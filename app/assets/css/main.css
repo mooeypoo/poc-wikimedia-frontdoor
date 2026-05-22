@@ -1,0 +1,81 @@
+/**
+ * main.css — global styles for the Front Door shell.
+ *
+ * Uses Codex design tokens (CSS custom properties) for colours, spacing,
+ * typography, and borders so the shell visually aligns with the rest of
+ * the Wikimedia design system.
+ *
+ * All direction-sensitive properties use CSS logical properties
+ * (margin-inline-*, padding-inline-*, inset-inline-*, text-align: start/end).
+ * The shell inherits direction from <html dir="...">, set in the default
+ * layout from the active language configuration.
+ */
+
+@import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	background-color: var( --background-color-base );
+	color: var( --color-base );
+	font-family: var( --font-family-system-sans );
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-medium );
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+a {
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:visited {
+	color: var( --color-visited );
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var( --font-family-serif );
+	color: var( --color-emphasized );
+	margin-block: var( --spacing-150 ) var( --spacing-75 );
+	line-height: var( --line-height-xx-small );
+}
+
+h1 {
+	font-size: var( --font-size-xx-large );
+}
+
+h2 {
+	font-size: var( --font-size-x-large );
+}
+
+h3 {
+	font-size: var( --font-size-large );
+}
+
+p {
+	margin-block: var( --spacing-50 );
+}
+
+code {
+	font-family: var( --font-family-monospace );
+	font-size: var( --font-size-small );
+	background-color: var( --background-color-neutral-subtle );
+	padding-block: var( --spacing-12 );
+	padding-inline: var( --spacing-25 );
+	border-radius: var( --border-radius-base );
+}

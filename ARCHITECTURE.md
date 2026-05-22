@@ -92,7 +92,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 ### Layer 1: Engine / data layer
 
-**Where:** `composables/`, `scripts/`, Nuxt server routes (`server/`)
+**Where:** `app/composables/`, `scripts/`, Nuxt server routes (`server/`)
 
 **Responsibility:** Fetching, resolving, transforming. This layer knows about:
 - The MediaWiki REST API and Action API
@@ -108,7 +108,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 ### Layer 2: Business logic / configuration layer
 
-**Where:** `config/`, composables that encode project rules
+**Where:** `config/`, `app/composables/` that encode project rules
 
 **Responsibility:** Project-specific decisions:
 - Which wiki instances are supported
@@ -131,7 +131,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 ## Composables reference
 
-All composables live in `composables/` and follow the `use` naming convention. Each must have a full JSDoc block.
+All composables live in `app/composables/` and follow the `use` naming convention. Each must have a full JSDoc block.
 
 | Composable | Provides |
 |---|---|
@@ -150,7 +150,7 @@ All composables live in `composables/` and follow the `use` naming convention. E
 
 ### Interface strings: banana-i18n only
 
-banana-i18n is registered in `plugins/banana-i18n.js` and provides `$i18n()` globally across all Vue components. It is the **only** system that may produce user-visible interface strings.
+banana-i18n is registered in `app/plugins/banana-i18n.ts` and provides `$i18n()` globally across all Vue components. It is the **only** system that may produce user-visible interface strings.
 
 Message files live in `i18n/[locale].json` using MediaWiki message format (supports CLDR plurals, gender, named parameters).
 
@@ -236,7 +236,7 @@ The OAuth callback route (`server/routes/oauth/callback.ts`) is a Nuxt server ro
 
 ### Layout direction
 
-The `<html>` element's `dir` attribute is set reactively in `layouts/default.vue` using `useDirection()`, which reads from `config/languages.js`. The Codex RTL stylesheet is loaded conditionally:
+The `<html>` element's `dir` attribute is set reactively in `app/layouts/default.vue` using `useDirection()`, which reads from `config/languages.js`. The Codex RTL stylesheet is loaded conditionally:
 
 ```vue
 <script setup>
@@ -266,6 +266,42 @@ Strings from banana-i18n are safe to render without isolation — their directio
 ### Known gap: Scalar spec content
 
 Strings rendered by Scalar from OpenAPI spec content (parameter names, descriptions, schema property names, example values) are not BiDi-isolated by Scalar. This is a known limitation. Mitigation: broad `unicode-bidi: isolate` CSS applied to Scalar's content containers. An upstream issue should be filed with Scalar requesting per-string isolation. See the design document for full details.
+
+### CSS direction strategy
+
+Front Door currently uses a single explicit strategy for direction-aware CSS.
+
+**Native CSS logical properties (first-party CSS).**
+All CSS authored in this project — component `<style>` blocks, layout styles, Nuxt Content prose styles, anything we write — uses CSS logical properties exclusively. This is the default and preferred mechanism.
+
+| Do not use | Use instead |
+|---|---|
+| `margin-left` / `margin-right` | `margin-inline-start` / `margin-inline-end` |
+| `padding-left` / `padding-right` | `padding-inline-start` / `padding-inline-end` |
+| `left` / `right` | `inset-inline-start` / `inset-inline-end` |
+| `border-left` / `border-right` | `border-inline-start` / `border-inline-end` |
+| `text-align: left` / `right` | `text-align: start` / `end` |
+| `float: left` / `right` | `float: inline-start` / `inline-end` |
+| `width` (when block-axis aware) | `inline-size` |
+
+The browser flips logical properties automatically based on the `dir` attribute on `<html>` (set reactively in `app/layouts/default.vue`). No build step, no runtime cost, no duplicated stylesheets, works inside scoped SFC styles. Browser support is universal in the baseline we target.
+
+**Explorer (Scalar) direction policy.**
+We intentionally do not run a global CSS RTL flipper over third-party explorer styles in the current phase. The explorer renders API-oriented content that is frequently LTR-dominant (paths, parameters, identifiers, examples). Global flipping can degrade readability and produce incorrect UI mirroring.
+
+Instead:
+- The application shell follows interface direction via `<html dir>`.
+- Explorer direction choices are explicit and component-level where needed (`dir="ltr"`, `dir="rtl"`, `dir="auto"`).
+- External dynamic strings remain BiDi-isolated with `<bdi>`.
+
+**Overrides and exceptions.**
+Direction overrides are explicit in templates and components:
+
+- For Vue components: set `dir="ltr"`, `dir="rtl"`, or `dir="auto"` on the element when its content requires a specific direction regardless of the interface direction (URL inputs, file paths, code, identifier-like content → `ltr`; an Arabic/Hebrew name input → `rtl`; user-supplied free text → `auto`). Each intentional pin carries a brief code comment explaining why.
+
+**What we do not do.**
+- Do not ship a separate `app.rtl.css` and toggle stylesheets at runtime — that defeats Nuxt 4 CSS code-splitting and HMR.
+- Do not write physical properties in first-party CSS "for clarity" and rely on a build-time flipper. Logical properties are clearer, faster, and avoid broad unintended mirroring.
 
 ---
 

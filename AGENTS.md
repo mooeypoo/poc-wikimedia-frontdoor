@@ -26,6 +26,7 @@ These two surfaces have different rules. Know which one you are working on.
 - **Auth:** Wikimedia OAuth 2.0 with PKCE — session state in Pinia
 - **Search:** Lunr.js with `lunr-languages`
 - **State management:** Pinia
+- **CSS direction:** native CSS logical properties for first-party CSS; no global CSS flipping layer for third-party explorer styles in the current phase
 
 Do not introduce additional frameworks, UI libraries, or i18n systems. If you believe an exception is warranted, stop and explain why before writing code.
 
@@ -110,6 +111,19 @@ Do not hardcode these values anywhere else in the codebase. If a component or co
 
 The `dir` property of each supported language is explicitly declared in `config/languages.js`. Do not write code that infers text direction from a language code or BCP 47 tag at runtime. Use the declared value from config.
 
+### 8. CSS uses logical properties; no global CSS flipping layer
+
+All CSS authored in this project — SFC `<style>` blocks, layout styles, Nuxt Content prose styles, anything we write — uses **CSS logical properties** (`margin-inline-start`, `padding-inline-end`, `inset-inline-start`, `border-inline-end`, `text-align: start`, `inline-size`, etc.) instead of their physical counterparts. The browser handles direction flipping automatically from the `dir` attribute on `<html>`.
+
+Do not add a global PostCSS RTL flipping layer at this stage. Explorer content is primarily API-facing and often LTR-dominant; forcing third-party explorer CSS to flip globally can produce incorrect UI behaviour. Direction-sensitive values inside explorer content must be handled by explicit `dir` usage and BiDi isolation (`<bdi>` for external strings).
+
+Do not:
+- Ship a separate `*.rtl.css` and swap stylesheets at runtime
+- Write physical properties in first-party CSS and rely on a build-time flipper — use logical properties
+- Assume the Scalar explorer should mirror all chrome direction changes; keep explorer direction decisions explicit and content-driven
+
+See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
+
 ---
 
 ## Code quality rules
@@ -188,7 +202,9 @@ Before marking any component complete, verify:
 
 - [ ] All interface strings go through banana-i18n
 - [ ] All external strings (from APIs, specs, config data shown in UI) are wrapped in `<bdi>`
+- [ ] First-party CSS uses logical properties (`margin-inline-*`, `padding-inline-*`, `inset-inline-*`, `text-align: start/end`, etc.) — no `left`/`right` physical properties in CSS we author
 - [ ] CSS does not pin `direction` (to `ltr` or `rtl`) unless that direction is genuinely required for the content. Most elements should inherit direction from the UI. Pin direction only with intent — for example, an input that accepts URLs, file paths, code, or other inherently LTR content should be `dir="ltr"` even when the surrounding UI is RTL; an input that accepts Arabic or Hebrew names should be `dir="rtl"` even when the UI is LTR. When in doubt, prefer `dir="auto"` over a hardcoded direction. Any intentional direction pin must be accompanied by a brief comment explaining why.
+- [ ] Explorer-specific direction choices are explicit; do not rely on global CSS flipping for Scalar
 - [ ] The component works correctly when the interface language is Arabic or Hebrew (RTL layout)
 - [ ] The component works correctly when the interface is LTR but the displayed wiki instance is an RTL-language wiki
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding

@@ -1,11 +1,25 @@
 {
   "name": "frontdoor",
-  "version": "0.0.1",
-  "description": "An experiment for Wikimedia API documentation developer front door",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
   },
-  "author": "Moriel Schottlender",
-  "license": "MIT"
+  "dependencies": {
+    "@nuxt/content": "^3.13.0",
+    "@wikimedia/codex": "^2.3.0",
+    "@wikimedia/codex-design-tokens": "^2.3.0",
+    "better-sqlite3": "^12.10.0",
+    "nuxt": "^4.4.6",
+    "sqlite3": "^6.0.1",
+    "vue": "^3.5.34",
+    "vue-router": "^5.0.7"
+  },
+  "devDependencies": {
+    "oxc-parser": "^0.131.0",
+    "rolldown": "^1.0.2"
+  }
 }
