@@ -86,7 +86,7 @@ npm run build:netlify
 
 This uses the Netlify Nitro preset and the repository's [netlify.toml](/home/moriel/code/wikimedia/frontdoor/netlify.toml), which expects:
 
-- static assets in `.output/public`
+- static assets in `dist`
 - server functions in `.netlify/functions-internal`
 
 `npm run generate` and `npm run generate:static` remain available for static generation workflows, but they do not provide the discovery proxy required by the explorer route.
