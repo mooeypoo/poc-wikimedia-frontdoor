@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CdxField, CdxSelect } from '@wikimedia/codex'
 import { useDirection } from '../composables/useDirection'
 
 /**
@@ -12,18 +13,47 @@ import { useDirection } from '../composables/useDirection'
  */
 
 const { direction } = useDirection()
-const { $i18n } = useNuxtApp()
+const { $i18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+
+interface PickerMenuItem {
+	label: string
+	value: string
+}
+
+const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he' ] as const
+
+// <option>-like rendering targets cannot include HTML tags, so FSI/PDI
+// markers isolate labels and keep mixed-direction names stable.
+function isolateLabel( label: string ): string {
+	return `\u2068${ label }\u2069`
+}
+
+const selectedInterfaceLocale = computed<string>( {
+	get: () => $interfaceLocale.value,
+	set: ( nextLocaleCode ) => {
+		$setInterfaceLocale( nextLocaleCode )
+	}
+} )
+
+const languageMenuItems = computed<PickerMenuItem[]>( () => {
+	return supportedInterfaceLocales.map( ( localeCode ) => ( {
+		value: localeCode,
+		label: isolateLabel( $i18n( `interface-language-${ localeCode }` ) )
+	} ) )
+} )
 
 const applicationTitle = computed( () => $i18n( 'app-title' ) )
 const homeNavigationLabel = computed( () => $i18n( 'nav-home' ) )
 const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
 const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
 const footerLabel = computed( () => $i18n( 'footer-title' ) )
+const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
+const interfaceLanguagePlaceholder = computed( () => $i18n( 'interface-language-placeholder' ) )
 
 useHead( {
 	htmlAttrs: {
 		dir: direction,
-		lang: 'en'
+		lang: selectedInterfaceLocale
 	},
 	title: applicationTitle
 } )
@@ -50,6 +80,16 @@ useHead( {
 						{{ apiNavigationLabel }}
 					</NuxtLink>
 				</nav>
+				<CdxField class="frontdoor-shell__language-field">
+					<template #label>
+						{{ interfaceLanguageLabel }}
+					</template>
+					<CdxSelect
+						v-model:selected="selectedInterfaceLocale"
+						:menu-items="languageMenuItems"
+						:default-label="interfaceLanguagePlaceholder"
+					/>
+				</CdxField>
 			</div>
 		</header>
 		<main class="frontdoor-shell__main">
@@ -79,7 +119,8 @@ useHead( {
 	padding-block: var( --spacing-75 );
 	padding-inline: var( --spacing-100 );
 	display: flex;
-	align-items: center;
+	align-items: flex-end;
+	flex-wrap: wrap;
 	gap: var( --spacing-200 );
 }
 
@@ -94,6 +135,10 @@ useHead( {
 	display: flex;
 	gap: var( --spacing-100 );
 	margin-inline-start: auto;
+}
+
+.frontdoor-shell__language-field {
+	inline-size: min( 14rem, 100% );
 }
 
 .frontdoor-shell__main {

@@ -1,6 +1,7 @@
 import Banana from 'banana-i18n'
 import type { Ref } from 'vue'
 import messagesEnglish from '../../i18n/en.json'
+import messagesSpanish from '../../i18n/es.json'
 import messagesFrench from '../../i18n/fr.json'
 import messagesHebrew from '../../i18n/he.json'
 
@@ -8,6 +9,7 @@ type MessageMap = Record<string, string>
 
 const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
 	en: messagesEnglish as MessageMap,
+	es: messagesSpanish as MessageMap,
 	fr: messagesFrench as MessageMap,
 	he: messagesHebrew as MessageMap
 }
