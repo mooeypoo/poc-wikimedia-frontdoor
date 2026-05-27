@@ -1,0 +1,21 @@
+{
+  "app-title": "Application header brand text.",
+  "nav-home": "Main navigation item for home page.",
+  "nav-about": "Main navigation item for about page.",
+  "nav-api": "Main navigation item for explorer page.",
+  "footer-title": "Footer brand line.",
+  "explorer-title": "Heading for the API explorer page.",
+  "explorer-description": "Short instruction text under explorer heading.",
+  "explorer-instance-label": "Label for the wiki instance selector.",
+  "explorer-module-label": "Label for the module selector.",
+  "explorer-loading-modules": "Shown while discovery modules are loading.",
+  "explorer-module-placeholder": "Placeholder text for module selector with no selected value.",
+  "explorer-instance-placeholder": "Placeholder text for instance selector with no selected value.",
+  "explorer-loading-interface": "Shown while the Scalar explorer bundle is loading after the page chrome has rendered.",
+  "explorer-refresh-button": "Button to retry discovery after failure.",
+  "explorer-empty-modules": "Shown when discovery returns no modules.",
+  "explorer-discovery-error": "Shown when discovery request fails.",
+  "explorer-spec-missing": "Shown when no module spec URL can be resolved.",
+  "explorer-debug-title": "Heading for diagnostics event panel.",
+  "explorer-debug-empty": "Shown when there are no diagnostics events recorded yet."
+}

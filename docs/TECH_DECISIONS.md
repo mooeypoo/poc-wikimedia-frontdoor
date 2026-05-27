@@ -56,7 +56,7 @@ Codex components and banana-i18n work inside plugins natively — no bridge patt
 
 Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
-1. Fetch `{wiki_base}/w/rest.php/discovery` for the selected instance
+1. Fetch `{wiki_base}/w/rest.php/specs/v0/discovery` for the selected instance
 2. Read available modules and their spec URLs from the response
 3. Pass the spec URL from the discovery response directly to Scalar
 
@@ -66,7 +66,7 @@ Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
 ## Wiki instances
 
-Six instances configured for the initial build. All modules and spec URLs for each are derived from their respective `/w/rest.php/discovery` endpoints at runtime.
+Six instances configured for the initial build. All modules and spec URLs for each are derived from their respective `/w/rest.php/specs/v0/discovery` endpoints at runtime.
 
 | ID | Base URL | Direction |
 |---|---|---|
@@ -197,7 +197,7 @@ Verify that `@scalar/api-reference` can switch between multiple real Wikimedia s
 
 **Includes:**
 - Nuxt 4 scaffold with correct structure
-- `useDiscovery(instance)` — fetches `/w/rest.php/discovery`, returns module list with spec URLs
+- `useDiscovery(instance)` — fetches `/w/rest.php/specs/v0/discovery`, returns module list with spec URLs
 - `useWikiModules(instance)` — exposes module list to UI
 - Instance picker (six instances from `config/instances.js`) + module picker (populated from discovery)
 - Scalar re-renders on instance or module change via reactive config

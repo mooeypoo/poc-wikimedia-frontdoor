@@ -1,0 +1,21 @@
+{
+  "app-title": "Wikimedia REST API",
+  "nav-home": "Home",
+  "nav-about": "About",
+  "nav-api": "API Explorer",
+  "footer-title": "Front Door - Wikimedia Foundation",
+  "explorer-title": "API Explorer",
+  "explorer-description": "Switch wiki instances and REST modules using live discovery data.",
+  "explorer-instance-label": "Wiki instance",
+  "explorer-module-label": "REST module",
+  "explorer-loading-modules": "Loading modules...",
+  "explorer-module-placeholder": "Select a module",
+  "explorer-instance-placeholder": "Select an instance",
+  "explorer-loading-interface": "Loading explorer interface...",
+  "explorer-refresh-button": "Retry discovery",
+  "explorer-empty-modules": "No modules available for this instance.",
+  "explorer-discovery-error": "Discovery request failed for this instance.",
+  "explorer-spec-missing": "No spec URL is available for the selected module.",
+  "explorer-debug-title": "Diagnostics",
+  "explorer-debug-empty": "No diagnostic events yet."
+}

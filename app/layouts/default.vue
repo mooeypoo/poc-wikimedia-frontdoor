@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useDirection } from '../composables/useDirection'
+
 /**
  * Default layout — the Front Door application shell.
  *
@@ -9,17 +11,21 @@
  * scaffolding for Experiment 1, not a permanent choice.
  */
 
-// QUESTION: useDirection() is not yet implemented — defaulting to 'ltr'
-// here is a temporary placeholder. Replace with the composable as soon as
-// it exists so the shell direction tracks the active interface language.
-const direction = 'ltr'
+const { direction } = useDirection()
+const { $i18n } = useNuxtApp()
+
+const applicationTitle = computed( () => $i18n( 'app-title' ) )
+const homeNavigationLabel = computed( () => $i18n( 'nav-home' ) )
+const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
+const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
+const footerLabel = computed( () => $i18n( 'footer-title' ) )
 
 useHead( {
 	htmlAttrs: {
 		dir: direction,
 		lang: 'en'
 	},
-	title: 'Wikimedia REST API — Front Door'
+	title: applicationTitle
 } )
 </script>
 
@@ -31,14 +37,17 @@ useHead( {
 					to="/"
 					class="frontdoor-shell__brand"
 				>
-					Wikimedia REST API
+					{{ applicationTitle }}
 				</NuxtLink>
 				<nav class="frontdoor-shell__nav">
 					<NuxtLink to="/">
-						Home
+						{{ homeNavigationLabel }}
 					</NuxtLink>
 					<NuxtLink to="/about">
-						About
+						{{ aboutNavigationLabel }}
+					</NuxtLink>
+					<NuxtLink to="/explorer">
+						{{ apiNavigationLabel }}
 					</NuxtLink>
 				</nav>
 			</div>
@@ -47,7 +56,7 @@ useHead( {
 			<slot />
 		</main>
 		<footer class="frontdoor-shell__footer">
-			Front Door — Wikimedia Foundation
+			{{ footerLabel }}
 		</footer>
 	</div>
 </template>

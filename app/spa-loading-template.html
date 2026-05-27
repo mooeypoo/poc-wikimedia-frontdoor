@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light;
+      --page-background: #ffffff;
+      --surface-subtle: #f8f9fa;
+      --surface-muted: #eaecf0;
+      --border-subtle: #c8ccd1;
+      --text-base: #202122;
+      --text-subtle: #54595d;
+      --accent: #36c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--page-background);
+      color: var(--text-base);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .spa-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .spa-shell__header,
+    .spa-shell__footer {
+      border-color: var(--border-subtle);
+      background: var(--page-background);
+    }
+
+    .spa-shell__header {
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .spa-shell__footer {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--surface-subtle);
+    }
+
+    .spa-shell__inner {
+      max-width: 64rem;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .spa-shell__topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .spa-shell__brand,
+    .spa-shell__nav-item,
+    .spa-shell__headline,
+    .spa-shell__line,
+    .spa-shell__panel,
+    .spa-shell__spinner {
+      background: linear-gradient(90deg, var(--surface-subtle), var(--surface-muted), var(--surface-subtle));
+      background-size: 200% 100%;
+      animation: spa-shell-shimmer 1.4s linear infinite;
+    }
+
+    .spa-shell__brand {
+      width: 12rem;
+      height: 1.5rem;
+      border-radius: 4px;
+    }
+
+    .spa-shell__nav {
+      margin-inline-start: auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .spa-shell__nav-item {
+      width: 5rem;
+      height: 1rem;
+      border-radius: 999px;
+    }
+
+    .spa-shell__content {
+      width: min(64rem, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 32px 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .spa-shell__headline {
+      width: min(22rem, 70%);
+      height: 2rem;
+      border-radius: 6px;
+    }
+
+    .spa-shell__line {
+      width: min(34rem, 92%);
+      height: 1rem;
+      border-radius: 999px;
+    }
+
+    .spa-shell__toolbar {
+      display: grid;
+      gap: 12px;
+    }
+
+    .spa-shell__panel {
+      min-height: 5.5rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+    }
+
+    .spa-shell__reference {
+      min-height: 26rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      background: linear-gradient(180deg, var(--page-background), var(--surface-subtle));
+      display: grid;
+      place-items: center;
+    }
+
+    .spa-shell__spinner {
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 3px solid var(--border-subtle);
+      border-top-color: var(--accent);
+      border-radius: 999px;
+      background: none;
+      animation: spa-shell-spin 0.9s linear infinite;
+    }
+
+    .spa-shell__footer .spa-shell__inner {
+      height: 3rem;
+    }
+
+    @media (min-width: 960px) {
+      .spa-shell__toolbar {
+        grid-template-columns: minmax(16rem, 22rem) minmax(16rem, 22rem);
+      }
+    }
+
+    @keyframes spa-shell-shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    @keyframes spa-shell-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="spa-shell">
+    <header class="spa-shell__header">
+      <div class="spa-shell__inner spa-shell__topbar">
+        <div class="spa-shell__brand"></div>
+        <div class="spa-shell__nav">
+          <div class="spa-shell__nav-item"></div>
+          <div class="spa-shell__nav-item"></div>
+          <div class="spa-shell__nav-item"></div>
+        </div>
+      </div>
+    </header>
+    <main class="spa-shell__content">
+      <div class="spa-shell__headline"></div>
+      <div class="spa-shell__line"></div>
+      <section class="spa-shell__toolbar">
+        <div class="spa-shell__panel"></div>
+        <div class="spa-shell__panel"></div>
+      </section>
+      <section class="spa-shell__reference">
+        <div class="spa-shell__spinner"></div>
+      </section>
+    </main>
+    <footer class="spa-shell__footer">
+      <div class="spa-shell__inner"></div>
+    </footer>
+  </div>
+</body>
+</html>

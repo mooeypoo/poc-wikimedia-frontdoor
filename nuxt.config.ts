@@ -1,27 +1,44 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+const isDevelopment = process.env.NODE_ENV !== 'production'
+const contentLocalDatabaseFilename = isDevelopment
+	? '.data/content/contents.sqlite'
+	: `.data/content/contents-${ process.pid }.sqlite`
+
 export default defineNuxtConfig( {
 	modules: [
-		'@nuxt/content'
+		'@nuxt/content',
+		'@pinia/nuxt'
 	],
 	devtools: { enabled: true },
 	compatibilityDate: '2024-04-03',
 
-	// Use the `sqlite3` connector for the local content DB. The default
-	// `better-sqlite3` has a native-binding double-load issue in Nuxt's dev
-	// pipeline ("Module did not self-register"). Node's built-in `node:sqlite`
-	// is not yet available in Node 22 LTS, so `sqlite3` is the most reliable
-	// option until we move to Node 24+.
+	// Nuxt Content behaves differently across environments here:
+	// - dev: `sqlite3` avoids the native-binding double-load issue we observed
+	//   with `better-sqlite3` in Nuxt's dev pipeline.
+	// - build/prod: `better-sqlite3` is synchronous and avoids the noisy locked
+	//   table warnings emitted by the async `sqlite3` connector during builds.
 	content: {
+		_localDatabase: {
+			type: 'sqlite',
+			filename: contentLocalDatabaseFilename
+		},
 		experimental: {
-			sqliteConnector: 'sqlite3'
+			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
 		}
 	},
 
 	// Global CSS: Codex design tokens + our shell styles.
 	css: [
-		'~/assets/css/main.css'
+		'@wikimedia/codex/dist/codex.style.css',
+		'~/assets/css/main.css',
+		'@scalar/api-reference/style.css'
 	],
+
+	routeRules: {
+		'/explorer': { ssr: false },
+		'/explorer/**': { ssr: false }
+	},
 
 	// Direction handling is currently driven by the shell dir attribute and
 	// logical CSS properties in first-party styles. We intentionally avoid

@@ -72,6 +72,7 @@ Validate runtime spec switching in Nuxt 4 using Scalar inside a client-only expl
 ### Scope
 - Add explorer route as client-only.
 - Add discovery-driven instance/module selection.
+- Fetch discovery from `{baseUrl}/w/rest.php/specs/v0/discovery` per selected instance.
 - Pass discovery-provided spec URLs to Scalar.
 - Re-render Scalar when selection changes.
 - Update shell direction based on selected instance direction.

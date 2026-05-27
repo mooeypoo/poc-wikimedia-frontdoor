@@ -1,0 +1,21 @@
+{
+  "app-title": "ממשק REST של ויקימדיה",
+  "nav-home": "דף הבית",
+  "nav-about": "אודות",
+  "nav-api": "סייר API",
+  "footer-title": "Front Door - קרן ויקימדיה",
+  "explorer-title": "סייר API",
+  "explorer-description": "החליפו מופעי ויקי ומודולי REST באמצעות נתוני גילוי חיים.",
+  "explorer-instance-label": "מופע ויקי",
+  "explorer-module-label": "מודול REST",
+  "explorer-loading-modules": "טוען מודולים...",
+  "explorer-module-placeholder": "בחרו מודול",
+  "explorer-instance-placeholder": "בחרו מופע",
+  "explorer-loading-interface": "ממשק הסייר נטען...",
+  "explorer-refresh-button": "נסו שוב גילוי",
+  "explorer-empty-modules": "אין מודולים זמינים עבור מופע זה.",
+  "explorer-discovery-error": "בקשת הגילוי נכשלה עבור מופע זה.",
+  "explorer-spec-missing": "אין כתובת מפרט זמינה עבור המודול שנבחר.",
+  "explorer-debug-title": "אבחון",
+  "explorer-debug-empty": "עדיין אין אירועי אבחון."
+}

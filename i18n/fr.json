@@ -1,0 +1,21 @@
+{
+  "app-title": "API REST Wikimedia",
+  "nav-home": "Accueil",
+  "nav-about": "A propos",
+  "nav-api": "Explorateur API",
+  "footer-title": "Front Door - Fondation Wikimedia",
+  "explorer-title": "Explorateur d'API",
+  "explorer-description": "Basculez les instances wiki et les modules REST via les donnees de decouverte.",
+  "explorer-instance-label": "Instance wiki",
+  "explorer-module-label": "Module REST",
+  "explorer-loading-modules": "Chargement des modules...",
+  "explorer-module-placeholder": "Selectionnez un module",
+  "explorer-instance-placeholder": "Selectionnez une instance",
+  "explorer-loading-interface": "Chargement de l'interface de l'explorateur...",
+  "explorer-refresh-button": "Reessayer la decouverte",
+  "explorer-empty-modules": "Aucun module disponible pour cette instance.",
+  "explorer-discovery-error": "La requete de decouverte a echoue pour cette instance.",
+  "explorer-spec-missing": "Aucune URL de spec disponible pour le module selectionne.",
+  "explorer-debug-title": "Diagnostics",
+  "explorer-debug-empty": "Aucun evenement de diagnostic pour le moment."
+}
