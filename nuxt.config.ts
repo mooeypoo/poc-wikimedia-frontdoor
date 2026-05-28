@@ -8,7 +8,8 @@ const contentLocalDatabaseFilename = isDevelopment
 export default defineNuxtConfig( {
 	modules: [
 		'@nuxt/content',
-		'@pinia/nuxt'
+		'@pinia/nuxt',
+		'@nuxtjs/i18n'
 	],
 	devtools: { enabled: true },
 	compatibilityDate: '2024-04-03',
@@ -26,6 +27,19 @@ export default defineNuxtConfig( {
 		experimental: {
 			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
 		}
+	},
+
+	i18n: {
+		strategy: 'prefix_except_default',
+		defaultLocale: 'en',
+		detectBrowserLanguage: false,
+		locales: [
+			{ code: 'en', language: 'en-US' },
+			{ code: 'es', language: 'es-ES' },
+			{ code: 'fr', language: 'fr-FR' },
+			{ code: 'he', language: 'he-IL' },
+			{ code: 'fa', language: 'fa-IR' }
+		]
 	},
 
 	// Global CSS: Codex design tokens + our shell styles.

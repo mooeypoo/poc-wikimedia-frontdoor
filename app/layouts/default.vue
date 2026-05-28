@@ -14,13 +14,17 @@ import { useDirection } from '../composables/useDirection'
 
 const { direction } = useDirection()
 const { $i18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+const { locale } = useI18n()
+const route = useRoute()
+const switchLocalePath = useSwitchLocalePath()
+const localePath = useLocalePath()
 
 interface PickerMenuItem {
 	label: string
 	value: string
 }
 
-const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he' ] as const
+const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
 
 // <option>-like rendering targets cannot include HTML tags, so FSI/PDI
 // markers isolate labels and keep mixed-direction names stable.
@@ -29,11 +33,21 @@ function isolateLabel( label: string ): string {
 }
 
 const selectedInterfaceLocale = computed<string>( {
-	get: () => $interfaceLocale.value,
-	set: ( nextLocaleCode ) => {
+	get: () => locale.value,
+	set: async ( nextLocaleCode ) => {
+		const nextLocalizedPath = switchLocalePath( nextLocaleCode )
 		$setInterfaceLocale( nextLocaleCode )
+		locale.value = nextLocaleCode
+
+		if ( nextLocalizedPath && nextLocalizedPath !== route.fullPath ) {
+			await navigateTo( nextLocalizedPath )
+		}
 	}
 } )
+
+watch( locale, ( nextLocaleCode ) => {
+	$setInterfaceLocale( nextLocaleCode )
+}, { immediate: true } )
 
 const languageMenuItems = computed<PickerMenuItem[]>( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
@@ -49,6 +63,8 @@ const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
 const footerLabel = computed( () => $i18n( 'footer-title' ) )
 const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $i18n( 'interface-language-placeholder' ) )
+const homePath = computed( () => localePath( '/' ) )
+const aboutPath = computed( () => localePath( '/about' ) )
 
 useHead( {
 	htmlAttrs: {
@@ -64,16 +80,16 @@ useHead( {
 		<header class="frontdoor-shell__header">
 			<div class="frontdoor-shell__header-inner">
 				<NuxtLink
-					to="/"
+					:to="homePath"
 					class="frontdoor-shell__brand"
 				>
 					{{ applicationTitle }}
 				</NuxtLink>
 				<nav class="frontdoor-shell__nav">
-					<NuxtLink to="/">
+					<NuxtLink :to="homePath">
 						{{ homeNavigationLabel }}
 					</NuxtLink>
-					<NuxtLink to="/about">
+					<NuxtLink :to="aboutPath">
 						{{ aboutNavigationLabel }}
 					</NuxtLink>
 					<NuxtLink to="/explorer">

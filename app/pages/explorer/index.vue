@@ -14,6 +14,10 @@ interface PickerMenuItem {
 	value: string
 }
 
+definePageMeta( {
+	i18n: false
+} )
+
 const { $i18n } = useNuxtApp()
 const { selectedWikiInstanceId } = useDirection()
 const {
