@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import type { Ref } from 'vue'
 import { useDiscovery } from './useDiscovery'
 
-interface WikiModuleOption {
+export interface WikiModuleOption {
 	value: string
 	label: string
 	specUrl: string

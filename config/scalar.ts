@@ -7,7 +7,7 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	showDeveloperTools: "never",
 	layout: 'modern' as const,
 	theme: 'default' as const,
-	showSidebar: true,
+	showSidebar: false,
 	searchHotKey: 'k',
 	metaData: {
 		title: 'Front Door API Explorer'
