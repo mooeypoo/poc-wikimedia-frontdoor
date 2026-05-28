@@ -9,9 +9,13 @@ import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
  */
 const { locale } = useI18n()
 
-const { data: page } = await useAsyncData( 'page-home', async () => {
+const localizedHomePageDataKey = computed( () => `page-home-${ locale.value }` )
+
+const { data: page } = await useAsyncData( localizedHomePageDataKey, async () => {
 	const localizedPageResult = await useLocalizedContentPage( locale.value, '' )
 	return localizedPageResult?.page ?? null
+}, {
+	watch: [ locale ]
 } )
 
 if ( !page.value ) {

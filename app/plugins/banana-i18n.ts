@@ -48,14 +48,14 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 		interfaceLocale.value = MESSAGES_BY_LOCALE[ nextLocale ] ? nextLocale : 'en'
 	}
 
-	nuxtApp.provide( 'i18n', i18n )
+	nuxtApp.provide( 'bananaI18n', i18n )
 	nuxtApp.provide( 'setInterfaceLocale', setInterfaceLocale )
 	nuxtApp.provide( 'interfaceLocale', interfaceLocale )
 } )
 
 declare module '#app' {
 	interface NuxtApp {
-		$i18n: ( messageKey: string, parameters?: Record<string, string> ) => string
+		$bananaI18n: ( messageKey: string, parameters?: Record<string, string> ) => string
 		$setInterfaceLocale: ( nextLocale: string ) => void
 		$interfaceLocale: Ref<string>
 	}
@@ -63,6 +63,6 @@ declare module '#app' {
 
 declare module 'vue' {
 	interface ComponentCustomProperties {
-		$i18n: ( messageKey: string, parameters?: Record<string, string> ) => string
+		$bananaI18n: ( messageKey: string, parameters?: Record<string, string> ) => string
 	}
 }
