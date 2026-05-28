@@ -553,12 +553,16 @@ function focusPendingOperationInScalar(): void {
 }
 
 .explorer-page__bootstrap-loading {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
 	display: grid;
+	align-content: center;
 	justify-items: center;
 	gap: var( --spacing-100 );
-	padding: var( --spacing-250 );
-	border: 1px solid var( --border-color-subtle );
-	border-radius: var( --border-radius-base );
+	padding-inline: var( --spacing-150 );
+	padding-block: var( --spacing-250 );
+	min-block-size: 100vh;
 	background:
 		radial-gradient( circle at top, color-mix( in srgb, var( --background-color-progressive-subtle ) 65%, transparent ) 0%, transparent 55% ),
 		linear-gradient( 180deg, var( --background-color-base ) 0%, var( --background-color-neutral-subtle ) 100% );
@@ -831,6 +835,7 @@ function focusPendingOperationInScalar(): void {
 
 	.explorer-page__workspace {
 		grid-template-columns: minmax( 20rem, 26rem ) minmax( 0, 1fr );
+		align-items: stretch;
 	}
 
 	.explorer-page__module-select {
@@ -841,8 +846,24 @@ function focusPendingOperationInScalar(): void {
 		display: grid;
 		position: sticky;
 		inset-block-start: var( --spacing-150 );
-		max-block-size: calc( 100vh - 8rem );
+		block-size: calc( 100vh - ( var( --spacing-150 ) * 2 ) );
 		overflow: auto;
+		overscroll-behavior: contain;
+	}
+
+	.explorer-page__reference-panel {
+		position: sticky;
+		inset-block-start: var( --spacing-150 );
+		block-size: calc( 100vh - ( var( --spacing-150 ) * 2 ) );
+		grid-template-rows: auto minmax( 0, 1fr );
+		overflow: hidden;
+	}
+
+	.explorer-page__scalar-shell {
+		block-size: 100%;
+		min-block-size: 0;
+		overflow: auto;
+		overscroll-behavior: contain;
 	}
 
 	.explorer-page__endpoint-heading {
