@@ -227,28 +227,22 @@ function normalizeDiscoveryModules(
 
 	if ( Array.isArray( discoveryModules ) ) {
 		return discoveryModules
-			.filter( ( rawModule ) => typeof rawModule.name === 'string' && typeof rawModule.specUrl === 'string' )
-			.map( ( rawModule ) => ( {
-				name: rawModule.name,
-				title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
-				version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
-				specUrl: normalizeSpecUrl( baseUrl, rawModule.specUrl )
-			} ) )
+			.filter( ( rawModule ) => typeof rawModule.specUrl === 'string' )
+			.map( ( rawModule ) => {
+				const specUrl = normalizeSpecUrl( baseUrl, rawModule.specUrl )
+
+				return {
+					name: resolveDiscoveryModuleName( rawModule.name, specUrl ),
+					title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
+					version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
+					specUrl
+				}
+			} )
 	}
 
 	if ( discoveryModules && typeof discoveryModules === 'object' ) {
 		return Object.entries( discoveryModules )
 			.flatMap( ( [ moduleKey, moduleValue ] ) => {
-				const moduleName = typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey
-				const moduleVersion =
-					isUsableVersion( moduleValue.info?.version )
-						? moduleValue.info.version
-						: isUsableVersion( moduleValue.version )
-							? moduleValue.version
-							: undefined
-				const moduleTitle = typeof moduleValue.info?.title === 'string'
-					? moduleValue.info.title
-					: undefined
 				const rawSpecUrl =
 					typeof moduleValue.spec === 'string'
 						? moduleValue.spec
@@ -260,9 +254,24 @@ function normalizeDiscoveryModules(
 					return []
 				}
 
+				const specUrl = normalizeSpecUrl( baseUrl, rawSpecUrl )
+				const moduleName = resolveDiscoveryModuleName(
+					typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey,
+					specUrl
+				)
+				const moduleVersion =
+					isUsableVersion( moduleValue.info?.version )
+						? moduleValue.info.version
+						: isUsableVersion( moduleValue.version )
+							? moduleValue.version
+							: undefined
+				const moduleTitle = typeof moduleValue.info?.title === 'string'
+					? moduleValue.info.title
+					: undefined
+
 				const normalizedModule: DiscoveryModule = {
 					name: moduleName,
-					specUrl: normalizeSpecUrl( baseUrl, rawSpecUrl )
+					specUrl
 				}
 
 				if ( moduleTitle ) {
@@ -278,6 +287,29 @@ function normalizeDiscoveryModules(
 	}
 
 	return []
+}
+
+/**
+ * Resolves a stable, non-empty module name for discovery entries.
+ *
+ * Core REST modules may expose an empty moduleId; in that case the name is
+ * taken from the `/module/{id}` segment in the spec URL (for example `-`).
+ *
+ * @param rawModuleName - Module id or object key from discovery.
+ * @param specUrl - Absolute OpenAPI spec URL for the module.
+ * @returns Non-empty module name used for selection and accordion state.
+ */
+function resolveDiscoveryModuleName( rawModuleName: string, specUrl: string ): string {
+	if ( typeof rawModuleName === 'string' && rawModuleName.trim() !== '' ) {
+		return rawModuleName.trim()
+	}
+
+	const modulePathMatch = specUrl.match( /\/module\/([^/?#]+)/ )
+	if ( modulePathMatch?.[ 1 ] ) {
+		return modulePathMatch[ 1 ]
+	}
+
+	return 'unknown-module'
 }
 
 /**

@@ -21,6 +21,10 @@
 	--fd-layout-breakpoint-max-content: 105rem; /* 1680px — margins grow from here */
 	/* Includes horizontal padding (border-box); inner grid tracks are 1615px at this cap. */
 	--fd-layout-grid-max-inline-size: var( --fd-layout-breakpoint-fluid-max );
+	/* Aligns the explorer side rail with the page h1 below site chrome. */
+	--fd-explorer-rail-offset: calc(
+		4rem + ( var( --spacing-100 ) * 2 ) + var( --line-height-small ) + var( --spacing-200 ) + var( --spacing-150 )
+	);
 }
 
 .fd-page-grid {
@@ -65,6 +69,11 @@
 
 	.fd-page-grid__end {
 		grid-column: calc( var( --fd-layout-side-span ) + var( --fd-layout-main-span ) + 1 ) / span var( --fd-layout-side-span );
+	}
+
+	/* When the end panel is omitted, let main content use the full width beside the start column. */
+	.fd-page-grid:not( :has( .fd-page-grid__end ) ) .fd-page-grid__main {
+		grid-column: calc( var( --fd-layout-side-span ) + 1 ) / -1;
 	}
 }
 

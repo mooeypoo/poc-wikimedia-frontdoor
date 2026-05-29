@@ -97,13 +97,17 @@ code {
 }
 
 .explorer-page .cdx-select-vue,
-.explorer-page .cdx-select-vue__menu-wrapper {
+.explorer-page .cdx-select-vue__menu-wrapper,
+.explorer-module-rail .cdx-select-vue,
+.explorer-module-rail .cdx-select-vue__menu-wrapper {
 	position: relative;
 	z-index: 20;
 }
 
 .explorer-page .cdx-select-vue__menu,
-.explorer-page .cdx-menu {
+.explorer-page .cdx-menu,
+.explorer-module-rail .cdx-select-vue__menu,
+.explorer-module-rail .cdx-menu {
 	background-color: var( --background-color-base );
 	color: var( --color-base );
 	border: 1px solid var( --border-color-base );

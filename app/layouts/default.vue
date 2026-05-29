@@ -62,6 +62,9 @@ const settingsButtonLabel = computed( () => $i18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $i18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
 
+const route = useRoute()
+const isExplorerRoute = computed( () => route.path === '/explorer' || route.path.startsWith( '/explorer/' ) )
+
 useHead( {
 	htmlAttrs: {
 		dir: direction,
@@ -72,7 +75,10 @@ useHead( {
 </script>
 
 <template>
-	<div class="frontdoor-shell">
+	<div
+		class="frontdoor-shell"
+		:class="{ 'frontdoor-shell--explorer': isExplorerRoute }"
+	>
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
 				<div class="frontdoor-shell__side-nav">
@@ -160,8 +166,14 @@ useHead( {
 				</footer>
 			</div>
 
-			<template #end>
-				<!-- Reserved for future secondary side navigation. -->
+			<template
+				v-if="isExplorerRoute"
+				#end
+			>
+				<div
+					id="explorer-end-panel"
+					class="frontdoor-shell__explorer-end"
+				/>
 			</template>
 		</SharedPageGrid>
 	</div>
@@ -317,6 +329,7 @@ useHead( {
 
 .frontdoor-shell__main {
 	flex: 1;
+	min-inline-size: 0;
 	padding-block: var( --spacing-200 );
 }
 
@@ -347,12 +360,32 @@ useHead( {
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
 		min-block-size: 100%;
 	}
+
+	.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		align-self: stretch;
+		min-inline-size: 0;
+	}
+
+	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
+		display: flex;
+		flex-direction: column;
+		min-block-size: 100%;
+		min-inline-size: 0;
+	}
 }
 
 @media screen and ( max-width: 69.999rem ) {
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
 		display: none;
 	}
+
+	.frontdoor-shell:not( .frontdoor-shell--explorer ) .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		display: none;
+	}
+
+	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
+		padding-block-start: 0;
+	}
+
 }
 </style>

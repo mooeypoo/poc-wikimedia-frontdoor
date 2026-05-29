@@ -16,7 +16,10 @@
 		<div class="fd-page-grid__main">
 			<slot />
 		</div>
-		<aside class="fd-page-grid__end">
+		<aside
+			v-if="$slots.end"
+			class="fd-page-grid__end"
+		>
 			<slot name="end" />
 		</aside>
 	</div>
