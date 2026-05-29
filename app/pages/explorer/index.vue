@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { CdxMessage } from '@wikimedia/codex'
-import { computed, markRaw, onMounted, shallowRef, watch } from 'vue'
+import { computed, markRaw, nextTick, onMounted, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 import { WIKI_INSTANCES } from '../../../config/instances'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
-import { useExplorerDiagnostics } from '../../composables/useExplorerDiagnostics'
+import { useExplorerRailStickyAlign } from '../../composables/useExplorerRailStickyAlign'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 
 interface PickerMenuItem {
@@ -32,11 +32,16 @@ const {
 	markScalarReady,
 	clearPendingOperationTarget
 } = useExplorerBootstrap( selectedWikiInstanceId )
-const { entries: diagnosticsEntries } = useExplorerDiagnostics()
 
 const scalarApiReferenceComponent = shallowRef<Component>()
 const isScalarInterfaceLoading = ref( false )
+const explorerPageTitleRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+
+const { railStickyStyle, refreshRailStickyAlign } = useExplorerRailStickyAlign(
+	explorerPageTitleRef,
+	scalarShellRef
+)
 
 // <option>-like rendering targets cannot include HTML tags, so we use
 // FSI/PDI markers to enforce BiDi isolation for external labels.
@@ -65,8 +70,6 @@ const explorerDescription = computed( () => $i18n( 'explorer-description' ) )
 const moduleLabel = computed( () => $i18n( 'explorer-module-label' ) )
 const instancePlaceholderLabel = computed( () => $i18n( 'explorer-instance-placeholder' ) )
 const missingSpecLabel = computed( () => $i18n( 'explorer-spec-missing' ) )
-const diagnosticsTitle = computed( () => $i18n( 'explorer-debug-title' ) )
-const diagnosticsEmptyLabel = computed( () => $i18n( 'explorer-debug-empty' ) )
 const explorerInterfaceLoadingLabel = computed( () => $i18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $i18n( 'explorer-loading-instance' ) )
 const loadingInstanceDescriptionLabel = computed( () => $i18n( 'explorer-loading-instance-description' ) )
@@ -99,6 +102,12 @@ async function loadScalarApiReference(): Promise<void> {
 onMounted( () => {
 	requestAnimationFrame( () => {
 		void loadScalarApiReference()
+	} )
+} )
+
+watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl ], () => {
+	nextTick( () => {
+		refreshRailStickyAlign()
 	} )
 } )
 
@@ -195,7 +204,9 @@ function focusPendingOperationInScalar(): void {
 <template>
 	<section class="explorer-page">
 		<header class="explorer-page__header">
-			<h1>{{ explorerTitle }}</h1>
+			<h1 ref="explorerPageTitleRef">
+				{{ explorerTitle }}
+			</h1>
 			<p>{{ explorerDescription }}</p>
 		</header>
 
@@ -203,6 +214,7 @@ function focusPendingOperationInScalar(): void {
 			<Teleport to="#explorer-end-panel">
 				<ExplorerModuleRail
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
+					:style="railStickyStyle"
 					:modules="modules"
 					:selected-module-name="selectedModuleName"
 					:expanded-module-name="expandedModuleName"
@@ -278,19 +290,6 @@ function focusPendingOperationInScalar(): void {
 				</section>
 			</template>
 		</template>
-
-		<aside class="explorer-page__diagnostics">
-			<h2>{{ diagnosticsTitle }}</h2>
-			<p v-if="!diagnosticsEntries.length">
-				{{ diagnosticsEmptyLabel }}
-			</p>
-			<ol v-else>
-				<li v-for="diagnosticsEntry in diagnosticsEntries" :key="`${diagnosticsEntry.timestamp}-${diagnosticsEntry.event}`">
-					<strong>{{ diagnosticsEntry.event }}</strong>
-					<pre>{{ JSON.stringify( diagnosticsEntry.details, null, 2 ) }}</pre>
-				</li>
-			</ol>
-		</aside>
 	</section>
 </template>
 
@@ -395,30 +394,6 @@ function focusPendingOperationInScalar(): void {
 .explorer-page :deep( .scalar-app-root ) {
 	position: relative;
 	z-index: 0;
-}
-
-.explorer-page__diagnostics {
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-100 );
-	border: 1px solid var( --border-color-subtle );
-	border-radius: var( --border-radius-base );
-	background-color: var( --background-color-base );
-}
-
-.explorer-page__diagnostics ol {
-	margin: 0;
-	padding-inline-start: var( --spacing-200 );
-	display: grid;
-	gap: var( --spacing-75 );
-}
-
-.explorer-page__diagnostics pre {
-	margin: 0;
-	padding-block: var( --spacing-50 );
-	padding-inline: var( --spacing-75 );
-	background-color: var( --background-color-neutral-subtle );
-	inline-size: 100%;
-	overflow: auto;
 }
 
 @media screen and ( min-width: 960px ) {

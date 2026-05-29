@@ -218,8 +218,8 @@ function getModuleExpandIcon( moduleName: string ) {
 	overflow-x: hidden;
 	margin-block-start: var( --fd-explorer-rail-offset );
 	position: sticky;
-	inset-block-start: var( --fd-explorer-rail-offset );
-	max-block-size: calc( 100vh - var( --fd-explorer-rail-offset ) );
+	inset-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
+	max-block-size: calc( 100vh - var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) ) );
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	border-radius: var( --border-radius-base );
@@ -264,7 +264,7 @@ function getModuleExpandIcon( moduleName: string ) {
 
 .explorer-module-rail__module-list {
 	display: grid;
-	gap: var( --spacing-50 );
+	gap: 0;
 	min-inline-size: 0;
 }
 
