@@ -3,6 +3,8 @@
   "nav-home": "דף הבית",
   "nav-about": "אודות",
   "nav-api": "סייר API",
+  "nav-primary-label": "ניווט באתר",
+  "nav-utility-label": "ניווט שירות",
   "interface-language-label": "שפת הממשק",
   "interface-language-placeholder": "בחרו שפה",
   "interface-language-en": "אנגלית",

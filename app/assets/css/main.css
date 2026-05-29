@@ -12,6 +12,7 @@
  */
 
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
+@import './page-grid.css';
 
 html,
 body {

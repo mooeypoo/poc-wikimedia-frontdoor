@@ -6,10 +6,8 @@ import { useDirection } from '../composables/useDirection'
  * Default layout — the Front Door application shell.
  *
  * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer. Direction will later come from the active
- * interface language via useDirection(); for now it is hardcoded to 'ltr'
- * as a placeholder until that composable lands. This is intentional
- * scaffolding for Experiment 1, not a permanent choice.
+ * content slot, and footer inside the site-wide 24-column grid. The outer
+ * 4-column areas are reserved for future side navigation menus.
  */
 
 const { direction } = useDirection()
@@ -46,6 +44,7 @@ const applicationTitle = computed( () => $i18n( 'app-title' ) )
 const homeNavigationLabel = computed( () => $i18n( 'nav-home' ) )
 const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
 const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
+const primaryNavigationLabel = computed( () => $i18n( 'nav-primary-label' ) )
 const footerLabel = computed( () => $i18n( 'footer-title' ) )
 const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $i18n( 'interface-language-placeholder' ) )
@@ -61,51 +60,79 @@ useHead( {
 
 <template>
 	<div class="frontdoor-shell">
-		<header class="frontdoor-shell__header">
-			<div class="frontdoor-shell__header-inner">
-				<NuxtLink
-					to="/"
-					class="frontdoor-shell__brand"
-				>
-					{{ applicationTitle }}
-				</NuxtLink>
-				<nav class="frontdoor-shell__nav">
-					<NuxtLink to="/">
-						{{ homeNavigationLabel }}
-					</NuxtLink>
-					<NuxtLink to="/about">
-						{{ aboutNavigationLabel }}
-					</NuxtLink>
-					<NuxtLink to="/explorer">
-						{{ apiNavigationLabel }}
-					</NuxtLink>
-				</nav>
-				<CdxField class="frontdoor-shell__language-field">
-					<template #label>
-						{{ interfaceLanguageLabel }}
-					</template>
-					<CdxSelect
-						v-model:selected="selectedInterfaceLocale"
-						:menu-items="languageMenuItems"
-						:default-label="interfaceLanguagePlaceholder"
-					/>
-				</CdxField>
+		<SharedPageGrid class="frontdoor-shell__page-grid">
+			<template #start>
+				<!-- Reserved for future primary side navigation. -->
+			</template>
+
+			<div class="frontdoor-shell__content">
+				<header class="frontdoor-shell__header">
+					<div class="frontdoor-shell__header-inner">
+						<NuxtLink
+							to="/"
+							class="frontdoor-shell__brand"
+						>
+							{{ applicationTitle }}
+						</NuxtLink>
+						<nav
+							class="frontdoor-shell__nav"
+							:aria-label="primaryNavigationLabel"
+						>
+							<NuxtLink to="/">
+								{{ homeNavigationLabel }}
+							</NuxtLink>
+							<NuxtLink to="/about">
+								{{ aboutNavigationLabel }}
+							</NuxtLink>
+							<NuxtLink to="/explorer">
+								{{ apiNavigationLabel }}
+							</NuxtLink>
+						</nav>
+						<CdxField class="frontdoor-shell__language-field">
+							<template #label>
+								{{ interfaceLanguageLabel }}
+							</template>
+							<CdxSelect
+								v-model:selected="selectedInterfaceLocale"
+								:menu-items="languageMenuItems"
+								:default-label="interfaceLanguagePlaceholder"
+							/>
+						</CdxField>
+					</div>
+				</header>
+
+				<main class="frontdoor-shell__main">
+					<slot />
+				</main>
+
+				<footer class="frontdoor-shell__footer">
+					<p class="frontdoor-shell__footer-text">
+						{{ footerLabel }}
+					</p>
+				</footer>
 			</div>
-		</header>
-		<main class="frontdoor-shell__main">
-			<slot />
-		</main>
-		<footer class="frontdoor-shell__footer">
-			{{ footerLabel }}
-		</footer>
+
+			<template #end>
+				<!-- Reserved for future secondary side navigation. -->
+			</template>
+		</SharedPageGrid>
 	</div>
 </template>
 
 <style scoped>
 .frontdoor-shell {
+	min-block-size: 100vh;
+}
+
+.frontdoor-shell__page-grid {
+	min-block-size: 100vh;
+}
+
+.frontdoor-shell__content {
 	display: flex;
 	flex-direction: column;
 	min-block-size: 100vh;
+	min-inline-size: 0;
 }
 
 .frontdoor-shell__header {
@@ -114,14 +141,11 @@ useHead( {
 }
 
 .frontdoor-shell__header-inner {
-	max-inline-size: 64rem;
-	margin-inline: auto;
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-100 );
 	display: flex;
 	align-items: flex-end;
 	flex-wrap: wrap;
 	gap: var( --spacing-200 );
+	padding-block: var( --spacing-75 );
 }
 
 .frontdoor-shell__brand {
@@ -143,20 +167,42 @@ useHead( {
 
 .frontdoor-shell__main {
 	flex: 1;
-	inline-size: 100%;
-	max-inline-size: 64rem;
-	margin-inline: auto;
 	padding-block: var( --spacing-200 );
-	padding-inline: var( --spacing-100 );
 }
 
 .frontdoor-shell__footer {
+	margin-block-start: auto;
+	padding-block: var( --spacing-100 );
 	background-color: var( --background-color-neutral-subtle );
-	border-block-start: 1px solid var( --border-color-subtle );
 	color: var( --color-subtle );
 	font-size: var( --font-size-small );
-	padding-block: var( --spacing-100 );
-	padding-inline: var( --spacing-100 );
+}
+
+.frontdoor-shell__footer-text {
+	margin: 0;
 	text-align: center;
+}
+
+@media screen and ( min-width: 70rem ) {
+	.frontdoor-shell__page-grid {
+		align-items: stretch;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		background-color: var( --background-color-neutral-subtle );
+		align-self: stretch;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		min-block-size: 100%;
+	}
+}
+
+@media screen and ( max-width: 69.999rem ) {
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		display: none;
+	}
 }
 </style>

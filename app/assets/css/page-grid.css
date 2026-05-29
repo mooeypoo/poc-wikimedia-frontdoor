@@ -1,0 +1,75 @@
+/**
+ * page-grid.css — shared 24-column page layout for the Front Door shell.
+ *
+ * Grid: 24 columns, 24px gutter, 32px outer page margins.
+ * Column distribution at wide breakpoints: 4 | 16 | 4 (start / main / end).
+ *
+ * - From 1120px: fluid grid between page margins.
+ * - From 1680px: content width locks to the width at 1679px; outer margins grow.
+ *
+ * All direction-sensitive properties use CSS logical properties.
+ */
+
+:root {
+	--fd-layout-page-margin: 2rem; /* 32px at 16px root */
+	--fd-layout-grid-gutter: 1.5rem; /* 24px at 16px root */
+	--fd-layout-grid-columns: 24;
+	--fd-layout-side-span: 4;
+	--fd-layout-main-span: 16;
+	--fd-layout-breakpoint-grid-min: 70rem; /* 1120px */
+	--fd-layout-breakpoint-fluid-max: 104.9375rem; /* 1679px — last fluid viewport */
+	--fd-layout-breakpoint-max-content: 105rem; /* 1680px — margins grow from here */
+	/* Includes horizontal padding (border-box); inner grid tracks are 1615px at this cap. */
+	--fd-layout-grid-max-inline-size: var( --fd-layout-breakpoint-fluid-max );
+}
+
+.fd-page-grid {
+	inline-size: 100%;
+	margin-inline: auto;
+	padding-inline: var( --fd-layout-page-margin );
+}
+
+.fd-page-grid__start,
+.fd-page-grid__end,
+.fd-page-grid__main {
+	min-inline-size: 0;
+}
+
+@media screen and ( max-width: 69.999rem ) {
+	.fd-page-grid {
+		display: flex;
+		flex-direction: column;
+		gap: var( --fd-layout-grid-gutter );
+	}
+
+	/* Brand and primary content read first on narrow viewports. */
+	.fd-page-grid__main {
+		order: -1;
+	}
+}
+
+@media screen and ( min-width: 70rem ) {
+	.fd-page-grid {
+		display: grid;
+		grid-template-columns: repeat( var( --fd-layout-grid-columns ), minmax( 0, 1fr ) );
+		gap: var( --fd-layout-grid-gutter );
+	}
+
+	.fd-page-grid__start {
+		grid-column: 1 / span var( --fd-layout-side-span );
+	}
+
+	.fd-page-grid__main {
+		grid-column: calc( var( --fd-layout-side-span ) + 1 ) / span var( --fd-layout-main-span );
+	}
+
+	.fd-page-grid__end {
+		grid-column: calc( var( --fd-layout-side-span ) + var( --fd-layout-main-span ) + 1 ) / span var( --fd-layout-side-span );
+	}
+}
+
+@media screen and ( min-width: 105rem ) {
+	.fd-page-grid {
+		max-inline-size: var( --fd-layout-grid-max-inline-size );
+	}
+}

@@ -3,6 +3,8 @@
   "nav-home": "Inicio",
   "nav-about": "Acerca de",
   "nav-api": "Explorador de API",
+  "nav-primary-label": "Navegacion del sitio",
+  "nav-utility-label": "Navegacion de utilidades",
   "interface-language-label": "Idioma de la interfaz",
   "interface-language-placeholder": "Selecciona un idioma",
   "interface-language-en": "Ingles",

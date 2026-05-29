@@ -3,6 +3,8 @@
   "nav-home": "Main navigation item for home page.",
   "nav-about": "Main navigation item for about page.",
   "nav-api": "Main navigation item for explorer page.",
+  "nav-primary-label": "Accessible name for the primary site navigation region in the left page grid column.",
+  "nav-utility-label": "Accessible name for the utility navigation region in the right page grid column.",
   "interface-language-label": "Label for the interface language selector in the top header.",
   "interface-language-placeholder": "Placeholder text for the interface language selector with no selected value.",
   "interface-language-en": "Option label for English in the interface language selector.",
