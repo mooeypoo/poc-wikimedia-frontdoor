@@ -292,7 +292,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 
 .explorer-module-rail__module-heading {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	gap: var( --spacing-100 );
 	inline-size: 100%;
@@ -336,27 +336,30 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 }
 
 .explorer-module-rail__module-expand-icon {
+	--explorer-module-expand-icon-size: calc( 14px * 0.8 );
 	flex-shrink: 0;
+	align-self: flex-start;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	inline-size: 14px;
-	block-size: 14px;
+	padding-block-start: 6px;
+	inline-size: var( --explorer-module-expand-icon-size );
+	block-size: var( --explorer-module-expand-icon-size );
 	overflow: hidden;
 	color: var( --color-subtle );
 }
 
 .explorer-module-rail__module-expand-icon :deep( .cdx-icon ) {
 	display: block;
-	inline-size: 14px;
-	block-size: 14px;
-	font-size: 14px;
+	inline-size: var( --explorer-module-expand-icon-size );
+	block-size: var( --explorer-module-expand-icon-size );
+	font-size: var( --explorer-module-expand-icon-size );
 }
 
 .explorer-module-rail__module-expand-icon :deep( .cdx-icon svg ) {
 	display: block;
-	inline-size: 14px;
-	block-size: 14px;
+	inline-size: var( --explorer-module-expand-icon-size );
+	block-size: var( --explorer-module-expand-icon-size );
 }
 
 .explorer-module-rail__module-panel {
