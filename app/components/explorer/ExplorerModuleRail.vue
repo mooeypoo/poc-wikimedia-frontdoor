@@ -1,26 +1,19 @@
 <script setup lang="ts">
-import { CdxField, CdxIcon, CdxMessage, CdxSelect } from '@wikimedia/codex'
+import { CdxIcon, CdxMessage } from '@wikimedia/codex'
 import { cdxIconCollapse, cdxIconExpand } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule, ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
-
-interface PickerMenuItem {
-	label: string
-	value: string
-}
 
 /**
  * ExplorerModuleRail — right-hand API modules navigation for the explorer.
  *
- * Renders wiki project selection and expandable module headings with
- * endpoint entries. Presentational only; the explorer page owns state
- * and passes handlers for user interactions.
+ * Renders expandable module headings with endpoint entries. Presentational only;
+ * the explorer page owns state and passes handlers for user interactions.
  */
 const props = defineProps<{
 	modules: ExplorerBootstrapModule[]
 	selectedModuleName: string
 	expandedModuleNames: string[]
-	wikiInstanceMenuItems: PickerMenuItem[]
-	instancePlaceholderLabel: string
+	wikiDisplayName: string
 	isInstanceBootstrapping: boolean
 }>()
 
@@ -29,15 +22,10 @@ const emit = defineEmits<{
 	'endpoint-click': [ moduleName: string, operation: ExplorerModuleOperation ]
 }>()
 
-const selectedWikiInstanceId = defineModel<string>( 'selectedWikiInstanceId', {
-	required: true
-} )
-
 const { $bananaI18n } = useNuxtApp()
 
-const apiModulesTitle = computed( () => $bananaI18n( 'explorer-api-modules-title' ) )
-const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
-const wikiProjectHelpLabel = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
+const browseModulesTitleBefore = computed( () => $bananaI18n( 'explorer-browse-api-modules-before' ) )
+const browseModulesTitleAfter = computed( () => $bananaI18n( 'explorer-browse-api-modules-after' ) )
 const noSelectableModulesLabel = computed( () => $bananaI18n( 'explorer-no-selectable-modules' ) )
 const failedModulesLabel = computed( () => $bananaI18n( 'explorer-failed-modules-label' ) )
 const endpointsEmptyLabel = computed( () => $bananaI18n( 'explorer-endpoints-empty' ) )
@@ -100,22 +88,8 @@ function getModuleExpandIcon( moduleName: string ) {
 	>
 		<header class="explorer-module-rail__header">
 			<h2 class="explorer-module-rail__title">
-				{{ apiModulesTitle }}
+				{{ browseModulesTitleBefore }}<bdi>{{ wikiDisplayName }}</bdi>{{ browseModulesTitleAfter }}
 			</h2>
-			<CdxField class="explorer-module-rail__wiki-field">
-				<template #label>
-					{{ wikiProjectLabel }}
-				</template>
-				<template #help-text>
-					{{ wikiProjectHelpLabel }}
-				</template>
-				<CdxSelect
-					v-model:selected="selectedWikiInstanceId"
-					:menu-items="wikiInstanceMenuItems"
-					:default-label="instancePlaceholderLabel"
-					:disabled="isInstanceBootstrapping"
-				/>
-			</CdxField>
 		</header>
 
 		<CdxMessage
@@ -216,7 +190,7 @@ function getModuleExpandIcon( moduleName: string ) {
 	min-inline-size: 0;
 	max-inline-size: 100%;
 	overflow-x: hidden;
-	margin-block-start: var( --fd-explorer-rail-offset );
+	margin-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
 	position: sticky;
 	inset-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
 	max-block-size: calc( 100vh - var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) ) );
@@ -239,26 +213,6 @@ function getModuleExpandIcon( moduleName: string ) {
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-large );
 	color: var( --color-emphasized );
-}
-
-.explorer-module-rail__wiki-field {
-	position: relative;
-	inline-size: 100%;
-	min-inline-size: 0;
-	max-inline-size: 100%;
-}
-
-.explorer-module-rail__wiki-field :deep( .cdx-select-vue ),
-.explorer-module-rail__wiki-field :deep( .cdx-select-vue__handle ) {
-	inline-size: 100%;
-	max-inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.explorer-module-rail__wiki-field :deep( .cdx-select-vue__handle-button ) {
-	min-inline-size: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 .explorer-module-rail__module-list {

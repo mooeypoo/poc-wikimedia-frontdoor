@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import '@scalar/api-reference/style.css'
+import '../../assets/css/explorer-codex-overrides.css'
 import { ApiReference } from '@scalar/api-reference'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'

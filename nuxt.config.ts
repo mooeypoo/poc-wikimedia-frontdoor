@@ -44,8 +44,7 @@ export default defineNuxtConfig( {
 	// Global CSS: Codex design tokens + our shell styles.
 	css: [
 		'@wikimedia/codex/dist/codex.style.css',
-		'~/assets/css/main.css',
-		'@scalar/api-reference/style.css'
+		'~/assets/css/main.css'
 	],
 
 	routeRules: {

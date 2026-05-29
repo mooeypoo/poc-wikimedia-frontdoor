@@ -8,15 +8,15 @@ interface ExplorerRailStickyStyle {
 }
 
 /**
- * Keeps the explorer module rail sticky inset aligned with the page title at
- * first, then tracks the Scalar shell top edge once scrolling brings them together.
+ * Keeps the explorer module rail sticky inset aligned with the REST module header,
+ * then tracks the Scalar shell top edge once scrolling brings them together.
  *
- * @param pageTitleElement - Ref to the explorer page `<h1>` used for initial alignment.
+ * @param railAlignAnchorElement - Ref to the REST module label paragraph (or fallback anchor).
  * @param scalarShellElement - Ref to `.explorer-page__scalar-shell` in the main column.
  * @returns Reactive inline style for the rail and a manual refresh hook.
  */
 export function useExplorerRailStickyAlign(
-	pageTitleElement: Ref<HTMLElement | null>,
+	railAlignAnchorElement: Ref<HTMLElement | null>,
 	scalarShellElement: Ref<HTMLElement | null>
 ): {
 	railStickyStyle: ComputedRef<ExplorerRailStickyStyle | undefined>
@@ -30,15 +30,15 @@ export function useExplorerRailStickyAlign(
 	let resizeObserver: ResizeObserver | null = null
 
 	/**
-	 * Caches the viewport top offset that aligns the rail with the page title.
+	 * Caches the viewport top offset that aligns the rail with the REST module label line.
 	 *
 	 * Only updates near the top of the page so mid-scroll measurements stay stable.
 	 *
 	 * @returns Nothing.
 	 */
 	function measureDefaultStickyInset(): void {
-		const titleElement = pageTitleElement.value
-		if ( !titleElement ) {
+		const alignAnchorElement = railAlignAnchorElement.value
+		if ( !alignAnchorElement ) {
 			return
 		}
 
@@ -46,11 +46,11 @@ export function useExplorerRailStickyAlign(
 			return
 		}
 
-		defaultStickyInsetPx.value = titleElement.getBoundingClientRect().top
+		defaultStickyInsetPx.value = alignAnchorElement.getBoundingClientRect().top
 	}
 
 	/**
-	 * Recomputes the rail sticky inset from the page title and Scalar shell positions.
+	 * Recomputes the rail sticky inset from the REST module label and Scalar shell positions.
 	 *
 	 * @returns Nothing.
 	 */
@@ -123,8 +123,8 @@ export function useExplorerRailStickyAlign(
 			refreshRailStickyAlign()
 		} )
 
-		if ( pageTitleElement.value ) {
-			resizeObserver.observe( pageTitleElement.value )
+		if ( railAlignAnchorElement.value ) {
+			resizeObserver.observe( railAlignAnchorElement.value )
 		}
 
 		if ( scalarShellElement.value ) {
@@ -145,13 +145,13 @@ export function useExplorerRailStickyAlign(
 		resizeObserver?.disconnect()
 	} )
 
-	watch( pageTitleElement, ( nextTitleElement, previousTitleElement ) => {
-		if ( previousTitleElement ) {
-			resizeObserver?.unobserve( previousTitleElement )
+	watch( railAlignAnchorElement, ( nextAlignAnchorElement, previousAlignAnchorElement ) => {
+		if ( previousAlignAnchorElement ) {
+			resizeObserver?.unobserve( previousAlignAnchorElement )
 		}
 
-		if ( nextTitleElement ) {
-			resizeObserver?.observe( nextTitleElement )
+		if ( nextAlignAnchorElement ) {
+			resizeObserver?.observe( nextAlignAnchorElement )
 		}
 
 		measureDefaultStickyInset()

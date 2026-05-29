@@ -21,9 +21,22 @@
 	--fd-layout-breakpoint-max-content: 105rem; /* 1680px — margins grow from here */
 	/* Includes horizontal padding (border-box); inner grid tracks are 1615px at this cap. */
 	--fd-layout-grid-max-inline-size: var( --fd-layout-breakpoint-fluid-max );
-	/* Aligns the explorer side rail with the page h1 below site chrome. */
+	/*
+	 * Fallback sticky offset for the explorer module rail (REST module label line).
+	 * Runtime alignment uses useExplorerRailStickyAlign; this approximates title,
+	 * description, project controls, and the REST module label below site chrome.
+	 */
 	--fd-explorer-rail-offset: calc(
-		4rem + ( var( --spacing-100 ) * 2 ) + var( --line-height-small ) + var( --spacing-200 ) + var( --spacing-150 )
+		4rem
+		+ ( var( --spacing-100 ) * 2 )
+		+ var( --line-height-small )
+		+ var( --spacing-200 )
+		+ var( --spacing-150 )
+		+ var( --line-height-xx-small )
+		+ var( --spacing-100 )
+		+ 5.5rem
+		+ var( --spacing-100 )
+		+ var( --line-height-medium )
 	);
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CdxMessage } from '@wikimedia/codex'
+import { CdxInfoChip, CdxMessage } from '@wikimedia/codex'
 import { computed, nextTick, watch } from 'vue'
 import { WIKI_INSTANCES } from '../../../config/instances'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
@@ -39,8 +39,18 @@ const {
 } = useExplorerBootstrap( selectedWikiInstanceId )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
-const explorerPageTitleRef = ref<HTMLElement | null>( null )
+const referenceHeaderRef = ref<HTMLElement | null>( null )
+const referenceModuleLabelRef = ref<HTMLElement | null>( null )
+const projectControlsRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+const includeBetaEndpoints = ref( false )
+const includeInternalEndpoints = ref( true )
+
+const railAlignAnchorRef = computed( () => {
+	return referenceModuleLabelRef.value
+		?? referenceHeaderRef.value
+		?? projectControlsRef.value
+} )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(
 	pendingOperationTarget,
@@ -68,7 +78,7 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 }
 
 const { railStickyStyle, refreshRailStickyAlign } = useExplorerRailStickyAlign(
-	explorerPageTitleRef,
+	railAlignAnchorRef,
 	scalarShellRef
 )
 
@@ -97,7 +107,6 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
 const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
-const instancePlaceholderLabel = computed( () => $bananaI18n( 'explorer-instance-placeholder' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
@@ -105,7 +114,7 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl ], () => {
+watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl, wikiDisplayName ], () => {
 	nextTick( () => {
 		refreshRailStickyAlign()
 	} )
@@ -146,23 +155,37 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 <template>
 	<section class="explorer-page">
-		<header class="explorer-page__header">
-			<h1 ref="explorerPageTitleRef">
-				{{ explorerTitle }}
-			</h1>
-			<p>{{ explorerDescription }}</p>
-		</header>
+		<div class="explorer-page__intro">
+			<header class="explorer-page__header">
+				<h1>
+					{{ explorerTitle }}
+				</h1>
+				<p>{{ explorerDescription }}</p>
+			</header>
+
+			<div
+				v-if="!isInstanceBootstrapping"
+				ref="projectControlsRef"
+				class="explorer-page__project-controls-anchor"
+			>
+				<ExplorerProjectControls
+					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
+					v-model:include-beta-endpoints="includeBetaEndpoints"
+					v-model:include-internal-endpoints="includeInternalEndpoints"
+					:wiki-instance-menu-items="wikiInstanceMenuItems"
+					:is-instance-bootstrapping="isInstanceBootstrapping"
+				/>
+			</div>
+		</div>
 
 		<ClientOnly>
 			<Teleport to="#explorer-end-panel">
 				<ExplorerModuleRail
-					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
 					:style="railStickyStyle"
 					:modules="modules"
 					:selected-module-name="selectedModuleName"
 					:expanded-module-names="expandedModuleNames"
-					:wiki-instance-menu-items="wikiInstanceMenuItems"
-					:instance-placeholder-label="instancePlaceholderLabel"
+					:wiki-display-name="wikiDisplayName"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 					@module-expand-toggle="onModuleExpandToggle"
 					@endpoint-click="onEndpointClick"
@@ -191,10 +214,23 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<section class="explorer-page__reference-panel">
 					<header
 						v-if="selectedModule"
+						ref="referenceHeaderRef"
 						class="explorer-page__reference-header"
 					>
-						<p>{{ moduleLabel }}</p>
-						<h2><bdi>{{ selectedModule.label }}</bdi></h2>
+						<p ref="referenceModuleLabelRef">
+							{{ moduleLabel }}
+						</p>
+						<div class="explorer-page__reference-heading">
+							<h2 class="explorer-page__reference-title">
+								<bdi>{{ selectedModule.label }}</bdi>
+							</h2>
+							<CdxInfoChip
+								v-if="wikiDisplayName"
+								class="explorer-page__wiki-info-chip"
+							>
+								<bdi>{{ wikiDisplayName }}</bdi>
+							</CdxInfoChip>
+						</div>
 					</header>
 
 					<CdxMessage
@@ -244,7 +280,23 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	max-inline-size: 100%;
 }
 
+.explorer-page__intro {
+	display: grid;
+	gap: var( --spacing-100 );
+	min-inline-size: 0;
+}
+
+.explorer-page__header {
+	display: grid;
+	gap: var( --spacing-50 );
+}
+
+.explorer-page__header h1 {
+	margin: 0;
+}
+
 .explorer-page__header p {
+	margin: 0;
 	max-inline-size: 60ch;
 }
 
@@ -270,13 +322,29 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	margin: 0;
 }
 
-.explorer-page__reference-header h2 {
-	margin: 0;
-}
-
 .explorer-page__reference-header p {
 	margin: 0;
 	color: var( --color-subtle );
+}
+
+.explorer-page__reference-heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.explorer-page__reference-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	margin: 0;
+}
+
+.explorer-page__wiki-info-chip {
+	flex: 0 0 auto;
+	max-inline-size: 100%;
 }
 
 .explorer-page__reference-panel {

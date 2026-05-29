@@ -13,6 +13,7 @@
 
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
 @import './page-grid.css';
+@import './explorer-codex-overrides.css';
 
 html,
 body {
@@ -98,12 +99,15 @@ code {
 
 .explorer-page .cdx-select-vue,
 .explorer-page .cdx-select-vue__menu-wrapper,
+.explorer-page .cdx-combobox,
+.explorer-page .cdx-combobox__menu-wrapper,
 .explorer-module-rail .cdx-select-vue,
 .explorer-module-rail .cdx-select-vue__menu-wrapper {
 	position: relative;
 }
 
 .explorer-page .cdx-select-vue__menu,
+.explorer-page .cdx-combobox__menu,
 .explorer-page .cdx-menu,
 .explorer-module-rail .cdx-select-vue__menu,
 .explorer-module-rail .cdx-menu {
