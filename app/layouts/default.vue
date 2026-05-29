@@ -144,6 +144,7 @@ useHead( {
 							{{ applicationTitle }}
 						</NuxtLink>
 					</div>
+					<ExplorerSideNav v-if="isExplorerRoute" />
 				</div>
 			</template>
 
@@ -328,8 +329,16 @@ useHead( {
 }
 
 .frontdoor-shell__side-nav {
+	display: flex;
+	flex-direction: column;
 	padding-inline: var( --spacing-100 );
 	min-block-size: 100%;
+	min-inline-size: 0;
+}
+
+/* Align the side nav first row with .frontdoor-shell__main-nav (no extra gap below the brand). */
+.frontdoor-shell--explorer .frontdoor-shell__side-nav {
+	gap: 0;
 }
 
 .frontdoor-shell__main-nav {
