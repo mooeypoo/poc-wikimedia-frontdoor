@@ -227,6 +227,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 							</h2>
 							<CdxInfoChip
 								v-if="wikiDisplayName"
+								status="subtle"
 								class="explorer-page__wiki-info-chip"
 							>
 								<bdi>{{ wikiDisplayName }}</bdi>
@@ -345,6 +346,16 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__wiki-info-chip {
 	flex: 0 0 auto;
 	max-inline-size: 100%;
+}
+
+/*
+ * Codex subtle InfoChip (transparent fill, base border). Re-assert here because the
+ * default .cdx-info-chip rules use notice colours until cdx-info-chip--subtle applies.
+ */
+.explorer-page__wiki-info-chip.cdx-info-chip,
+.explorer-page__reference-heading :deep( .cdx-info-chip ) {
+	background-color: var( --background-color-transparent );
+	border-color: var( --border-color-base );
 }
 
 .explorer-page__reference-panel {
