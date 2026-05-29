@@ -22,9 +22,9 @@
 	/* Includes horizontal padding (border-box); inner grid tracks are 1615px at this cap. */
 	--fd-layout-grid-max-inline-size: var( --fd-layout-breakpoint-fluid-max );
 	/*
-	 * Fallback sticky offset for the explorer module rail (REST module label line).
-	 * Runtime alignment uses useExplorerRailStickyAlign; this approximates title,
-	 * description, project controls, and the REST module label below site chrome.
+	 * Fallback sticky offset for the explorer module rail (project controls block).
+	 * Runtime alignment uses useExplorerRailStickyAlign; this approximates site chrome,
+	 * the explorer title and description, and the project controls row.
 	 */
 	--fd-explorer-rail-offset: calc(
 		4rem
@@ -35,8 +35,6 @@
 		+ var( --line-height-xx-small )
 		+ var( --spacing-100 )
 		+ 5.5rem
-		+ var( --spacing-100 )
-		+ var( --line-height-medium )
 	);
 }
 

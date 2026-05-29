@@ -47,9 +47,9 @@ const includeBetaEndpoints = ref( false )
 const includeInternalEndpoints = ref( true )
 
 const railAlignAnchorRef = computed( () => {
-	return referenceModuleLabelRef.value
+	return projectControlsRef.value
 		?? referenceHeaderRef.value
-		?? projectControlsRef.value
+		?? referenceModuleLabelRef.value
 } )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(

@@ -8,10 +8,10 @@ interface ExplorerRailStickyStyle {
 }
 
 /**
- * Keeps the explorer module rail sticky inset aligned with the REST module header,
+ * Keeps the explorer module rail sticky inset aligned with the project controls block,
  * then tracks the Scalar shell top edge once scrolling brings them together.
  *
- * @param railAlignAnchorElement - Ref to the REST module label paragraph (or fallback anchor).
+ * @param railAlignAnchorElement - Ref to `.explorer-page__project-controls-anchor` (or fallbacks).
  * @param scalarShellElement - Ref to `.explorer-page__scalar-shell` in the main column.
  * @returns Reactive inline style for the rail and a manual refresh hook.
  */
@@ -30,7 +30,7 @@ export function useExplorerRailStickyAlign(
 	let resizeObserver: ResizeObserver | null = null
 
 	/**
-	 * Caches the viewport top offset that aligns the rail with the REST module label line.
+	 * Caches the viewport top offset that aligns the rail with the project controls block.
 	 *
 	 * Only updates near the top of the page so mid-scroll measurements stay stable.
 	 *
@@ -39,6 +39,7 @@ export function useExplorerRailStickyAlign(
 	function measureDefaultStickyInset(): void {
 		const alignAnchorElement = railAlignAnchorElement.value
 		if ( !alignAnchorElement ) {
+			defaultStickyInsetPx.value = 0
 			return
 		}
 
@@ -50,7 +51,7 @@ export function useExplorerRailStickyAlign(
 	}
 
 	/**
-	 * Recomputes the rail sticky inset from the REST module label and Scalar shell positions.
+	 * Recomputes the rail sticky inset from the align anchor and Scalar shell positions.
 	 *
 	 * @returns Nothing.
 	 */
@@ -154,6 +155,7 @@ export function useExplorerRailStickyAlign(
 			resizeObserver?.observe( nextAlignAnchorElement )
 		}
 
+		defaultStickyInsetPx.value = 0
 		measureDefaultStickyInset()
 		refreshRailStickyAlign()
 	} )

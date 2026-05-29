@@ -204,7 +204,7 @@ function getModuleExpandIcon( moduleName: string ) {
 .explorer-module-rail {
 	display: grid;
 	align-content: start;
-	gap: var( --spacing-125 );
+	gap: var( --spacing-25 );
 	padding: var( --spacing-75 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
@@ -262,8 +262,8 @@ function getModuleExpandIcon( moduleName: string ) {
 	justify-content: space-between;
 	gap: var( --spacing-100 );
 	inline-size: 100%;
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-50 );
+	padding-block: var( --spacing-50 );
+	padding-inline: 0;
 	border: none;
 	background: transparent;
 	cursor: pointer;
