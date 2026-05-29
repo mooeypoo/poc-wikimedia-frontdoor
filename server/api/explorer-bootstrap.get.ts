@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
 import { getWikiInstanceById } from '../../config/instances'
+import { resolveExplorerModuleRailHeading } from '../../app/utils/explorerModuleRailHeading'
 
 const EXPLORER_BOOTSTRAP_USER_AGENT =
 	'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
@@ -54,6 +55,9 @@ interface ExplorerBootstrapModule {
 	title?: string
 	version?: string
 	label: string
+	headingTitle: string
+	versionChipLabel?: string
+	showBetaChip: boolean
 	specUrl: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
@@ -144,10 +148,19 @@ export default defineEventHandler( async ( event ) => {
 			const modulePayload: ExplorerBootstrapModule = {
 				name: moduleItem.name,
 				label: formatModuleLabel( moduleItem.name, moduleItem.title, moduleItem.version ),
+				headingTitle: moduleItem.title ?? moduleItem.name,
+				showBetaChip: false,
 				specUrl: moduleItem.specUrl,
 				operations: extractOperationsFromOpenApi( parsedOpenApiDocument.paths ?? {} ),
 				hasSpecError: false
 			}
+
+			attachModuleRailHeadingFields(
+				modulePayload,
+				moduleItem.name,
+				moduleItem.title,
+				moduleItem.version
+			)
 
 			if ( moduleItem.title ) {
 				modulePayload.title = moduleItem.title
@@ -162,11 +175,20 @@ export default defineEventHandler( async ( event ) => {
 			const failedModulePayload: ExplorerBootstrapModule = {
 				name: moduleItem.name,
 				label: formatModuleLabel( moduleItem.name, moduleItem.title, moduleItem.version ),
+				headingTitle: moduleItem.title ?? moduleItem.name,
+				showBetaChip: false,
 				specUrl: moduleItem.specUrl,
 				operations: [],
 				hasSpecError: true,
 				specErrorMessage: error instanceof Error ? error.message : 'Module spec fetch failed.'
 			}
+
+			attachModuleRailHeadingFields(
+				failedModulePayload,
+				moduleItem.name,
+				moduleItem.title,
+				moduleItem.version
+			)
 
 			if ( moduleItem.title ) {
 				failedModulePayload.title = moduleItem.title
@@ -327,6 +349,30 @@ function formatModuleLabel( moduleName: string, moduleTitle?: string, moduleVers
 
 	const normalizedVersion = moduleVersion.startsWith( 'v' ) ? moduleVersion : `v${ moduleVersion }`
 	return `${ moduleTitle ?? moduleName } (${ normalizedVersion })`
+}
+
+/**
+ * Adds parsed rail heading fields used by the explorer module navigation menu.
+ *
+ * @param modulePayload - Bootstrap module record to enrich.
+ * @param moduleName - Discovery module name.
+ * @param moduleTitle - Optional human-readable module title.
+ * @param moduleVersion - Optional module version.
+ * @returns Nothing.
+ */
+function attachModuleRailHeadingFields(
+	modulePayload: ExplorerBootstrapModule,
+	moduleName: string,
+	moduleTitle?: string,
+	moduleVersion?: string
+): void {
+	const railHeading = resolveExplorerModuleRailHeading( moduleName, moduleTitle, moduleVersion )
+	modulePayload.headingTitle = railHeading.headingTitle
+	modulePayload.showBetaChip = railHeading.showBetaChip
+
+	if ( railHeading.versionChipLabel ) {
+		modulePayload.versionChipLabel = railHeading.versionChipLabel
+	}
 }
 
 /**

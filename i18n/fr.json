@@ -32,6 +32,7 @@
   "explorer-module-rail-title": "Index des modules",
   "explorer-endpoint-fallback": "Point d'acces",
   "explorer-module-unavailable": "Non disponible pour ce projet",
+  "explorer-module-beta-chip-label": "bêta",
   "explorer-module-rail-description": "Parcourez chaque module detecte puis ouvrez-le pour inspecter ses points d'acces avant de le charger dans la vue de reference.",
   "explorer-loading-modules": "Chargement des modules...",
   "explorer-module-placeholder": "Selectionnez un module",

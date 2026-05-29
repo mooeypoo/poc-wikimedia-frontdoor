@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CdxIcon, CdxMessage } from '@wikimedia/codex'
+import { CdxIcon, CdxInfoChip, CdxMessage } from '@wikimedia/codex'
 import { cdxIconCollapse, cdxIconExpand } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule, ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
+import { formatModuleRailHeadingAriaLabel } from '../../utils/explorerModuleRailHeading'
 
 /**
  * ExplorerModuleRail — right-hand API modules navigation for the explorer.
@@ -31,6 +32,7 @@ const failedModulesLabel = computed( () => $bananaI18n( 'explorer-failed-modules
 const endpointsEmptyLabel = computed( () => $bananaI18n( 'explorer-endpoints-empty' ) )
 const moduleUnavailableLabel = computed( () => $bananaI18n( 'explorer-module-unavailable' ) )
 const endpointFallbackLabel = computed( () => $bananaI18n( 'explorer-endpoint-fallback' ) )
+const betaChipLabel = computed( () => $bananaI18n( 'explorer-module-beta-chip-label' ) )
 
 const hasSelectableModules = computed( () => {
 	return props.modules.some( ( moduleItem ) => !moduleItem.hasSpecError )
@@ -97,6 +99,23 @@ function onModuleHeadingClick( moduleName: string ): void {
 function getModuleExpandIcon( moduleName: string ) {
 	return isModuleExpanded( moduleName ) ? cdxIconCollapse : cdxIconExpand
 }
+
+/**
+ * Builds an accessible name for a module section heading button.
+ *
+ * @param moduleOption - Module metadata for the heading row.
+ * @returns Title plus beta and version chip labels when present.
+ */
+function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule ): string {
+	return formatModuleRailHeadingAriaLabel(
+		{
+			headingTitle: moduleOption.headingTitle,
+			versionChipLabel: moduleOption.versionChipLabel,
+			showBetaChip: moduleOption.showBetaChip
+		},
+		betaChipLabel.value
+	)
+}
 </script>
 
 <template>
@@ -130,10 +149,25 @@ function getModuleExpandIcon( moduleName: string ) {
 					type="button"
 					class="explorer-module-rail__module-heading"
 					:aria-expanded="isModuleExpanded( moduleOption.name )"
+					:aria-label="getModuleHeadingAccessibleLabel( moduleOption )"
 					@click="onModuleHeadingClick( moduleOption.name )"
 				>
 					<span class="explorer-module-rail__module-heading-label">
-						<bdi>{{ moduleOption.label }}</bdi>
+						<bdi>{{ moduleOption.headingTitle }}</bdi>
+						<CdxInfoChip
+							v-if="moduleOption.showBetaChip"
+							status="warning"
+							class="explorer-module-rail__module-chip"
+						>
+							{{ betaChipLabel }}
+						</CdxInfoChip>
+						<CdxInfoChip
+							v-if="moduleOption.versionChipLabel"
+							status="success"
+							class="explorer-module-rail__module-chip"
+						>
+							<bdi>{{ moduleOption.versionChipLabel }}</bdi>
+						</CdxInfoChip>
 					</span>
 					<CdxIcon
 						:icon="getModuleExpandIcon( moduleOption.name )"
@@ -277,6 +311,10 @@ function getModuleExpandIcon( moduleName: string ) {
 
 .explorer-module-rail__module-heading-label {
 	flex: 1 1 auto;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-50 );
 	/* Prevent flex from shrinking the label to zero width in the narrow end column. */
 	min-inline-size: 1px;
 	font-size: var( --font-size-medium );
@@ -284,6 +322,17 @@ function getModuleExpandIcon( moduleName: string ) {
 	line-height: var( --line-height-medium );
 	color: var( --color-emphasized );
 	overflow-wrap: anywhere;
+}
+
+.explorer-module-rail__module-chip {
+	flex-shrink: 0;
+	font-weight: var( --font-weight-normal );
+}
+
+/* Module rail chips are text-only; hide Codex status icons (warning/success). */
+.explorer-module-rail__module-chip :deep( .cdx-info-chip__icon ),
+.explorer-module-rail__module-chip :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
 }
 
 .explorer-module-rail__module-expand-icon {

@@ -32,6 +32,7 @@
   "explorer-module-rail-title": "Indice de modulos",
   "explorer-endpoint-fallback": "Endpoint",
   "explorer-module-unavailable": "No disponible para este proyecto",
+  "explorer-module-beta-chip-label": "beta",
   "explorer-module-rail-description": "Explora cada modulo descubierto y expandelo para inspeccionar sus endpoints antes de cargarlo en la vista de referencia.",
   "explorer-loading-modules": "Cargando modulos...",
   "explorer-module-placeholder": "Selecciona un modulo",

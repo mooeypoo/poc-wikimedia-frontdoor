@@ -33,6 +33,7 @@
   "explorer-module-rail-description": "Browse each discovered module, then expand it to inspect the endpoints before loading it into the reference view.",
   "explorer-endpoint-fallback": "Endpoint",
   "explorer-module-unavailable": "Not available for this project",
+  "explorer-module-beta-chip-label": "beta",
   "explorer-loading-modules": "Loading modules...",
   "explorer-module-placeholder": "Select a module",
   "explorer-instance-placeholder": "Select an instance",

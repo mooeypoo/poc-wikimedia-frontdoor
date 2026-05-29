@@ -24,6 +24,7 @@
   "explorer-wiki-project-help": "پروژه‌ای را که می‌خواهید درخواست‌ها را علیه آن اجرا کنید انتخاب کنید",
   "explorer-module-rail-title": "فهرست ماژول‌ها",
   "explorer-module-rail-description": "هر ماژول کشف‌شده را مرور کنید، سپس آن را باز کنید تا پیش از بارگذاری در نمای مرجع، نقطه‌های پایانی را بررسی کنید.",
+  "explorer-module-beta-chip-label": "بتا",
   "explorer-loading-modules": "در حال بارگذاری ماژول‌ها...",
   "explorer-module-placeholder": "یک ماژول انتخاب کنید",
   "explorer-instance-placeholder": "یک نمونه انتخاب کنید",

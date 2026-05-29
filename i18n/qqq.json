@@ -32,6 +32,7 @@
   "explorer-module-rail-title": "Heading for the desktop module sidebar.",
   "explorer-endpoint-fallback": "Fallback endpoint label when an operation has no summary in the API modules panel.",
   "explorer-module-unavailable": "Shown when a module or endpoint is unavailable for the selected wiki project.",
+  "explorer-module-beta-chip-label": "Label on the warning InfoChip when a REST module title includes a beta marker.",
   "explorer-module-rail-description": "Help text that explains the desktop module accordion and the mobile module selector.",
   "explorer-loading-modules": "Shown while discovery modules are loading.",
   "explorer-module-placeholder": "Placeholder text for module selector with no selected value.",
