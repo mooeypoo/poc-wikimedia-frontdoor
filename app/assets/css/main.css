@@ -101,7 +101,6 @@ code {
 .explorer-module-rail .cdx-select-vue,
 .explorer-module-rail .cdx-select-vue__menu-wrapper {
 	position: relative;
-	z-index: 20;
 }
 
 .explorer-page .cdx-select-vue__menu,
@@ -113,7 +112,8 @@ code {
 	border: 1px solid var( --border-color-base );
 	box-shadow: 0 4px 4px 0 rgba( 0, 0, 0, 0.06 ), 0 0 8px 0 rgba( 0, 0, 0, 0.06 );
 	opacity: 1;
-	z-index: 900;
+	/* Above sibling rail content only; explorer main column stacks above the end panel. */
+	z-index: 50;
 }
 
 .explorer-page .cdx-menu__listbox,

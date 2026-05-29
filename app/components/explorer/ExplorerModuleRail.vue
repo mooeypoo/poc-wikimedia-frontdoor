@@ -243,7 +243,6 @@ function getModuleExpandIcon( moduleName: string ) {
 
 .explorer-module-rail__wiki-field {
 	position: relative;
-	z-index: 20;
 	inline-size: 100%;
 	min-inline-size: 0;
 	max-inline-size: 100%;

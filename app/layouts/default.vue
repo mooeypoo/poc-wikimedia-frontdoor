@@ -346,6 +346,21 @@ useHead( {
 	text-align: center;
 }
 
+/*
+ * Keep the API modules rail behind Scalar overlays (request client, search, etc.).
+ * Scalar modals use high z-index inside .scalar-app; the main column must sit above
+ * the end column in the page grid stacking order.
+ */
+.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
+	position: relative;
+	z-index: 1;
+}
+
+.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+	position: relative;
+	z-index: 0;
+}
+
 @media screen and ( min-width: 70rem ) {
 	.frontdoor-shell__page-grid {
 		align-items: stretch;
