@@ -33,16 +33,16 @@ const selectedWikiInstanceId = defineModel<string>( 'selectedWikiInstanceId', {
 	required: true
 } )
 
-const { $i18n } = useNuxtApp()
+const { $bananaI18n } = useNuxtApp()
 
-const apiModulesTitle = computed( () => $i18n( 'explorer-api-modules-title' ) )
-const wikiProjectLabel = computed( () => $i18n( 'explorer-wiki-project-label' ) )
-const wikiProjectHelpLabel = computed( () => $i18n( 'explorer-wiki-project-help' ) )
-const noSelectableModulesLabel = computed( () => $i18n( 'explorer-no-selectable-modules' ) )
-const failedModulesLabel = computed( () => $i18n( 'explorer-failed-modules-label' ) )
-const endpointsEmptyLabel = computed( () => $i18n( 'explorer-endpoints-empty' ) )
-const moduleUnavailableLabel = computed( () => $i18n( 'explorer-module-unavailable' ) )
-const endpointFallbackLabel = computed( () => $i18n( 'explorer-endpoint-fallback' ) )
+const apiModulesTitle = computed( () => $bananaI18n( 'explorer-api-modules-title' ) )
+const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
+const wikiProjectHelpLabel = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
+const noSelectableModulesLabel = computed( () => $bananaI18n( 'explorer-no-selectable-modules' ) )
+const failedModulesLabel = computed( () => $bananaI18n( 'explorer-failed-modules-label' ) )
+const endpointsEmptyLabel = computed( () => $bananaI18n( 'explorer-endpoints-empty' ) )
+const moduleUnavailableLabel = computed( () => $bananaI18n( 'explorer-module-unavailable' ) )
+const endpointFallbackLabel = computed( () => $bananaI18n( 'explorer-endpoint-fallback' ) )
 
 const hasSelectableModules = computed( () => {
 	return props.modules.some( ( moduleItem ) => !moduleItem.hasSpecError )

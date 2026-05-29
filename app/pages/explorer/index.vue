@@ -338,12 +338,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	display: none;
 }
 
-.explorer-page :deep( .scalar-app ),
-.explorer-page :deep( .scalar-app-root ) {
-	position: relative;
-	z-index: 0;
-}
-
 @media screen and ( min-width: 960px ) {
 	.explorer-page__reference-panel {
 		position: sticky;

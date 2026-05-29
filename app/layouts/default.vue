@@ -23,7 +23,10 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const localePath = useLocalePath()
-const isExplorerRoute = computed( () => route.path.startsWith( '/explorer' ) )
+const isExplorerRoute = computed( () => {
+	const normalizedPath = route.path.replace( /\/+$/, '' ) || '/'
+	return normalizedPath === '/explorer' || normalizedPath.endsWith( '/explorer' )
+} )
 
 interface PickerMenuItem {
 	label: string
@@ -74,13 +77,22 @@ watch( locale, ( nextLocaleCode ) => {
 	$setInterfaceLocale( nextLocaleCode )
 }, { immediate: true } )
 
-watch( isExplorerRoute, ( nextIsExplorerRoute ) => {
-	if ( !nextIsExplorerRoute ) {
+watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
+	if ( nextIsExplorerRoute ) {
+		if ( locale.value !== $interfaceLocale.value ) {
+			locale.value = $interfaceLocale.value
+		}
 		return
 	}
 
-	if ( locale.value !== $interfaceLocale.value ) {
-		locale.value = $interfaceLocale.value
+	if ( wasExplorerRoute ) {
+		const pathLocale = nonDefaultInterfaceLocales.find( ( localeCode ) => {
+			return route.path === `/${ localeCode }` || route.path.startsWith( `/${ localeCode }/` )
+		} ) ?? 'en'
+
+		if ( locale.value !== pathLocale ) {
+			locale.value = pathLocale
+		}
 	}
 }, { immediate: true } )
 
@@ -104,8 +116,8 @@ const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label'
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
-const homePath = computed( () => localePath( '/', selectedInterfaceLocale.value ) )
-const aboutPath = computed( () => localePath( '/about', selectedInterfaceLocale.value ) )
+const homePath = computed( () => localePath( '/' ) )
+const aboutPath = computed( () => localePath( '/about' ) )
 
 useHead( {
 	htmlAttrs: {
@@ -133,6 +145,16 @@ useHead( {
 						</NuxtLink>
 					</div>
 				</div>
+			</template>
+
+			<template
+				v-if="isExplorerRoute"
+				#end
+			>
+				<div
+					id="explorer-end-panel"
+					class="frontdoor-shell__explorer-end"
+				/>
 			</template>
 
 			<div class="frontdoor-shell__content">
@@ -207,16 +229,6 @@ useHead( {
 					</p>
 				</footer>
 			</div>
-
-			<template
-				v-if="isExplorerRoute"
-				#end
-			>
-				<div
-					id="explorer-end-panel"
-					class="frontdoor-shell__explorer-end"
-				/>
-			</template>
 		</SharedPageGrid>
 	</div>
 </template>
@@ -389,18 +401,18 @@ useHead( {
 }
 
 /*
- * Keep the API modules rail behind Scalar overlays (request client, search, etc.).
- * Scalar modals use high z-index inside .scalar-app; the main column must sit above
- * the end column in the page grid stacking order.
+ * Scalar overlays must stack above the API modules rail when modals span the viewport.
+ * Raise only the explorer reference shell — not the whole main grid column — so the
+ * end column rail stays visible beside the spec panel.
  */
-.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
+.frontdoor-shell--explorer .explorer-page__scalar-shell {
 	position: relative;
-	z-index: 1;
+	z-index: 2;
 }
 
-.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+.frontdoor-shell--explorer .explorer-module-rail {
 	position: relative;
-	z-index: 0;
+	z-index: 1;
 }
 
 @media screen and ( min-width: 70rem ) {
