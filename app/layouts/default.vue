@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { CdxField, CdxSelect } from '@wikimedia/codex'
+import {
+	CdxButton,
+	CdxIcon,
+	CdxSearchInput,
+	CdxSelect
+} from '@wikimedia/codex'
+import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
 
 /**
  * Default layout — the Front Door application shell.
  *
  * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer inside the site-wide 24-column grid. The outer
- * 4-column areas are reserved for side navigation; the site brand lives
- * at the top of the left column on wide viewports.
+ * content slot, and footer inside the site-wide 24-column grid. The site
+ * brand lives in the left column; the header holds search and utility
+ * controls with primary navigation directly below.
  */
 
 const { direction } = useDirection()
@@ -20,6 +26,8 @@ interface PickerMenuItem {
 }
 
 const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he' ] as const
+
+const searchPlaceholderValue = ref( '' )
 
 // <option>-like rendering targets cannot include HTML tags, so FSI/PDI
 // markers isolate labels and keep mixed-direction names stable.
@@ -34,10 +42,11 @@ const selectedInterfaceLocale = computed<string>( {
 	}
 } )
 
-const languageMenuItems = computed<PickerMenuItem[]>( () => {
+const languageMenuItems = computed( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
 		value: localeCode,
-		label: isolateLabel( $i18n( `interface-language-${ localeCode }` ) )
+		label: isolateLabel( $i18n( `interface-language-${ localeCode }` ) ),
+		icon: cdxIconLanguage
 	} ) )
 } )
 
@@ -47,8 +56,11 @@ const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
 const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
 const primaryNavigationLabel = computed( () => $i18n( 'nav-primary-label' ) )
 const footerLabel = computed( () => $i18n( 'footer-title' ) )
+const searchPlaceholderLabel = computed( () => $i18n( 'header-search-placeholder' ) )
+const searchButtonLabel = computed( () => $i18n( 'header-search-button-label' ) )
+const settingsButtonLabel = computed( () => $i18n( 'header-settings-label' ) )
+const loginLinkLabel = computed( () => $i18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
-const interfaceLanguagePlaceholder = computed( () => $i18n( 'interface-language-placeholder' ) )
 
 useHead( {
 	htmlAttrs: {
@@ -64,50 +76,78 @@ useHead( {
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
 				<div class="frontdoor-shell__side-nav">
-					<NuxtLink
-						to="/"
-						class="frontdoor-shell__brand frontdoor-shell__brand--sidebar"
-					>
-						{{ applicationTitle }}
-					</NuxtLink>
+					<div class="frontdoor-shell__brand-area">
+						<NuxtLink
+							to="/"
+							class="frontdoor-shell__brand"
+						>
+							{{ applicationTitle }}
+						</NuxtLink>
+					</div>
 				</div>
 			</template>
 
 			<div class="frontdoor-shell__content">
-				<header class="frontdoor-shell__header">
-					<div class="frontdoor-shell__header-inner">
-						<NuxtLink
-							to="/"
-							class="frontdoor-shell__brand frontdoor-shell__brand--header"
-						>
-							{{ applicationTitle }}
+				<div class="frontdoor-shell__chrome">
+					<header class="frontdoor-shell__header">
+						<div class="frontdoor-shell__header-inner">
+							<div class="frontdoor-shell__search-wrap">
+								<CdxSearchInput
+									v-model="searchPlaceholderValue"
+									class="frontdoor-shell__search"
+									:use-button="false"
+									:placeholder="searchPlaceholderLabel"
+									disabled
+								/>
+							</div>
+							<div class="frontdoor-shell__utilities">
+								<CdxButton
+									class="frontdoor-shell__search-toggle"
+									:aria-label="searchButtonLabel"
+									disabled
+								>
+									<CdxIcon :icon="cdxIconSearch" />
+								</CdxButton>
+								<CdxButton
+									class="frontdoor-shell__settings-button"
+									:aria-label="settingsButtonLabel"
+									disabled
+								>
+									<CdxIcon :icon="cdxIconConfigure" />
+								</CdxButton>
+								<CdxSelect
+									v-model:selected="selectedInterfaceLocale"
+									class="frontdoor-shell__language-select"
+									:menu-items="languageMenuItems"
+									:default-icon="cdxIconLanguage"
+									:default-label="interfaceLanguageLabel"
+									:aria-label="interfaceLanguageLabel"
+								/>
+							</div>
+							<a
+								href="#"
+								class="frontdoor-shell__login-link"
+								@click.prevent
+							>
+								{{ loginLinkLabel }}
+							</a>
+						</div>
+					</header>
+					<nav
+						class="frontdoor-shell__main-nav"
+						:aria-label="primaryNavigationLabel"
+					>
+						<NuxtLink to="/">
+							{{ homeNavigationLabel }}
 						</NuxtLink>
-						<nav
-							class="frontdoor-shell__nav"
-							:aria-label="primaryNavigationLabel"
-						>
-							<NuxtLink to="/">
-								{{ homeNavigationLabel }}
-							</NuxtLink>
-							<NuxtLink to="/about">
-								{{ aboutNavigationLabel }}
-							</NuxtLink>
-							<NuxtLink to="/explorer">
-								{{ apiNavigationLabel }}
-							</NuxtLink>
-						</nav>
-						<CdxField class="frontdoor-shell__language-field">
-							<template #label>
-								{{ interfaceLanguageLabel }}
-							</template>
-							<CdxSelect
-								v-model:selected="selectedInterfaceLocale"
-								:menu-items="languageMenuItems"
-								:default-label="interfaceLanguagePlaceholder"
-							/>
-						</CdxField>
-					</div>
-				</header>
+						<NuxtLink to="/about">
+							{{ aboutNavigationLabel }}
+						</NuxtLink>
+						<NuxtLink to="/explorer">
+							{{ apiNavigationLabel }}
+						</NuxtLink>
+					</nav>
+				</div>
 
 				<main class="frontdoor-shell__main">
 					<slot />
@@ -143,26 +183,124 @@ useHead( {
 	min-inline-size: 0;
 }
 
-.frontdoor-shell__header {
+.frontdoor-shell__chrome {
 	background-color: var( --background-color-base );
-	border-block-end: 1px solid var( --border-color-subtle );
+}
+
+.frontdoor-shell__header {
+	block-size: 4rem;
+	min-block-size: 4rem;
+	max-block-size: 4rem;
 }
 
 .frontdoor-shell__header-inner {
+	container-type: inline-size;
+	container-name: frontdoor-header;
 	display: flex;
-	align-items: flex-end;
-	flex-wrap: wrap;
-	gap: var( --spacing-200 );
-	padding-block: var( --spacing-75 );
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: var( --spacing-100 );
+	block-size: 100%;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__search-wrap {
+	flex: 1 1 0;
+	min-inline-size: 0;
+	max-inline-size: 36rem;
+	display: flex;
+	align-items: center;
+}
+
+.frontdoor-shell__search {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+/* Codex sets min-width: 256px on .cdx-text-input; override so the field can shrink
+   and the container query can switch to the icon-only control instead of wrapping. */
+.frontdoor-shell__search:deep( .cdx-text-input ) {
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+.frontdoor-shell__search-toggle {
+	display: none;
+	flex-shrink: 0;
+}
+
+.frontdoor-shell__utilities {
+	display: flex;
+	align-items: center;
+	gap: var( --spacing-100 ); /* 16px between search, settings, and language controls */
+	flex-shrink: 0;
+	margin-inline-start: auto;
+}
+
+/* Collapse when the header cannot fit the search field (Codex minimum 256px). */
+@container frontdoor-header ( max-width: 39.999rem ) {
+	.frontdoor-shell__search-wrap {
+		display: none;
+	}
+
+	.frontdoor-shell__search-toggle {
+		display: inline-flex;
+	}
+}
+
+.frontdoor-shell__language-select {
+	inline-size: min( 12rem, 100% );
+	flex-shrink: 0;
+}
+
+.frontdoor-shell__login-link {
+	flex-shrink: 0;
+	color: var( --color-progressive );
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	white-space: nowrap;
+}
+
+.frontdoor-shell__login-link:hover {
+	text-decoration: underline;
 }
 
 .frontdoor-shell__side-nav {
-	display: flex;
-	flex-direction: column;
-	gap: var( --spacing-100 );
-	padding-block: var( --spacing-75 );
 	padding-inline: var( --spacing-100 );
 	min-block-size: 100%;
+}
+
+.frontdoor-shell__main-nav {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-100 ); /* 16px between nav items */
+	padding-block: var( --spacing-100 );
+}
+
+.frontdoor-shell__main-nav a {
+	color: var( --color-base );
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	text-decoration: none;
+}
+
+.frontdoor-shell__main-nav a:hover {
+	text-decoration: underline;
+}
+
+.frontdoor-shell__main-nav a.router-link-active {
+	color: var( --color-emphasized );
+	font-weight: var( --font-weight-bold );
+}
+
+.frontdoor-shell__brand-area {
+	block-size: 4rem;
+	min-block-size: 4rem;
+	max-block-size: 4rem;
+	display: flex;
+	align-items: center;
 }
 
 .frontdoor-shell__brand {
@@ -170,24 +308,11 @@ useHead( {
 	font-size: var( --font-size-large );
 	color: var( --color-emphasized );
 	font-weight: var( --font-weight-bold );
-	max-block-size: 4rem;
 	display: inline-flex;
 	align-items: center;
 	line-height: var( --line-height-xx-small );
-}
-
-.frontdoor-shell__brand--sidebar {
-	display: none;
-}
-
-.frontdoor-shell__nav {
-	display: flex;
-	gap: var( --spacing-100 );
-	margin-inline-start: auto;
-}
-
-.frontdoor-shell__language-field {
-	inline-size: min( 14rem, 100% );
+	max-block-size: 100%;
+	overflow: hidden;
 }
 
 .frontdoor-shell__main {
@@ -214,16 +339,8 @@ useHead( {
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		background-color: var( --background-color-neutral-subtle );
+		border-inline-end: 1px solid var( --border-color-subtle );
 		align-self: stretch;
-	}
-
-	.frontdoor-shell__brand--header {
-		display: none;
-	}
-
-	.frontdoor-shell__brand--sidebar {
-		display: inline-flex;
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
