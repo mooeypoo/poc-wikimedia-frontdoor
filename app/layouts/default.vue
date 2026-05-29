@@ -18,14 +18,20 @@ import { useDirection } from '../composables/useDirection'
  */
 
 const { direction } = useDirection()
-const { $i18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+const { locale } = useI18n()
+const route = useRoute()
+const switchLocalePath = useSwitchLocalePath()
+const localePath = useLocalePath()
+const isExplorerRoute = computed( () => route.path.startsWith( '/explorer' ) )
 
 interface PickerMenuItem {
 	label: string
 	value: string
 }
 
-const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he' ] as const
+const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
+const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
 
 const searchPlaceholderValue = ref( '' )
 
@@ -37,33 +43,69 @@ function isolateLabel( label: string ): string {
 
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
-	set: ( nextLocaleCode ) => {
+	set: async ( nextLocaleCode ) => {
+		const nextLocalizedPath = isExplorerRoute.value ? null : switchLocalePath( nextLocaleCode )
 		$setInterfaceLocale( nextLocaleCode )
+		locale.value = nextLocaleCode
+
+		if ( nextLocalizedPath && nextLocalizedPath !== route.fullPath ) {
+			await navigateTo( nextLocalizedPath )
+		}
 	}
 } )
 
-const languageMenuItems = computed( () => {
+watch( locale, ( nextLocaleCode ) => {
+	if ( isExplorerRoute.value ) {
+		return
+	}
+
+	const pathHasNonDefaultLocalePrefix = nonDefaultInterfaceLocales.some( ( localeCode ) => {
+		return route.path === `/${ localeCode }` || route.path.startsWith( `/${ localeCode }/` )
+	} )
+
+	const routeMatchesLocale = nextLocaleCode === 'en'
+		? !pathHasNonDefaultLocalePrefix
+		: route.path === `/${ nextLocaleCode }` || route.path.startsWith( `/${ nextLocaleCode }/` )
+
+	if ( !routeMatchesLocale ) {
+		return
+	}
+
+	$setInterfaceLocale( nextLocaleCode )
+}, { immediate: true } )
+
+watch( isExplorerRoute, ( nextIsExplorerRoute ) => {
+	if ( !nextIsExplorerRoute ) {
+		return
+	}
+
+	if ( locale.value !== $interfaceLocale.value ) {
+		locale.value = $interfaceLocale.value
+	}
+}, { immediate: true } )
+
+const languageMenuItems = computed<PickerMenuItem[]>( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
 		value: localeCode,
-		label: isolateLabel( $i18n( `interface-language-${ localeCode }` ) ),
+		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) ),
 		icon: cdxIconLanguage
 	} ) )
 } )
 
-const applicationTitle = computed( () => $i18n( 'app-title' ) )
-const homeNavigationLabel = computed( () => $i18n( 'nav-home' ) )
-const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
-const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
-const primaryNavigationLabel = computed( () => $i18n( 'nav-primary-label' ) )
-const footerLabel = computed( () => $i18n( 'footer-title' ) )
-const searchPlaceholderLabel = computed( () => $i18n( 'header-search-placeholder' ) )
-const searchButtonLabel = computed( () => $i18n( 'header-search-button-label' ) )
-const settingsButtonLabel = computed( () => $i18n( 'header-settings-label' ) )
-const loginLinkLabel = computed( () => $i18n( 'header-login-label' ) )
-const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
-
-const route = useRoute()
-const isExplorerRoute = computed( () => route.path === '/explorer' || route.path.startsWith( '/explorer/' ) )
+const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
+const homeNavigationLabel = computed( () => $bananaI18n( 'nav-home' ) )
+const aboutNavigationLabel = computed( () => $bananaI18n( 'nav-about' ) )
+const apiNavigationLabel = computed( () => $bananaI18n( 'nav-api' ) )
+const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
+const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
+const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
+const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
+const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
+const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
+const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
+const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
+const homePath = computed( () => localePath( '/', selectedInterfaceLocale.value ) )
+const aboutPath = computed( () => localePath( '/about', selectedInterfaceLocale.value ) )
 
 useHead( {
 	htmlAttrs: {
@@ -84,7 +126,7 @@ useHead( {
 				<div class="frontdoor-shell__side-nav">
 					<div class="frontdoor-shell__brand-area">
 						<NuxtLink
-							to="/"
+							:to="homePath"
 							class="frontdoor-shell__brand"
 						>
 							{{ applicationTitle }}
@@ -126,7 +168,7 @@ useHead( {
 									class="frontdoor-shell__language-select"
 									:menu-items="languageMenuItems"
 									:default-icon="cdxIconLanguage"
-									:default-label="interfaceLanguageLabel"
+									:default-label="interfaceLanguagePlaceholder"
 									:aria-label="interfaceLanguageLabel"
 								/>
 							</div>
@@ -143,10 +185,10 @@ useHead( {
 						class="frontdoor-shell__main-nav"
 						:aria-label="primaryNavigationLabel"
 					>
-						<NuxtLink to="/">
+						<NuxtLink :to="homePath">
 							{{ homeNavigationLabel }}
 						</NuxtLink>
-						<NuxtLink to="/about">
+						<NuxtLink :to="aboutPath">
 							{{ aboutNavigationLabel }}
 						</NuxtLink>
 						<NuxtLink to="/explorer">

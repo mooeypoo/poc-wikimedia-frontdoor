@@ -14,7 +14,11 @@ interface PickerMenuItem {
 	value: string
 }
 
-const { $i18n } = useNuxtApp()
+definePageMeta( {
+	i18n: false
+} )
+
+const { $bananaI18n } = useNuxtApp()
 const { selectedWikiInstanceId } = useDirection()
 const {
 	modules,
@@ -90,16 +94,16 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	}
 } )
 
-const explorerTitle = computed( () => $i18n( 'explorer-title' ) )
-const explorerDescription = computed( () => $i18n( 'explorer-description' ) )
-const moduleLabel = computed( () => $i18n( 'explorer-module-label' ) )
-const instancePlaceholderLabel = computed( () => $i18n( 'explorer-instance-placeholder' ) )
-const missingSpecLabel = computed( () => $i18n( 'explorer-spec-missing' ) )
-const explorerInterfaceLoadingLabel = computed( () => $i18n( 'explorer-loading-interface' ) )
-const loadingInstanceLabel = computed( () => $i18n( 'explorer-loading-instance' ) )
-const loadingInstanceDescriptionLabel = computed( () => $i18n( 'explorer-loading-instance-description' ) )
-const bootstrapErrorLabel = computed( () => $i18n( 'explorer-bootstrap-error' ) )
-const scalarSwitchingLabel = computed( () => $i18n( 'explorer-scalar-switching' ) )
+const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
+const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
+const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
+const instancePlaceholderLabel = computed( () => $bananaI18n( 'explorer-instance-placeholder' ) )
+const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
+const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
+const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
+const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
+const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
+const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
 watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl ], () => {
 	nextTick( () => {

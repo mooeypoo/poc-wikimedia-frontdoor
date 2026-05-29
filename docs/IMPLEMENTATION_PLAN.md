@@ -348,16 +348,54 @@ Definition of ready-to-implement:
 
 ---
 
-## Experiment 2 (Placeholder)
+## Experiment 2 - OAuth 2.0 + PKCE
 
-### Planned Focus
-OAuth 2.0 + PKCE integration and token usage in explorer flows.
+### Objective
+Implement Wikimedia OAuth 2.0 with PKCE for the explorer while keeping token handling isolated from UI components and aligned with security boundaries.
 
-### Planned Outputs
-- Auth callback handling
-- Token persistence model
-- Explorer auth injection strategy
-- Security and secret-boundary validation
+### Scope
+- Add login/logout flow for Wikimedia OAuth 2.0 Authorization Code + PKCE.
+- Handle OAuth callback and code exchange through server-side endpoints.
+- Store session state in Pinia through a dedicated auth composable.
+- Inject authorization headers into explorer requests through composables, not components.
+- Preserve client-only explorer behavior and current bootstrap/module flow.
+
+### Out of Scope
+- Cross-device session sync.
+- Long-term refresh token rotation policy hardening beyond experiment goals.
+- Final production UX polish for auth prompts.
+
+### Implementation Steps
+1. Add auth configuration in `config/`:
+   - OAuth client id
+   - authorization/token endpoints
+   - redirect URI and scopes
+2. Add server routes under `server/api/`:
+   - auth start (PKCE verifier/challenge generation)
+   - auth callback exchange
+   - auth session clear/revoke helper (if available)
+3. Add composables and store integration:
+   - `useOAuthSession()` for auth state and actions
+   - Pinia-backed session state for access token metadata
+4. Integrate explorer auth usage:
+   - route-level auth controls in `app/pages/explorer/index.vue`
+   - request header injection in composables that perform API calls
+5. Add banana-i18n strings for auth labels, errors, and status messages.
+6. Add diagnostics events for auth lifecycle transitions.
+
+### Verification Checklist
+- [ ] OAuth start redirects to Wikimedia auth endpoint with PKCE challenge.
+- [ ] OAuth callback exchanges code successfully and returns a usable session state.
+- [ ] Explorer requests include auth headers only when authenticated.
+- [ ] Logout clears local session state and stops header injection.
+- [ ] Error states are visible for denied consent, expired code, and exchange failures.
+- [ ] `npm run build:netlify` passes.
+
+### Security Checklist
+- [ ] PKCE verifier never appears in client logs.
+- [ ] Tokens are not printed in diagnostics events.
+- [ ] Callback route validates expected state and origin.
+- [ ] No token parsing or crypto logic is implemented inside Vue components.
 
 ---
 

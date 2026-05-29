@@ -8,11 +8,13 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "generate:static": "nuxt generate",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "test:content-fallback": "node scripts/test-content-fallback.mjs"
   },
   "dependencies": {
     "@netlify/functions": "^5.2.2",
     "@nuxt/content": "^3.13.0",
+    "@nuxtjs/i18n": "^10.4.0",
     "@pinia/nuxt": "^0.11.3",
     "@scalar/api-reference": "^1.46.4",
     "@wikimedia/codex": "^2.3.0",
