@@ -322,14 +322,9 @@ useHead( {
 
 .frontdoor-shell__login-link {
 	flex-shrink: 0;
-	color: var( --color-progressive );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
 	white-space: nowrap;
-}
-
-.frontdoor-shell__login-link:hover {
-	text-decoration: underline;
 }
 
 .frontdoor-shell__side-nav {
@@ -346,19 +341,8 @@ useHead( {
 }
 
 .frontdoor-shell__main-nav a {
-	color: var( --color-base );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
-	text-decoration: none;
-}
-
-.frontdoor-shell__main-nav a:hover {
-	text-decoration: underline;
-}
-
-.frontdoor-shell__main-nav a.router-link-active {
-	color: var( --color-emphasized );
-	font-weight: var( --font-weight-bold );
 }
 
 .frontdoor-shell__brand-area {
@@ -370,9 +354,7 @@ useHead( {
 }
 
 .frontdoor-shell__brand {
-	font-family: var( --font-family-serif );
 	font-size: var( --font-size-large );
-	color: var( --color-emphasized );
 	font-weight: var( --font-weight-bold );
 	display: inline-flex;
 	align-items: center;
@@ -391,7 +373,6 @@ useHead( {
 	margin-block-start: auto;
 	padding-block: var( --spacing-100 );
 	background-color: var( --background-color-neutral-subtle );
-	color: var( --color-subtle );
 	font-size: var( --font-size-small );
 }
 

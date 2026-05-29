@@ -325,7 +325,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__reference-header p {
 	margin: 0;
-	color: var( --color-subtle );
 }
 
 .explorer-page__reference-heading {
@@ -391,7 +390,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__scalar-loading p {
 	margin: 0;
-	color: var( --color-subtle );
 }
 
 .explorer-page__scalar-loading-indicator {
@@ -436,7 +434,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 	.explorer-page__scalar-switching-mask p {
 		margin: 0;
-		color: var( --color-subtle );
 	}
 }
 

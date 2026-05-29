@@ -32,3 +32,55 @@
 	border-block-end-color: var( --border-color-inverted-fixed, #fff ) !important;
 	transform: rotate( 45deg ) !important;
 }
+
+/*
+ * Scalar link colours (loads after Scalar CSS).
+ *
+ * Scalar sets --scalar-link-color to body text in .light-mode / .dark-mode and, in
+ * @supports (color: color(display-p3 …)), replaces --scalar-color-accent with display-p3
+ * blues used as the link fallback. Use .scalar-app (not :where) so these tokens beat
+ * Scalar’s single-class theme rules regardless of load order.
+ */
+.explorer-page .scalar-app,
+.explorer-page .scalar-app.light-mode,
+.explorer-page .scalar-app.dark-mode {
+	--scalar-color-accent: var( --color-progressive );
+	--scalar-link-color: var( --color-progressive );
+	--scalar-link-color-hover: var( --color-progressive--hover );
+	--scalar-link-color-visited: var( --color-visited );
+}
+
+/* Mirror Scalar’s display-p3 @supports block so accent/link tokens stay progressive. */
+@supports ( color: color( display-p3 1 1 1 ) ) {
+	.explorer-page .scalar-app,
+	.explorer-page .scalar-app.light-mode,
+	.explorer-page .scalar-app.dark-mode {
+		--scalar-color-accent: var( --color-progressive );
+		--scalar-link-color: var( --color-progressive );
+		--scalar-link-color-hover: var( --color-progressive--hover );
+		--scalar-link-color-visited: var( --color-visited );
+	}
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href] ) {
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href]:hover ) {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href]:visited ) {
+	color: var( --color-visited );
+}
+
+/* Markdown and .text-c-accent links resolve accent directly, not only via <a>. */
+.explorer-page .scalar-app :where( .markdown a, .text-c-accent ) {
+	color: var( --color-progressive );
+}
+
+.explorer-page .scalar-app :where( .markdown a:hover ) {
+	color: var( --color-progressive--hover );
+}

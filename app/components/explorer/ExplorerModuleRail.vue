@@ -51,13 +51,31 @@ function isModuleExpanded( moduleName: string ): boolean {
 }
 
 /**
- * Resolves the endpoint label shown beside the HTTP method.
+ * Resolves the OpenAPI path shown beside the HTTP method in the module rail.
  *
  * @param operation - Module operation metadata.
- * @returns Summary text or the generic endpoint fallback label.
+ * @returns Path template or the generic endpoint fallback label.
  */
-function getEndpointLabel( operation: ExplorerModuleOperation ): string {
-	return operation.summary || endpointFallbackLabel.value
+function getEndpointPathLabel( operation: ExplorerModuleOperation ): string {
+	const pathTemplate = operation.path.trim()
+	return pathTemplate || endpointFallbackLabel.value
+}
+
+/**
+ * Builds an accessible name for a module rail endpoint control.
+ *
+ * @param operation - Module operation metadata.
+ * @returns Method, path, and summary when available.
+ */
+function getEndpointAccessibleLabel( operation: ExplorerModuleOperation ): string {
+	const pathLabel = getEndpointPathLabel( operation )
+	const summary = operation.summary.trim()
+
+	if ( summary && summary !== pathLabel ) {
+		return `${ operation.method } ${ pathLabel }. ${ summary }`
+	}
+
+	return `${ operation.method } ${ pathLabel }`
 }
 
 /**
@@ -153,6 +171,7 @@ function getModuleExpandIcon( moduleName: string ) {
 							<button
 								type="button"
 								class="explorer-module-rail__endpoint-action"
+								:aria-label="getEndpointAccessibleLabel( moduleOperation )"
 								@click="emit( 'endpoint-click', moduleOption.name, moduleOperation )"
 							>
 								<span
@@ -161,8 +180,8 @@ function getModuleExpandIcon( moduleName: string ) {
 								>
 									{{ moduleOperation.method }}
 								</span>
-								<span class="explorer-module-rail__endpoint-label">
-									<bdi>{{ getEndpointLabel( moduleOperation ) }}</bdi>
+								<span class="explorer-module-rail__endpoint-path">
+									<bdi>{{ getEndpointPathLabel( moduleOperation ) }}</bdi>
 								</span>
 							</button>
 						</li>
@@ -189,7 +208,6 @@ function getModuleExpandIcon( moduleName: string ) {
 	padding: var( --spacing-75 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
-	overflow-x: hidden;
 	margin-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
 	position: sticky;
 	inset-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
@@ -198,31 +216,44 @@ function getModuleExpandIcon( moduleName: string ) {
 	overscroll-behavior: contain;
 	border-radius: var( --border-radius-base );
 	background-color: var( --background-color-neutral-subtle );
+	font-family: var( --font-family-sans-stack );
 }
 
 .explorer-module-rail__header {
 	display: grid;
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 1;
+	padding-block-end: var( --spacing-50 );
+	background-color: var( --background-color-neutral-subtle );
 }
 
 .explorer-module-rail__title {
 	margin: 0;
-	font-family: inherit;
 	font-size: var( --font-size-large );
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-large );
-	color: var( --color-emphasized );
 }
 
 .explorer-module-rail__module-list {
 	display: grid;
 	gap: 0;
 	min-inline-size: 0;
+	/* Keep the first module heading visible when the default module expands on load. */
+	overflow-anchor: none;
 }
 
 .explorer-module-rail__module {
 	min-inline-size: 0;
+}
+
+.explorer-module-rail__module-heading,
+.explorer-module-rail__endpoint-action {
+	/* Buttons do not inherit font-family from ancestors in most browsers (UA default is often Arial). */
+	font-family: var( --font-family-sans-stack );
+	color: var( --color-base );
 }
 
 .explorer-module-rail__module-heading {
@@ -237,6 +268,7 @@ function getModuleExpandIcon( moduleName: string ) {
 	background: transparent;
 	cursor: pointer;
 	text-align: start;
+	scroll-margin-block-start: var( --spacing-50 );
 }
 
 .explorer-module-rail__module-heading:hover {
@@ -245,8 +277,8 @@ function getModuleExpandIcon( moduleName: string ) {
 
 .explorer-module-rail__module-heading-label {
 	flex: 1 1 auto;
-	min-inline-size: 0;
-	font-family: inherit;
+	/* Prevent flex from shrinking the label to zero width in the narrow end column. */
+	min-inline-size: 1px;
 	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-medium );
@@ -287,7 +319,6 @@ function getModuleExpandIcon( moduleName: string ) {
 .explorer-module-rail__module-unavailable,
 .explorer-module-rail__module-empty-state {
 	margin: 0;
-	color: var( --color-subtle );
 	font-size: var( --font-size-small );
 }
 
@@ -318,13 +349,13 @@ function getModuleExpandIcon( moduleName: string ) {
 	min-inline-size: 0;
 }
 
-.explorer-module-rail__endpoint-action:hover .explorer-module-rail__endpoint-label {
+.explorer-module-rail__endpoint-action:hover .explorer-module-rail__endpoint-path {
 	text-decoration: underline;
 }
 
 .explorer-module-rail__endpoint-method {
 	flex-shrink: 0;
-	font-family: var( --font-family-monospace );
+	font-family: var( --font-family-monospace-stack );
 	font-size: var( --font-size-small );
 	font-weight: var( --font-weight-bold );
 	letter-spacing: 0.04em;
@@ -349,11 +380,12 @@ function getModuleExpandIcon( moduleName: string ) {
 	color: var( --color-warning );
 }
 
-.explorer-module-rail__endpoint-label {
+.explorer-module-rail__endpoint-path {
 	flex: 1 1 auto;
-	min-inline-size: 0;
+	min-inline-size: 1px;
+	font-family: var( --font-family-monospace-stack );
+	font-size: var( --font-size-small );
 	color: var( --color-base );
-	font-size: var( --font-size-medium );
 	overflow-wrap: anywhere;
 }
 
