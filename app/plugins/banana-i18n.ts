@@ -4,6 +4,7 @@ import messagesEnglish from '../../i18n/en.json'
 import messagesSpanish from '../../i18n/es.json'
 import messagesFrench from '../../i18n/fr.json'
 import messagesHebrew from '../../i18n/he.json'
+import messagesPersian from '../../i18n/fa.json'
 
 type MessageMap = Record<string, string>
 
@@ -11,7 +12,8 @@ const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
 	en: messagesEnglish as MessageMap,
 	es: messagesSpanish as MessageMap,
 	fr: messagesFrench as MessageMap,
-	he: messagesHebrew as MessageMap
+	he: messagesHebrew as MessageMap,
+	fa: messagesPersian as MessageMap
 }
 
 /**
@@ -46,14 +48,14 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 		interfaceLocale.value = MESSAGES_BY_LOCALE[ nextLocale ] ? nextLocale : 'en'
 	}
 
-	nuxtApp.provide( 'i18n', i18n )
+	nuxtApp.provide( 'bananaI18n', i18n )
 	nuxtApp.provide( 'setInterfaceLocale', setInterfaceLocale )
 	nuxtApp.provide( 'interfaceLocale', interfaceLocale )
 } )
 
 declare module '#app' {
 	interface NuxtApp {
-		$i18n: ( messageKey: string, parameters?: Record<string, string> ) => string
+		$bananaI18n: ( messageKey: string, parameters?: Record<string, string> ) => string
 		$setInterfaceLocale: ( nextLocale: string ) => void
 		$interfaceLocale: Ref<string>
 	}
@@ -61,6 +63,6 @@ declare module '#app' {
 
 declare module 'vue' {
 	interface ComponentCustomProperties {
-		$i18n: ( messageKey: string, parameters?: Record<string, string> ) => string
+		$bananaI18n: ( messageKey: string, parameters?: Record<string, string> ) => string
 	}
 }

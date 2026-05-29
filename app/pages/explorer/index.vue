@@ -14,7 +14,11 @@ interface PickerMenuItem {
 	value: string
 }
 
-const { $i18n } = useNuxtApp()
+definePageMeta( {
+	i18n: false
+} )
+
+const { $bananaI18n } = useNuxtApp()
 const { selectedWikiInstanceId } = useDirection()
 const {
 	modules,
@@ -70,29 +74,29 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	}
 } )
 
-const explorerTitle = computed( () => $i18n( 'explorer-title' ) )
-const explorerDescription = computed( () => $i18n( 'explorer-description' ) )
-const instanceLabel = computed( () => $i18n( 'explorer-instance-label' ) )
-const moduleLabel = computed( () => $i18n( 'explorer-module-label' ) )
-const moduleRailTitle = computed( () => $i18n( 'explorer-module-rail-title' ) )
-const moduleRailDescription = computed( () => $i18n( 'explorer-module-rail-description' ) )
-const modulePlaceholderLabel = computed( () => $i18n( 'explorer-module-placeholder' ) )
-const instancePlaceholderLabel = computed( () => $i18n( 'explorer-instance-placeholder' ) )
-const refreshButtonLabel = computed( () => $i18n( 'explorer-refresh-button' ) )
-const emptyModulesLabel = computed( () => $i18n( 'explorer-empty-modules' ) )
-const missingSpecLabel = computed( () => $i18n( 'explorer-spec-missing' ) )
-const endpointsLabel = computed( () => $i18n( 'explorer-endpoints-label' ) )
-const endpointsEmptyLabel = computed( () => $i18n( 'explorer-endpoints-empty' ) )
-const selectedModuleBadgeLabel = computed( () => $i18n( 'explorer-selected-module-badge' ) )
-const diagnosticsTitle = computed( () => $i18n( 'explorer-debug-title' ) )
-const diagnosticsEmptyLabel = computed( () => $i18n( 'explorer-debug-empty' ) )
-const explorerInterfaceLoadingLabel = computed( () => $i18n( 'explorer-loading-interface' ) )
-const loadingInstanceLabel = computed( () => $i18n( 'explorer-loading-instance' ) )
-const loadingInstanceDescriptionLabel = computed( () => $i18n( 'explorer-loading-instance-description' ) )
-const bootstrapErrorLabel = computed( () => $i18n( 'explorer-bootstrap-error' ) )
-const failedModulesLabel = computed( () => $i18n( 'explorer-failed-modules-label' ) )
-const noSelectableModulesLabel = computed( () => $i18n( 'explorer-no-selectable-modules' ) )
-const scalarSwitchingLabel = computed( () => $i18n( 'explorer-scalar-switching' ) )
+const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
+const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
+const instanceLabel = computed( () => $bananaI18n( 'explorer-instance-label' ) )
+const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
+const moduleRailTitle = computed( () => $bananaI18n( 'explorer-module-rail-title' ) )
+const moduleRailDescription = computed( () => $bananaI18n( 'explorer-module-rail-description' ) )
+const modulePlaceholderLabel = computed( () => $bananaI18n( 'explorer-module-placeholder' ) )
+const instancePlaceholderLabel = computed( () => $bananaI18n( 'explorer-instance-placeholder' ) )
+const refreshButtonLabel = computed( () => $bananaI18n( 'explorer-refresh-button' ) )
+const emptyModulesLabel = computed( () => $bananaI18n( 'explorer-empty-modules' ) )
+const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
+const endpointsLabel = computed( () => $bananaI18n( 'explorer-endpoints-label' ) )
+const endpointsEmptyLabel = computed( () => $bananaI18n( 'explorer-endpoints-empty' ) )
+const selectedModuleBadgeLabel = computed( () => $bananaI18n( 'explorer-selected-module-badge' ) )
+const diagnosticsTitle = computed( () => $bananaI18n( 'explorer-debug-title' ) )
+const diagnosticsEmptyLabel = computed( () => $bananaI18n( 'explorer-debug-empty' ) )
+const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
+const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
+const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
+const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
+const failedModulesLabel = computed( () => $bananaI18n( 'explorer-failed-modules-label' ) )
+const noSelectableModulesLabel = computed( () => $bananaI18n( 'explorer-no-selectable-modules' ) )
+const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
 /**
  * Loads Scalar after the explorer shell has rendered.

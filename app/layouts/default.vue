@@ -13,14 +13,20 @@ import { useDirection } from '../composables/useDirection'
  */
 
 const { direction } = useDirection()
-const { $i18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
+const { locale } = useI18n()
+const route = useRoute()
+const switchLocalePath = useSwitchLocalePath()
+const localePath = useLocalePath()
+const isExplorerRoute = computed( () => route.path.startsWith( '/explorer' ) )
 
 interface PickerMenuItem {
 	label: string
 	value: string
 }
 
-const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he' ] as const
+const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
+const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
 
 // <option>-like rendering targets cannot include HTML tags, so FSI/PDI
 // markers isolate labels and keep mixed-direction names stable.
@@ -30,25 +36,63 @@ function isolateLabel( label: string ): string {
 
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
-	set: ( nextLocaleCode ) => {
+	set: async ( nextLocaleCode ) => {
+		const nextLocalizedPath = isExplorerRoute.value ? null : switchLocalePath( nextLocaleCode )
 		$setInterfaceLocale( nextLocaleCode )
+		locale.value = nextLocaleCode
+
+		if ( nextLocalizedPath && nextLocalizedPath !== route.fullPath ) {
+			await navigateTo( nextLocalizedPath )
+		}
 	}
 } )
+
+watch( locale, ( nextLocaleCode ) => {
+	if ( isExplorerRoute.value ) {
+		return
+	}
+
+	const pathHasNonDefaultLocalePrefix = nonDefaultInterfaceLocales.some( ( localeCode ) => {
+		return route.path === `/${ localeCode }` || route.path.startsWith( `/${ localeCode }/` )
+	} )
+
+	const routeMatchesLocale = nextLocaleCode === 'en'
+		? !pathHasNonDefaultLocalePrefix
+		: route.path === `/${ nextLocaleCode }` || route.path.startsWith( `/${ nextLocaleCode }/` )
+
+	if ( !routeMatchesLocale ) {
+		return
+	}
+
+	$setInterfaceLocale( nextLocaleCode )
+}, { immediate: true } )
+
+watch( isExplorerRoute, ( nextIsExplorerRoute ) => {
+	if ( !nextIsExplorerRoute ) {
+		return
+	}
+
+	if ( locale.value !== $interfaceLocale.value ) {
+		locale.value = $interfaceLocale.value
+	}
+}, { immediate: true } )
 
 const languageMenuItems = computed<PickerMenuItem[]>( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
 		value: localeCode,
-		label: isolateLabel( $i18n( `interface-language-${ localeCode }` ) )
+		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) )
 	} ) )
 } )
 
-const applicationTitle = computed( () => $i18n( 'app-title' ) )
-const homeNavigationLabel = computed( () => $i18n( 'nav-home' ) )
-const aboutNavigationLabel = computed( () => $i18n( 'nav-about' ) )
-const apiNavigationLabel = computed( () => $i18n( 'nav-api' ) )
-const footerLabel = computed( () => $i18n( 'footer-title' ) )
-const interfaceLanguageLabel = computed( () => $i18n( 'interface-language-label' ) )
-const interfaceLanguagePlaceholder = computed( () => $i18n( 'interface-language-placeholder' ) )
+const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
+const homeNavigationLabel = computed( () => $bananaI18n( 'nav-home' ) )
+const aboutNavigationLabel = computed( () => $bananaI18n( 'nav-about' ) )
+const apiNavigationLabel = computed( () => $bananaI18n( 'nav-api' ) )
+const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
+const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
+const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
+const homePath = computed( () => localePath( '/', selectedInterfaceLocale.value ) )
+const aboutPath = computed( () => localePath( '/about', selectedInterfaceLocale.value ) )
 
 useHead( {
 	htmlAttrs: {
@@ -64,16 +108,16 @@ useHead( {
 		<header class="frontdoor-shell__header">
 			<div class="frontdoor-shell__header-inner">
 				<NuxtLink
-					to="/"
+					:to="homePath"
 					class="frontdoor-shell__brand"
 				>
 					{{ applicationTitle }}
 				</NuxtLink>
 				<nav class="frontdoor-shell__nav">
-					<NuxtLink to="/">
+					<NuxtLink :to="homePath">
 						{{ homeNavigationLabel }}
 					</NuxtLink>
-					<NuxtLink to="/about">
+					<NuxtLink :to="aboutPath">
 						{{ aboutNavigationLabel }}
 					</NuxtLink>
 					<NuxtLink to="/explorer">
