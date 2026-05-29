@@ -35,6 +35,7 @@ export interface ExplorerOperationTarget {
 	path: string
 	summary: string
 	operationId?: string
+	primaryTag?: string
 }
 
 type SelectionSource = 'module-title' | 'module-accordion' | 'module-select' | 'endpoint-item' | 'bootstrap-default'
@@ -159,7 +160,9 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 			pendingOperationTarget.value = options.operationTarget
 		}
 
-		if ( !isAlreadySelected || options.operationTarget ) {
+		// Only block on Scalar reload when the spec URL changes (new module).
+		// Same-module endpoint clicks keep the current spec mounted so focus can run immediately.
+		if ( !isAlreadySelected ) {
 			startScalarSwitch()
 		}
 

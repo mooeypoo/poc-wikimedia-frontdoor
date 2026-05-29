@@ -1,0 +1,103 @@
+<script setup lang="ts">
+import { ApiReference } from '@scalar/api-reference'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import type { ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import type { ScalarNavigationEntry } from '../../utils/scalarOperationNavigation'
+
+/**
+ * ExplorerScalarReference — client-only Scalar ApiReference wrapper.
+ *
+ * Nuxt loads this module only in the browser so the heavy Scalar bundle does
+ * not block the explorer shell. Emits a ready event with Scalar handles needed
+ * for operation navigation.
+ */
+const props = defineProps<{
+	configuration: Record<string, unknown>
+}>()
+
+const emit = defineEmits<{
+	'interface-ready': [ ScalarInterfaceHandle ]
+}>()
+
+const apiReferenceRef = ref<{
+	eventBus?: ScalarInterfaceHandle[ 'eventBus' ]
+	workspaceStore?: ScalarInterfaceHandle[ 'workspaceStore' ]
+	sidebarItems?: ScalarNavigationEntry[] | { value: ScalarNavigationEntry[] }
+} | null>( null )
+
+const activeSpecUrl = computed( () => {
+	const spec = props.configuration.spec
+	if ( spec && typeof spec === 'object' && 'url' in spec && typeof spec.url === 'string' ) {
+		return spec.url
+	}
+
+	return ''
+} )
+
+/**
+ * Normalizes sidebar items exposed by Scalar (plain array or computed ref).
+ *
+ * @param sidebarItems - Raw sidebar items from ApiReference.
+ * @returns Sidebar navigation entries.
+ */
+function normalizeSidebarItems(
+	sidebarItems: ScalarNavigationEntry[] | { value: ScalarNavigationEntry[] } | undefined
+): ScalarNavigationEntry[] | undefined {
+	if ( !sidebarItems ) {
+		return undefined
+	}
+
+	if ( Array.isArray( sidebarItems ) ) {
+		return sidebarItems
+	}
+
+	if ( 'value' in sidebarItems && Array.isArray( sidebarItems.value ) ) {
+		return sidebarItems.value
+	}
+
+	return undefined
+}
+
+/**
+ * Notifies the explorer page that Scalar exposes navigation handles.
+ *
+ * @returns Nothing.
+ */
+function emitInterfaceReady(): void {
+	const apiReferenceInstance = apiReferenceRef.value
+	if ( !apiReferenceInstance?.eventBus ) {
+		return
+	}
+
+	emit( 'interface-ready', {
+		eventBus: apiReferenceInstance.eventBus,
+		workspaceStore: apiReferenceInstance.workspaceStore,
+		sidebarItems: normalizeSidebarItems( apiReferenceInstance.sidebarItems )
+	} )
+}
+
+watch( apiReferenceRef, () => {
+	void nextTick( () => {
+		emitInterfaceReady()
+	} )
+} )
+
+watch( activeSpecUrl, () => {
+	void nextTick( () => {
+		emitInterfaceReady()
+	} )
+} )
+
+onMounted( () => {
+	void nextTick( () => {
+		emitInterfaceReady()
+	} )
+} )
+</script>
+
+<template>
+	<ApiReference
+		ref="apiReferenceRef"
+		:configuration="configuration"
+	/>
+</template>

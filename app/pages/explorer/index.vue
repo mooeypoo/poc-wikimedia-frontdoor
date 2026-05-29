@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { CdxMessage } from '@wikimedia/codex'
-import { computed, markRaw, nextTick, onMounted, shallowRef, watch } from 'vue'
-import type { Component } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import { WIKI_INSTANCES } from '../../../config/instances'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useExplorerRailStickyAlign } from '../../composables/useExplorerRailStickyAlign'
+import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 
 interface PickerMenuItem {
@@ -33,10 +33,34 @@ const {
 	clearPendingOperationTarget
 } = useExplorerBootstrap( selectedWikiInstanceId )
 
-const scalarApiReferenceComponent = shallowRef<Component>()
-const isScalarInterfaceLoading = ref( false )
+const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 const explorerPageTitleRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+
+const { focusPendingOperationInScalar } = useExplorerScalarFocus(
+	pendingOperationTarget,
+	scalarInterface,
+	scalarShellRef,
+	isScalarSwitching,
+	isInstanceBootstrapping,
+	clearPendingOperationTarget
+)
+
+/**
+ * Stores Scalar navigation handles once the ApiReference component is ready.
+ *
+ * @param nextScalarInterface - Event bus and workspace store from Scalar.
+ * @returns Nothing.
+ */
+function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): void {
+	scalarInterface.value = nextScalarInterface
+
+	if ( pendingOperationTarget.value && !isScalarSwitching.value && !isInstanceBootstrapping.value ) {
+		requestAnimationFrame( () => {
+			focusPendingOperationInScalar()
+		} )
+	}
+}
 
 const { railStickyStyle, refreshRailStickyAlign } = useExplorerRailStickyAlign(
 	explorerPageTitleRef,
@@ -75,35 +99,6 @@ const loadingInstanceLabel = computed( () => $i18n( 'explorer-loading-instance' 
 const loadingInstanceDescriptionLabel = computed( () => $i18n( 'explorer-loading-instance-description' ) )
 const bootstrapErrorLabel = computed( () => $i18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $i18n( 'explorer-scalar-switching' ) )
-
-/**
- * Loads Scalar after the explorer shell has rendered.
- *
- * This keeps the route chrome responsive on client-only navigation while the
- * heavy API reference bundle downloads.
- *
- * @returns Nothing.
- */
-async function loadScalarApiReference(): Promise<void> {
-	if ( scalarApiReferenceComponent.value || isScalarInterfaceLoading.value ) {
-		return
-	}
-
-	isScalarInterfaceLoading.value = true
-
-	try {
-		const scalarModule = await import( '@scalar/api-reference' )
-		scalarApiReferenceComponent.value = markRaw( scalarModule.ApiReference )
-	} finally {
-		isScalarInterfaceLoading.value = false
-	}
-}
-
-onMounted( () => {
-	requestAnimationFrame( () => {
-		void loadScalarApiReference()
-	} )
-} )
 
 watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl ], () => {
 	nextTick( () => {
@@ -144,60 +139,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			method: operation.method,
 			path: operation.path,
 			summary: operation.summary,
-			operationId: operation.operationId
+			operationId: operation.operationId,
+			primaryTag: operation.primaryTag
 		}
 	} )
-
-	requestAnimationFrame( () => {
-		focusPendingOperationInScalar()
-	} )
-}
-
-/**
- * Attempts to focus a selected operation in Scalar once the module is loaded.
- *
- * Uses operationId when available and falls back to matching method+path text
- * in the Scalar content tree.
- *
- * @returns Nothing.
- */
-function focusPendingOperationInScalar(): void {
-	const operationTarget = pendingOperationTarget.value
-	if ( !operationTarget ) {
-		return
-	}
-
-	const scalarShellElement = scalarShellRef.value
-	if ( !scalarShellElement ) {
-		return
-	}
-
-	let matchedElement: HTMLElement | null = null
-
-	if ( operationTarget.operationId ) {
-		const escapedOperationId = operationTarget.operationId.replaceAll( '"', '\\"' )
-		matchedElement = scalarShellElement.querySelector<HTMLElement>( `[id="${ escapedOperationId }"]` )
-			?? scalarShellElement.querySelector<HTMLElement>( `[id*="${ escapedOperationId }"]` )
-	}
-
-	if ( !matchedElement ) {
-		const allCandidates = Array.from( scalarShellElement.querySelectorAll<HTMLElement>( 'section, article, div, h2, h3, h4, a, button' ) )
-		matchedElement = allCandidates.find( ( candidateElement ) => {
-			const candidateText = candidateElement.textContent ?? ''
-			return candidateText.includes( operationTarget.path ) && candidateText.includes( operationTarget.method )
-		} ) ?? null
-	}
-
-	if ( !matchedElement ) {
-		return
-	}
-
-	matchedElement.scrollIntoView( {
-		behavior: 'smooth',
-		block: 'center'
-	} )
-
-	clearPendingOperationTarget()
 }
 </script>
 
@@ -273,19 +218,19 @@ function focusPendingOperationInScalar(): void {
 								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
 								<p>{{ scalarSwitchingLabel }}</p>
 							</div>
-							<component
-								:is="scalarApiReferenceComponent"
-								v-if="scalarApiReferenceComponent"
+							<LazyExplorerScalarReference
 								:configuration="scalarConfiguration"
+								@interface-ready="onScalarInterfaceReady"
 							/>
-							<div
-								v-else
-								class="explorer-page__scalar-loading"
-							>
-								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-								<p>{{ explorerInterfaceLoadingLabel }}</p>
-							</div>
 						</div>
+						<template #fallback>
+							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
+								<div class="explorer-page__scalar-loading">
+									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<p>{{ explorerInterfaceLoadingLabel }}</p>
+								</div>
+							</div>
+						</template>
 					</ClientOnly>
 				</section>
 			</template>
@@ -358,6 +303,11 @@ function focusPendingOperationInScalar(): void {
 	border-radius: var( --border-radius-base );
 	overflow: hidden;
 	background-color: var( --background-color-base );
+}
+
+.explorer-page__scalar-shell--loading {
+	display: grid;
+	place-items: center;
 }
 
 .explorer-page__scalar-loading {

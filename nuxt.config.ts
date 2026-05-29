@@ -1,9 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-const contentLocalDatabaseFilename = isDevelopment
-	? '.data/content/contents.sqlite'
-	: `.data/content/contents-${ process.pid }.sqlite`
+// Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
+const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
 
 export default defineNuxtConfig( {
 	modules: [
@@ -38,6 +37,15 @@ export default defineNuxtConfig( {
 	routeRules: {
 		'/explorer': { ssr: false },
 		'/explorer/**': { ssr: false }
+	},
+
+	vite: {
+		optimizeDeps: {
+			include: [
+				'@scalar/api-reference',
+				'github-slugger'
+			]
+		}
 	},
 
 	// Direction handling is currently driven by the shell dir attribute and
