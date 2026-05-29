@@ -16,6 +16,9 @@ export interface ExplorerBootstrapModule {
 	title?: string
 	version?: string
 	label: string
+	headingTitle: string
+	versionChipLabel?: string
+	showBetaChip: boolean
 	specUrl: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
@@ -35,6 +38,7 @@ export interface ExplorerOperationTarget {
 	path: string
 	summary: string
 	operationId?: string
+	primaryTag?: string
 }
 
 type SelectionSource = 'module-title' | 'module-accordion' | 'module-select' | 'endpoint-item' | 'bootstrap-default'
@@ -60,7 +64,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	const modules = ref<ExplorerBootstrapModule[]>( [] )
 	const wikiDisplayName = ref( '' )
 	const selectedModuleName = ref( '' )
-	const expandedModuleName = ref( '' )
+	const expandedModuleNames = ref<string[]>( [] )
 	const instanceBootstrapState = ref<'idle' | 'loading' | 'ready' | 'error'>( 'idle' )
 	const scalarSwitchState = ref<'idle' | 'switching'>( 'idle' )
 	const instanceBootstrapErrorMessage = ref( '' )
@@ -140,6 +144,38 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	}
 
 	/**
+	 * Ensures a module section is expanded in the navigation rail.
+	 *
+	 * @param moduleName - Module name to expand.
+	 * @returns Nothing.
+	 */
+	function ensureModuleExpanded( moduleName: string ): void {
+		if ( expandedModuleNames.value.includes( moduleName ) ) {
+			return
+		}
+
+		expandedModuleNames.value = [ ...expandedModuleNames.value, moduleName ]
+	}
+
+	/**
+	 * Toggles whether a module section is expanded in the navigation rail.
+	 *
+	 * @param moduleName - Module name for the heading that was activated.
+	 * @param isOpen - Whether the section should be open.
+	 * @returns Nothing.
+	 */
+	function setModuleExpanded( moduleName: string, isOpen: boolean ): void {
+		if ( isOpen ) {
+			ensureModuleExpanded( moduleName )
+			return
+		}
+
+		expandedModuleNames.value = expandedModuleNames.value.filter(
+			( expandedName ) => expandedName !== moduleName
+		)
+	}
+
+	/**
 	 * Selects a module and triggers Scalar switching state.
 	 *
 	 * @param moduleName - Target module name.
@@ -153,13 +189,15 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 
 		const isAlreadySelected = selectedModuleName.value === moduleName
 		selectedModuleName.value = moduleName
-		expandedModuleName.value = moduleName
+		ensureModuleExpanded( moduleName )
 
 		if ( options.operationTarget ) {
 			pendingOperationTarget.value = options.operationTarget
 		}
 
-		if ( !isAlreadySelected || options.operationTarget ) {
+		// Only block on Scalar reload when the spec URL changes (new module).
+		// Same-module endpoint clicks keep the current spec mounted so focus can run immediately.
+		if ( !isAlreadySelected ) {
 			startScalarSwitch()
 		}
 
@@ -195,7 +233,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		instanceBootstrapErrorMessage.value = ''
 		modules.value = []
 		selectedModuleName.value = ''
-		expandedModuleName.value = ''
+		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
 		scalarSwitchState.value = 'idle'
 
@@ -269,7 +307,8 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		failedModules,
 		wikiDisplayName,
 		selectedModuleName,
-		expandedModuleName,
+		expandedModuleNames,
+		setModuleExpanded,
 		selectedModule,
 		openApiSpecUrl,
 		pendingOperationTarget,

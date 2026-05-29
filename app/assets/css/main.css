@@ -12,6 +12,13 @@
  */
 
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
+@import './page-grid.css';
+@import './explorer-codex-overrides.css';
+
+:root {
+	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
+	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
+}
 
 html,
 body {
@@ -19,7 +26,7 @@ body {
 	padding: 0;
 	background-color: var( --background-color-base );
 	color: var( --color-base );
-	font-family: var( --font-family-system-sans );
+	font-family: var( --font-family-sans-stack );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-medium );
 }
@@ -30,16 +37,83 @@ body {
 	box-sizing: border-box;
 }
 
-a {
+/**
+ * First-party typography colours (Codex tokens).
+ * Codex components keep their own colours; these rules target shell and page content.
+ */
+.frontdoor-shell {
+	color: var( --color-base );
+}
+
+.frontdoor-shell :where( h1, h2, h3, h4, h5, h6 ) {
+	color: var( --color-emphasized );
+}
+
+.frontdoor-shell :where(
+	.frontdoor-description,
+	.frontdoor-help-text,
+	.frontdoor-shell__footer,
+	.explorer-page__header > p,
+	.explorer-page__reference-header > p,
+	.explorer-page__bootstrap-loading > p,
+	.explorer-page__scalar-loading > p,
+	.explorer-page__scalar-switching-mask > p,
+	.explorer-module-rail__module-unavailable,
+	.explorer-module-rail__module-empty-state
+) {
+	color: var( --color-subtle );
+}
+
+/* Shell chrome navigation (Home / About / API Explorer) has no font rule in the
+ * layout; re-assert the Codex sans stack so links do not pick up generic sans-serif
+ * (often computed as Arial on Windows). */
+.frontdoor-shell__main-nav,
+.frontdoor-shell__main-nav :where( a ),
+.frontdoor-shell__side-nav,
+.frontdoor-shell__side-nav :where( a ) {
+	font-family: var( --font-family-sans-stack );
+}
+
+/* Navigation menus: base text, not progressive links. */
+.frontdoor-shell__main-nav :where( a ) {
+	color: var( --color-base );
+	text-decoration: none;
+}
+
+.frontdoor-shell__main-nav :where( a:hover ) {
+	text-decoration: underline;
+}
+
+.frontdoor-shell__main-nav :where( a.router-link-active ) {
+	color: var( --color-emphasized );
+	font-weight: var( --font-weight-bold );
+}
+
+.frontdoor-shell__brand {
+	color: var( --color-emphasized );
+	text-decoration: none;
+}
+
+.frontdoor-shell__login-link {
 	color: var( --color-progressive );
 	text-decoration: none;
 }
 
-a:hover {
+.frontdoor-shell__login-link:hover {
 	text-decoration: underline;
 }
 
-a:visited {
+/* Content links (prose, explorer copy, etc.) — excludes navigation menus above. */
+.frontdoor-shell__main :where( a ) {
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.frontdoor-shell__main :where( a:hover ) {
+	text-decoration: underline;
+}
+
+.frontdoor-shell__main :where( a:visited ) {
 	color: var( --color-visited );
 }
 
@@ -49,8 +123,6 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: var( --font-family-serif );
-	color: var( --color-emphasized );
 	margin-block: var( --spacing-150 ) var( --spacing-75 );
 	line-height: var( --line-height-xx-small );
 }
@@ -71,8 +143,14 @@ p {
 	margin-block: var( --spacing-50 );
 }
 
+code,
+kbd,
+pre,
+samp {
+	font-family: var( --font-family-monospace-stack );
+}
+
 code {
-	font-family: var( --font-family-monospace );
 	font-size: var( --font-size-small );
 	background-color: var( --background-color-neutral-subtle );
 	padding-block: var( --spacing-12 );
@@ -88,27 +166,51 @@ code {
 	--scalar-color-2: var( --color-subtle );
 	--scalar-color-3: var( --color-placeholder );
 	--scalar-color-accent: var( --color-progressive );
+	--scalar-link-color: var( --color-progressive );
+	--scalar-link-color-hover: var( --color-progressive--hover );
+	--scalar-link-color-visited: var( --color-visited );
 	--scalar-color-green: var( --color-success );
 	--scalar-color-red: var( --color-error );
 	--scalar-color-orange: var( --color-warning );
 	--scalar-border-color: var( --border-color-subtle );
-	font-family: var( --font-family-system-sans );
+	--scalar-font-code: var( --font-family-monospace-stack );
+	font-family: var( --font-family-sans-stack );
+}
+
+.explorer-page :where( .scalar-app ) :where( code, pre, kbd, samp ) {
+	font-family: var( --font-family-monospace-stack );
+}
+
+/* OpenAPI path templates in operation headings and code-sample headers (Scalar modern + classic). */
+.explorer-page :where( .scalar-app ) :where(
+	.operation-path,
+	.endpoint-path,
+	.endpoint-label-path
+) {
+	font-family: var( --font-family-monospace-stack );
 }
 
 .explorer-page .cdx-select-vue,
-.explorer-page .cdx-select-vue__menu-wrapper {
+.explorer-page .cdx-select-vue__menu-wrapper,
+.explorer-page .cdx-combobox,
+.explorer-page .cdx-combobox__menu-wrapper,
+.explorer-module-rail .cdx-select-vue,
+.explorer-module-rail .cdx-select-vue__menu-wrapper {
 	position: relative;
-	z-index: 20;
 }
 
 .explorer-page .cdx-select-vue__menu,
-.explorer-page .cdx-menu {
+.explorer-page .cdx-combobox__menu,
+.explorer-page .cdx-menu,
+.explorer-module-rail .cdx-select-vue__menu,
+.explorer-module-rail .cdx-menu {
 	background-color: var( --background-color-base );
 	color: var( --color-base );
 	border: 1px solid var( --border-color-base );
 	box-shadow: 0 4px 4px 0 rgba( 0, 0, 0, 0.06 ), 0 0 8px 0 rgba( 0, 0, 0, 0.06 );
 	opacity: 1;
-	z-index: 900;
+	/* Above sibling rail content only; explorer main column stacks above the end panel. */
+	z-index: 50;
 }
 
 .explorer-page .cdx-menu__listbox,

@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
 import { getWikiInstanceById } from '../../config/instances'
+import { resolveExplorerModuleRailHeading } from '../../app/utils/explorerModuleRailHeading'
 
 const EXPLORER_BOOTSTRAP_USER_AGENT =
 	'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
@@ -54,6 +55,9 @@ interface ExplorerBootstrapModule {
 	title?: string
 	version?: string
 	label: string
+	headingTitle: string
+	versionChipLabel?: string
+	showBetaChip: boolean
 	specUrl: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
@@ -144,10 +148,19 @@ export default defineEventHandler( async ( event ) => {
 			const modulePayload: ExplorerBootstrapModule = {
 				name: moduleItem.name,
 				label: formatModuleLabel( moduleItem.name, moduleItem.title, moduleItem.version ),
+				headingTitle: moduleItem.title ?? moduleItem.name,
+				showBetaChip: false,
 				specUrl: moduleItem.specUrl,
 				operations: extractOperationsFromOpenApi( parsedOpenApiDocument.paths ?? {} ),
 				hasSpecError: false
 			}
+
+			attachModuleRailHeadingFields(
+				modulePayload,
+				moduleItem.name,
+				moduleItem.title,
+				moduleItem.version
+			)
 
 			if ( moduleItem.title ) {
 				modulePayload.title = moduleItem.title
@@ -162,11 +175,20 @@ export default defineEventHandler( async ( event ) => {
 			const failedModulePayload: ExplorerBootstrapModule = {
 				name: moduleItem.name,
 				label: formatModuleLabel( moduleItem.name, moduleItem.title, moduleItem.version ),
+				headingTitle: moduleItem.title ?? moduleItem.name,
+				showBetaChip: false,
 				specUrl: moduleItem.specUrl,
 				operations: [],
 				hasSpecError: true,
 				specErrorMessage: error instanceof Error ? error.message : 'Module spec fetch failed.'
 			}
+
+			attachModuleRailHeadingFields(
+				failedModulePayload,
+				moduleItem.name,
+				moduleItem.title,
+				moduleItem.version
+			)
 
 			if ( moduleItem.title ) {
 				failedModulePayload.title = moduleItem.title
@@ -227,28 +249,22 @@ function normalizeDiscoveryModules(
 
 	if ( Array.isArray( discoveryModules ) ) {
 		return discoveryModules
-			.filter( ( rawModule ) => typeof rawModule.name === 'string' && typeof rawModule.specUrl === 'string' )
-			.map( ( rawModule ) => ( {
-				name: rawModule.name,
-				title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
-				version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
-				specUrl: normalizeSpecUrl( baseUrl, rawModule.specUrl )
-			} ) )
+			.filter( ( rawModule ) => typeof rawModule.specUrl === 'string' )
+			.map( ( rawModule ) => {
+				const specUrl = normalizeSpecUrl( baseUrl, rawModule.specUrl )
+
+				return {
+					name: resolveDiscoveryModuleName( rawModule.name, specUrl ),
+					title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
+					version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
+					specUrl
+				}
+			} )
 	}
 
 	if ( discoveryModules && typeof discoveryModules === 'object' ) {
 		return Object.entries( discoveryModules )
 			.flatMap( ( [ moduleKey, moduleValue ] ) => {
-				const moduleName = typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey
-				const moduleVersion =
-					isUsableVersion( moduleValue.info?.version )
-						? moduleValue.info.version
-						: isUsableVersion( moduleValue.version )
-							? moduleValue.version
-							: undefined
-				const moduleTitle = typeof moduleValue.info?.title === 'string'
-					? moduleValue.info.title
-					: undefined
 				const rawSpecUrl =
 					typeof moduleValue.spec === 'string'
 						? moduleValue.spec
@@ -260,9 +276,24 @@ function normalizeDiscoveryModules(
 					return []
 				}
 
+				const specUrl = normalizeSpecUrl( baseUrl, rawSpecUrl )
+				const moduleName = resolveDiscoveryModuleName(
+					typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey,
+					specUrl
+				)
+				const moduleVersion =
+					isUsableVersion( moduleValue.info?.version )
+						? moduleValue.info.version
+						: isUsableVersion( moduleValue.version )
+							? moduleValue.version
+							: undefined
+				const moduleTitle = typeof moduleValue.info?.title === 'string'
+					? moduleValue.info.title
+					: undefined
+
 				const normalizedModule: DiscoveryModule = {
 					name: moduleName,
-					specUrl: normalizeSpecUrl( baseUrl, rawSpecUrl )
+					specUrl
 				}
 
 				if ( moduleTitle ) {
@@ -281,6 +312,29 @@ function normalizeDiscoveryModules(
 }
 
 /**
+ * Resolves a stable, non-empty module name for discovery entries.
+ *
+ * Core REST modules may expose an empty moduleId; in that case the name is
+ * taken from the `/module/{id}` segment in the spec URL (for example `-`).
+ *
+ * @param rawModuleName - Module id or object key from discovery.
+ * @param specUrl - Absolute OpenAPI spec URL for the module.
+ * @returns Non-empty module name used for selection and accordion state.
+ */
+function resolveDiscoveryModuleName( rawModuleName: string, specUrl: string ): string {
+	if ( typeof rawModuleName === 'string' && rawModuleName.trim() !== '' ) {
+		return rawModuleName.trim()
+	}
+
+	const modulePathMatch = specUrl.match( /\/module\/([^/?#]+)/ )
+	if ( modulePathMatch?.[ 1 ] ) {
+		return modulePathMatch[ 1 ]
+	}
+
+	return 'unknown-module'
+}
+
+/**
  * Formats the module label shown by the explorer interface.
  *
  * @param moduleName - Discovery module name.
@@ -295,6 +349,30 @@ function formatModuleLabel( moduleName: string, moduleTitle?: string, moduleVers
 
 	const normalizedVersion = moduleVersion.startsWith( 'v' ) ? moduleVersion : `v${ moduleVersion }`
 	return `${ moduleTitle ?? moduleName } (${ normalizedVersion })`
+}
+
+/**
+ * Adds parsed rail heading fields used by the explorer module navigation menu.
+ *
+ * @param modulePayload - Bootstrap module record to enrich.
+ * @param moduleName - Discovery module name.
+ * @param moduleTitle - Optional human-readable module title.
+ * @param moduleVersion - Optional module version.
+ * @returns Nothing.
+ */
+function attachModuleRailHeadingFields(
+	modulePayload: ExplorerBootstrapModule,
+	moduleName: string,
+	moduleTitle?: string,
+	moduleVersion?: string
+): void {
+	const railHeading = resolveExplorerModuleRailHeading( moduleName, moduleTitle, moduleVersion )
+	modulePayload.headingTitle = railHeading.headingTitle
+	modulePayload.showBetaChip = railHeading.showBetaChip
+
+	if ( railHeading.versionChipLabel ) {
+		modulePayload.versionChipLabel = railHeading.versionChipLabel
+	}
 }
 
 /**

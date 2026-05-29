@@ -48,6 +48,7 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 		interfaceLocale.value = MESSAGES_BY_LOCALE[ nextLocale ] ? nextLocale : 'en'
 	}
 
+	// Use bananaI18n only — @nuxtjs/i18n already registers $i18n for content locale routing.
 	nuxtApp.provide( 'bananaI18n', i18n )
 	nuxtApp.provide( 'setInterfaceLocale', setInterfaceLocale )
 	nuxtApp.provide( 'interfaceLocale', interfaceLocale )
