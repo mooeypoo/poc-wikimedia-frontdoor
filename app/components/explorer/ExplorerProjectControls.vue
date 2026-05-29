@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CdxCheckbox, CdxCombobox, CdxField } from '@wikimedia/codex'
+import { getWikiInstanceById, WIKI_INSTANCES } from '../../../config/instances'
 
 interface PickerMenuItem {
 	label: string
@@ -42,6 +43,26 @@ const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-proje
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
 const betaEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-beta-endpoints' ) )
 const internalEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-internal-endpoints' ) )
+
+/**
+ * Bridges wiki instance id state to Codex Combobox, which shows `selected` in the input.
+ *
+ * Menu item values are display names; the explorer page keeps the instance id.
+ */
+const wikiProjectComboboxSelected = computed( {
+	get(): string {
+		return getWikiInstanceById( selectedWikiInstanceId.value )?.displayName ?? ''
+	},
+	set( nextSelectedDisplayName: string ) {
+		const matchingWikiInstance = WIKI_INSTANCES.find( ( wikiInstance ) => {
+			return wikiInstance.displayName === nextSelectedDisplayName
+		} )
+
+		if ( matchingWikiInstance ) {
+			selectedWikiInstanceId.value = matchingWikiInstance.id
+		}
+	}
+} )
 
 const optInCheckboxOptions = computed( () => [
 	{
@@ -93,7 +114,7 @@ const selectedOptInValues = computed( {
 				{{ wikiProjectDescription }}
 			</template>
 			<CdxCombobox
-				v-model:selected="selectedWikiInstanceId"
+				v-model:selected="wikiProjectComboboxSelected"
 				:menu-items="wikiInstanceMenuItems"
 				:disabled="isInstanceBootstrapping"
 			/>

@@ -90,7 +90,8 @@ function isolateLabel( label: string ): string {
 
 const wikiInstanceMenuItems = computed<PickerMenuItem[]>( () => {
 	return WIKI_INSTANCES.map( ( wikiInstance ) => ( {
-		value: wikiInstance.id,
+		// Combobox binds `selected` to the text input; use displayName as the value.
+		value: wikiInstance.displayName,
 		label: isolateLabel( wikiInstance.displayName )
 	} ) )
 } )
