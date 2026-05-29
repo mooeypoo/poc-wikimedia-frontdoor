@@ -18,7 +18,7 @@ interface PickerMenuItem {
 const props = defineProps<{
 	modules: ExplorerBootstrapModule[]
 	selectedModuleName: string
-	expandedModuleName: string
+	expandedModuleNames: string[]
 	wikiInstanceMenuItems: PickerMenuItem[]
 	instancePlaceholderLabel: string
 	isInstanceBootstrapping: boolean
@@ -59,7 +59,7 @@ const failedModules = computed( () => {
  * @returns True when the module section is open.
  */
 function isModuleExpanded( moduleName: string ): boolean {
-	return props.expandedModuleName === moduleName
+	return props.expandedModuleNames.includes( moduleName )
 }
 
 /**

@@ -20,7 +20,8 @@ const {
 	modules,
 	wikiDisplayName,
 	selectedModuleName,
-	expandedModuleName,
+	expandedModuleNames,
+	setModuleExpanded,
 	selectedModule,
 	openApiSpecUrl,
 	pendingOperationTarget,
@@ -121,14 +122,7 @@ watch( pendingOperationTarget, ( nextPendingOperationTarget ) => {
 } )
 
 function onModuleExpandToggle( moduleName: string, isOpen: boolean ): void {
-	if ( !isOpen ) {
-		if ( expandedModuleName.value === moduleName ) {
-			expandedModuleName.value = ''
-		}
-		return
-	}
-
-	expandedModuleName.value = moduleName
+	setModuleExpanded( moduleName, isOpen )
 }
 
 function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation ): void {
@@ -162,7 +156,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					:style="railStickyStyle"
 					:modules="modules"
 					:selected-module-name="selectedModuleName"
-					:expanded-module-name="expandedModuleName"
+					:expanded-module-names="expandedModuleNames"
 					:wiki-instance-menu-items="wikiInstanceMenuItems"
 					:instance-placeholder-label="instancePlaceholderLabel"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
