@@ -7,7 +7,8 @@ import { useDirection } from '../composables/useDirection'
  *
  * Sets the <html> dir attribute and provides the shared header, main
  * content slot, and footer inside the site-wide 24-column grid. The outer
- * 4-column areas are reserved for future side navigation menus.
+ * 4-column areas are reserved for side navigation; the site brand lives
+ * at the top of the left column on wide viewports.
  */
 
 const { direction } = useDirection()
@@ -62,7 +63,14 @@ useHead( {
 	<div class="frontdoor-shell">
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
-				<!-- Reserved for future primary side navigation. -->
+				<div class="frontdoor-shell__side-nav">
+					<NuxtLink
+						to="/"
+						class="frontdoor-shell__brand frontdoor-shell__brand--sidebar"
+					>
+						{{ applicationTitle }}
+					</NuxtLink>
+				</div>
 			</template>
 
 			<div class="frontdoor-shell__content">
@@ -70,7 +78,7 @@ useHead( {
 					<div class="frontdoor-shell__header-inner">
 						<NuxtLink
 							to="/"
-							class="frontdoor-shell__brand"
+							class="frontdoor-shell__brand frontdoor-shell__brand--header"
 						>
 							{{ applicationTitle }}
 						</NuxtLink>
@@ -148,11 +156,28 @@ useHead( {
 	padding-block: var( --spacing-75 );
 }
 
+.frontdoor-shell__side-nav {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-100 );
+	padding-block: var( --spacing-75 );
+	padding-inline: var( --spacing-100 );
+	min-block-size: 100%;
+}
+
 .frontdoor-shell__brand {
 	font-family: var( --font-family-serif );
 	font-size: var( --font-size-large );
 	color: var( --color-emphasized );
 	font-weight: var( --font-weight-bold );
+	max-block-size: 4rem;
+	display: inline-flex;
+	align-items: center;
+	line-height: var( --line-height-xx-small );
+}
+
+.frontdoor-shell__brand--sidebar {
+	display: none;
 }
 
 .frontdoor-shell__nav {
@@ -191,6 +216,14 @@ useHead( {
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
 		background-color: var( --background-color-neutral-subtle );
 		align-self: stretch;
+	}
+
+	.frontdoor-shell__brand--header {
+		display: none;
+	}
+
+	.frontdoor-shell__brand--sidebar {
+		display: inline-flex;
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
