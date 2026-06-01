@@ -1,0 +1,40 @@
+/**
+ * shell-end-panel-nav.css — end-column page navigation (2-panel desktop layout).
+ *
+ * Used by the API Explorer module rail and future section page menus in the grid end column.
+ * Vertical alignment with main-column controls is driven by useEndPanelNavAlign (CSS variables).
+ */
+
+.frontdoor-end-panel-nav {
+	display: grid;
+	align-content: start;
+	align-self: start;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	margin-block-start: var(
+		--frontdoor-end-panel-nav-flow-offset,
+		var( --fd-explorer-rail-offset )
+	);
+	position: sticky;
+	inset-block-start: var(
+		--frontdoor-end-panel-nav-sticky-inset,
+		var( --fd-explorer-rail-offset )
+	);
+	max-block-size: calc(
+		100vh - var(
+			--frontdoor-end-panel-nav-sticky-inset,
+			var( --fd-explorer-rail-offset )
+		)
+	);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+@media screen and ( max-width: 1119px ) {
+	.frontdoor-end-panel-nav {
+		position: static;
+		margin-block-start: 0;
+		inset-block-start: auto;
+		max-block-size: none;
+	}
+}

@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 
@@ -16,6 +16,9 @@ export interface ExplorerBootstrapModule {
 	title?: string
 	version?: string
 	label: string
+	headingTitle: string
+	versionChipLabel?: string
+	showBetaChip: boolean
 	specUrl: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
@@ -35,6 +38,7 @@ export interface ExplorerOperationTarget {
 	path: string
 	summary: string
 	operationId?: string
+	primaryTag?: string
 }
 
 type SelectionSource = 'module-title' | 'module-accordion' | 'module-select' | 'endpoint-item' | 'bootstrap-default'
@@ -55,13 +59,17 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  *
  * @param selectedWikiInstanceId - Reactive wiki instance id.
  * @returns Reactive bootstrap state, selected module state, and selection actions.
+ *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
 export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	const modules = ref<ExplorerBootstrapModule[]>( [] )
 	const wikiDisplayName = ref( '' )
 	const selectedModuleName = ref( '' )
-	const expandedModuleName = ref( '' )
-	const instanceBootstrapState = ref<'idle' | 'loading' | 'ready' | 'error'>( 'idle' )
+	const expandedModuleNames = ref<string[]>( [] )
+	// Show the loading UI immediately on the client-only explorer route (no idle flash).
+	const instanceBootstrapState = ref<'idle' | 'loading' | 'ready' | 'error'>(
+		import.meta.client ? 'loading' : 'idle'
+	)
 	const scalarSwitchState = ref<'idle' | 'switching'>( 'idle' )
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
@@ -85,6 +93,8 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	const failedModules = computed( () => {
 		return modules.value.filter( ( moduleItem ) => moduleItem.hasSpecError )
 	} )
+
+	const hasSelectableModules = computed( () => availableModules.value.length > 0 )
 
 	const openApiSpecUrl = computed<string | null>( () => selectedModule.value?.specUrl ?? null )
 
@@ -140,6 +150,38 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	}
 
 	/**
+	 * Ensures a module section is expanded in the navigation rail.
+	 *
+	 * @param moduleName - Module name to expand.
+	 * @returns Nothing.
+	 */
+	function ensureModuleExpanded( moduleName: string ): void {
+		if ( expandedModuleNames.value.includes( moduleName ) ) {
+			return
+		}
+
+		expandedModuleNames.value = [ ...expandedModuleNames.value, moduleName ]
+	}
+
+	/**
+	 * Toggles whether a module section is expanded in the navigation rail.
+	 *
+	 * @param moduleName - Module name for the heading that was activated.
+	 * @param isOpen - Whether the section should be open.
+	 * @returns Nothing.
+	 */
+	function setModuleExpanded( moduleName: string, isOpen: boolean ): void {
+		if ( isOpen ) {
+			ensureModuleExpanded( moduleName )
+			return
+		}
+
+		expandedModuleNames.value = expandedModuleNames.value.filter(
+			( expandedName ) => expandedName !== moduleName
+		)
+	}
+
+	/**
 	 * Selects a module and triggers Scalar switching state.
 	 *
 	 * @param moduleName - Target module name.
@@ -153,13 +195,15 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 
 		const isAlreadySelected = selectedModuleName.value === moduleName
 		selectedModuleName.value = moduleName
-		expandedModuleName.value = moduleName
+		ensureModuleExpanded( moduleName )
 
 		if ( options.operationTarget ) {
 			pendingOperationTarget.value = options.operationTarget
 		}
 
-		if ( !isAlreadySelected || options.operationTarget ) {
+		// Only block on Scalar reload when the spec URL changes (new module).
+		// Same-module endpoint clicks keep the current spec mounted so focus can run immediately.
+		if ( !isAlreadySelected ) {
 			startScalarSwitch()
 		}
 
@@ -195,7 +239,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		instanceBootstrapErrorMessage.value = ''
 		modules.value = []
 		selectedModuleName.value = ''
-		expandedModuleName.value = ''
+		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
 		scalarSwitchState.value = 'idle'
 
@@ -259,17 +303,74 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		await bootstrapSelectedInstance( true )
 	}
 
-	watch( selectedWikiInstanceId, () => {
+	onMounted( () => {
+		const nuxtApp = useNuxtApp()
+
+		/**
+		 * Waits until Nuxt finishes client hydration, then starts bootstrap.
+		 *
+		 * Immediate watchers can hang `$fetch` on SPA entry to `ssr: false` routes; see
+		 * ARCHITECTURE.md → API explorer → Route boundary navigation.
+		 *
+		 * @returns Promise that resolves when bootstrap has been scheduled.
+		 */
+		async function bootstrapAfterHydration(): Promise<void> {
+			if ( nuxtApp.isHydrating ) {
+				await new Promise<void>( ( resolve ) => {
+					const finishHydration = (): void => {
+						if ( !nuxtApp.isHydrating ) {
+							resolve()
+						}
+					}
+
+					const stopHook = nuxtApp.hook( 'app:suspense:resolve', () => {
+						stopHook()
+						finishHydration()
+					} )
+
+					requestAnimationFrame( finishHydration )
+					setTimeout( finishHydration, 500 )
+				} )
+			}
+
+			await nextTick()
+			void bootstrapSelectedInstance( false )
+		}
+
+		void bootstrapAfterHydration()
+
+		// Fallback when bootstrap started before the client was fully ready (SPA entry to `/explorer`).
+		setTimeout( () => {
+			if (
+				instanceBootstrapState.value !== 'ready'
+				&& instanceBootstrapState.value !== 'error'
+			) {
+				void bootstrapSelectedInstance( false )
+			}
+		}, 1000 )
+	} )
+
+	watch( selectedWikiInstanceId, ( newWikiInstanceId, previousWikiInstanceId ) => {
+		if ( previousWikiInstanceId === undefined ) {
+			return
+		}
+
+		if ( newWikiInstanceId === previousWikiInstanceId ) {
+			return
+		}
+
 		void bootstrapSelectedInstance( false )
-	}, { immediate: true } )
+	} )
 
 	return {
 		modules,
 		availableModules,
 		failedModules,
+		hasSelectableModules,
 		wikiDisplayName,
 		selectedModuleName,
-		expandedModuleName,
+		expandedModuleNames,
+		setModuleExpanded,
 		selectedModule,
 		openApiSpecUrl,
 		pendingOperationTarget,

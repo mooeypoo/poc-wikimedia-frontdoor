@@ -1,0 +1,86 @@
+/**
+ * explorer-codex-overrides.css — Codex fixes on the API explorer page.
+ *
+ * Scalar’s Tailwind preflight can reset ::before margin/border on shell controls.
+ * These rules re-assert Codex checkbox checkmark layout and load after Scalar CSS
+ * (see ExplorerScalarReference.client.vue).
+ */
+
+.explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
+	content: ' ' !important;
+	display: block !important;
+	box-sizing: border-box !important;
+	position: relative !important;
+	inset: auto !important;
+	margin: 0 !important;
+	inline-size: 0.25rem !important;
+	block-size: calc( 100% - 6px ) !important;
+	max-block-size: calc( 100% - 6px ) !important;
+	border-block-start-width: 0 !important;
+	border-inline-start-width: 0 !important;
+	border-inline-end-width: 2px !important;
+	border-inline-end-style: solid !important;
+	border-block-end-width: 2px !important;
+	border-block-end-style: solid !important;
+	border-inline-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	border-block-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	transform: rotate( 45deg ) !important;
+}
+
+/*
+ * Scalar link colours (loads after Scalar CSS).
+ *
+ * Scalar sets --scalar-link-color to body text in .light-mode / .dark-mode and, in
+ * @supports (color: color(display-p3 …)), replaces --scalar-color-accent with display-p3
+ * blues used as the link fallback. Use .scalar-app (not :where) so these tokens beat
+ * Scalar’s single-class theme rules regardless of load order.
+ */
+.explorer-page .scalar-app,
+.explorer-page .scalar-app.light-mode,
+.explorer-page .scalar-app.dark-mode {
+	--scalar-color-accent: var( --color-progressive );
+	--scalar-link-color: var( --color-progressive );
+	--scalar-link-color-hover: var( --color-progressive--hover );
+	--scalar-link-color-visited: var( --color-visited );
+}
+
+/* Mirror Scalar’s display-p3 @supports block so accent/link tokens stay progressive. */
+@supports ( color: color( display-p3 1 1 1 ) ) {
+	.explorer-page .scalar-app,
+	.explorer-page .scalar-app.light-mode,
+	.explorer-page .scalar-app.dark-mode {
+		--scalar-color-accent: var( --color-progressive );
+		--scalar-link-color: var( --color-progressive );
+		--scalar-link-color-hover: var( --color-progressive--hover );
+		--scalar-link-color-visited: var( --color-visited );
+	}
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href] ) {
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href]:hover ) {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.explorer-page :where( .scalar-app ) :where( a[href]:visited ) {
+	color: var( --color-visited );
+}
+
+/* Markdown and .text-c-accent links resolve accent directly, not only via <a>. */
+.explorer-page .scalar-app :where( .markdown a, .text-c-accent ) {
+	color: var( --color-progressive );
+}
+
+.explorer-page .scalar-app :where( .markdown a:hover ) {
+	color: var( --color-progressive--hover );
+}

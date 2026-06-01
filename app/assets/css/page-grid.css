@@ -1,0 +1,151 @@
+/**
+ * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
+ *
+ * Desktop (≥ 1120px, Codex --min-width-breakpoint-desktop): 2-panel layout — 4 | 16 | 4
+ * with both side columns always reserved on every route.
+ *
+ * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
+ * future commit). Tablet uses 2 + 6 without a stacked end row; mobile stacks main first.
+ *
+ * @media uses px literals matching Codex breakpoint tokens — CSS variables are unreliable
+ * inside media query conditions in many browsers.
+ * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
+ *
+ * Page margins: --spacing-100 (mobile), --spacing-150 (tablet), --spacing-200 (desktop).
+ */
+
+:root {
+	/* Locked shell width at desktop wide (Codex max-width-breakpoint-desktop, 1679px) */
+	--fd-layout-grid-max-inline-size: var( --max-width-breakpoint-desktop );
+
+	/* Column spans on 24-column desktop */
+	--fd-layout-grid-columns: 24;
+	--fd-layout-side-span: 4;
+	--fd-layout-main-span: 16;
+
+	/* Tablet 8-column split: 2 + 6 */
+	--fd-layout-tablet-columns: 8;
+	--fd-layout-tablet-side-span: 2;
+	--fd-layout-tablet-main-span: 6;
+
+	/* Desktop wide: fixed Codex column width */
+	--fd-layout-desktop-wide-column-width: 2.5rem; /* 40px */
+
+	/* Mobile defaults */
+	--fd-layout-page-margin: var( --spacing-100 );
+	--fd-layout-grid-gutter: var( --spacing-100 );
+
+	/*
+	 * Fallback sticky offset for the explorer module rail (project controls block).
+	 * Runtime alignment uses useEndPanelNavAlign; this approximates site chrome,
+	 * the explorer title and description, and the project controls row.
+	 */
+	--fd-explorer-rail-offset: calc(
+		4rem
+		+ ( var( --spacing-100 ) * 2 )
+		+ var( --line-height-small )
+		+ var( --spacing-200 )
+		+ var( --spacing-150 )
+		+ var( --line-height-xx-small )
+		+ var( --spacing-100 )
+		+ 5.5rem
+	);
+}
+
+.fd-page-grid {
+	inline-size: 100%;
+	margin-inline: auto;
+	padding-inline: var( --fd-layout-page-margin );
+	box-sizing: border-box;
+}
+
+.fd-page-grid__start,
+.fd-page-grid__end,
+.fd-page-grid__main {
+	min-inline-size: 0;
+}
+
+/* --- Below desktop: interim layouts (full panel responsive deferred) --- */
+
+/* Mobile (< 640px): main first, start column visible, end hidden */
+.fd-page-grid {
+	display: flex;
+	flex-direction: column;
+	gap: var( --fd-layout-grid-gutter );
+}
+
+.fd-page-grid__main {
+	order: -1;
+}
+
+.fd-page-grid__end {
+	display: none;
+}
+
+/* Tablet (640px–1119px): 8-column 2 | 6; end panel hidden until desktop */
+@media screen and ( min-width: 640px ) {
+	:root {
+		--fd-layout-page-margin: var( --spacing-150 );
+		--fd-layout-grid-gutter: var( --spacing-150 );
+	}
+
+	.fd-page-grid {
+		display: grid;
+		grid-template-columns: repeat( var( --fd-layout-tablet-columns ), minmax( 0, 1fr ) );
+		gap: var( --fd-layout-grid-gutter );
+	}
+
+	.fd-page-grid__main {
+		order: unset;
+		grid-column: calc( var( --fd-layout-tablet-side-span ) + 1 ) / span var( --fd-layout-tablet-main-span );
+	}
+
+	.fd-page-grid__start {
+		grid-column: 1 / span var( --fd-layout-tablet-side-span );
+	}
+}
+
+/* --- Desktop (≥ 1120px): 24-column 4 | 16 | 4, both side panels on sides --- */
+@media screen and ( min-width: 1120px ) {
+	:root {
+		--fd-layout-page-margin: var( --spacing-200 );
+		--fd-layout-grid-gutter: var( --spacing-150 );
+	}
+
+	.fd-page-grid {
+		display: grid;
+		grid-template-columns: repeat( var( --fd-layout-grid-columns ), minmax( 0, 1fr ) );
+		gap: var( --fd-layout-grid-gutter );
+	}
+
+	.fd-page-grid__start,
+	.fd-page-grid__end {
+		display: block;
+	}
+
+	.fd-page-grid__start {
+		grid-column: 1 / span var( --fd-layout-side-span );
+		grid-row: 1;
+	}
+
+	.fd-page-grid__main {
+		grid-column: calc( var( --fd-layout-side-span ) + 1 ) / span var( --fd-layout-main-span );
+		grid-row: 1;
+	}
+
+	.fd-page-grid__end {
+		grid-column: calc( var( --fd-layout-side-span ) + var( --fd-layout-main-span ) + 1 ) / span var( --fd-layout-side-span );
+		grid-row: 1;
+	}
+}
+
+/* --- Desktop wide (≥ 1680px): lock shell width; 24 × 40px column tracks --- */
+@media screen and ( min-width: 1680px ) {
+	.fd-page-grid {
+		max-inline-size: var( --fd-layout-grid-max-inline-size );
+		grid-template-columns: repeat(
+			var( --fd-layout-grid-columns ),
+			var( --fd-layout-desktop-wide-column-width )
+		);
+	}
+}

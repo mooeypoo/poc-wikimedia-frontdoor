@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Front Door Developer Portal
 
-This document describes the architecture of the Front Door project: how it is structured, why key decisions were made, and how the main concerns are separated. Read this alongside `AGENTS.md`, which describes behavioural rules for working in the codebase.
+This document describes the architecture of the Front Door project: how it is structured, why key decisions were made, and how the main concerns are separated. Read this alongside `AGENTS.md`, which describes behavioural rules for working in the codebase, and `DESIGN_REQUIREMENTS.md`, which records UI/UX decisions.
 
 For the full decision history and comparative analysis, see the project design document.
 
@@ -56,17 +56,24 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   └── shared/             # Components used across both surfaces
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
-│   │   └── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
+│   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
+│   │   └── explorer-route-navigation.client.ts  # Full reload across /explorer boundary
+│   ├── utils/
+│   │   └── explorerRoute.ts    # isExplorerRoutePath() for layout and plugins
+│   ├── app.vue                 # NuxtPage :page-key for route remounts
 │   └── layouts/
-│       └── default.vue         # Shell layout; sets dir attribute on <html>
+│       └── default.vue         # Shell layout; primary nav; sets dir on <html>
 │
 ├── config/                     # Project-level configuration (not Nuxt config)
-│   ├── instances.js            # Wiki instance definitions and base URLs
+│   ├── instances.ts            # Wiki instance definitions and base URLs
 │   ├── languages.js            # Supported languages with explicit dir declarations
+│   ├── mainNavigation.ts       # Primary shell nav order and paths
+│   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
+│   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
-│   ├── en/                     # English content
+│   ├── en/                     # English content (index, learn, about, …)
 │   ├── ar/                     # Arabic content (where available)
 │   └── [locale]/               # Per-locale Markdown directories
 │
@@ -125,7 +132,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 **Responsibility:** Rendering data and handling user interaction. Calls composables to get reactive data. Renders it using Codex components. Passes user actions back up via events or composable actions.
 
-**Does not contain:** Fetch calls, URL construction, fallback logic, business rules.
+**Does not contain:** Fetch calls, URL construction, fallback logic, business rules. Pure helpers for labels, BiDi, and a11y live in `app/utils/` (for example `explorerEndpointLabels.ts`, `bidiLabel.ts`).
 
 ---
 
@@ -141,8 +148,13 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useLocaleWithFallback(requestedLocale)` | Best available locale given the fallback chain in config |
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
+| `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
+| `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
+| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
+| `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
+| `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
-| `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language config |
+| `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 
 ---
 
@@ -170,7 +182,9 @@ Scalar renders its own internal UI strings (button labels, response section head
 
 ### Why `@scalar/api-reference` directly
 
-The `@scalar/nuxt` module supports only a single spec configured at build time. This project requires runtime resolution of specs across hundreds of instance + language + module combinations. The module is therefore not used. The Vue component is imported and mounted directly in `app/pages/explorer/index.vue` inside a `<ClientOnly>` wrapper.
+The `@scalar/nuxt` module supports only a single spec configured at build time. This project requires runtime resolution of specs across hundreds of instance + language + module combinations. The module is therefore not used.
+
+The Vue component is mounted in `app/pages/explorer/index.vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`).
 
 ### Spec resolution flow
 
@@ -205,6 +219,58 @@ Object.assign( scalarConfig, { spec: { url: newSpecUrl } } )
 ```
 
 If a future Scalar version changes this behaviour, update the composable and remove this comment.
+
+When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (instance + module + spec URL). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
+
+### Module rail → Scalar operation focus
+
+The right-hand **module rail** lists endpoints from bootstrap data. Selecting an endpoint must scroll the **Scalar reference panel** to the matching OpenAPI operation. This is application behaviour (not Scalar configuration): the rail emits a selection, bootstrap state holds a pending target, and a composable drives Scalar navigation once the spec is mounted.
+
+```
+User clicks endpoint in ExplorerModuleRail
+       ↓
+useExplorerBootstrap.selectModule(module, { operationTarget })
+       ↓
+pendingOperationTarget set (method, path, operationId, primaryTag, …)
+       ↓
+If module changed → startScalarSwitch (spec reload); else keep current spec
+       ↓
+useExplorerScalarFocus (when !isScalarSwitching && !isInstanceBootstrapping)
+       ↓
+resolveScalarOperationNavigationId()  ← app/utils/scalarOperationNavigation.ts
+  ├── Match workspace store / sidebarItems from ApiReference
+  ├── Fall back to DOM id candidates (Scalar generateId pattern)
+  └── Document slug from config/scalar.ts (SCALAR_DOCUMENT_SLUG)
+       ↓
+scalarInterface.eventBus.emit('scroll-to:nav-item', { id })
+       ↓
+scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow: auto)
+```
+
+**Resolution strategy.** Scalar assigns each operation a navigation id (typically `{document}/tag/{tag}/{METHOD}{path}` or `{document}/{METHOD}{path}`). `scalarOperationNavigation.ts` mirrors that id generation (GitHub slugger for segments) and searches, in order: the workspace navigation tree exposed by `ApiReference`, sidebar items, then the DOM under the Scalar shell. Candidates are tried until an element with a matching `id` exists.
+
+**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling the **Scalar shell container** (not only `document`) so sticky layout and `overscroll-behavior: contain` behave correctly.
+
+**Triggers.** Focus runs when:
+
+- The user selects an endpoint (pending target set, Scalar already ready)
+- Scalar finishes switching modules (`isScalarSwitching` false → true transition)
+- `ApiReference` exposes `eventBus` / workspace handles (`@interface-ready` on `ExplorerScalarReference`)
+
+**Same-module clicks.** Selecting another endpoint in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged), so focus can run immediately without waiting for a spec swap.
+
+**UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
+
+### Route boundary navigation
+
+The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
+
+1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation).
+2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+
+`app/utils/explorerRoute.ts` provides `isExplorerRoutePath()` for the layout, explorer page (teleport disable on exit), and the plugin.
+
+Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
 
 ### Scalar plugin layer
 
@@ -313,11 +379,18 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
+| `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
+| `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 
 Environment-specific values use Nuxt `runtimeConfig`:
 - `runtimeConfig.public.*` — values safe to expose to the client (OAuth client ID, API base URLs)
 - `runtimeConfig.*` — server-only values (OAuth client secret)
+
+### Netlify deployment
+
+Production deploys use the Nitro **`netlify`** preset (`npm run build:netlify`). In `nuxt.config.ts`, `compatibilityDate` must be **≥ `2024-05-07`** so Nitro does not emit the legacy CommonJS handler that breaks on Netlify Functions 2.0. See `netlify.toml` — do not set `[functions] node_bundler = "esbuild"`; bundling is declared in the generated ESM function config.
 
 ---
 

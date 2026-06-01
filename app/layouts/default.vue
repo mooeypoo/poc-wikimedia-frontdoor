@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { CdxField, CdxSelect } from '@wikimedia/codex'
+import {
+	CdxButton,
+	CdxIcon,
+	CdxSearchInput,
+	CdxSelect
+} from '@wikimedia/codex'
+import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
+import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
+import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
  * Default layout — the Front Door application shell.
  *
  * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer. Direction will later come from the active
- * interface language via useDirection(); for now it is hardcoded to 'ltr'
- * as a placeholder until that composable lands. This is intentional
- * scaffolding for Experiment 1, not a permanent choice.
+ * content slot, and footer inside the site-wide 24-column grid. The site
+ * brand lives in the left column; the header holds search and utility
+ * controls with primary navigation directly below.
  */
 
 const { direction } = useDirection()
@@ -17,8 +24,8 @@ const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
 const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
-const localePath = useLocalePath()
-const isExplorerRoute = computed( () => route.path.startsWith( '/explorer' ) )
+const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
 
 interface PickerMenuItem {
 	label: string
@@ -27,6 +34,8 @@ interface PickerMenuItem {
 
 const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
 const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
+
+const searchPlaceholderValue = ref( '' )
 
 // <option>-like rendering targets cannot include HTML tags, so FSI/PDI
 // markers isolate labels and keep mixed-direction names stable.
@@ -67,33 +76,42 @@ watch( locale, ( nextLocaleCode ) => {
 	$setInterfaceLocale( nextLocaleCode )
 }, { immediate: true } )
 
-watch( isExplorerRoute, ( nextIsExplorerRoute ) => {
-	if ( !nextIsExplorerRoute ) {
+watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
+	if ( nextIsExplorerRoute ) {
+		if ( locale.value !== $interfaceLocale.value ) {
+			locale.value = $interfaceLocale.value
+		}
 		return
 	}
 
-	if ( locale.value !== $interfaceLocale.value ) {
-		locale.value = $interfaceLocale.value
+	if ( wasExplorerRoute ) {
+		const pathLocale = nonDefaultInterfaceLocales.find( ( localeCode ) => {
+			return route.path === `/${ localeCode }` || route.path.startsWith( `/${ localeCode }/` )
+		} ) ?? 'en'
+
+		if ( locale.value !== pathLocale ) {
+			locale.value = pathLocale
+		}
 	}
 }, { immediate: true } )
 
 const languageMenuItems = computed<PickerMenuItem[]>( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
 		value: localeCode,
-		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) )
+		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) ),
+		icon: cdxIconLanguage
 	} ) )
 } )
 
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
-const homeNavigationLabel = computed( () => $bananaI18n( 'nav-home' ) )
-const aboutNavigationLabel = computed( () => $bananaI18n( 'nav-about' ) )
-const apiNavigationLabel = computed( () => $bananaI18n( 'nav-api' ) )
+const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
 const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
+const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
+const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
+const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
+const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
-const homePath = computed( () => localePath( '/', selectedInterfaceLocale.value ) )
-const aboutPath = computed( () => localePath( '/about', selectedInterfaceLocale.value ) )
-
 useHead( {
 	htmlAttrs: {
 		dir: direction,
@@ -104,103 +122,332 @@ useHead( {
 </script>
 
 <template>
-	<div class="frontdoor-shell">
-		<header class="frontdoor-shell__header">
-			<div class="frontdoor-shell__header-inner">
-				<NuxtLink
-					:to="homePath"
-					class="frontdoor-shell__brand"
+	<div
+		class="frontdoor-shell"
+		:class="{ 'frontdoor-shell--explorer': isExplorerRoute }"
+	>
+		<SharedPageGrid class="frontdoor-shell__page-grid">
+			<template #start>
+				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start frontdoor-shell__side-nav">
+					<div class="frontdoor-shell__brand-area">
+						<NuxtLink
+							:to="getStartedPath"
+							class="frontdoor-shell__brand"
+						>
+							{{ applicationTitle }}
+						</NuxtLink>
+					</div>
+					<ExplorerSideNav v-if="isExplorerRoute" />
+				</div>
+			</template>
+
+			<template #end>
+				<div
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
+					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
 				>
-					{{ applicationTitle }}
-				</NuxtLink>
-				<nav class="frontdoor-shell__nav">
-					<NuxtLink :to="homePath">
-						{{ homeNavigationLabel }}
-					</NuxtLink>
-					<NuxtLink :to="aboutPath">
-						{{ aboutNavigationLabel }}
-					</NuxtLink>
-					<NuxtLink to="/explorer">
-						{{ apiNavigationLabel }}
-					</NuxtLink>
-				</nav>
-				<CdxField class="frontdoor-shell__language-field">
-					<template #label>
-						{{ interfaceLanguageLabel }}
-					</template>
-					<CdxSelect
-						v-model:selected="selectedInterfaceLocale"
-						:menu-items="languageMenuItems"
-						:default-label="interfaceLanguagePlaceholder"
+					<div
+						v-if="isExplorerRoute"
+						id="explorer-end-panel"
+						class="frontdoor-shell__explorer-end"
 					/>
-				</CdxField>
+				</div>
+			</template>
+
+			<div class="frontdoor-shell__content">
+				<div class="frontdoor-shell__chrome">
+					<header class="frontdoor-shell__header">
+						<div class="frontdoor-shell__header-inner">
+							<div class="frontdoor-shell__search-wrap">
+								<CdxSearchInput
+									v-model="searchPlaceholderValue"
+									class="frontdoor-shell__search"
+									:use-button="false"
+									:placeholder="searchPlaceholderLabel"
+									disabled
+								/>
+							</div>
+							<div class="frontdoor-shell__utilities">
+								<CdxButton
+									class="frontdoor-shell__search-toggle"
+									:aria-label="searchButtonLabel"
+									disabled
+								>
+									<CdxIcon :icon="cdxIconSearch" />
+								</CdxButton>
+								<CdxButton
+									class="frontdoor-shell__settings-button"
+									:aria-label="settingsButtonLabel"
+									disabled
+								>
+									<CdxIcon :icon="cdxIconConfigure" />
+								</CdxButton>
+								<CdxSelect
+									v-model:selected="selectedInterfaceLocale"
+									class="frontdoor-shell__language-select"
+									:menu-items="languageMenuItems"
+									:default-icon="cdxIconLanguage"
+									:default-label="interfaceLanguagePlaceholder"
+									:aria-label="interfaceLanguageLabel"
+								/>
+							</div>
+							<a
+								href="#"
+								class="frontdoor-shell__login-link"
+								@click.prevent
+							>
+								{{ loginLinkLabel }}
+							</a>
+						</div>
+					</header>
+					<nav
+						class="frontdoor-shell__main-nav"
+						:aria-label="primaryNavigationLabel"
+					>
+						<NuxtLink
+							v-for="navigationLink in mainNavigationLinks"
+							:key="navigationLink.id"
+							:to="navigationLink.to"
+						>
+							{{ navigationLink.label }}
+						</NuxtLink>
+					</nav>
+				</div>
+
+				<main class="frontdoor-shell__main">
+					<div
+						:key="route.path"
+						class="frontdoor-shell__page-slot"
+					>
+						<slot />
+					</div>
+				</main>
+
+				<footer class="frontdoor-shell__footer">
+					<p class="frontdoor-shell__footer-text">
+						{{ footerLabel }}
+					</p>
+				</footer>
 			</div>
-		</header>
-		<main class="frontdoor-shell__main">
-			<slot />
-		</main>
-		<footer class="frontdoor-shell__footer">
-			{{ footerLabel }}
-		</footer>
+		</SharedPageGrid>
 	</div>
 </template>
 
 <style scoped>
 .frontdoor-shell {
-	display: flex;
-	flex-direction: column;
 	min-block-size: 100vh;
 }
 
-.frontdoor-shell__header {
+.frontdoor-shell__page-grid {
+	min-block-size: 100vh;
+}
+
+.frontdoor-shell__content {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 100vh;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome {
+	position: relative;
+	z-index: 10;
 	background-color: var( --background-color-base );
-	border-block-end: 1px solid var( --border-color-subtle );
+}
+
+.frontdoor-shell__header {
+	block-size: 4rem;
+	min-block-size: 4rem;
+	max-block-size: 4rem;
 }
 
 .frontdoor-shell__header-inner {
-	max-inline-size: 64rem;
-	margin-inline: auto;
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-100 );
+	container-type: inline-size;
+	container-name: frontdoor-header;
 	display: flex;
-	align-items: flex-end;
-	flex-wrap: wrap;
-	gap: var( --spacing-200 );
-}
-
-.frontdoor-shell__brand {
-	font-family: var( --font-family-serif );
-	font-size: var( --font-size-large );
-	color: var( --color-emphasized );
-	font-weight: var( --font-weight-bold );
-}
-
-.frontdoor-shell__nav {
-	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
 	gap: var( --spacing-100 );
+	block-size: 100%;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__search-wrap {
+	flex: 1 1 0;
+	min-inline-size: 0;
+	max-inline-size: 36rem;
+	display: flex;
+	align-items: center;
+}
+
+.frontdoor-shell__search {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+/* Codex sets min-width: 256px on .cdx-text-input; override so the field can shrink
+   and the container query can switch to the icon-only control instead of wrapping. */
+.frontdoor-shell__search:deep( .cdx-text-input ) {
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+.frontdoor-shell__search-toggle {
+	display: none;
+	flex-shrink: 0;
+}
+
+.frontdoor-shell__utilities {
+	display: flex;
+	align-items: center;
+	gap: var( --spacing-100 ); /* 16px between search, settings, and language controls */
+	flex-shrink: 0;
 	margin-inline-start: auto;
 }
 
-.frontdoor-shell__language-field {
-	inline-size: min( 14rem, 100% );
+/* Collapse when the header cannot fit the search field (Codex minimum 256px). */
+@container frontdoor-header ( max-width: var( --max-width-breakpoint-mobile ) ) {
+	.frontdoor-shell__search-wrap {
+		display: none;
+	}
+
+	.frontdoor-shell__search-toggle {
+		display: inline-flex;
+	}
+}
+
+.frontdoor-shell__language-select {
+	inline-size: min( 12rem, 100% );
+	flex-shrink: 0;
+}
+
+.frontdoor-shell__login-link {
+	flex-shrink: 0;
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	white-space: nowrap;
+}
+
+.frontdoor-shell__side-nav {
+	display: flex;
+	flex-direction: column;
+	padding-inline: var( --spacing-100 );
+	min-block-size: 100%;
+	min-inline-size: 0;
+}
+
+/* Align the side nav first row with .frontdoor-shell__main-nav (no extra gap below the brand). */
+.frontdoor-shell--explorer .frontdoor-shell__side-nav {
+	gap: 0;
+}
+
+.frontdoor-shell__main-nav {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-100 ); /* 16px between nav items */
+	padding-block: var( --spacing-100 );
+}
+
+.frontdoor-shell__main-nav a {
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+}
+
+.frontdoor-shell__brand-area {
+	block-size: 4rem;
+	min-block-size: 4rem;
+	max-block-size: 4rem;
+	display: flex;
+	align-items: center;
+}
+
+.frontdoor-shell__brand {
+	font-size: var( --font-size-large );
+	font-weight: var( --font-weight-bold );
+	display: inline-flex;
+	align-items: center;
+	line-height: var( --line-height-xx-small );
+	max-block-size: 100%;
+	overflow: hidden;
 }
 
 .frontdoor-shell__main {
 	flex: 1;
-	inline-size: 100%;
-	max-inline-size: 64rem;
-	margin-inline: auto;
+	min-inline-size: 0;
 	padding-block: var( --spacing-200 );
-	padding-inline: var( --spacing-100 );
 }
 
 .frontdoor-shell__footer {
-	background-color: var( --background-color-neutral-subtle );
-	border-block-start: 1px solid var( --border-color-subtle );
-	color: var( --color-subtle );
-	font-size: var( --font-size-small );
+	margin-block-start: auto;
 	padding-block: var( --spacing-100 );
-	padding-inline: var( --spacing-100 );
+	background-color: var( --background-color-neutral-subtle );
+	font-size: var( --font-size-small );
+}
+
+.frontdoor-shell__footer-text {
+	margin: 0;
 	text-align: center;
+}
+
+/*
+ * Scalar overlays must stack above the API modules rail when modals span the viewport.
+ * Raise only the explorer reference shell — not the whole main grid column — so the
+ * end column rail stays visible beside the spec panel.
+ */
+.frontdoor-shell--explorer .explorer-page__scalar-shell {
+	position: relative;
+	z-index: 2;
+}
+
+.frontdoor-shell--explorer .explorer-module-rail {
+	position: relative;
+	z-index: 1;
+}
+
+@media screen and ( min-width: 1120px ) {
+	.frontdoor-shell__page-grid {
+		align-items: stretch;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		border-inline-end: 1px solid var( --border-color-subtle );
+		align-self: stretch;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		min-block-size: 100%;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		align-self: stretch;
+		min-inline-size: 0;
+	}
+
+	.frontdoor-shell__side-panel {
+		min-block-size: 100%;
+		min-inline-size: 0;
+	}
+
+	.frontdoor-shell__side-panel--end:not( .frontdoor-shell__side-panel--active ) {
+		/* Reserved 4-column panel for future page-level navigation. */
+		background-color: var( --background-color-base );
+	}
+
+	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		align-self: start;
+		min-inline-size: 0;
+	}
+}
+
+@media screen and ( min-width: 640px ) and ( max-width: 1119px ) {
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		border-inline-end: 1px solid var( --border-color-subtle );
+	}
 }
 </style>

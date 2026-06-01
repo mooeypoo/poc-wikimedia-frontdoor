@@ -46,7 +46,7 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 			updateStrategy: 'object_assign',
 			specUrl: nextOpenApiSpecUrl
 		} )
-	}, { immediate: true } )
+	}, { immediate: true, flush: 'post' } )
 
 	return {
 		scalarConfiguration

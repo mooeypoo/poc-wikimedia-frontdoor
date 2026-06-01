@@ -1,6 +1,22 @@
 # AGENTS.md — Front Door Developer Portal
 
-This file instructs AI coding agents working on the Front Door project. Read it in full before writing any code. The rules here are not preferences — they are requirements derived from architectural decisions documented in `ARCHITECTURE.md` and the project design document.
+This file instructs AI coding agents working on the Front Door project. Read it in full before writing any code. The rules here are not preferences — they are requirements derived from architectural decisions documented in [`ARCHITECTURE.md`](ARCHITECTURE.md) and UI/UX decisions in [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md).
+
+---
+
+## Related documentation
+
+Use the right document for the kind of work you are doing:
+
+| Document | Consult for |
+|----------|-------------|
+| **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow |
+| **[`ARCHITECTURE.md`](ARCHITECTURE.md)** | System structure, data flow, composables, route boundaries, discovery, technical constraints |
+| **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | **UI/UX:** Codex layout system (2-panel desktop grid, breakpoints, margins), shell chrome, site navigation IA, API Explorer layout (side nav, project controls, module rail), typography, loading/empty states, prototype vs final behaviour |
+
+**Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
+
+**Precedence:** If **`DESIGN_REQUIREMENTS.md`** conflicts with this file, **`AGENTS.md` wins**. For technical behaviour (SSR, discovery, composable boundaries), prefer **`ARCHITECTURE.md`**. For visual and interaction behaviour, prefer **`DESIGN_REQUIREMENTS.md`**.
 
 ---
 
@@ -200,6 +216,7 @@ Event handler props: `onInstanceChange`, `onLanguageSelect`, `onAuthComplete`
 
 Before marking any component complete, verify:
 
+- [ ] Layout, spacing, and shell/explorer UI patterns match [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) when the change is user-visible
 - [ ] All interface strings go through banana-i18n
 - [ ] All external strings (from APIs, specs, config data shown in UI) are wrapped in `<bdi>`
 - [ ] First-party CSS uses logical properties (`margin-inline-*`, `padding-inline-*`, `inset-inline-*`, `text-align: start/end`, etc.) — no `left`/`right` physical properties in CSS we author
@@ -218,7 +235,7 @@ Before marking any component complete, verify:
 
 **If a third-party library behaves unexpectedly:** Document it with an inline comment explaining what was expected, what actually happens, and the workaround used. Include a link to the relevant issue if one exists.
 
-**If you need to deviate from these rules:** Explain why before writing the code. The rules exist for specific reasons documented in `ARCHITECTURE.md` and the design document — if the reason no longer applies, the rule can be revisited, but that is a decision, not a default.
+**If you need to deviate from these rules:** Explain why before writing the code. The rules exist for specific reasons documented in [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) — if the reason no longer applies, the rule can be revisited, but that is a decision, not a default.
 
 ---
 
