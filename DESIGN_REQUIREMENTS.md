@@ -24,7 +24,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 
 **Explicitly prototype / not final:**
 
-- The site is not yet responsive
+- The site is not yet fully responsive
 - Search, settings, and login controls are present but **disabled** or non-functional
 - API Explorer page's **left side nav** links use `href="#"` and do not route anywhere
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
@@ -96,37 +96,41 @@ On **desktop** and **desktop wide**, the implemented shell uses a **4 + 16 + 4**
 
 | Area | Span | Role |
 |------|------|------|
-| **Start** | 4 cols | Brand; on `/explorer`, left documentation side nav |
+| **Start** | 4 cols | Brand; on `/explorer`, left documentation side nav; reserved on all other pages for future section navigation |
 | **Main** | 16 cols | Header utilities, primary nav, page content |
-| **End** | 4 cols | API Explorer **module rail** only (teleported to `#explorer-end-panel`) |
+| **End** | 4 cols | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
 
-On routes other than `/explorer`, the end column is omitted and main extends across the remaining width (**16 + 4** columns).
+On **desktop** and **desktop wide**, both side columns are **always present** in the grid (**4 + 16 + 4**). Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
 
 **Source (prototype):** `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue`.
 
-### Current prototype vs design specification
+**Breakpoints:** Media queries use [Codex breakpoint tokens](https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html) from `theme-wikimedia-ui.css` (e.g. `--min-width-breakpoint-tablet`, `--max-width-breakpoint-desktop`). JavaScript `matchMedia` helpers: `app/utils/codexBreakpointMediaQuery.ts`.
 
-The design exploration branch implements the **desktop 24-column** behaviour in code, not the full Codex breakpoint matrix yet.
+### Implementation status
 
-| Design spec | Status in prototype |
-|-------------|---------------------|
-| Desktop 1120px–1679px (24-col, 24px gutter, 32px margins) | **Implemented** (`--fd-layout-page-margin: 2rem`, `--fd-layout-grid-gutter: 1.5rem`, grid from `70rem`) |
-| Desktop wide ≥ 1680px (fixed content, growing margins) | **Implemented** (`max-inline-size` locks at 1679px equivalent) |
-| Tablet 8-column / mobile 4-column grids | **Not implemented** — see “The site is not yet responsive” under scope |
-| Codex 40px column width at desktop wide | **Not implemented** — columns are `minmax(0, 1fr)` fractional tracks |
+| Design spec | Status | Implementation |
+|-------------|--------|------------------|
+| Mobile 320px–639px (4-col tokens, 16px gutter/margins, stacked) | **Implemented** | `page-grid.css` — `--spacing-100` page margin and gutter |
+| Tablet 640px–1119px (8-col, 2 \| 6, 24px gutter/margins) | **Interim** | `page-grid.css` — start + main only; end panel hidden until desktop |
+| Desktop 1120px–1679px (24-col fluid, 4 \| 16 \| 4, 32px margins) | **Implemented** | `page-grid.css` — `--spacing-200` page margin; both side panels on sides, always reserved |
+| Desktop wide ≥ 1680px (fixed 1679px shell, 24 × 40px tracks) | **Implemented** | `page-grid.css` — `@media (min-width: 1680px)`, `--max-width-breakpoint-desktop` cap |
 
-**Below 1120px (prototype behaviour today):**
+**Responsive behaviour summary:**
 
-| Viewport | Behaviour |
-|----------|-----------|
-| **&lt; 1120px** (`70rem`) | Single-column stack; **main content first** (`order: -1`); start column **hidden** (brand + explorer side nav not shown in the side column) |
-| **≥ 1120px** | Three-column grid; subtle `border-inline-end` on start column |
+| Viewport | Shell layout |
+|----------|----------------|
+| **&lt; 640px** | **Interim:** main first, then start (brand); end panel hidden — full side-panel responsive deferred |
+| **640px–1119px** | **Interim:** 8-column **2 \| 6** (start + main); end panel hidden until desktop |
+| **≥ 1120px** | 24-column grid: **4 \| 16 \| 4** (both side panels on sides, all routes); start column `border-inline-end` |
+| **≥ 1680px** | Same column spans; grid box **max 1679px** centered; column tracks **40px** fixed |
+
+**Note:** `@media` conditions in `page-grid.css` use **px literals** aligned to Codex breakpoint tokens (`640px`, `1120px`, `1680px`) because custom properties are unreliable in media query conditions.
 
 ### Explorer layout (module rail and reference panel)
 
 **Decision:** On `/explorer`, the **end** column hosts a teleported **module rail** (`#explorer-end-panel`). The **main** column holds project controls and the Scalar reference panel.
 
-**Narrow (&lt; 1120px, prototype):** Module rail is not sticky and stacks in document flow below main content; explorer side nav is hidden with the start column.
+**Below desktop (&lt; 1120px):** Side panels use the interim layout above; module rail and full 2-panel placement are **desktop-only** until side-panel responsive behaviour is implemented.
 
 **Wide (≥ 960px on explorer page):** Reference panel and Scalar shell use sticky, viewport-height scrolling as documented in **API Explorer page layout** below.
 
@@ -146,7 +150,7 @@ The design exploration branch implements the **desktop 24-column** behaviour in 
 | Interface language (`CdxSelect`) | **Functional** — switches interface locale; on explorer, does not change URL |
 | Log in | Text link, `@click.prevent` — **non-functional** prototype |
 
-**Responsive pattern:** CSS container query on `frontdoor-header` at `max-width: 39.999rem` collapses full search to icon-only.
+**Responsive pattern:** CSS container query on `frontdoor-header` at `max-width: var(--max-width-breakpoint-mobile)` collapses full search to icon-only.
 
 **Source:** `app/layouts/default.vue`.
 
@@ -278,7 +282,7 @@ Top to bottom:
 
 ### Rail positioning
 
-**Decision (wide):** Rail is **sticky** in the end column; sticky offset computed at runtime to align with project controls / Scalar top (`useExplorerRailStickyAlign`, CSS variable `--explorer-rail-sticky-inset`). Fallback constant `--fd-explorer-rail-offset` in `page-grid.css` when JS has not run.
+**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with main-column page controls uses `useEndPanelNavAlign` (anchor: `.frontdoor-page-nav-align-anchor` on project controls) setting `--frontdoor-end-panel-nav-flow-offset` and `--frontdoor-end-panel-nav-sticky-inset`. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
 **Decision (narrow):** Rail is static (not sticky), full width in stack.
 
@@ -390,5 +394,5 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue` |
 | Explorer side nav | `app/components/explorer/ExplorerSideNav.vue`, `config/explorerSideNav.js` |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
-| Rail sticky align | `app/composables/useExplorerRailStickyAlign.ts` |
+| End-panel nav align | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |

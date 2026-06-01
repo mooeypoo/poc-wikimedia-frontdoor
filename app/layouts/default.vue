@@ -128,7 +128,7 @@ useHead( {
 	>
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
-				<div class="frontdoor-shell__side-nav">
+				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start frontdoor-shell__side-nav">
 					<div class="frontdoor-shell__brand-area">
 						<NuxtLink
 							:to="getStartedPath"
@@ -141,14 +141,17 @@ useHead( {
 				</div>
 			</template>
 
-			<template
-				v-if="isExplorerRoute"
-				#end
-			>
+			<template #end>
 				<div
-					id="explorer-end-panel"
-					class="frontdoor-shell__explorer-end"
-				/>
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
+					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+				>
+					<div
+						v-if="isExplorerRoute"
+						id="explorer-end-panel"
+						class="frontdoor-shell__explorer-end"
+					/>
+				</div>
 			</template>
 
 			<div class="frontdoor-shell__content">
@@ -304,7 +307,7 @@ useHead( {
 }
 
 /* Collapse when the header cannot fit the search field (Codex minimum 256px). */
-@container frontdoor-header ( max-width: 39.999rem ) {
+@container frontdoor-header ( max-width: var( --max-width-breakpoint-mobile ) ) {
 	.frontdoor-shell__search-wrap {
 		display: none;
 	}
@@ -403,7 +406,7 @@ useHead( {
 	z-index: 1;
 }
 
-@media screen and ( min-width: 70rem ) {
+@media screen and ( min-width: 1120px ) {
 	.frontdoor-shell__page-grid {
 		align-items: stretch;
 	}
@@ -418,31 +421,33 @@ useHead( {
 		min-block-size: 100%;
 	}
 
-	.frontdoor-shell--explorer .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
 		align-self: stretch;
 		min-inline-size: 0;
+	}
+
+	.frontdoor-shell__side-panel {
+		min-block-size: 100%;
+		min-inline-size: 0;
+	}
+
+	.frontdoor-shell__side-panel--end:not( .frontdoor-shell__side-panel--active ) {
+		/* Reserved 4-column panel for future page-level navigation. */
+		background-color: var( --background-color-base );
 	}
 
 	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
 		display: flex;
 		flex-direction: column;
-		min-block-size: 100%;
+		align-items: stretch;
+		align-self: start;
 		min-inline-size: 0;
 	}
 }
 
-@media screen and ( max-width: 69.999rem ) {
+@media screen and ( min-width: 640px ) and ( max-width: 1119px ) {
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		display: none;
+		border-inline-end: 1px solid var( --border-color-subtle );
 	}
-
-	.frontdoor-shell:not( .frontdoor-shell--explorer ) .frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		display: none;
-	}
-
-	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
-		padding-block-start: 0;
-	}
-
 }
 </style>

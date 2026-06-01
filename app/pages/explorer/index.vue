@@ -4,7 +4,7 @@ import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
-import { useExplorerRailStickyAlign } from '../../composables/useExplorerRailStickyAlign'
+import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
@@ -49,11 +49,7 @@ const scalarShellRef = ref<HTMLElement | null>( null )
 const includeBetaEndpoints = ref( false )
 const includeInternalEndpoints = ref( true )
 
-const railAlignAnchorRef = computed( () => {
-	return projectControlsRef.value
-		?? referenceHeaderRef.value
-		?? referenceModuleLabelRef.value
-} )
+const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(
 	pendingOperationTarget,
@@ -80,10 +76,16 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 	}
 }
 
-const { railStickyStyle, refreshRailStickyAlign } = useExplorerRailStickyAlign(
-	railAlignAnchorRef,
+const { endPanelNavStyle, refreshEndPanelNavAlign } = useEndPanelNavAlign(
+	projectControlsRef,
+	explorerEndPanelElement,
 	scalarShellRef
 )
+
+onMounted( () => {
+	explorerEndPanelElement.value = document.getElementById( 'explorer-end-panel' )
+	refreshEndPanelNavAlign()
+} )
 
 const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	onLoaded: () => {
@@ -122,7 +124,7 @@ const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switc
 
 watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl, wikiDisplayName ], () => {
 	nextTick( () => {
-		refreshRailStickyAlign()
+		refreshEndPanelNavAlign()
 	} )
 } )
 
@@ -172,7 +174,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			<div
 				v-if="!isInstanceBootstrapping"
 				ref="projectControlsRef"
-				class="explorer-page__project-controls-anchor"
+				class="explorer-page__project-controls-anchor frontdoor-page-nav-align-anchor"
 			>
 				<ExplorerProjectControls
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
@@ -189,7 +191,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				:disabled="!isActiveExplorerRoute"
 			>
 				<ExplorerModuleRail
-					:style="railStickyStyle"
+					:style="endPanelNavStyle"
 					:modules="modules"
 					:failed-modules="failedModules"
 					:has-selectable-modules="hasSelectableModules"

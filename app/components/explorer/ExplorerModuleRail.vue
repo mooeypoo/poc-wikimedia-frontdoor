@@ -90,7 +90,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 
 <template>
 	<aside
-		class="explorer-module-rail"
+		class="explorer-module-rail frontdoor-end-panel-nav"
 		:aria-busy="isInstanceBootstrapping"
 	>
 		<header class="explorer-module-rail__header">
@@ -209,17 +209,8 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 <style scoped>
 .explorer-module-rail {
 	display: grid;
-	align-content: start;
 	gap: var( --spacing-25 );
 	padding-inline: var( --spacing-75 );
-	min-inline-size: 0;
-	max-inline-size: 100%;
-	margin-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
-	position: sticky;
-	inset-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
-	max-block-size: calc( 100vh - var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) ) );
-	overflow-y: auto;
-	overscroll-behavior: contain;
 	border-radius: var( --border-radius-base );
 	background-color: var( --background-color-neutral-subtle );
 	font-family: var( --font-family-sans-stack );
@@ -415,11 +406,4 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	overflow-wrap: anywhere;
 }
 
-@media screen and ( max-width: 69.999rem ) {
-	.explorer-module-rail {
-		margin-block-start: 0;
-		position: static;
-		max-block-size: none;
-	}
-}
 </style>

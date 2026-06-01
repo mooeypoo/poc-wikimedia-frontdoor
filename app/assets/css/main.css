@@ -13,6 +13,7 @@
 
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
 @import './page-grid.css';
+@import './shell-end-panel-nav.css';
 @import './explorer-codex-overrides.css';
 
 :root {
