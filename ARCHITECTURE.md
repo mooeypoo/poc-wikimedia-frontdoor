@@ -56,17 +56,22 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   └── shared/             # Components used across both surfaces
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
-│   │   └── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
+│   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
+│   │   └── explorer-route-navigation.client.ts  # Full reload across /explorer boundary
+│   ├── utils/
+│   │   └── explorerRoute.ts    # isExplorerRoutePath() for layout and plugins
+│   ├── app.vue                 # NuxtPage :page-key for route remounts
 │   └── layouts/
-│       └── default.vue         # Shell layout; sets dir attribute on <html>
+│       └── default.vue         # Shell layout; primary nav; sets dir on <html>
 │
 ├── config/                     # Project-level configuration (not Nuxt config)
 │   ├── instances.js            # Wiki instance definitions and base URLs
 │   ├── languages.js            # Supported languages with explicit dir declarations
+│   ├── mainNavigation.ts       # Primary shell nav order and paths
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
-│   ├── en/                     # English content
+│   ├── en/                     # English content (index, learn, about, …)
 │   ├── ar/                     # Arabic content (where available)
 │   └── [locale]/               # Per-locale Markdown directories
 │
@@ -141,8 +146,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useLocaleWithFallback(requestedLocale)` | Best available locale given the fallback chain in config |
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
+| `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
+| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
-| `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language config |
+| `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 
 ---
 
@@ -170,7 +177,9 @@ Scalar renders its own internal UI strings (button labels, response section head
 
 ### Why `@scalar/api-reference` directly
 
-The `@scalar/nuxt` module supports only a single spec configured at build time. This project requires runtime resolution of specs across hundreds of instance + language + module combinations. The module is therefore not used. The Vue component is imported and mounted directly in `app/pages/explorer/index.vue` inside a `<ClientOnly>` wrapper.
+The `@scalar/nuxt` module supports only a single spec configured at build time. This project requires runtime resolution of specs across hundreds of instance + language + module combinations. The module is therefore not used.
+
+The Vue component is mounted in `app/pages/explorer/index.vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`).
 
 ### Spec resolution flow
 
@@ -205,6 +214,19 @@ Object.assign( scalarConfig, { spec: { url: newSpecUrl } } )
 ```
 
 If a future Scalar version changes this behaviour, update the composable and remove this comment.
+
+When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (instance + module + spec URL). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
+
+### Route boundary navigation
+
+The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
+
+1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation).
+2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+
+`app/utils/explorerRoute.ts` provides `isExplorerRoutePath()` for the layout, explorer page (teleport disable on exit), and the plugin.
+
+Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
 
 ### Scalar plugin layer
 
@@ -313,11 +335,16 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 
 Environment-specific values use Nuxt `runtimeConfig`:
 - `runtimeConfig.public.*` — values safe to expose to the client (OAuth client ID, API base URLs)
 - `runtimeConfig.*` — server-only values (OAuth client secret)
+
+### Netlify deployment
+
+Production deploys use the Nitro **`netlify`** preset (`npm run build:netlify`). In `nuxt.config.ts`, `compatibilityDate` must be **≥ `2024-05-07`** so Nitro does not emit the legacy CommonJS handler that breaks on Netlify Functions 2.0. See `netlify.toml` — do not set `[functions] node_bundler = "esbuild"`; bundling is declared in the generated ESM function config.
 
 ---
 

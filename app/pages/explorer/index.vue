@@ -112,7 +112,13 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	}
 } )
 
-/** Remounts Scalar when instance, module, or spec URL changes (SPA safety). */
+/**
+ * Forces ApiReference remount when the spec context changes.
+ *
+ * Object.assign on the Scalar config handles in-place URL updates, but a full remount
+ * is still required when crossing the explorer route boundary or recovering from a
+ * stuck client-only mount (documented in ARCHITECTURE.md → API explorer).
+ */
 const scalarReferenceKey = computed( () => {
 	return [
 		route.fullPath,
@@ -126,6 +132,7 @@ const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
 const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
+const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
 const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
@@ -261,24 +268,33 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 						{{ missingSpecLabel }}
 					</CdxMessage>
 
-					<div
-						v-else
-						ref="scalarShellRef"
-						class="explorer-page__scalar-shell"
-					>
+					<ClientOnly v-else>
 						<div
-							v-if="isScalarSwitching"
-							class="explorer-page__scalar-switching-mask"
+							ref="scalarShellRef"
+							class="explorer-page__scalar-shell"
 						>
-							<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-							<p>{{ scalarSwitchingLabel }}</p>
+							<div
+								v-if="isScalarSwitching"
+								class="explorer-page__scalar-switching-mask"
+							>
+								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+								<p>{{ scalarSwitchingLabel }}</p>
+							</div>
+							<ExplorerScalarReference
+								:key="scalarReferenceKey"
+								:configuration="scalarConfiguration"
+								@interface-ready="onScalarInterfaceReady"
+							/>
 						</div>
-						<ExplorerScalarReference
-							:key="scalarReferenceKey"
-							:configuration="scalarConfiguration"
-							@interface-ready="onScalarInterfaceReady"
-						/>
-					</div>
+						<template #fallback>
+							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
+								<div class="explorer-page__scalar-loading">
+									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<p>{{ explorerInterfaceLoadingLabel }}</p>
+								</div>
+							</div>
+						</template>
+					</ClientOnly>
 				</section>
 			</template>
 		</template>

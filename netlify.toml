@@ -6,5 +6,6 @@
 [build.environment]
   NODE_VERSION = "22"
 
-[functions]
-  node_bundler = "esbuild"
+# Function bundling is declared in `.netlify/functions-internal/server/server.mjs`
+# (`nodeBundler: "none"`). Do not set `node_bundler = "esbuild"` here — it forces a
+# CommonJS wrapper that breaks ESM `server.mjs` / `main.mjs` on Netlify Functions 2.0.

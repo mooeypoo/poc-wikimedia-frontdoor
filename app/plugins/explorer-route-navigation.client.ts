@@ -5,6 +5,7 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  *
  * `/explorer` uses `ssr: false`. Client-side transitions to or from that route can
  * leave Scalar DOM behind or prevent ApiReference from mounting until a reload.
+ * Documented in ARCHITECTURE.md → API explorer → Route boundary navigation.
  */
 export default defineNuxtPlugin( () => {
 	const router = useRouter()

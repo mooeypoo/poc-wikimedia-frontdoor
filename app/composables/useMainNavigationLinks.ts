@@ -31,7 +31,8 @@ function buildContentRoutePath( navigationItem: MainNavigationItem, localeCode: 
  * Explorer uses an explicit `/explorer` path because `localePath()` can return an
  * empty string when invoked from the `i18n: false` explorer route.
  *
- * @returns Reactive list of navigation links for the shell header.
+ * @returns {{ mainNavigationLinks: import('vue').ComputedRef<MainNavigationLink[]>, getStartedPath: import('vue').ComputedRef<string> }}
+ *   Shell navigation links with banana labels and locale-aware `to` paths.
  */
 export function useMainNavigationLinks() {
 	const { $bananaI18n, $interfaceLocale } = useNuxtApp()

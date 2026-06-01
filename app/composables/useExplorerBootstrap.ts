@@ -59,6 +59,7 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  *
  * @param selectedWikiInstanceId - Reactive wiki instance id.
  * @returns Reactive bootstrap state, selected module state, and selection actions.
+ *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
 export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	const modules = ref<ExplorerBootstrapModule[]>( [] )
@@ -305,6 +306,9 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 
 		/**
 		 * Waits until Nuxt finishes client hydration, then starts bootstrap.
+		 *
+		 * Immediate watchers can hang `$fetch` on SPA entry to `ssr: false` routes; see
+		 * ARCHITECTURE.md → API explorer → Route boundary navigation.
 		 *
 		 * @returns Promise that resolves when bootstrap has been scheduled.
 		 */

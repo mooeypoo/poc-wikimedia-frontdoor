@@ -11,7 +11,9 @@ export default defineNuxtConfig( {
 		'@nuxtjs/i18n'
 	],
 	devtools: { enabled: true },
-	compatibilityDate: '2024-04-03',
+	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
+	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
+	compatibilityDate: '2024-05-07',
 
 	// Nuxt Content behaves differently across environments here:
 	// - dev: `sqlite3` avoids the native-binding double-load issue we observed
