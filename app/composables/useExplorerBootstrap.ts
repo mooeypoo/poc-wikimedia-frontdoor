@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 
@@ -65,7 +65,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	const wikiDisplayName = ref( '' )
 	const selectedModuleName = ref( '' )
 	const expandedModuleNames = ref<string[]>( [] )
-	const instanceBootstrapState = ref<'idle' | 'loading' | 'ready' | 'error'>( 'idle' )
+	// Show the loading UI immediately on the client-only explorer route (no idle flash).
+	const instanceBootstrapState = ref<'idle' | 'loading' | 'ready' | 'error'>(
+		import.meta.client ? 'loading' : 'idle'
+	)
 	const scalarSwitchState = ref<'idle' | 'switching'>( 'idle' )
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
@@ -297,9 +300,61 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		await bootstrapSelectedInstance( true )
 	}
 
-	watch( selectedWikiInstanceId, () => {
+	onMounted( () => {
+		const nuxtApp = useNuxtApp()
+
+		/**
+		 * Waits until Nuxt finishes client hydration, then starts bootstrap.
+		 *
+		 * @returns Promise that resolves when bootstrap has been scheduled.
+		 */
+		async function bootstrapAfterHydration(): Promise<void> {
+			if ( nuxtApp.isHydrating ) {
+				await new Promise<void>( ( resolve ) => {
+					const finishHydration = (): void => {
+						if ( !nuxtApp.isHydrating ) {
+							resolve()
+						}
+					}
+
+					const stopHook = nuxtApp.hook( 'app:suspense:resolve', () => {
+						stopHook()
+						finishHydration()
+					} )
+
+					requestAnimationFrame( finishHydration )
+					setTimeout( finishHydration, 500 )
+				} )
+			}
+
+			await nextTick()
+			void bootstrapSelectedInstance( false )
+		}
+
+		void bootstrapAfterHydration()
+
+		// Fallback when bootstrap started before the client was fully ready (SPA entry to `/explorer`).
+		setTimeout( () => {
+			if (
+				instanceBootstrapState.value !== 'ready'
+				&& instanceBootstrapState.value !== 'error'
+			) {
+				void bootstrapSelectedInstance( false )
+			}
+		}, 1000 )
+	} )
+
+	watch( selectedWikiInstanceId, ( newWikiInstanceId, previousWikiInstanceId ) => {
+		if ( previousWikiInstanceId === undefined ) {
+			return
+		}
+
+		if ( newWikiInstanceId === previousWikiInstanceId ) {
+			return
+		}
+
 		void bootstrapSelectedInstance( false )
-	}, { immediate: true } )
+	} )
 
 	return {
 		modules,

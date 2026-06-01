@@ -7,6 +7,8 @@ import {
 } from '@wikimedia/codex'
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
+import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
+import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
  * Default layout — the Front Door application shell.
@@ -22,11 +24,8 @@ const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
 const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
-const localePath = useLocalePath()
-const isExplorerRoute = computed( () => {
-	const normalizedPath = route.path.replace( /\/+$/, '' ) || '/'
-	return normalizedPath === '/explorer' || normalizedPath.endsWith( '/explorer' )
-} )
+const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
 
 interface PickerMenuItem {
 	label: string
@@ -105,9 +104,6 @@ const languageMenuItems = computed<PickerMenuItem[]>( () => {
 } )
 
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
-const homeNavigationLabel = computed( () => $bananaI18n( 'nav-home' ) )
-const aboutNavigationLabel = computed( () => $bananaI18n( 'nav-about' ) )
-const apiNavigationLabel = computed( () => $bananaI18n( 'nav-api' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
 const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
@@ -116,9 +112,6 @@ const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label'
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
-const homePath = computed( () => localePath( '/' ) )
-const aboutPath = computed( () => localePath( '/about' ) )
-
 useHead( {
 	htmlAttrs: {
 		dir: direction,
@@ -138,7 +131,7 @@ useHead( {
 				<div class="frontdoor-shell__side-nav">
 					<div class="frontdoor-shell__brand-area">
 						<NuxtLink
-							:to="homePath"
+							:to="getStartedPath"
 							class="frontdoor-shell__brand"
 						>
 							{{ applicationTitle }}
@@ -208,20 +201,23 @@ useHead( {
 						class="frontdoor-shell__main-nav"
 						:aria-label="primaryNavigationLabel"
 					>
-						<NuxtLink :to="homePath">
-							{{ homeNavigationLabel }}
-						</NuxtLink>
-						<NuxtLink :to="aboutPath">
-							{{ aboutNavigationLabel }}
-						</NuxtLink>
-						<NuxtLink to="/explorer">
-							{{ apiNavigationLabel }}
+						<NuxtLink
+							v-for="navigationLink in mainNavigationLinks"
+							:key="navigationLink.id"
+							:to="navigationLink.to"
+						>
+							{{ navigationLink.label }}
 						</NuxtLink>
 					</nav>
 				</div>
 
 				<main class="frontdoor-shell__main">
-					<slot />
+					<div
+						:key="route.path"
+						class="frontdoor-shell__page-slot"
+					>
+						<slot />
+					</div>
 				</main>
 
 				<footer class="frontdoor-shell__footer">
@@ -251,6 +247,8 @@ useHead( {
 }
 
 .frontdoor-shell__chrome {
+	position: relative;
+	z-index: 10;
 	background-color: var( --background-color-base );
 }
 

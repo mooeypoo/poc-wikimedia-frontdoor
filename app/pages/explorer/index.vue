@@ -7,7 +7,9 @@ import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useExplorerRailStickyAlign } from '../../composables/useExplorerRailStickyAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
+import { isExplorerRoutePath } from '../../utils/explorerRoute'
 
 interface PickerMenuItem {
 	label: string
@@ -15,10 +17,15 @@ interface PickerMenuItem {
 }
 
 definePageMeta( {
-	i18n: false
+	i18n: false,
+	keepalive: false
 } )
 
+const route = useRoute()
 const { $bananaI18n } = useNuxtApp()
+
+/** Whether this page is still the active route (disables teleports on exit). */
+const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { selectedWikiInstanceId } = useDirection()
 const {
 	modules,
@@ -105,11 +112,20 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	}
 } )
 
+/** Remounts Scalar when instance, module, or spec URL changes (SPA safety). */
+const scalarReferenceKey = computed( () => {
+	return [
+		route.fullPath,
+		selectedWikiInstanceId.value,
+		selectedModuleName.value,
+		openApiSpecUrl.value ?? ''
+	].join( ':' )
+} )
+
 const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
 const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
-const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
 const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
@@ -180,7 +196,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		</div>
 
 		<ClientOnly>
-			<Teleport to="#explorer-end-panel">
+			<Teleport
+				to="#explorer-end-panel"
+				:disabled="!isActiveExplorerRoute"
+			>
 				<ExplorerModuleRail
 					:style="railStickyStyle"
 					:modules="modules"
@@ -242,32 +261,24 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 						{{ missingSpecLabel }}
 					</CdxMessage>
 
-					<ClientOnly v-else>
+					<div
+						v-else
+						ref="scalarShellRef"
+						class="explorer-page__scalar-shell"
+					>
 						<div
-							ref="scalarShellRef"
-							class="explorer-page__scalar-shell"
+							v-if="isScalarSwitching"
+							class="explorer-page__scalar-switching-mask"
 						>
-							<div
-								v-if="isScalarSwitching"
-								class="explorer-page__scalar-switching-mask"
-							>
-								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-								<p>{{ scalarSwitchingLabel }}</p>
-							</div>
-							<LazyExplorerScalarReference
-								:configuration="scalarConfiguration"
-								@interface-ready="onScalarInterfaceReady"
-							/>
+							<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+							<p>{{ scalarSwitchingLabel }}</p>
 						</div>
-						<template #fallback>
-							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
-								<div class="explorer-page__scalar-loading">
-									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-									<p>{{ explorerInterfaceLoadingLabel }}</p>
-								</div>
-							</div>
-						</template>
-					</ClientOnly>
+						<ExplorerScalarReference
+							:key="scalarReferenceKey"
+							:configuration="scalarConfiguration"
+							@interface-ready="onScalarInterfaceReady"
+						/>
+					</div>
 				</section>
 			</template>
 		</template>
@@ -276,6 +287,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 <style scoped>
 .explorer-page {
+	position: relative;
 	display: grid;
 	gap: var( --spacing-150 );
 	min-inline-size: 0;
@@ -303,7 +315,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 }
 
 .explorer-page__bootstrap-loading {
-	position: fixed;
+	/* Contained to the page so a stuck loader cannot cover the shell header. */
+	position: absolute;
 	inset: 0;
 	z-index: 30;
 	display: grid;
@@ -374,13 +387,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 }
 
 .explorer-page__scalar-shell {
+	/* Contain Scalar `position: fixed` UI so it cannot cover the shell header. */
+	transform: translateZ( 0 );
 	min-inline-size: 0;
 	min-block-size: 24rem;
 	border: 1px solid var( --border-color-subtle );
 	border-radius: var( --border-radius-base );
 	overflow: hidden;
 	background-color: var( --background-color-base );
-	padding-inline: var(--spacing-150);
+	padding-inline: var( --spacing-150 );
 	padding-block: 0;
 }
 

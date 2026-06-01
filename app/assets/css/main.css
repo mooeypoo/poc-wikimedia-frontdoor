@@ -117,7 +117,6 @@ body {
 	color: var( --color-visited );
 }
 
-h1,
 h2,
 h3,
 h4,
@@ -129,6 +128,9 @@ h6 {
 
 h1 {
 	font-size: var( --font-size-xx-large );
+	line-height: var( --line-height-xx-small );
+	/* Top spacing comes from .frontdoor-shell__main padding only (matches explorer). */
+	margin-block: 0 var( --spacing-75 );
 }
 
 h2 {
