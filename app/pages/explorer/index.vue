@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CdxInfoChip, CdxMessage } from '@wikimedia/codex'
 import { computed, nextTick, watch } from 'vue'
-import { WIKI_INSTANCES } from '../../../config/instances'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
@@ -10,11 +9,6 @@ import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../compos
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
-
-interface PickerMenuItem {
-	label: string
-	value: string
-}
 
 definePageMeta( {
 	i18n: false,
@@ -29,6 +23,8 @@ const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) 
 const { selectedWikiInstanceId } = useDirection()
 const {
 	modules,
+	failedModules,
+	hasSelectableModules,
 	wikiDisplayName,
 	selectedModuleName,
 	expandedModuleNames,
@@ -88,20 +84,6 @@ const { railStickyStyle, refreshRailStickyAlign } = useExplorerRailStickyAlign(
 	railAlignAnchorRef,
 	scalarShellRef
 )
-
-// <option>-like rendering targets cannot include HTML tags, so we use
-// FSI/PDI markers to enforce BiDi isolation for external labels.
-function isolateLabel( label: string ): string {
-	return `\u2068${ label }\u2069`
-}
-
-const wikiInstanceMenuItems = computed<PickerMenuItem[]>( () => {
-	return WIKI_INSTANCES.map( ( wikiInstance ) => ( {
-		// Combobox binds `selected` to the text input; use displayName as the value.
-		value: wikiInstance.displayName,
-		label: isolateLabel( wikiInstance.displayName )
-	} ) )
-} )
 
 const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	onLoaded: () => {
@@ -196,7 +178,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
 					v-model:include-internal-endpoints="includeInternalEndpoints"
-					:wiki-instance-menu-items="wikiInstanceMenuItems"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 				/>
 			</div>
@@ -210,6 +191,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<ExplorerModuleRail
 					:style="railStickyStyle"
 					:modules="modules"
+					:failed-modules="failedModules"
+					:has-selectable-modules="hasSelectableModules"
 					:selected-module-name="selectedModuleName"
 					:expanded-module-names="expandedModuleNames"
 					:wiki-display-name="wikiDisplayName"

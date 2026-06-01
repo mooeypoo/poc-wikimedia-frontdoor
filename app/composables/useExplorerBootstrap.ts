@@ -94,6 +94,8 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		return modules.value.filter( ( moduleItem ) => moduleItem.hasSpecError )
 	} )
 
+	const hasSelectableModules = computed( () => availableModules.value.length > 0 )
+
 	const openApiSpecUrl = computed<string | null>( () => selectedModule.value?.specUrl ?? null )
 
 	/**
@@ -364,6 +366,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		modules,
 		availableModules,
 		failedModules,
+		hasSelectableModules,
 		wikiDisplayName,
 		selectedModuleName,
 		expandedModuleNames,

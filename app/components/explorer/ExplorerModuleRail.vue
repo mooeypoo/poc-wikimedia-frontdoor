@@ -2,6 +2,10 @@
 import { CdxIcon, CdxInfoChip, CdxMessage } from '@wikimedia/codex'
 import { cdxIconCollapse, cdxIconExpand } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule, ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
+import {
+	formatEndpointAccessibleLabel,
+	resolveEndpointPathLabel
+} from '../../utils/explorerEndpointLabels'
 import { formatModuleRailHeadingAriaLabel } from '../../utils/explorerModuleRailHeading'
 
 /**
@@ -12,6 +16,8 @@ import { formatModuleRailHeadingAriaLabel } from '../../utils/explorerModuleRail
  */
 const props = defineProps<{
 	modules: ExplorerBootstrapModule[]
+	failedModules: ExplorerBootstrapModule[]
+	hasSelectableModules: boolean
 	selectedModuleName: string
 	expandedModuleNames: string[]
 	wikiDisplayName: string
@@ -34,14 +40,6 @@ const moduleUnavailableLabel = computed( () => $bananaI18n( 'explorer-module-una
 const endpointFallbackLabel = computed( () => $bananaI18n( 'explorer-endpoint-fallback' ) )
 const betaChipLabel = computed( () => $bananaI18n( 'explorer-module-beta-chip-label' ) )
 
-const hasSelectableModules = computed( () => {
-	return props.modules.some( ( moduleItem ) => !moduleItem.hasSpecError )
-} )
-
-const failedModules = computed( () => {
-	return props.modules.filter( ( moduleItem ) => moduleItem.hasSpecError )
-} )
-
 /**
  * Returns whether the given module section is expanded.
  *
@@ -50,34 +48,6 @@ const failedModules = computed( () => {
  */
 function isModuleExpanded( moduleName: string ): boolean {
 	return props.expandedModuleNames.includes( moduleName )
-}
-
-/**
- * Resolves the OpenAPI path shown beside the HTTP method in the module rail.
- *
- * @param operation - Module operation metadata.
- * @returns Path template or the generic endpoint fallback label.
- */
-function getEndpointPathLabel( operation: ExplorerModuleOperation ): string {
-	const pathTemplate = operation.path.trim()
-	return pathTemplate || endpointFallbackLabel.value
-}
-
-/**
- * Builds an accessible name for a module rail endpoint control.
- *
- * @param operation - Module operation metadata.
- * @returns Method, path, and summary when available.
- */
-function getEndpointAccessibleLabel( operation: ExplorerModuleOperation ): string {
-	const pathLabel = getEndpointPathLabel( operation )
-	const summary = operation.summary.trim()
-
-	if ( summary && summary !== pathLabel ) {
-		return `${ operation.method } ${ pathLabel }. ${ summary }`
-	}
-
-	return `${ operation.method } ${ pathLabel }`
 }
 
 /**
@@ -205,17 +175,19 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 							<button
 								type="button"
 								class="explorer-module-rail__endpoint-action"
-								:aria-label="getEndpointAccessibleLabel( moduleOperation )"
+								:aria-label="formatEndpointAccessibleLabel( moduleOperation, endpointFallbackLabel )"
 								@click="emit( 'endpoint-click', moduleOption.name, moduleOperation )"
 							>
+								<!-- HTTP verbs are LTR identifiers regardless of interface direction. -->
 								<span
 									class="explorer-module-rail__endpoint-method"
 									:data-method="moduleOperation.method.toLowerCase()"
+									dir="ltr"
 								>
 									{{ moduleOperation.method }}
 								</span>
 								<span class="explorer-module-rail__endpoint-path">
-									<bdi>{{ getEndpointPathLabel( moduleOperation ) }}</bdi>
+									<bdi>{{ resolveEndpointPathLabel( moduleOperation, endpointFallbackLabel ) }}</bdi>
 								</span>
 							</button>
 						</li>
@@ -225,7 +197,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 		</div>
 
 		<CdxMessage
-			v-if="failedModules.length"
+			v-if="failedModules.length > 0"
 			type="warning"
 		>
 			{{ failedModulesLabel }}:
@@ -269,7 +241,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	font-size: var( --font-size-large );
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-large );
-	width: 100%;
+	inline-size: 100%;
 	padding-block-start: var( --spacing-75 );
 }
 
@@ -344,7 +316,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding-block-start: 6px;
+	padding-block-start: var( --spacing-25 );
 	inline-size: var( --explorer-module-expand-icon-size );
 	block-size: var( --explorer-module-expand-icon-size );
 	overflow: hidden;

@@ -65,9 +65,11 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │       └── default.vue         # Shell layout; primary nav; sets dir on <html>
 │
 ├── config/                     # Project-level configuration (not Nuxt config)
-│   ├── instances.js            # Wiki instance definitions and base URLs
+│   ├── instances.ts            # Wiki instance definitions and base URLs
 │   ├── languages.js            # Supported languages with explicit dir declarations
 │   ├── mainNavigation.ts       # Primary shell nav order and paths
+│   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
+│   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
@@ -130,7 +132,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 **Responsibility:** Rendering data and handling user interaction. Calls composables to get reactive data. Renders it using Codex components. Passes user actions back up via events or composable actions.
 
-**Does not contain:** Fetch calls, URL construction, fallback logic, business rules.
+**Does not contain:** Fetch calls, URL construction, fallback logic, business rules. Pure helpers for labels, BiDi, and a11y live in `app/utils/` (for example `explorerEndpointLabels.ts`, `bidiLabel.ts`).
 
 ---
 
@@ -147,7 +149,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
+| `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
+| `useExplorerScalarFocus(...)` | Scrolls/focuses a module-rail endpoint in Scalar after spec load |
+| `useExplorerRailStickyAlign(...)` | Sticky offset for the module rail beside the Scalar panel |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 
@@ -336,6 +341,8 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
 | `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
+| `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
+| `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 
 Environment-specific values use Nuxt `runtimeConfig`:

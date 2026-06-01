@@ -1,26 +1,17 @@
 <script setup lang="ts">
 import { CdxCheckbox, CdxCombobox, CdxField } from '@wikimedia/codex'
-import { getWikiInstanceById, WIKI_INSTANCES } from '../../../config/instances'
-
-interface PickerMenuItem {
-	label: string
-	value: string
-}
-
-/** Opt-in checkbox `input-value` for beta REST endpoints. */
-const OPT_IN_VALUE_BETA_ENDPOINTS = 'beta-endpoints'
-
-/** Opt-in checkbox `input-value` for internal REST endpoints. */
-const OPT_IN_VALUE_INTERNAL_ENDPOINTS = 'internal-endpoints'
+import {
+	EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
+	EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS
+} from '../../../config/explorerOptIn'
+import { useWikiInstancePicker } from '../../composables/useWikiInstancePicker'
 
 /**
  * ExplorerProjectControls — wiki project combobox and opt-in filters for the explorer.
  *
- * Sits below the page title in the main column, spanning the Scalar reference width.
- * Presentational only; the explorer page owns selection and filter state.
+ * Presentational only; selection state is owned by the explorer page via `defineModel`.
  */
 defineProps<{
-	wikiInstanceMenuItems: PickerMenuItem[]
 	isInstanceBootstrapping: boolean
 }>()
 
@@ -37,6 +28,7 @@ const includeInternalEndpoints = defineModel<boolean>( 'includeInternalEndpoints
 } )
 
 const { $bananaI18n } = useNuxtApp()
+const { wikiInstanceMenuItems, wikiProjectComboboxSelected } = useWikiInstancePicker( selectedWikiInstanceId )
 
 const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
 const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
@@ -44,33 +36,13 @@ const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
 const betaEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-beta-endpoints' ) )
 const internalEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-internal-endpoints' ) )
 
-/**
- * Bridges wiki instance id state to Codex Combobox, which shows `selected` in the input.
- *
- * Menu item values are display names; the explorer page keeps the instance id.
- */
-const wikiProjectComboboxSelected = computed( {
-	get(): string {
-		return getWikiInstanceById( selectedWikiInstanceId.value )?.displayName ?? ''
-	},
-	set( nextSelectedDisplayName: string ) {
-		const matchingWikiInstance = WIKI_INSTANCES.find( ( wikiInstance ) => {
-			return wikiInstance.displayName === nextSelectedDisplayName
-		} )
-
-		if ( matchingWikiInstance ) {
-			selectedWikiInstanceId.value = matchingWikiInstance.id
-		}
-	}
-} )
-
 const optInCheckboxOptions = computed( () => [
 	{
-		value: OPT_IN_VALUE_BETA_ENDPOINTS,
+		value: EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
 		label: betaEndpointsLabel.value
 	},
 	{
-		value: OPT_IN_VALUE_INTERNAL_ENDPOINTS,
+		value: EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS,
 		label: internalEndpointsLabel.value
 	}
 ] )
@@ -83,18 +55,18 @@ const selectedOptInValues = computed( {
 		const selectedValues: string[] = []
 
 		if ( includeBetaEndpoints.value ) {
-			selectedValues.push( OPT_IN_VALUE_BETA_ENDPOINTS )
+			selectedValues.push( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
 		}
 
 		if ( includeInternalEndpoints.value ) {
-			selectedValues.push( OPT_IN_VALUE_INTERNAL_ENDPOINTS )
+			selectedValues.push( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
 		}
 
 		return selectedValues
 	},
 	set( nextSelectedValues: string[] ) {
-		includeBetaEndpoints.value = nextSelectedValues.includes( OPT_IN_VALUE_BETA_ENDPOINTS )
-		includeInternalEndpoints.value = nextSelectedValues.includes( OPT_IN_VALUE_INTERNAL_ENDPOINTS )
+		includeBetaEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
+		includeInternalEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
 	}
 } )
 </script>
