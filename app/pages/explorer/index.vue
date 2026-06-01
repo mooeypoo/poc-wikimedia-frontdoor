@@ -380,6 +380,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	border-radius: var( --border-radius-base );
 	overflow: hidden;
 	background-color: var( --background-color-base );
+	padding-inline: var(--spacing-150);
+	padding-block: 0;
 }
 
 .explorer-page__scalar-shell--loading {

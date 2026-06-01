@@ -239,7 +239,7 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	display: grid;
 	align-content: start;
 	gap: var( --spacing-25 );
-	padding: var( --spacing-75 );
+	padding-inline: var( --spacing-75 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
 	margin-block-start: var( --explorer-rail-sticky-inset, var( --fd-explorer-rail-offset ) );
@@ -269,6 +269,8 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	font-size: var( --font-size-large );
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-large );
+	width: 100%;
+	padding-block-start: var( --spacing-75 );
 }
 
 .explorer-module-rail__module-list {
