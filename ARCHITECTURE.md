@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Front Door Developer Portal
 
-This document describes the architecture of the Front Door project: how it is structured, why key decisions were made, and how the main concerns are separated. Read this alongside `AGENTS.md`, which describes behavioural rules for working in the codebase.
+This document describes the architecture of the Front Door project: how it is structured, why key decisions were made, and how the main concerns are separated. Read this alongside `AGENTS.md`, which describes behavioural rules for working in the codebase, and `DESIGN_REQUIREMENTS.md`, which records UI/UX decisions.
 
 For the full decision history and comparative analysis, see the project design document.
 
@@ -151,7 +151,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
 | `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
-| `useExplorerScalarFocus(...)` | Scrolls/focuses a module-rail endpoint in Scalar after spec load |
+| `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
 | `useExplorerRailStickyAlign(...)` | Sticky offset for the module rail beside the Scalar panel |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
@@ -221,6 +221,45 @@ Object.assign( scalarConfig, { spec: { url: newSpecUrl } } )
 If a future Scalar version changes this behaviour, update the composable and remove this comment.
 
 When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (instance + module + spec URL). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
+
+### Module rail → Scalar operation focus
+
+The right-hand **module rail** lists endpoints from bootstrap data. Selecting an endpoint must scroll the **Scalar reference panel** to the matching OpenAPI operation. This is application behaviour (not Scalar configuration): the rail emits a selection, bootstrap state holds a pending target, and a composable drives Scalar navigation once the spec is mounted.
+
+```
+User clicks endpoint in ExplorerModuleRail
+       ↓
+useExplorerBootstrap.selectModule(module, { operationTarget })
+       ↓
+pendingOperationTarget set (method, path, operationId, primaryTag, …)
+       ↓
+If module changed → startScalarSwitch (spec reload); else keep current spec
+       ↓
+useExplorerScalarFocus (when !isScalarSwitching && !isInstanceBootstrapping)
+       ↓
+resolveScalarOperationNavigationId()  ← app/utils/scalarOperationNavigation.ts
+  ├── Match workspace store / sidebarItems from ApiReference
+  ├── Fall back to DOM id candidates (Scalar generateId pattern)
+  └── Document slug from config/scalar.ts (SCALAR_DOCUMENT_SLUG)
+       ↓
+scalarInterface.eventBus.emit('scroll-to:nav-item', { id })
+       ↓
+scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow: auto)
+```
+
+**Resolution strategy.** Scalar assigns each operation a navigation id (typically `{document}/tag/{tag}/{METHOD}{path}` or `{document}/{METHOD}{path}`). `scalarOperationNavigation.ts` mirrors that id generation (GitHub slugger for segments) and searches, in order: the workspace navigation tree exposed by `ApiReference`, sidebar items, then the DOM under the Scalar shell. Candidates are tried until an element with a matching `id` exists.
+
+**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling the **Scalar shell container** (not only `document`) so sticky layout and `overscroll-behavior: contain` behave correctly.
+
+**Triggers.** Focus runs when:
+
+- The user selects an endpoint (pending target set, Scalar already ready)
+- Scalar finishes switching modules (`isScalarSwitching` false → true transition)
+- `ApiReference` exposes `eventBus` / workspace handles (`@interface-ready` on `ExplorerScalarReference`)
+
+**Same-module clicks.** Selecting another endpoint in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged), so focus can run immediately without waiting for a spec swap.
+
+**UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
 
 ### Route boundary navigation
 
