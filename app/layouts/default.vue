@@ -214,7 +214,7 @@ useHead( {
 										:fallback-results="fallbackResults"
 										:all-locale-result-groups="allLocaleResultGroups"
 										:is-all-locales-mode="isAllLocalesMode"
-										:active-locale="$interfaceLocale.value"
+										:active-locale="$interfaceLocale"
 										:search-query="searchQuery"
 										@result-select="handleResultSelect"
 										@activate-all-locales="activateAllLocalesSearch"

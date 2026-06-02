@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import { SUPPORTED_LANGUAGES } from '~/config/languages'
+import { SUPPORTED_LANGUAGES } from '../../config/languages'
 
 /**
  * Mirrors the shape of a Nuxt Content FTS5 search result.

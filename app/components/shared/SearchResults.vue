@@ -105,7 +105,11 @@ const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
 			v-if="hasLocaleResults"
 			class="fd-search-results__locale-group"
 		>
-			<h3 class="fd-search-results__locale-heading">
+			<!-- Heading only when there is also a fallback section to distinguish the two -->
+			<h3
+				v-if="hasFallbackResults"
+				class="fd-search-results__locale-heading"
+			>
 				{{ localeHeading( activeLocale ) }}
 			</h3>
 			<ul
