@@ -73,8 +73,8 @@
   "explorer-selected-module-badge": "Activo",
   "explorer-debug-title": "Diagnosticos",
   "explorer-debug-empty": "Aun no hay eventos de diagnostico.",
-  "search-results-locale-heading": "Resultados en \u2068$1\u2069",
-  "search-no-locale-results": "Sin resultados en \u2068$1\u2069 para \u2068$2\u2069.",
+  "search-results-locale-heading": "Resultados en {{bidi:$1}}",
+  "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}.",
   "search-all-languages-cta": "Buscar en todos los idiomas",
-  "search-no-results-any-language": "No se encontraron resultados para \u2068$1\u2069 en ningún idioma."
+  "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma."
 }
