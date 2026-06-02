@@ -29,6 +29,10 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				id: 'wikimedia-api-modules',
 				messageKey: 'explorer-side-nav-wikimedia-api-modules',
 				isActive: true
+			},
+			{
+				id: 'additional-apis',
+				messageKey: 'explorer-side-nav-additional-apis-title'
 			}
 		]
 	},

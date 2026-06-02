@@ -392,7 +392,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer page | `app/pages/explorer/index.vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue` |
-| Explorer side nav | `app/components/explorer/ExplorerSideNav.vue`, `config/explorerSideNav.js` |
+| Section side nav | `app/components/shared/PageSectionNav.vue`, `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/composables/usePageSectionNav.ts` |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |
