@@ -8,6 +8,7 @@ import {
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
+import { useContentSearch } from '../composables/useContentSearch'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -35,7 +36,41 @@ interface PickerMenuItem {
 const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
 const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
 
-const searchPlaceholderValue = ref( '' )
+const searchQuery = ref( '' )
+const isSearchPanelOpen = ref( false )
+
+const {
+	localeResults,
+	fallbackResults,
+	allLocaleResultGroups,
+	isAllLocalesMode,
+	activateAllLocalesSearch,
+	hasQuery
+} = useContentSearch( searchQuery, $interfaceLocale )
+
+watch( hasQuery, ( newHasQuery ) => {
+	if ( newHasQuery ) {
+		isSearchPanelOpen.value = true
+	}
+} )
+
+function handleSearchFocusIn(): void {
+	if ( hasQuery.value ) {
+		isSearchPanelOpen.value = true
+	}
+}
+
+function handleSearchAreaFocusOut( event: FocusEvent ): void {
+	const container = event.currentTarget as HTMLElement
+	if ( !container.contains( event.relatedTarget as Node ) ) {
+		isSearchPanelOpen.value = false
+	}
+}
+
+function handleResultSelect( _resultId: string ): void {
+	searchQuery.value = ''
+	isSearchPanelOpen.value = false
+}
 
 // <option>-like rendering targets cannot include HTML tags, so FSI/PDI
 // markers isolate labels and keep mixed-direction names stable.
@@ -158,14 +193,33 @@ useHead( {
 				<div class="frontdoor-shell__chrome">
 					<header class="frontdoor-shell__header">
 						<div class="frontdoor-shell__header-inner">
-							<div class="frontdoor-shell__search-wrap">
+							<div
+								class="frontdoor-shell__search-wrap"
+								@focusout="handleSearchAreaFocusOut"
+							>
 								<CdxSearchInput
-									v-model="searchPlaceholderValue"
+									v-model="searchQuery"
 									class="frontdoor-shell__search"
+									dir="auto"
 									:use-button="false"
 									:placeholder="searchPlaceholderLabel"
-									disabled
+									@focusin="handleSearchFocusIn"
 								/>
+								<div
+									v-if="isSearchPanelOpen && hasQuery"
+									class="frontdoor-shell__search-panel"
+								>
+									<SharedSearchResults
+										:locale-results="localeResults"
+										:fallback-results="fallbackResults"
+										:all-locale-result-groups="allLocaleResultGroups"
+										:is-all-locales-mode="isAllLocalesMode"
+										:active-locale="$interfaceLocale.value"
+										:search-query="searchQuery"
+										@result-select="handleResultSelect"
+										@activate-all-locales="activateAllLocalesSearch"
+									/>
+								</div>
 							</div>
 							<div class="frontdoor-shell__utilities">
 								<CdxButton
@@ -273,6 +327,7 @@ useHead( {
 }
 
 .frontdoor-shell__search-wrap {
+	position: relative;
 	flex: 1 1 0;
 	min-inline-size: 0;
 	max-inline-size: 36rem;
@@ -291,6 +346,20 @@ useHead( {
 .frontdoor-shell__search:deep( .cdx-text-input ) {
 	min-inline-size: 0;
 	inline-size: 100%;
+}
+
+.frontdoor-shell__search-panel {
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	z-index: 20;
+	background-color: var( --background-color-base );
+	border: 1px solid var( --border-color-base );
+	border-radius: var( --border-radius-base );
+	box-shadow: var( --box-shadow-drop-medium );
+	max-block-size: min( 24rem, 80dvh );
+	overflow-y: auto;
 }
 
 .frontdoor-shell__search-toggle {

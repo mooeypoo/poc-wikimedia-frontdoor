@@ -63,5 +63,8 @@
   "explorer-endpoints-error": "فهرست نقطه‌های پایانی این ماژول بارگذاری نشد.",
   "explorer-selected-module-badge": "فعال",
   "explorer-debug-title": "عیب‌یابی",
-  "explorer-debug-empty": "هنوز رویداد عیب‌یابی وجود ندارد."
+  "explorer-debug-empty": "هنوز رویداد عیب‌یابی وجود ندارد.",
+  "search-results-locale-heading": "نتایج به زبان \u2068$1\u2069",
+  "search-no-locale-results": "نتیجه\u200cای به زبان \u2068$1\u2069 برای \u2068$2\u2069 یافت نشد.",
+  "search-all-languages-cta": "جستجو در همه زبان\u200cها"
 }
