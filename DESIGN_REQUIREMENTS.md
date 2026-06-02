@@ -6,7 +6,7 @@ This document records **UI/UX design decisions** introduced during the **design 
 - **`AGENTS.md`** — non-negotiable implementation rules (i18n, BiDi, Codex, layer separation)
 - **`docs/TECH_DECISIONS.md`** — settled product/tech choices (stack, discovery, instances)
 
-Use this file when implementing or reviewing visual behaviour, layout, navigation, and explorer interaction patterns. Where this document conflicts with **`AGENTS.md`**, **`AGENTS.md` wins**.
+Use this file when implementing or reviewing visual styles, grids, layout areas, responsive behaviours, navigation, and interaction patterns. Where this document conflicts with **`AGENTS.md`**, **`AGENTS.md` wins**.
 
 ---
 
@@ -25,7 +25,11 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 **Explicitly prototype / not final:**
 
 - The site is not yet fully responsive
-- Search, settings, and login controls are present but **disabled** or non-functional
+- The site needs to be reviewed and improved for compliance with best internationalization practices.
+- The site needs to be tested for compliance with an AA level of accessibility. It should be fully actionable via screen reader technology.
+- Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
+- Default Nuxt elements such as skeletons need to be replaced by Codex components
+- Search, settings, and login controls are present but **disabled**
 - API Explorer page's **left side nav** links use `href="#"` and do not route anywhere
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
@@ -51,23 +55,6 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 | 8 | About | `/about` | Existing about content |
 
 **Source:** `config/mainNavigation.ts`, labels via banana-i18n (`nav-*` keys).
-
-**Rationale:** Mirrors a full developer-portal IA while keeping explorer outside locale-prefixed routing.
-
-### Brand link
-
-**Decision:** Application title in the **left grid column** links to **Get started** (localized home path), not a separate “home” label.
-
-### API Explorer left navigation (side nav)
-
-**Decision:** On `/explorer` only, the start column shows a **two-section** vertical nav:
-
-1. **API Explorer** — single active item: “Wikimedia API modules”
-2. **Overview** — placeholder links (access policy, rate limits, authentication, licensing, stability, changelog, libraries/SDKs)
-
-**Source:** `config/explorerSideNav.js`.
-
-**Status:** Visual/IA mock only. Links do not navigate; `isActive` is config-driven for the modules item only.
 
 ---
 
@@ -176,7 +163,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 
 ### Design tokens
 
-**Decision:** All first-party UI uses **Codex Wikimedia UI theme tokens** (`@wikimedia/codex-design-tokens/theme-wikimedia-ui.css`) and Codex component styles.
+**Decision:** All first-party UI should use **Codex Wikimedia UI theme tokens** (`@wikimedia/codex-design-tokens/theme-wikimedia-ui.css`) and Codex component styles.
 
 **Body:** `--font-size-medium`, `--line-height-medium`, system sans stack.
 
@@ -372,13 +359,14 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 ## Open questions / future design work
 
-1. **Wire explorer side nav** to real doc routes or in-page anchors.
-2. **Implement search** in header (Lunr per `ARCHITECTURE.md`).
-3. **Apply opt-in filters** to module/endpoint lists and Scalar display.
-4. **Mobile explorer** — dedicated small-screen module rail placement (currently stacked, start column hidden).
-5. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
-6. **Editorial content** for Learn, Enterprise, Community, Contribute, Get help.
-7. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
+1. **Full responsive shell** — Complete responsive behaviour at all Codex breakpoints (mobile/tablet side panels, stacked explorer layout, interim 2-column tablet layout). See **Layout system → Implementation status** for current gaps.
+2. **Settings and login** — Prototype the user's dashboard and token management flows.
+3. **Add side navigation for all pages**  - Include navigation menus in all pages and represent all relevant sections to fully outline the site's information architecture.
+4. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
+5. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
+6. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
+7. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
+8. **Codex styling review** – Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
 
 ---
 
