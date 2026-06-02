@@ -69,6 +69,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── languages.js            # Supported languages with explicit dir declarations
 │   ├── mainNavigation.ts       # Primary shell nav order and paths
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
+│   ├── sectionNavigation.js    # Content-page left-rail sections (banana keys; IA prototype)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   └── scalar.js               # Scalar component defaults
 │
@@ -381,6 +382,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
 | `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
+| `config/sectionNavigation.js` | Content-page left-rail sections per main nav id (Get started, Learn, stubs) |
 | `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 

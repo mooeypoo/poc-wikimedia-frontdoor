@@ -8,6 +8,7 @@ import {
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
+import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -26,6 +27,11 @@ const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
+const {
+	hasPageSectionNavigation,
+	navigationLabel: pageSectionNavigationLabel,
+	navigationSections: pageSectionNavigationSections
+} = usePageSectionNav()
 
 interface PickerMenuItem {
 	label: string
@@ -124,7 +130,10 @@ useHead( {
 <template>
 	<div
 		class="frontdoor-shell"
-		:class="{ 'frontdoor-shell--explorer': isExplorerRoute }"
+		:class="{
+			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--has-section-nav': hasPageSectionNavigation
+		}"
 	>
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
@@ -137,7 +146,11 @@ useHead( {
 							{{ applicationTitle }}
 						</NuxtLink>
 					</div>
-					<ExplorerSideNav v-if="isExplorerRoute" />
+					<SharedPageSectionNav
+						v-if="hasPageSectionNavigation"
+						:aria-label="pageSectionNavigationLabel"
+						:sections="pageSectionNavigationSections"
+					/>
 				</div>
 			</template>
 
@@ -338,7 +351,8 @@ useHead( {
 }
 
 /* Align the side nav first row with .frontdoor-shell__main-nav (no extra gap below the brand). */
-.frontdoor-shell--explorer .frontdoor-shell__side-nav {
+.frontdoor-shell--explorer .frontdoor-shell__side-nav,
+.frontdoor-shell--has-section-nav .frontdoor-shell__side-nav {
 	gap: 0;
 }
 
