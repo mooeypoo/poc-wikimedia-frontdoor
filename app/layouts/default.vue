@@ -208,6 +208,7 @@ useHead( {
 								<div
 									v-if="isSearchPanelOpen && hasQuery"
 									class="frontdoor-shell__search-panel"
+									@mousedown.prevent
 								>
 									<SharedSearchResults
 										:locale-results="localeResults"

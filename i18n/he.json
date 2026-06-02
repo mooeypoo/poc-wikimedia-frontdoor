@@ -75,5 +75,6 @@
   "explorer-debug-empty": "עדיין אין אירועי אבחון.",
   "search-results-locale-heading": "תוצאות ב\u2068$1\u2069",
   "search-no-locale-results": "אין תוצאות ב\u2068$1\u2069 עבור \u2068$2\u2069.",
-  "search-all-languages-cta": "חפש בכל השפות"
+  "search-all-languages-cta": "חפש בכל השפות",
+  "search-no-results-any-language": "לא נמצאו תוצאות עבור \u2068$1\u2069 באף שפה."
 }

@@ -75,5 +75,6 @@
   "explorer-debug-empty": "Aucun evenement de diagnostic pour le moment.",
   "search-results-locale-heading": "R\u00e9sultats en \u2068$1\u2069",
   "search-no-locale-results": "Aucun r\u00e9sultat en \u2068$1\u2069 pour \u2068$2\u2069.",
-  "search-all-languages-cta": "Rechercher dans toutes les langues"
+  "search-all-languages-cta": "Rechercher dans toutes les langues",
+  "search-no-results-any-language": "Aucun résultat trouvé pour \u2068$1\u2069 dans aucune langue."
 }

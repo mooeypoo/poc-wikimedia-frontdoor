@@ -57,7 +57,7 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 			args.push( parameters[ `$${ i }` ] )
 		}
 
-		const translatedMessage = banana.i18n( messageKey, args )
+		const translatedMessage = banana.i18n( messageKey, ...args )
 		return translatedMessage || MESSAGES_BY_LOCALE.en[ messageKey ] || messageKey
 	}
 

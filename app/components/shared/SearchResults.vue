@@ -48,6 +48,10 @@ const noLocaleResultsMessage = computed( () => {
 	return $bananaI18n( 'search-no-locale-results', { $1: langName, $2: props.searchQuery } )
 } )
 
+const noResultsAnyLanguageMessage = computed( () =>
+	$bananaI18n( 'search-no-results-any-language', { $1: props.searchQuery } )
+)
+
 const allLanguagesCta = computed( () => $bananaI18n( 'search-all-languages-cta' ) )
 
 const hasLocaleResults = computed( () => props.localeResults.length > 0 )
@@ -60,6 +64,12 @@ const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
 		v-if="isAllLocalesMode"
 		class="fd-search-results fd-search-results--all-locales"
 	>
+		<p
+			v-if="allLocaleResultGroups.length === 0"
+			class="fd-search-results__no-any-language"
+		>
+			{{ noResultsAnyLanguageMessage }}
+		</p>
 		<section
 			v-for="group in allLocaleResultGroups"
 			:key="group.locale"
@@ -269,6 +279,14 @@ const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
 
 .fd-search-results__no-locale-message {
 	margin: 0;
+	font-size: var( --font-size-medium );
+	color: var( --color-subtle );
+}
+
+.fd-search-results__no-any-language {
+	margin: 0;
+	padding-inline: var( --spacing-75 );
+	padding-block: var( --spacing-75 );
 	font-size: var( --font-size-medium );
 	color: var( --color-subtle );
 }

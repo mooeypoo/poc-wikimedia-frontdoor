@@ -66,5 +66,6 @@
   "explorer-debug-empty": "هنوز رویداد عیب‌یابی وجود ندارد.",
   "search-results-locale-heading": "نتایج به زبان \u2068$1\u2069",
   "search-no-locale-results": "نتیجه\u200cای به زبان \u2068$1\u2069 برای \u2068$2\u2069 یافت نشد.",
-  "search-all-languages-cta": "جستجو در همه زبان\u200cها"
+  "search-all-languages-cta": "جستجو در همه زبان\u200cها",
+  "search-no-results-any-language": "نتیجه\u200cای برای \u2068$1\u2069 در هیچ زبانی یافت نشد."
 }
