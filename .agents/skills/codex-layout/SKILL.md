@@ -266,6 +266,7 @@ Spacing is the same at all breakpoints.
 - [`codex-components`](../codex-components/SKILL.md) — `CdxButton`, `CdxField`, `CdxDialog`, …
 - [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — footer mirroring, ellipsis
 - [`codex-design-principles`](../codex-design-principles/SKILL.md) — familiar, accessible UX
+- [`codex-content`](../codex-content/SKILL.md) — labels, errors, button copy, tone
 - [`codex-tokens`](../codex-tokens/SKILL.md) — spacing and size tokens
 
 ## Inside Front Door

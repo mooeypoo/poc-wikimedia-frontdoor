@@ -120,6 +120,7 @@ recipe rather than hand-rolling those styles.
   logical CSS, `<bdi>`, and mirroring per the Codex style guide.
 - [`codex-layout`](../codex-layout/SKILL.md) — content overflow, links vs
   buttons, and constructing forms.
+- [`codex-content`](../codex-content/SKILL.md) — voice, tone, and UI copywriting.
 
 ## Inside ProtoWiki
 
