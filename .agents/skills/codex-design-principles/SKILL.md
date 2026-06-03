@@ -53,6 +53,8 @@ RTL. *Use them as designed*:
 - Don't replace `<a>` with `<div @click>`.
 - Don't hard-code colours that fail in dark mode.
 - Don't suppress focus rings.
+- Follow bidirectionality rules for mirroring, mixed-language text, and
+  `dir` — see [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md).
 
 If your work removes accessibility affordances, it's no longer
 demonstrating a Wikimedia design — it's demonstrating something else.
@@ -108,7 +110,13 @@ Before you call a piece of work done, walk through this checklist:
 ## Reference
 
 - Wikimedia Style Guide overview:
+  <https://doc.wikimedia.org/codex/latest/style-guide/overview.html>
+- Wikimedia design principles:
   <https://doc.wikimedia.org/codex/latest/style-guide/principles.html>
+- Bidirectionality (RTL/LTR):
+  <https://doc.wikimedia.org/codex/latest/style-guide/bidirectionality.html>
+- [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — agent-oriented
+  BiDi checklist for this repo
 - Wikimedia content (writing) style guide:
   <https://design.wikimedia.org/style-guide/>
 

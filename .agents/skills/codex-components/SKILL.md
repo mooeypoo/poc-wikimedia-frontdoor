@@ -126,6 +126,8 @@ When in doubt, the canonical docs are at
 
 ## See also
 
+- [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) for RTL/LTR,
+  mirroring, `<bdi>`, and `dir` best practices.
 - [`codex-icons`](../codex-icons/SKILL.md) for the icon catalogue.
 - [`codex-tokens`](../codex-tokens/SKILL.md) for the design tokens that
   drive every component's appearance.
