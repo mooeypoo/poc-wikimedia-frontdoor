@@ -118,6 +118,7 @@ Before you call a piece of work done, walk through this checklist:
 - [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — agent-oriented
   BiDi checklist for this repo
 - [`codex-layout`](../codex-layout/SKILL.md) — overflow, links, buttons, forms
+- [`codex-content`](../codex-content/SKILL.md) — voice, tone, UI copy, machine-assisted disclosure
 - Wikimedia content (writing) style guide:
   <https://design.wikimedia.org/style-guide/>
 
