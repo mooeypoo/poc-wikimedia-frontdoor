@@ -152,6 +152,8 @@ project explicitly allows it.
 
 ## See also
 
+- [`codex-layout`](../codex-layout/SKILL.md) — form footers, button order,
+  ellipsis placement in RTL
 - [`codex-design-principles`](../codex-design-principles/SKILL.md) —
   accessible, familiar Wikimedia UX
 - [`codex-components`](../codex-components/SKILL.md) — RTL-aware components
