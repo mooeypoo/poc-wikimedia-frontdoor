@@ -7,7 +7,7 @@ import {
 } from '@wikimedia/codex'
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
-import { useLoginPath } from '../composables/useLoginPath'
+import { useShellAuthNavigation } from '../composables/useShellAuthNavigation'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
@@ -28,7 +28,13 @@ const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
-const { loginPath } = useLoginPath()
+const {
+	headerAuthLinkPath,
+	headerLoginLabel,
+	headerAuthLinkAccessibleLabel,
+	isAuthenticated: isHeaderAuthAuthenticated,
+	username: headerAuthUsername
+} = useShellAuthNavigation()
 const {
 	hasPageSectionNavigation,
 	navigationLabel: pageSectionNavigationLabel,
@@ -117,7 +123,6 @@ const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
-const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
 useHead( {
@@ -207,10 +212,12 @@ useHead( {
 								/>
 							</div>
 							<NuxtLink
-								:to="loginPath"
+								:to="headerAuthLinkPath"
 								class="frontdoor-shell__login-link"
+								:aria-label="isHeaderAuthAuthenticated ? headerAuthLinkAccessibleLabel : undefined"
 							>
-								{{ loginLinkLabel }}
+								<bdi v-if="isHeaderAuthAuthenticated">{{ headerAuthUsername }}</bdi>
+								<template v-else>{{ headerLoginLabel }}</template>
 							</NuxtLink>
 						</div>
 					</header>
