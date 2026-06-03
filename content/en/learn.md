@@ -19,58 +19,40 @@ Each section exercises one feature. Inline notes explain the implementation stat
 Everything below relies only on packages already installed in this project.
 No new dependencies are required.
 
-**`nuxt.config.ts` — add Shiki transformers** (`@shikijs/transformers` is already a transitive dep of `@nuxt/content`):
-
-| Feature | Transformer |
-|---|---|
-| Line numbers | `transformerMetaLineNumbers()` |
-| Line highlighting | `transformerMetaHighlight()` |
-| Diffs | `transformerNotationDiff()` |
-
-**`app/components/content/` — new Vue components** (all use Codex, already installed):
-
-| File | Codex widget(s) | Markdown usage |
+| Feature | Type | Implementation |
 |---|---|---|
-| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; plain text + hover icon instead of full-text `<a>` wrap |
-| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when href is external |
-| `Callout.vue` | `CdxMessage` (`type` prop: `notice` / `warning` / `error`) | `::callout{type="warning"}` MDC block |
-| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` MDC block |
-| `AppButton.vue` | `CdxButton` | `::app-button{href="…" label="…"}` MDC inline |
-
-**`app/pages/[...slug].vue` — read frontmatter** (no new packages):
-
-| Feature | Change |
-|---|---|
-| Next / Previous | Read `page.prev` / `page.next` from frontmatter; render `CdxButton` links with `cdxIconArrowPrevious` / `cdxIconArrowNext` |
-
-**Needs testing:**
-
-| Feature | Status |
-|---|---|
-| File inclusion | MDC ships a built-in `::include` component via `@nuxtjs/mdc`; the demo below uses it — verify it resolves correctly |
+| Header anchors | Custom component | `ProseH2.vue`…`ProseH6.vue` override default prose headings; plain text + hover `CdxIcon` link |
+| External link icons | Custom component | `ProseA.vue` overrides default prose anchor; appends `CdxIcon` for `https?://` links |
+| Callouts | Custom component | `Callout.vue` wraps `CdxMessage`; `type` prop + optional `#title` named slot |
+| Code tabs | Custom components | `CodeTabs.vue` + `CodeTab.vue`; custom tab UI styled with Codex tokens |
+| File inclusion | Custom component | `Include.vue` resolves relative paths against current locale + route, queries content collection |
+| Expandable sections | Built-in | Native `<details>` / `<summary>`; no configuration needed |
+| Buttons | Custom component | `AppButton.vue`; `NuxtLink` (internal) or `<a>` (external) styled as a Codex progressive button |
+| Syntax highlighting | Built-in | Shiki bundled with `@nuxt/content`; language tag on fence is enough |
+| Line numbers | Configured | Custom inline Shiki transformer in `nuxt.config.ts`; CSS counters in `main.css` |
+| Line highlighting | Configured | `transformerMetaHighlight()` from `@shikijs/transformers` (transitive dep), added to config |
+| Code diffs | Configured | `transformerNotationDiff()` from `@shikijs/transformers` (transitive dep), added to config |
+| Prev / next navigation | Custom code | `[...slug].vue` reads `prev`/`next` from frontmatter; renders `NuxtLink` with `CdxIcon` arrows |
 
 ---
 
 ## Header Anchors
 
-Each heading should show plain text with a small `CdxIcon` (`cdxIconLink`) that appears on hover
-and links to `#the-heading-id` for shareable deep-links — **not yet implemented**.
-
-The default `@nuxtjs/mdc` rendering wraps the **entire heading text** inside an `<a>` tag.
-The fix is `app/components/content/ProseH2.vue` … `ProseH6.vue`: each renders the heading text
-as a plain `<slot>` with the icon as a sibling, toggled via CSS `:hover`.
+**Custom component** — `ProseH2.vue`…`ProseH6.vue` override the default `@nuxtjs/mdc` prose headings,
+which wrap the entire heading text in an `<a>`. The custom components render plain text with a
+`CdxIcon` (`cdxIconLink`) sibling that appears on hover and links to `#the-heading-id`.
 
 ### Sub-section Example
 
-This H3 should get the same treatment. The anchor ID (`#sub-section-example`) already exists;
-only the hover-icon rendering is missing.
+Hover this heading to see the anchor icon appear.
 
 ---
 
 ## External Link Icons
 
-Internal and external links mixed together. External ones should gain a `CdxIcon` rendered
-by a `ProseA.vue` override — **not yet implemented**.
+**Custom component** — `ProseA.vue` overrides the default prose anchor. Links whose `href` starts
+with `https?://` get a `CdxIcon` (`cdxIconLinkExternal`) appended after the link text. Internal
+links are left unchanged.
 
 - [Wikimedia REST API documentation](https://api.wikimedia.org/wiki/Documentation) — external
 - [MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) — external
@@ -81,7 +63,8 @@ by a `ProseA.vue` override — **not yet implemented**.
 
 ## Callouts
 
-Uses `CdxMessage` once `app/components/content/Callout.vue` is created — **not yet implemented**.
+**Custom component** — `Callout.vue` wraps `CdxMessage`. Accepts a `type` prop (`notice`, `warning`,
+`error`, `success`) and an optional `#title` named slot rendered as a bold label above the body.
 
 ::callout
 #title
@@ -105,12 +88,12 @@ upgrading. Responses from the old endpoint will return `410 Gone` after the depr
 
 ## Code Tabs
 
-Uses `CdxTabs` + `CdxTab` once `CodeTabs.vue` and `CodeTab.vue` are created — **not yet implemented**.
-All tab contents remain in the DOM so Ctrl+F finds them regardless of which tab is active.
+**Custom components** — `CodeTabs.vue` + `CodeTab.vue` implement a tab UI styled with Codex tokens.
+All tab panels remain in the DOM (`v-show`), so Ctrl+F searches all tabs regardless of which is active.
 
 ::::code-tabs
 :::code-tab{label="JavaScript"}
-```js
+```js :line-numbers
 async function fetchArticle( title ) {
 	const response = await fetch(
 		`https://api.wikimedia.org/core/v1/wikipedia/en/page/${ title }/bare`
@@ -124,7 +107,7 @@ async function fetchArticle( title ) {
 :::
 
 :::code-tab{label="Python"}
-```python
+```python :line-numbers
 import requests
 
 def fetch_article(title: str) -> dict:
@@ -136,7 +119,7 @@ def fetch_article(title: str) -> dict:
 :::
 
 :::code-tab{label="PHP"}
-```php
+```php :line-numbers
 <?php
 function fetchArticle(string $title): array {
     $url = "https://api.wikimedia.org/core/v1/wikipedia/en/page/{$title}/bare";
@@ -151,16 +134,18 @@ function fetchArticle(string $title): array {
 
 ## File Inclusion
 
-The block below uses the MDC `::include` directive — **needs verification** that
-`@nuxtjs/mdc`'s built-in `Include` component resolves the path correctly.
+**Custom component** — `Include.vue` resolves a relative `./path` against the current page's locale
+and route, queries the content collection, and renders the result with `ContentRenderer`. The partial
+below lives in `content/en/_partials/api-note.md`.
 
 ::include{file="./_partials/api-note.md"}
+::
 
 ---
 
 ## Expandable Sections
 
-Native HTML `<details>` / `<summary>` — **works today** without any configuration.
+**Built-in** — native HTML `<details>` / `<summary>` work out of the box; no configuration needed.
 
 <details>
 <summary>Advanced: Configuring a custom User-Agent header</summary>
@@ -188,17 +173,22 @@ Wikipedia articles redirect when pages are moved or merged. The REST API returns
 
 ## Buttons
 
-Uses `CdxButton` once `app/components/content/AppButton.vue` is created — **not yet implemented**.
+**Custom component** — `AppButton.vue` renders a `NuxtLink` for internal paths or an `<a>` for
+external ones, styled with Codex tokens to match a progressive primary button. External links
+show a `CdxIcon` (`cdxIconLinkExternal`) and get `rel="noopener noreferrer"`.
 
 ::app-button{href="/explorer" label="Open API Explorer"}
+::
 
-::app-button{href="https://api.wikimedia.org" label="Wikimedia API" external="true"}
+::app-button{href="https://www.mediawiki.org" label="Wikimedia Docs" external="true"}
+::
 
 ---
 
 ## Syntax Highlighting
 
-Shiki is bundled with `@nuxt/content` — **works today**.
+**Built-in** — Shiki is bundled with `@nuxt/content`; fenced code blocks with a language tag are
+highlighted automatically with no extra configuration.
 
 ```javascript
 async function paginatedFetch( endpoint, params = {} ) {
@@ -261,7 +251,9 @@ curl -s \
 
 ## Code with Line Numbers
 
-Requires `transformerMetaLineNumbers()` in `nuxt.config.ts` — **not yet configured**.
+**Configured** — a custom inline Shiki transformer in `nuxt.config.ts` adds `data-line-numbers` to
+`<pre>` when `:line-numbers` appears in the code fence meta. CSS counters in `main.css` render the
+numbers. (`@shikijs/transformers` has no built-in equivalent for this.)
 
 ```javascript :line-numbers
 function buildAuthHeaders( token ) {
@@ -280,8 +272,8 @@ function buildAuthHeaders( token ) {
 
 ## Line Highlighting
 
-Requires `transformerMetaHighlight()` in `nuxt.config.ts` — **not yet configured**.
-Lines 3–5 below should be highlighted.
+**Configured** — `transformerMetaHighlight()` from `@shikijs/transformers` (already a transitive dep)
+added to `nuxt.config.ts`. Lines 3–5 below are highlighted with `{3-5}` in the fence meta.
 
 ```javascript {3-5}
 async function authenticate( clientId, clientSecret ) {
@@ -300,8 +292,8 @@ async function authenticate( clientId, clientSecret ) {
 
 ## Code Diffs
 
-Requires `transformerNotationDiff()` in `nuxt.config.ts` — **not yet configured**.
-Lines marked `[!code --]` should appear red; `[!code ++]` should appear green.
+**Configured** — `transformerNotationDiff()` from `@shikijs/transformers` added to `nuxt.config.ts`.
+Lines annotated with `// [!code --]` render red; `// [!code ++]` render green.
 
 ```javascript
 async function fetchWithRetry( url, retries = 3 ) {
@@ -328,7 +320,7 @@ async function fetchWithRetry( url, retries = 3 ) {
 
 ## Next / Previous Navigation
 
-The frontmatter at the top of this file declares `prev` and `next` links.
-Rendering them requires reading `page.prev` / `page.next` in `[...slug].vue`
-and displaying `CdxButton` links with `cdxIconArrowPrevious` / `cdxIconArrowNext` —
-**not yet implemented**.
+**Custom code** — `[...slug].vue` reads `prev` and `next` from the page frontmatter and renders
+`NuxtLink` elements with `CdxIcon` arrows (`cdxIconArrowPrevious` / `cdxIconArrowNext`, both
+`flip-for-rtl`) below the content. The links at the bottom of this page use the frontmatter declared
+at the top of this file.

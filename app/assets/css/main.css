@@ -249,3 +249,19 @@ code {
 .explorer-page .cdx-menu-item--enabled.cdx-menu-item--selected.cdx-menu-item--highlighted {
 	color: var( --color-base );
 }
+
+/* Syntax highlighting: line numbers via CSS counters */
+pre[data-line-numbers] {
+	counter-reset: line;
+}
+
+pre[data-line-numbers] .line::before {
+	counter-increment: line;
+	content: counter( line );
+	display: inline-block;
+	width: 2em;
+	margin-inline-end: var( --spacing-75 );
+	text-align: end;
+	color: var( --color-subtle );
+	user-select: none;
+}
