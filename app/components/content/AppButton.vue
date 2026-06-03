@@ -5,7 +5,8 @@ import { cdxIconLinkExternal } from '@wikimedia/codex-icons'
 const props = defineProps<{
 	href: string
 	label: string
-	external?: boolean
+	// MDC passes attribute values as strings; accept both for Vue prop validation.
+	external?: boolean | string
 }>()
 
 const isInternal = computed( () => props.href.startsWith( '/' ) && !props.external )

@@ -1,8 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import {
-	transformerMetaHighlight,
-	transformerNotationDiff
-} from '@shikijs/transformers'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
@@ -32,37 +28,24 @@ export default defineNuxtConfig( {
 		experimental: {
 			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
 		},
-		highlight: {
-			langs: [
-				'javascript',
-				'typescript',
-				'python',
-				'php',
-				'bash',
-				'json',
-				'html',
-				'css',
-				'vue',
-				'markdown'
-			],
-			transformers: [
-				// {1,3-5} meta syntax highlights specific lines
-				transformerMetaHighlight(),
-				// [!code ++] / [!code --] diff annotations
-				transformerNotationDiff(),
-				// :line-numbers meta flag — adds data-line-numbers to <pre>;
-				// display is handled via CSS counters in main.css.
-				// @shikijs/transformers does not ship this natively for v4.
-				{
-					name: 'line-numbers',
-					pre( node: any ) {
-						const meta = ( this as any ).options?.meta?.__raw ?? ''
-						if ( meta.includes( ':line-numbers' ) ) {
-							node.properties[ 'data-line-numbers' ] = ''
-						}
-					}
+		build: {
+			markdown: {
+				highlight: {
+					theme: 'github-light',
+					langs: [
+						'javascript',
+						'typescript',
+						'python',
+						'php',
+						'bash',
+						'json',
+						'html',
+						'css',
+						'vue',
+						'markdown'
+					]
 				}
-			]
+			}
 		}
 	},
 

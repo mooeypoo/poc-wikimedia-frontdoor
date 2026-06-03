@@ -161,6 +161,14 @@ code {
 	border-radius: var( --border-radius-base );
 }
 
+/* Reset inline-code decoration inside fenced blocks */
+pre code {
+	background-color: transparent;
+	padding: 0;
+	border-radius: 0;
+	font-size: inherit;
+}
+
 .explorer-page :where( .scalar-app ) {
 	--scalar-background-1: var( --background-color-base );
 	--scalar-background-2: var( --background-color-neutral-subtle );
@@ -250,12 +258,13 @@ code {
 	color: var( --color-base );
 }
 
-/* Syntax highlighting: line numbers via CSS counters */
-pre[data-line-numbers] {
+/* Syntax highlighting */
+
+pre.has-line-numbers {
 	counter-reset: line;
 }
 
-pre[data-line-numbers] .line::before {
+pre.has-line-numbers .line::before {
 	counter-increment: line;
 	content: counter( line );
 	display: inline-block;
@@ -264,4 +273,31 @@ pre[data-line-numbers] .line::before {
 	text-align: end;
 	color: var( --color-subtle );
 	user-select: none;
+}
+
+/* Line highlight: {1,3-5} meta syntax — MDC parses these into highlights prop,
+   mdc:highlight transformer adds class "highlight" (not "highlighted") */
+.shiki .line.highlight {
+	background-color: var( --background-color-progressive-subtle );
+}
+
+/* Code diff: [!code ++] / [!code --] via transformerNotationDiff */
+.shiki.has-diff .line.diff.add {
+	background-color: var( --background-color-success-subtle );
+}
+
+.shiki.has-diff .line.diff.remove {
+	background-color: var( --background-color-error-subtle );
+}
+
+.shiki.has-diff .line.diff.add::before {
+	content: '+';
+	color: var( --color-success );
+	padding-inline-end: var( --spacing-50 );
+}
+
+.shiki.has-diff .line.diff.remove::before {
+	content: '-';
+	color: var( --color-error );
+	padding-inline-end: var( --spacing-50 );
 }

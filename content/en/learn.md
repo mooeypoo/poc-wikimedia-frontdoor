@@ -93,7 +93,7 @@ All tab panels remain in the DOM (`v-show`), so Ctrl+F searches all tabs regardl
 
 ::::code-tabs
 :::code-tab{label="JavaScript"}
-```js :line-numbers
+```javascript :line-numbers
 async function fetchArticle( title ) {
 	const response = await fetch(
 		`https://api.wikimedia.org/core/v1/wikipedia/en/page/${ title }/bare`
