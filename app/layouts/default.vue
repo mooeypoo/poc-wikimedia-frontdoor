@@ -7,6 +7,7 @@ import {
 } from '@wikimedia/codex'
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
+import { useShellAuthNavigation } from '../composables/useShellAuthNavigation'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { useContentSearch } from '../composables/useContentSearch'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
@@ -27,6 +28,13 @@ const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
+const {
+	headerAuthLinkPath,
+	headerLoginLabel,
+	headerAuthLinkAccessibleLabel,
+	isAuthenticated: isHeaderAuthAuthenticated,
+	username: headerAuthUsername
+} = useShellAuthNavigation()
 
 interface PickerMenuItem {
 	label: string
@@ -144,7 +152,6 @@ const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
-const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
 useHead( {
@@ -246,13 +253,14 @@ useHead( {
 									:aria-label="interfaceLanguageLabel"
 								/>
 							</div>
-							<a
-								href="#"
+							<NuxtLink
+								:to="headerAuthLinkPath"
 								class="frontdoor-shell__login-link"
-								@click.prevent
+								:aria-label="isHeaderAuthAuthenticated ? headerAuthLinkAccessibleLabel : undefined"
 							>
-								{{ loginLinkLabel }}
-							</a>
+								<bdi v-if="isHeaderAuthAuthenticated">{{ headerAuthUsername }}</bdi>
+								<template v-else>{{ headerLoginLabel }}</template>
+							</NuxtLink>
 						</div>
 					</header>
 					<nav
