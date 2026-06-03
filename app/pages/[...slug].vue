@@ -31,7 +31,7 @@ if ( !page.value ) {
   } )
 }
 
-type NavLink = { title: string; to: string }
+type NavLink = { text: string; link: string }
 const prevPage = computed( () => page.value?.prev as NavLink | undefined )
 const nextPage = computed( () => page.value?.next as NavLink | undefined )
 </script>
@@ -48,18 +48,18 @@ const nextPage = computed( () => page.value?.next as NavLink | undefined )
   >
     <NuxtLink
       v-if="prevPage"
-      :to="prevPage.to"
+      :to="prevPage.link"
       class="page-nav__link page-nav__link--prev"
     >
       <CdxIcon :icon="cdxIconArrowPrevious" :flip-for-rtl="true" />
-      {{ prevPage.title }}
+      {{ prevPage.text }}
     </NuxtLink>
     <NuxtLink
       v-if="nextPage"
-      :to="nextPage.to"
+      :to="nextPage.link"
       class="page-nav__link page-nav__link--next"
     >
-      {{ nextPage.title }}
+      {{ nextPage.text }}
       <CdxIcon :icon="cdxIconArrowNext" :flip-for-rtl="true" />
     </NuxtLink>
   </nav>
