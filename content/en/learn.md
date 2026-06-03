@@ -12,38 +12,76 @@ next:
 # Learn
 
 This page is a **feature demonstration** for all required markdown rendering capabilities.
-Each section below exercises a specific feature from the requirements list.
+Each section exercises one feature. Inline notes explain the implementation status.
+
+## Implementation summary
+
+Everything below relies only on packages already installed in this project.
+No new dependencies are required.
+
+**`nuxt.config.ts` — add Shiki transformers** (`@shikijs/transformers` is already a transitive dep of `@nuxt/content`):
+
+| Feature | Transformer |
+|---|---|
+| Line numbers | `transformerMetaLineNumbers()` |
+| Line highlighting | `transformerMetaHighlight()` |
+| Diffs | `transformerNotationDiff()` |
+
+**`app/components/content/` — new Vue components** (all use Codex, already installed):
+
+| File | Codex widget(s) | Markdown usage |
+|---|---|---|
+| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; plain text + hover icon instead of full-text `<a>` wrap |
+| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when href is external |
+| `Callout.vue` | `CdxMessage` (`type` prop: `notice` / `warning` / `error`) | `::callout{type="warning"}` MDC block |
+| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` MDC block |
+| `AppButton.vue` | `CdxButton` | `::app-button{href="…" label="…"}` MDC inline |
+
+**`app/pages/[...slug].vue` — read frontmatter** (no new packages):
+
+| Feature | Change |
+|---|---|
+| Next / Previous | Read `page.prev` / `page.next` from frontmatter; render `CdxButton` links with `cdxIconArrowPrevious` / `cdxIconArrowNext` |
+
+**Needs testing:**
+
+| Feature | Status |
+|---|---|
+| File inclusion | MDC ships a built-in `::include` component via `@nuxtjs/mdc`; the demo below uses it — verify it resolves correctly |
 
 ---
 
 ## Header Anchors
 
-Each heading on this page has a unique anchor ID generated automatically (e.g. `#header-anchors`).
-Clicking a heading should reveal a shareable link icon. That icon is not yet rendered — it
-requires overriding the `ProseH2.vue` / `ProseH3.vue` components in `app/components/content/`.
+Each heading should show plain text with a small `CdxIcon` (`cdxIconLink`) that appears on hover
+and links to `#the-heading-id` for shareable deep-links — **not yet implemented**.
+
+The default `@nuxtjs/mdc` rendering wraps the **entire heading text** inside an `<a>` tag.
+The fix is `app/components/content/ProseH2.vue` … `ProseH6.vue`: each renders the heading text
+as a plain `<slot>` with the icon as a sibling, toggled via CSS `:hover`.
 
 ### Sub-section Example
 
-This H3 also gets an anchor. Deep-linking to `#sub-section-example` should work.
+This H3 should get the same treatment. The anchor ID (`#sub-section-example`) already exists;
+only the hover-icon rendering is missing.
 
 ---
 
 ## External Link Icons
 
-Links pointing outside the site should display a small icon indicating they are external.
-This is **not yet implemented** — it requires a custom `ProseA.vue` component.
+Internal and external links mixed together. External ones should gain a `CdxIcon` rendered
+by a `ProseA.vue` override — **not yet implemented**.
 
-- [Wikimedia REST API documentation](https://api.wikimedia.org/wiki/Documentation) — external link
-- [MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) — external link
-- [Learn](/learn) — internal link (no icon expected)
-- [API Explorer](/explorer) — internal link (no icon expected)
+- [Wikimedia REST API documentation](https://api.wikimedia.org/wiki/Documentation) — external
+- [MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) — external
+- [Learn](/learn) — internal (no icon expected)
+- [API Explorer](/explorer) — internal (no icon expected)
 
 ---
 
 ## Callouts
 
-Callouts are **not yet implemented**. The MDC syntax below will render raw until
-`app/components/content/Callout.vue` is created. Expected behaviour shown as comments.
+Uses `CdxMessage` once `app/components/content/Callout.vue` is created — **not yet implemented**.
 
 ::callout
 #title
@@ -67,9 +105,8 @@ upgrading. Responses from the old endpoint will return `410 Gone` after the depr
 
 ## Code Tabs
 
-Code tabs are **not yet implemented**. The MDC syntax below requires
-`app/components/content/CodeTabs.vue` and `app/components/content/CodeTab.vue`.
-All tab contents remain in the DOM for Ctrl+F findability.
+Uses `CdxTabs` + `CdxTab` once `CodeTabs.vue` and `CodeTab.vue` are created — **not yet implemented**.
+All tab contents remain in the DOM so Ctrl+F finds them regardless of which tab is active.
 
 ::::code-tabs
 :::code-tab{label="JavaScript"}
@@ -114,8 +151,8 @@ function fetchArticle(string $title): array {
 
 ## File Inclusion
 
-The following block should be replaced by the contents of `_partials/api-note.md`.
-This is **not yet verified** — needs testing against the MDC `::include` directive.
+The block below uses the MDC `::include` directive — **needs verification** that
+`@nuxtjs/mdc`'s built-in `Include` component resolves the path correctly.
 
 ::include{file="./_partials/api-note.md"}
 
@@ -123,12 +160,12 @@ This is **not yet verified** — needs testing against the MDC `::include` direc
 
 ## Expandable Sections
 
-Native HTML `<details>` / `<summary>` works today in markdown without any configuration.
+Native HTML `<details>` / `<summary>` — **works today** without any configuration.
 
 <details>
 <summary>Advanced: Configuring a custom User-Agent header</summary>
 
-The Wikimedia API requires a descriptive `User-Agent` header for all requests.
+The Wikimedia API requires a descriptive `User-Agent` header on all requests.
 Format: `AppName/version (contact@example.org)`.
 
 Recommended values to include:
@@ -136,17 +173,14 @@ Recommended values to include:
 - A contact email or URL for the maintainer
 - The hosting platform if relevant (e.g. `Toolforge`, `PAWS`)
 
-Example: `MyResearchTool/1.0 (research@university.edu)`
-
 </details>
 
 <details>
 <summary>Advanced: Handling redirects and page moves</summary>
 
-Wikipedia articles are often redirected when pages are moved or merged.
-The REST API returns a `301` or `308` for redirect titles. Follow the
-`Location` header or use the `redirect=true` query parameter to resolve
-redirects automatically.
+Wikipedia articles redirect when pages are moved or merged. The REST API returns
+`301` or `308` for redirect titles. Follow the `Location` header or append
+`?redirect=true` to resolve redirects automatically.
 
 </details>
 
@@ -154,22 +188,17 @@ redirects automatically.
 
 ## Buttons
 
-Buttons are **not yet implemented** as an MDC component. The MDC syntax below requires
-`app/components/content/AppButton.vue`. As a fallback, raw HTML links work today.
+Uses `CdxButton` once `app/components/content/AppButton.vue` is created — **not yet implemented**.
 
 ::app-button{href="/explorer" label="Open API Explorer"}
 
 ::app-button{href="https://api.wikimedia.org" label="Wikimedia API" external="true"}
 
-**Fallback (raw HTML, works today):**
-
-<a href="/explorer">Open API Explorer</a>
-
 ---
 
 ## Syntax Highlighting
 
-Standard syntax highlighting works today via Shiki.
+Shiki is bundled with `@nuxt/content` — **works today**.
 
 ```javascript
 async function paginatedFetch( endpoint, params = {} ) {
@@ -205,7 +234,7 @@ def paginated_fetch(endpoint: str, **params) -> Iterator[dict]:
         data = response.json()
         yield from data.get("items", [])
         url = data.get("next")
-        params = {}  # continuation URLs already include params
+        params = {}
 ```
 
 ```bash
@@ -224,11 +253,7 @@ curl -s \
     "id": 1234567890,
     "timestamp": "2024-01-15T12:34:56Z"
   },
-  "content_model": "wikitext",
-  "license": {
-    "url": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "title": "Creative Commons Attribution-Share Alike 4.0"
-  }
+  "content_model": "wikitext"
 }
 ```
 
@@ -236,8 +261,7 @@ curl -s \
 
 ## Code with Line Numbers
 
-Line numbers require a Shiki transformer configuration in `nuxt.config.ts`.
-**Not yet configured** — the `:line-numbers` meta flag will be ignored until added.
+Requires `transformerMetaLineNumbers()` in `nuxt.config.ts` — **not yet configured**.
 
 ```javascript :line-numbers
 function buildAuthHeaders( token ) {
@@ -256,13 +280,12 @@ function buildAuthHeaders( token ) {
 
 ## Line Highlighting
 
-Line highlighting requires `transformerMetaHighlight` from `@shikijs/transformers` in `nuxt.config.ts`.
-**Not yet configured** — `{3-5}` in the meta will be ignored until added.
+Requires `transformerMetaHighlight()` in `nuxt.config.ts` — **not yet configured**.
+Lines 3–5 below should be highlighted.
 
 ```javascript {3-5}
 async function authenticate( clientId, clientSecret ) {
 	const tokenEndpoint = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
-	// Lines 3-5 are highlighted: these are the credentials being exchanged
 	const body = new URLSearchParams( {
 		grant_type: 'client_credentials',
 		client_id: clientId,
@@ -277,8 +300,8 @@ async function authenticate( clientId, clientSecret ) {
 
 ## Code Diffs
 
-Diff annotations require `transformerNotationDiff` from `@shikijs/transformers` in `nuxt.config.ts`.
-**Not yet configured** — `[!code ++]` / `[!code --]` markers will render as text until added.
+Requires `transformerNotationDiff()` in `nuxt.config.ts` — **not yet configured**.
+Lines marked `[!code --]` should appear red; `[!code ++]` should appear green.
 
 ```javascript
 async function fetchWithRetry( url, retries = 3 ) {
@@ -305,7 +328,7 @@ async function fetchWithRetry( url, retries = 3 ) {
 
 ## Next / Previous Navigation
 
-The frontmatter at the top of this file includes `prev` and `next` fields. Those are
-**not yet rendered** — `[...slug].vue` needs to read `page.prev` / `page.next` and display
-navigation links. Expected output: a "← Home" link and an "API Explorer →" link at the
-bottom of this page.
+The frontmatter at the top of this file declares `prev` and `next` links.
+Rendering them requires reading `page.prev` / `page.next` in `[...slug].vue`
+and displaying `CdxButton` links with `cdxIconArrowPrevious` / `cdxIconArrowNext` —
+**not yet implemented**.
