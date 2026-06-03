@@ -72,5 +72,9 @@
   "explorer-endpoints-error": "Shown when the endpoint list for a module cannot be loaded.",
   "explorer-selected-module-badge": "Badge text displayed next to the module currently loaded into Scalar.",
   "explorer-debug-title": "Heading for diagnostics event panel.",
-  "explorer-debug-empty": "Shown when there are no diagnostics events recorded yet."
+  "explorer-debug-empty": "Shown when there are no diagnostics events recorded yet.",
+  "search-results-locale-heading": "Heading shown above a group of search results in a specific language. $1 is the translated name of the language (e.g. 'French'). Use {{bidi:$1}} for BiDi isolation.",
+  "search-no-locale-results": "Message shown when no results are found for the query in the active locale. $1 is the translated language name; $2 is the user's search query. Use {{bidi:$1}} and {{bidi:$2}} for BiDi isolation.",
+  "search-all-languages-cta": "Button label to expand the search view across all supported languages.",
+  "search-no-results-any-language": "Message shown in all-locales mode when no results are found in any language. $1 is the user's search query. Use {{bidi:$1}} for BiDi isolation."
 }

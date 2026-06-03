@@ -72,5 +72,9 @@
   "explorer-endpoints-error": "לא ניתן היה לטעון את רשימת נקודות הקצה עבור מודול זה.",
   "explorer-selected-module-badge": "פעיל",
   "explorer-debug-title": "אבחון",
-  "explorer-debug-empty": "עדיין אין אירועי אבחון."
+  "explorer-debug-empty": "עדיין אין אירועי אבחון.",
+  "search-results-locale-heading": "תוצאות ב{{bidi:$1}}",
+  "search-no-locale-results": "אין תוצאות ב{{bidi:$1}} עבור {{bidi:$2}}.",
+  "search-all-languages-cta": "חפש בכל השפות",
+  "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה."
 }

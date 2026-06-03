@@ -72,5 +72,9 @@
   "explorer-endpoints-error": "Impossible de charger la liste des points d'acces pour ce module.",
   "explorer-selected-module-badge": "Actif",
   "explorer-debug-title": "Diagnostics",
-  "explorer-debug-empty": "Aucun evenement de diagnostic pour le moment."
+  "explorer-debug-empty": "Aucun evenement de diagnostic pour le moment.",
+  "search-results-locale-heading": "Résultats en {{bidi:$1}}",
+  "search-no-locale-results": "Aucun résultat en {{bidi:$1}} pour {{bidi:$2}}.",
+  "search-all-languages-cta": "Rechercher dans toutes les langues",
+  "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue."
 }

@@ -66,4 +66,29 @@ export default defineNuxtConfig( {
 	// Direction handling is currently driven by the shell dir attribute and
 	// logical CSS properties in first-party styles. We intentionally avoid
 	// global CSS flipping for third-party explorer styles for now.
+
+	hooks: {
+		// Per-process SQLite files accumulate across dev server restarts when the
+		// previous process exits uncleanly. Clean them up at startup so the .data/
+		// directory does not grow unboundedly (ADR §9).
+		ready: async () => {
+			if ( !isDevelopment ) {
+				return
+			}
+			const { readdir, unlink } = await import( 'node:fs/promises' )
+			const { join } = await import( 'node:path' )
+			const dir = '.data/content'
+			const currentFile = `contents-${ process.pid }.sqlite`
+			try {
+				const files = await readdir( dir )
+				await Promise.all(
+					files
+						.filter( ( f ) => f !== currentFile && f.startsWith( 'contents-' ) && f.endsWith( '.sqlite' ) )
+						.map( ( f ) => unlink( join( dir, f ) ).catch( () => undefined ) )
+				)
+			} catch {
+				// .data/content does not exist yet on a fresh checkout — safe to ignore.
+			}
+		}
+	}
 } )

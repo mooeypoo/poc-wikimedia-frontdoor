@@ -6,9 +6,9 @@ Settled decisions for the Front Door project. This document contains only conclu
 
 ## Site architecture
 
-The site is a **hybrid static + dynamic application**:
+The site is a **hybrid SSR + client-side application**:
 
-- **Static shell** — prose pages (policy, guides, landing, user routing) pre-rendered via `nuxt generate`. SEO-friendly, cacheable.
+- **SSR shell** — prose pages (policy, guides, landing, user routing) rendered server-side via `nuxt build`. Nuxt Content FTS5 search runs on the server.
 - **Dynamic SPA** — the API explorer, fully client-side, never pre-rendered. OpenAPI specs are fetched at runtime. The explorer route is configured `ssr: false`.
 
 These two surfaces have different rules and must not be conflated.
@@ -26,9 +26,9 @@ These two surfaces have different rules and must not be conflated.
 | API explorer | `@scalar/api-reference` Vue component — used directly, NOT via `@scalar/nuxt` |
 | Auth | Wikimedia OAuth 2.0, Authorization Code + PKCE |
 | Session state | Pinia |
-| Search | Lunr.js + `lunr-languages` |
+| Search | @nuxt/content FTS5 via `useSearchCollection` |
 | Styling | Codex design tokens + CSS variables; Codex RTL stylesheet for RTL locales |
-| Build | `nuxt generate` for static shell; explorer route excluded from pre-rendering |
+| Build | `nuxt build` (SSR); explorer route configured `ssr: false` |
 
 ---
 
@@ -179,10 +179,11 @@ When content is unavailable in the requested locale, the fallback chain declared
 
 ## Search
 
-- Lunr.js + `lunr-languages`
-- Separate index built per locale during `nuxt generate`
+- @nuxt/content FTS5 via `useSearchCollection( 'content' )`
+- Single cross-locale search call; client-side path-prefix partitioning splits results into locale bucket + English fallback
+- `useContentSearch( query, activeLocale )` composable handles partitioning, all-locales expansion, and raw-result caching to avoid repeated fetches
 - Search input uses `dir="auto"` for correct RTL query handling
-- Languages outside Lunr's stemmer list fall back to the default stemmer — documented in the search composable
+- All result text (titles, snippets) wrapped in `<bdi>` for BiDi isolation
 
 ---
 

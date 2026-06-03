@@ -72,5 +72,9 @@
   "explorer-endpoints-error": "No se pudo cargar la lista de endpoints para este modulo.",
   "explorer-selected-module-badge": "Activo",
   "explorer-debug-title": "Diagnosticos",
-  "explorer-debug-empty": "Aun no hay eventos de diagnostico."
+  "explorer-debug-empty": "Aun no hay eventos de diagnostico.",
+  "search-results-locale-heading": "Resultados en {{bidi:$1}}",
+  "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}.",
+  "search-all-languages-cta": "Buscar en todos los idiomas",
+  "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma."
 }
