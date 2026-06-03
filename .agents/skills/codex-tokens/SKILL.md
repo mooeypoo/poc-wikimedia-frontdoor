@@ -86,6 +86,12 @@ the upstream package.
 - **Token values change.** When Codex bumps a major, run a quick visual
   diff. The token _names_ are stable.
 
+## See also
+
+- [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — use
+  logical properties (`margin-inline-*`, `text-align: start`) with tokens
+  so layouts mirror correctly in RTL.
+
 ## Inside ProtoWiki
 
 ProtoWiki bundles the Codex token files and re-scopes them at boot via

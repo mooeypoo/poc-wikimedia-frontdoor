@@ -116,6 +116,8 @@ recipe rather than hand-rolling those styles.
 - [`references/figma-to-codex.md`](references/figma-to-codex.md) — how to
   map Figma layers (Codex/Components, Codex/Tokens) to component imports
   and `var(--…)` references.
+- [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — RTL/LTR,
+  logical CSS, `<bdi>`, and mirroring per the Codex style guide.
 
 ## Inside ProtoWiki
 
