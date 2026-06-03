@@ -4,9 +4,10 @@ import { CdxButton, CdxCheckbox, CdxField, CdxTextInput } from '@wikimedia/codex
 /**
  * Prototype developer login page.
  *
- * Mirrors the Wikimedia Special:UserLogin layout using Codex form controls.
- * No authentication is performed — submit and auxiliary links are placeholders
- * until Experiment 2 wires Wikimedia OAuth 2.0 + PKCE.
+ * Layout follows Codex constructing-forms and using-links-and-buttons guidance
+ * (see `.agents/skills/codex-layout/SKILL.md`). No authentication is performed —
+ * submit and auxiliary links are placeholders until Experiment 2 wires
+ * Wikimedia OAuth 2.0 + PKCE.
  */
 const { $bananaI18n } = useNuxtApp()
 
@@ -38,13 +39,17 @@ function onLoginSubmit( submitEvent: Event ): void {
 
 <template>
 	<div class="login-page">
-		<h1>{{ pageTitle }}</h1>
+		<header class="login-page__header">
+			<h1 class="login-page__title">
+				{{ pageTitle }}
+			</h1>
+		</header>
 
 		<form
 			class="login-page__form"
 			@submit="onLoginSubmit"
 		>
-			<CdxField class="login-page__field">
+			<CdxField>
 				<template #label>
 					{{ usernameLabel }}
 				</template>
@@ -55,7 +60,7 @@ function onLoginSubmit( submitEvent: Event ): void {
 				/>
 			</CdxField>
 
-			<CdxField class="login-page__field">
+			<CdxField>
 				<template #label>
 					{{ passwordLabel }}
 				</template>
@@ -68,86 +73,107 @@ function onLoginSubmit( submitEvent: Event ): void {
 				/>
 			</CdxField>
 
-			<CdxField class="login-page__field login-page__field--checkbox">
+			<CdxField>
 				<CdxCheckbox v-model="keepLoggedIn">
 					{{ keepLoggedInLabel }}
 				</CdxCheckbox>
 			</CdxField>
 
-			<CdxButton
-				class="login-page__submit"
-				action="progressive"
-				weight="primary"
-				type="submit"
-			>
-				{{ submitButtonLabel }}
-			</CdxButton>
+			<footer class="login-page__form-footer">
+				<CdxButton
+					action="progressive"
+					weight="primary"
+					type="submit"
+				>
+					{{ submitButtonLabel }}
+				</CdxButton>
+			</footer>
 		</form>
 
 		<nav
 			class="login-page__auxiliary"
 			:aria-label="auxiliaryLinksLabel"
 		>
-			<p class="login-page__auxiliary-item">
-				<a
-					href="#"
-					@click.prevent
-				>
-					{{ helpLinkLabel }}
-				</a>
-			</p>
-			<p class="login-page__auxiliary-item">
-				<a
-					href="#"
-					@click.prevent
-				>
-					{{ forgotPasswordLinkLabel }}
-				</a>
-			</p>
-			<p class="login-page__auxiliary-item login-page__auxiliary-item--create-account">
-				<span>{{ noAccountPromptLabel }}</span>
-				<a
-					href="#"
-					@click.prevent
-				>
-					{{ createAccountLinkLabel }}
-				</a>
-			</p>
+			<ul class="login-page__link-list">
+				<li>
+					<a
+						href="#"
+						@click.prevent
+					>
+						{{ helpLinkLabel }}
+					</a>
+				</li>
+				<li>
+					<a
+						href="#"
+						@click.prevent
+					>
+						{{ forgotPasswordLinkLabel }}
+					</a>
+				</li>
+				<li class="login-page__link-list-item--inline">
+					<span>{{ noAccountPromptLabel }}</span>
+					<a
+						href="#"
+						@click.prevent
+					>
+						{{ createAccountLinkLabel }}
+					</a>
+				</li>
+			</ul>
 		</nav>
 	</div>
 </template>
 
 <style scoped>
+/* Codex forms: max field width size-4000; equal-width fields in one column. */
 .login-page {
-	max-inline-size: 28rem;
+	max-inline-size: var( --size-4000 );
 }
 
+.login-page__header {
+	margin-block-end: var( --spacing-150 );
+}
+
+.login-page__title {
+	margin: 0;
+}
+
+/* spacing-100 between fields; label-to-control spacing is built into CdxField. */
 .login-page__form {
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-100 );
-	margin-block-start: var( --spacing-100 );
 }
 
-.login-page__field--checkbox {
-	margin-block-start: 0;
+/* Form footer: actions at inline-start; primary submit is the sole action. */
+.login-page__form-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var( --spacing-75 );
 }
 
-.login-page__submit {
-	align-self: flex-start;
-}
-
+/* spacing-150 between form block and auxiliary link group. */
 .login-page__auxiliary {
 	margin-block-start: var( --spacing-150 );
 }
 
-.login-page__auxiliary-item {
-	margin-block: var( --spacing-50 );
+/* Vertical link group per Codex links guidance (spacing-75 between links). */
+.login-page__link-list {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-75 );
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
-.login-page__auxiliary-item--create-account {
+.login-page__link-list-item--inline {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var( --spacing-25 );
+	align-items: baseline;
+	gap: var( --spacing-75 );
 }
 </style>
