@@ -91,6 +91,8 @@ the upstream package.
 - [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — use
   logical properties (`margin-inline-*`, `text-align: start`) with tokens
   so layouts mirror correctly in RTL.
+- [`codex-layout`](../codex-layout/SKILL.md) — spacing tokens for forms,
+  button groups, and overflow patterns.
 
 ## Inside ProtoWiki
 

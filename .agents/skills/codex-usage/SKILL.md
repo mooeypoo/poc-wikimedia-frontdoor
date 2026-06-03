@@ -118,6 +118,8 @@ recipe rather than hand-rolling those styles.
   and `var(--…)` references.
 - [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — RTL/LTR,
   logical CSS, `<bdi>`, and mirroring per the Codex style guide.
+- [`codex-layout`](../codex-layout/SKILL.md) — content overflow, links vs
+  buttons, and constructing forms.
 
 ## Inside ProtoWiki
 

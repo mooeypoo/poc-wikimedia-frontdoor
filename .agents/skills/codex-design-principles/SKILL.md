@@ -117,6 +117,7 @@ Before you call a piece of work done, walk through this checklist:
   <https://doc.wikimedia.org/codex/latest/style-guide/bidirectionality.html>
 - [`codex-bidirectionality`](../codex-bidirectionality/SKILL.md) — agent-oriented
   BiDi checklist for this repo
+- [`codex-layout`](../codex-layout/SKILL.md) — overflow, links, buttons, forms
 - Wikimedia content (writing) style guide:
   <https://design.wikimedia.org/style-guide/>
 
