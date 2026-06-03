@@ -7,6 +7,7 @@ import {
 } from '@wikimedia/codex'
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
+import { useLoginPath } from '../composables/useLoginPath'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
@@ -27,6 +28,7 @@ const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
+const { loginPath } = useLoginPath()
 const {
 	hasPageSectionNavigation,
 	navigationLabel: pageSectionNavigationLabel,
@@ -204,13 +206,12 @@ useHead( {
 									:aria-label="interfaceLanguageLabel"
 								/>
 							</div>
-							<a
-								href="#"
+							<NuxtLink
+								:to="loginPath"
 								class="frontdoor-shell__login-link"
-								@click.prevent
 							>
 								{{ loginLinkLabel }}
-							</a>
+							</NuxtLink>
 						</div>
 					</header>
 					<nav
