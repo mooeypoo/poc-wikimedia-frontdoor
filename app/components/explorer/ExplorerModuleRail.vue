@@ -127,14 +127,14 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 						<CdxInfoChip
 							v-if="moduleOption.showBetaChip"
 							status="warning"
-							class="explorer-module-rail__module-chip"
+							class="explorer-module-chip"
 						>
 							{{ betaChipLabel }}
 						</CdxInfoChip>
 						<CdxInfoChip
 							v-if="moduleOption.versionChipLabel"
 							status="success"
-							class="explorer-module-rail__module-chip"
+							class="explorer-module-chip"
 						>
 							<bdi>{{ moduleOption.versionChipLabel }}</bdi>
 						</CdxInfoChip>
@@ -287,17 +287,6 @@ function getModuleHeadingAccessibleLabel( moduleOption: ExplorerBootstrapModule 
 	line-height: var( --line-height-medium );
 	color: var( --color-emphasized );
 	overflow-wrap: anywhere;
-}
-
-.explorer-module-rail__module-chip {
-	flex-shrink: 0;
-	font-weight: var( --font-weight-normal );
-}
-
-/* Module rail chips are text-only; hide Codex status icons (warning/success). */
-.explorer-module-rail__module-chip :deep( .cdx-info-chip__icon ),
-.explorer-module-rail__module-chip :deep( .cdx-info-chip__icon--vue ) {
-	display: none;
 }
 
 .explorer-module-rail__module-expand-icon {

@@ -58,11 +58,26 @@
  * Codex uses a separate .cdx-popover__arrow (placement bottom-start → top: -9px).
  * More negative top moves the arrow away from the panel and widens the seam; nudge
  * down (less negative top) plus drop the arrow shadow so the junction matches the demo.
+ * Physical `top` overrides Codex inline coordinates from Floating UI (not logical props).
  */
 .cdx-popover.explorer-project-controls__opt-in-help-popover .cdx-popover__arrow {
 	box-shadow: none !important;
 	/* Between Codex -9px (hairline gap) and -7px (arrow bites into body). */
 	top: -8px !important;
+}
+
+/*
+ * Module beta/version InfoChips (rail headings and reference header).
+ * Text-only: hide Codex status icons; keep warning/success chip colours.
+ */
+.frontdoor-shell--explorer .explorer-module-chip {
+	flex-shrink: 0;
+	font-weight: var( --font-weight-normal );
+}
+
+.frontdoor-shell--explorer .explorer-module-chip .cdx-info-chip__icon,
+.frontdoor-shell--explorer .explorer-module-chip .cdx-info-chip__icon--vue {
+	display: none;
 }
 
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
