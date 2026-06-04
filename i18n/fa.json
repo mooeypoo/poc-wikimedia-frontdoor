@@ -4,6 +4,7 @@
   "explorer-browse-api-modules-after": "",
   "explorer-browse-api-modules-before": "مرور ماژول‌های API ",
   "explorer-debug-empty": "هنوز رویداد عیب‌یابی وجود ندارد.",
+  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در ویکی فعلی را تغییر می‌دهد. برای آزمایش ایمن، انتخاب کنید درخواست‌های خود را در برابر $1 اجرا کنید.",
   "explorer-debug-title": "عیب‌یابی",
   "explorer-description": "با استفاده از داده‌های کشف زنده، بین نمونه‌های ویکی و ماژول‌های REST جابه‌جا شوید.",
   "explorer-discovery-error": "درخواست کشف برای این نمونه شکست خورد.",

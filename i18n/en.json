@@ -159,6 +159,7 @@
   "explorer-selected-module-badge": "Active",
   "explorer-debug-title": "Diagnostics",
   "explorer-debug-empty": "No diagnostic events yet.",
+  "explorer-scalar-write-endpoint-warning": "Executing this request will change live data on the current wiki. To experiment safely, select to run your calls against $1.",
   "header-account-label": "Your dashboard",
   "account-page-title-before": "",
   "account-page-title-after": "'s dashboard",

@@ -1,4 +1,49 @@
 /**
+ * Scalar API client modal write-endpoint warnings (DOM injection + ClientPlugin).
+ */
+.scalar-client-write-endpoint-warning,
+.scalar-client-write-endpoint-warning-mount {
+	position: relative;
+	z-index: 1;
+}
+
+.scalar-client-write-endpoint-warning-mount {
+	margin-block: var( --spacing-100 );
+	margin-inline: var( --spacing-100 );
+}
+
+.scalar-client .t-app__top-container > .scalar-client-write-endpoint-warning-mount {
+	margin-block-start: var( --spacing-100 );
+	inline-size: 100%;
+}
+
+/**
+ * Plain HTML probe for Scalar modal slot injection (no Codex).
+ * Toggle via SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE in config/scalarClientWriteWarnings.ts.
+ */
+.scalar-client-write-endpoint-warning-probe {
+	background-color: #fdf2d5;
+	border: 1px solid #ab7f2a;
+	border-radius: 2px;
+	color: #202122;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	padding-block: 12px;
+	padding-inline: 12px;
+}
+
+.scalar-client-write-endpoint-warning-probe__slot {
+	font-weight: 600;
+	margin-block: 0 4px;
+	margin-inline: 0;
+}
+
+.scalar-client-write-endpoint-warning-probe__text {
+	margin-block: 0;
+	margin-inline: 0;
+}
+
+/**
  * explorer-codex-overrides.css — Codex fixes on the API explorer page.
  *
  * Scalar’s Tailwind preflight can reset ::before margin/border on shell controls.

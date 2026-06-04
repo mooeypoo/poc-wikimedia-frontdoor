@@ -5,6 +5,7 @@
   "explorer-browse-api-modules-after": "",
   "explorer-browse-api-modules-before": "עיון במודולי API של ",
   "explorer-debug-empty": "עדיין אין אירועי אבחון.",
+  "explorer-scalar-write-endpoint-warning": "ביצוע בקשה זו ישנה נתונים חיים בוויקי הנוכחי. כדי להתנסות בבטחה, בחרו להפעיל את הקריאות שלכם מול $1.",
   "explorer-debug-title": "אבחון",
   "explorer-description": "החליפו מופעי ויקי ומודולי REST באמצעות נתוני גילוי חיים.",
   "explorer-discovery-error": "בקשת הגילוי נכשלה עבור מופע זה.",

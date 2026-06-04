@@ -5,6 +5,7 @@
   "explorer-browse-api-modules-after": "",
   "explorer-browse-api-modules-before": "Explorar modulos de API de ",
   "explorer-debug-empty": "Aun no hay eventos de diagnostico.",
+  "explorer-scalar-write-endpoint-warning": "Ejecutar esta solicitud cambiará datos en vivo en la wiki actual. Para experimentar de forma segura, elige ejecutar tus llamadas contra $1.",
   "explorer-debug-title": "Diagnosticos",
   "explorer-description": "Cambia instancias wiki y modulos REST con datos de descubrimiento en vivo.",
   "explorer-discovery-error": "La solicitud de descubrimiento fallo para esta instancia.",

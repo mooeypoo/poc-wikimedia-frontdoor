@@ -158,6 +158,7 @@
   "explorer-selected-module-badge": "Badge text displayed next to the module currently loaded into Scalar.",
   "explorer-debug-title": "Heading for diagnostics event panel.",
   "explorer-debug-empty": "Shown when there are no diagnostics events recorded yet.",
+  "explorer-scalar-write-endpoint-warning": "Warning in the Scalar Test Request modal for write HTTP methods (POST, PUT, DELETE, PATCH). $1 is the test wiki URL for the selected project (for example test.wikipedia.org or https://test-commons.wikimedia.org/).",
   "header-account-label": "Deprecated visible label; header now shows the wiki username when signed in.",
   "header-auth-link-aria": "Accessible name for the header link when signed in; $1 is the wiki username (link goes to the account dashboard).",
   "account-page-title-before": "Text before the username in the account dashboard title (empty in English).",
