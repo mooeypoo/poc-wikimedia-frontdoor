@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover } from '@wikimedia/codex'
 import { cdxIconInfo } from '@wikimedia/codex-icons'
-import {
-	EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
-	EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS
-} from '../../../config/explorerOptIn'
+import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
 import { useWikiInstancePicker } from '../../composables/useWikiInstancePicker'
 
 /**
@@ -34,8 +31,6 @@ const { wikiInstanceMenuItems, wikiProjectComboboxSelected } = useWikiInstancePi
 const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
 const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
-const betaEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-beta-endpoints' ) )
-const internalEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-internal-endpoints' ) )
 const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
 const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
 const optInPopoverIntro = computed( () => $bananaI18n( 'explorer-opt-in-popover-intro' ) )
@@ -43,6 +38,11 @@ const optInPopoverBetaLabel = computed( () => $bananaI18n( 'explorer-opt-in-popo
 const optInPopoverBetaBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-body' ) )
 const optInPopoverInternalLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-label' ) )
 const optInPopoverInternalBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-body' ) )
+
+const { optInCheckboxOptions, selectedOptInValues } = useExplorerOptInCheckboxGroup(
+	includeBetaEndpoints,
+	includeInternalEndpoints
+)
 
 const optInPopoverTrigger = ref<InstanceType<typeof CdxButton> | undefined>()
 const isOptInPopoverOpen = ref( false )
@@ -56,39 +56,6 @@ function onOptInPopoverTriggerClick(): void {
 	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
 }
 
-const optInCheckboxOptions = computed( () => [
-	{
-		value: EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
-		label: betaEndpointsLabel.value
-	},
-	{
-		value: EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS,
-		label: internalEndpointsLabel.value
-	}
-] )
-
-/**
- * Bridges the explorer page’s boolean opt-in flags to Codex’s array-based checkbox group model.
- */
-const selectedOptInValues = computed( {
-	get(): string[] {
-		const selectedValues: string[] = []
-
-		if ( includeBetaEndpoints.value ) {
-			selectedValues.push( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
-		}
-
-		if ( includeInternalEndpoints.value ) {
-			selectedValues.push( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
-		}
-
-		return selectedValues
-	},
-	set( nextSelectedValues: string[] ) {
-		includeBetaEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
-		includeInternalEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
-	}
-} )
 </script>
 
 <template>

@@ -193,9 +193,19 @@ Top to bottom:
 
 1. **Page header** — `h1` “API Explorer” + description (max **60ch** width on subtitle)
 2. **Project controls** — wiki combobox + opt-in checkboxes (hidden while instance bootstrapping)
-3. **Reference panel** — module label, title row (module name + wiki InfoChip), Scalar shell
+3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
+
+### Reference panel title row
+
+**Decision:** Match the module rail heading pattern:
+
+- `h2` shows parsed **`headingTitle`** (for example “Attribution API”), not the long bootstrap `label`, in `<bdi>`
+- **Beta** (warning) and **version** (success) chips use shared class **`explorer-module-chip`** (text-only, icons hidden) — same styles as the rail via `explorer-codex-overrides.css`
+- **Wiki** project name remains a separate **subtle** InfoChip at the end of the row
+
+**Source:** `app/pages/explorer/index.vue`, `explorerModuleRailHeading.ts`.
 
 ### Reference panel (wide ≥ 960px)
 
@@ -222,15 +232,16 @@ Top to bottom:
 | Control | Pattern |
 |---------|---------|
 | Wiki project | `CdxCombobox` — menu values are **display names**; model stores **instance id** |
-| Opt-in | Fieldset with two `CdxCheckbox` options: Beta endpoints, Internal endpoints |
+| Opt-in | Fieldset with two `CdxCheckbox` options: **Beta modules and endpoints**, **Internal modules and endpoints** |
+| Opt-in help | Quiet info `CdxButton` + `CdxPopover` (teleported, titled **Opt-in modules and endpoints**, close button) beside the Opt-in legend |
 
-**Defaults:** Beta **off**, Internal **on**.
+**Defaults:** Beta **off**, Internal **off**.
 
 **Layout:** Wiki field flexes up to **40rem** max; opt-in group aligns to start with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `config/explorerOptIn.ts`.
+**Source:** `ExplorerProjectControls.vue`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`.
 
-**Status:** Opt-in values are not applied to discovery or Scalar filtering yet.
+**Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
 
 ---
 
@@ -251,7 +262,7 @@ Top to bottom:
 - Accordion-style **button** headings (not native `<details>`)
 - **Multiple modules may be expanded** simultaneously
 - Expand/collapse icon: Codex **expand / collapse** icons at **80% of 14px** (~11.2px)
-- Module title parsing: strip `(Beta)` from title → **warning** “beta” chip; version → **success** chip with `v` prefix; chip **icons hidden** (text-only chips)
+- Module title parsing: strip `(Beta)` from title → **warning** “beta” chip; version → **success** chip with `v` prefix and **`-beta` stripped** from version strings (for example `v0.1.0` not `v0.1.0-beta`); chips use class **`explorer-module-chip`** (text-only, status icons hidden)
 - First-load expansion of default module uses `overflow-anchor: none` on list so first heading stays visible
 
 ### Endpoint rows

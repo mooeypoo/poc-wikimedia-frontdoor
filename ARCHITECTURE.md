@@ -144,7 +144,7 @@ The codebase is separated into three layers with narrow interfaces between them.
 
 **Responsibility:** Rendering data and handling user interaction. Calls composables to get reactive data. Renders it using Codex components. Passes user actions back up via events or composable actions.
 
-**Does not contain:** Fetch calls, URL construction, fallback logic, business rules. Pure helpers for labels, BiDi, and a11y live in `app/utils/` (for example `explorerEndpointLabels.ts`, `bidiLabel.ts`).
+**Does not contain:** Fetch calls, URL construction, fallback logic, business rules. Pure helpers for labels, BiDi, and a11y live in `app/utils/` (for example `explorerEndpointLabels.ts`, `explorerModuleOptInFilter.ts`, `explorerModuleRailHeading.ts`, `bidiLabel.ts`).
 
 ---
 
@@ -161,6 +161,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
+| `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes; exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
+| `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
@@ -292,6 +294,26 @@ The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or
 
 Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
 
+### Opt-in module visibility
+
+Project controls expose **Beta modules and endpoints** and **Internal modules and endpoints** checkboxes (defaults: both off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
+
+```
+includeBetaEndpoints / includeInternalEndpoints (explorer page refs)
+       ↓
+useExplorerOptInFilteredModules
+       ↓
+filterExplorerBootstrapModulesByOptIn(modules, { includeBetaEndpoints, … })
+       ↓
+isExplorerBetaOptInModule(name)?  ← config/explorerOptIn.ts (prefix `attribution/`)
+       ↓
+visibleModules → ExplorerModuleRail; visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
+```
+
+When the active module becomes hidden (for example Attribution API with beta off), the composable selects the first remaining healthy module through `useExplorerBootstrap.selectModule()`. Internal opt-in rules are reserved until internal module ids are defined in config.
+
+Module rail headings and the reference `h2` use `headingTitle`, beta chip, and version chip from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`).
+
 ### Scalar plugin layer
 
 The `ApiReferencePlugin` API accepts Vue components natively. Plugins are registered on the `<ApiReference>` component's `plugins` prop. Codex components and banana-i18n work inside plugins without any bridge pattern.
@@ -402,7 +424,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
 | `config/sectionNavigation.js` | Content-page left-rail sections per main nav id (Get started, Learn, stubs) |
-| `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
+| `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()` |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 
 Environment-specific values use Nuxt `runtimeConfig`:
