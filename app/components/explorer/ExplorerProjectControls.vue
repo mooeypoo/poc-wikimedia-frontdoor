@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CdxCheckbox, CdxCombobox, CdxField } from '@wikimedia/codex'
+import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover } from '@wikimedia/codex'
+import { cdxIconInfo } from '@wikimedia/codex-icons'
 import {
 	EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
 	EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS
@@ -35,6 +36,25 @@ const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-proje
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
 const betaEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-beta-endpoints' ) )
 const internalEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-internal-endpoints' ) )
+const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
+const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
+const optInPopoverIntro = computed( () => $bananaI18n( 'explorer-opt-in-popover-intro' ) )
+const optInPopoverBetaLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-label' ) )
+const optInPopoverBetaBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-body' ) )
+const optInPopoverInternalLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-label' ) )
+const optInPopoverInternalBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-body' ) )
+
+const optInPopoverTrigger = ref<InstanceType<typeof CdxButton> | undefined>()
+const isOptInPopoverOpen = ref( false )
+
+/**
+ * Toggles the opt-in help popover open state from the quiet info trigger.
+ *
+ * @returns Nothing.
+ */
+function onOptInPopoverTriggerClick(): void {
+	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
+}
 
 const optInCheckboxOptions = computed( () => [
 	{
@@ -97,7 +117,48 @@ const selectedOptInValues = computed( {
 			:is-fieldset="true"
 		>
 			<template #label>
-				{{ optInLabel }}
+				<span class="explorer-project-controls__opt-in-label">
+					{{ optInLabel }}
+					<CdxButton
+						ref="optInPopoverTrigger"
+						class="explorer-project-controls__opt-in-info-trigger"
+						weight="quiet"
+						type="button"
+						:aria-label="optInPopoverTriggerLabel"
+						:aria-expanded="isOptInPopoverOpen"
+						@click="onOptInPopoverTriggerClick"
+					>
+						<CdxIcon :icon="cdxIconInfo" />
+					</CdxButton>
+					<CdxPopover
+						class="explorer-project-controls__opt-in-help-popover"
+						v-model:open="isOptInPopoverOpen"
+						:anchor="optInPopoverTrigger"
+						:title="optInPopoverTitle"
+						placement="bottom-start"
+						:use-close-button="true"
+					>
+						<div class="explorer-project-controls__opt-in-popover">
+							<p class="explorer-project-controls__opt-in-popover-intro">
+								{{ optInPopoverIntro }}
+							</p>
+							<ul class="explorer-project-controls__opt-in-popover-list">
+								<li>
+									<strong class="explorer-project-controls__opt-in-popover-term">
+										{{ optInPopoverBetaLabel }}
+									</strong>
+									{{ optInPopoverBetaBody }}
+								</li>
+								<li>
+									<strong class="explorer-project-controls__opt-in-popover-term">
+										{{ optInPopoverInternalLabel }}
+									</strong>
+									{{ optInPopoverInternalBody }}
+								</li>
+							</ul>
+						</div>
+					</CdxPopover>
+				</span>
 			</template>
 			<CdxCheckbox
 				v-for="optInOption in optInCheckboxOptions"
@@ -144,5 +205,34 @@ const selectedOptInValues = computed( {
 	min-inline-size: 0;
 	/* Codex fields default to margin-block-start: 16px; align with the wiki field row. */
 	margin-block-start: 0;
+}
+
+.explorer-project-controls__opt-in-label {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-25 );
+}
+
+.explorer-project-controls__opt-in-info-trigger {
+	flex-shrink: 0;
+}
+
+.explorer-project-controls__opt-in-popover {
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-intro {
+	margin: 0;
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-list {
+	margin: var( --spacing-50 ) 0 0;
+	padding-inline-start: var( --spacing-125 );
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-term {
+	font-weight: var( --font-weight-bold );
 }
 </style>
