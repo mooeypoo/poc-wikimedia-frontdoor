@@ -64,7 +64,7 @@ resultId.startsWith('/{locale}#')      // section on root page
 
 **Rationale:** Mixing locales without a label is confusing, especially for RTL locales where English results would flip direction mid-list. A labeled section communicates clearly that the content is not yet translated.
 
-**UI string key:** `search-results-fallback-heading` via banana-i18n. Value in each locale is the translation of "Results in English."
+**UI string key:** A single parameterized key, `search-results-locale-heading` (`"Results in {{bidi:$1}}"`), serves both the active-locale and English-fallback headings. The translated language name is passed as `$1`, so there is no separate `search-results-fallback-heading` key — the English-fallback section reuses the same key with `$1` resolved to "English". `{{bidi:$1}}` provides BiDi isolation around the language name (see §8).
 
 ---
 
@@ -105,7 +105,9 @@ const args: string[] = []
 for ( let i = 1; parameters[ `$${ i }` ] !== undefined; i++ ) {
     args.push( parameters[ `$${ i }` ] )
 }
-const translatedMessage = banana.i18n( messageKey, args )
+// Spread the array — banana.i18n() takes positional replacements as variadic
+// arguments ($1, $2, …), so passing the array itself would land it all in $1.
+const translatedMessage = banana.i18n( messageKey, ...args )
 ```
 
 **Consequence:** This fix is backwards-compatible. Messages with no parameters pass an empty array, which is fine.
@@ -135,33 +137,34 @@ const translatedMessage = banana.i18n( messageKey, args )
 
 ## 9. SQLite stale file cleanup
 
-**Decision:** Add a `build:before` Nuxt hook that deletes old `contents-{pid}.sqlite` files before each production build.
+**Decision:** Add a `ready` Nuxt hook that, in development, deletes old `contents-{pid}.sqlite` files left behind by previous dev servers.
 
-**Context:** `nuxt.config.ts` creates a per-PID SQLite file in production (`contents-{pid}.sqlite`) to allow parallel builds. Files from previous runs are never deleted, accumulating indefinitely and eventually causing `SQLITE_BUSY: database is locked` errors when a stale process still holds a file descriptor.
+**Context:** `nuxt.config.ts` derives the content DB filename per process (`contents-{pid}.sqlite`) so a previous dev server that exited uncleanly does not lock the file the new one needs (`SQLITE_BUSY: database is locked`). The trade-off is that those per-PID files accumulate in `.data/content/` across restarts, so something has to sweep the stale ones.
 
-**Fix in `nuxt.config.ts`:**
+**Fix in `nuxt.config.ts`:** Runs on the `ready` hook, **development only**, and skips the current process's own file:
 
 ```ts
-import { readdirSync, unlinkSync } from 'fs'
-import { join } from 'path'
-
-function cleanStaleContentDatabases(): void {
-    const dir = join( process.cwd(), '.data/content' )
-    try {
-        for ( const file of readdirSync( dir ) ) {
-            if ( file.startsWith( 'contents-' ) && file.endsWith( '.sqlite' ) ) {
-                try { unlinkSync( join( dir, file ) ) } catch { /* ignore */ }
-            }
-        }
-    } catch { /* directory may not exist yet */ }
-}
-
-// inside defineNuxtConfig:
 hooks: {
-    'build:before': () => {
-        if ( !isDevelopment ) { cleanStaleContentDatabases() }
+    ready: async () => {
+        if ( !isDevelopment ) {
+            return
+        }
+        const { readdir, unlink } = await import( 'node:fs/promises' )
+        const { join } = await import( 'node:path' )
+        const dir = '.data/content'
+        const currentFile = `contents-${ process.pid }.sqlite`
+        try {
+            const files = await readdir( dir )
+            await Promise.all(
+                files
+                    .filter( ( f ) => f !== currentFile && f.startsWith( 'contents-' ) && f.endsWith( '.sqlite' ) )
+                    .map( ( f ) => unlink( join( dir, f ) ).catch( () => undefined ) )
+            )
+        } catch {
+            // .data/content does not exist yet on a fresh checkout — safe to ignore.
+        }
     }
 }
 ```
 
-**Note:** The dev server SQLITE_BUSY error is usually a stale `nuxt dev` process holding `contents.sqlite`. Kill it (`lsof .data/content/contents.sqlite` to find the PID), then restart. The hook does not help with dev — it only cleans prod build artifacts.
+**Note:** This targets the dev workflow, where repeated `nuxt dev` restarts are the source of accumulation. If a live dev server still holds a lock, `lsof .data/content/contents-{pid}.sqlite` finds the PID so it can be stopped before restarting.
