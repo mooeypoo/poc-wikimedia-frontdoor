@@ -67,5 +67,6 @@
   "search-results-locale-heading": "نتایج به زبان {{bidi:$1}}",
   "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد.",
   "search-all-languages-cta": "جستجو در همه زبان‌ها",
-  "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد."
+  "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد.",
+  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در ویکی فعلی را تغییر می‌دهد. برای آزمایش ایمن، انتخاب کنید درخواست‌های خود را در برابر $1 اجرا کنید."
 }

@@ -76,5 +76,6 @@
   "search-results-locale-heading": "Résultats en {{bidi:$1}}",
   "search-no-locale-results": "Aucun résultat en {{bidi:$1}} pour {{bidi:$2}}.",
   "search-all-languages-cta": "Rechercher dans toutes les langues",
-  "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue."
+  "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue.",
+  "explorer-scalar-write-endpoint-warning": "Exécuter cette requête modifiera les données en direct sur le wiki actuel. Pour expérimenter en toute sécurité, choisissez d'exécuter vos appels contre $1."
 }

@@ -6,6 +6,8 @@ import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
+import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
@@ -42,6 +44,13 @@ const {
 } = useExplorerBootstrap( selectedWikiInstanceId )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
+
+useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
+
+watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
+	setActiveExplorerWikiInstanceId( wikiInstanceId )
+}, { immediate: true } )
+
 const referenceHeaderRef = ref<HTMLElement | null>( null )
 const referenceModuleLabelRef = ref<HTMLElement | null>( null )
 const projectControlsRef = ref<HTMLElement | null>( null )

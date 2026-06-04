@@ -1,5 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
+import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfigPluginsResolvePlugin'
+
+const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
@@ -74,11 +80,41 @@ export default defineNuxtConfig( {
 	},
 
 	vite: {
+		plugins: [
+			scalarMapConfigPluginsResolvePlugin( projectRootDirectory )
+		],
+		resolve: {
+			alias: {
+				// ApiReference forwards ClientPlugin UI only through mapConfigPlugins into the modal.
+				[ resolve(
+					projectRootDirectory,
+					'node_modules/@scalar/api-reference/dist/helpers/map-config-plugins.js'
+				) ]: resolve( projectRootDirectory, 'app/scalar/explorerMapConfigPlugins.client.ts' )
+			}
+		},
 		optimizeDeps: {
 			include: [
 				'@scalar/api-reference',
 				'github-slugger'
-			]
+			],
+			esbuildOptions: {
+				plugins: [
+					{
+						name: 'front-door-scalar-map-config-plugins-esbuild',
+						setup( build ) {
+							build.onResolve(
+								{ filter: /map-config-plugins\.js$/ },
+								() => ( {
+									path: resolve(
+										projectRootDirectory,
+										'app/scalar/explorerMapConfigPlugins.client.ts'
+									)
+								} )
+							)
+						}
+					}
+				]
+			}
 		}
 	},
 
