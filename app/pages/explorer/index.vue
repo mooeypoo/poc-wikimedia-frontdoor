@@ -33,6 +33,7 @@ const {
 	openApiSpecUrl,
 	pendingOperationTarget,
 	isInstanceBootstrapping,
+	isExplorerModuleRailVisible,
 	hasInstanceBootstrapError,
 	instanceBootstrapErrorMessage,
 	isScalarSwitching,
@@ -47,7 +48,7 @@ const referenceModuleLabelRef = ref<HTMLElement | null>( null )
 const projectControlsRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
 const includeBetaEndpoints = ref( false )
-const includeInternalEndpoints = ref( true )
+const includeInternalEndpoints = ref( false )
 
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
@@ -122,7 +123,7 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl, wikiDisplayName ], () => {
+watch( [ isExplorerModuleRailVisible, selectedModuleName, openApiSpecUrl, wikiDisplayName ], () => {
 	nextTick( () => {
 		refreshEndPanelNavAlign()
 	} )
@@ -191,6 +192,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				:disabled="!isActiveExplorerRoute"
 			>
 				<ExplorerModuleRail
+					v-if="isExplorerModuleRailVisible"
 					:style="endPanelNavStyle"
 					:modules="modules"
 					:failed-modules="failedModules"
