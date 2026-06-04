@@ -106,6 +106,12 @@ export function useContentSearch(
 	// Retained so activateAllLocalesSearch() can re-partition without a new fetch.
 	const lastRawResults = ref<ContentSearchResult[]>( [] )
 
+	// Search-as-you-type fires one async search() per keystroke/locale change.
+	// Responses can resolve out of order, so each run claims a sequence number
+	// and only commits its results if it is still the most recent run. This
+	// prevents a slow earlier query from clobbering a faster later one.
+	let searchSequence = 0
+
 	const hasQuery = computed( () => query.value.trim().length >= MIN_QUERY_LENGTH )
 
 	/**
@@ -142,11 +148,15 @@ export function useContentSearch(
 			const trimmedQuery = nextQuery.trim()
 
 			if ( trimmedQuery.length < MIN_QUERY_LENGTH ) {
+				// Invalidate any in-flight search so a pending response cannot
+				// repopulate results after the query was cleared.
+				searchSequence++
 				localeResults.value = []
 				fallbackResults.value = []
 				lastRawResults.value = []
 				allLocaleResultGroups.value = []
 				isAllLocalesMode.value = false
+				isSearching.value = false
 				return
 			}
 
@@ -154,11 +164,20 @@ export function useContentSearch(
 			isAllLocalesMode.value = false
 			isSearching.value = true
 
+			const sequence = ++searchSequence
+
 			try {
 				// useSearchCollection searches all content regardless of locale;
 				// client-side path-prefix partitioning is used per ADR §3.
 				// snippet option is passed to search(), not to useSearchCollection() — ADR §1.
 				const rawResults = ( await search( trimmedQuery, { snippet: true } ) ) as ContentSearchResult[]
+
+				// A newer query started while this one was in flight — discard
+				// these stale results so they cannot overwrite the latest run.
+				if ( sequence !== searchSequence ) {
+					return
+				}
+
 				lastRawResults.value = rawResults
 
 				localeResults.value = rawResults.filter(
@@ -171,7 +190,10 @@ export function useContentSearch(
 					? rawResults.filter( ( result ) => resultMatchesLocale( result.id, 'en' ) )
 					: []
 			} finally {
-				isSearching.value = false
+				// Only the most recent run owns the searching flag.
+				if ( sequence === searchSequence ) {
+					isSearching.value = false
+				}
 			}
 		},
 		{ immediate: false }
