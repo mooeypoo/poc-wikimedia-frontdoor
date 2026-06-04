@@ -27,6 +27,25 @@ export default defineNuxtConfig( {
 		},
 		experimental: {
 			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
+		},
+		build: {
+			markdown: {
+				highlight: {
+					theme: 'github-light',
+					langs: [
+						'javascript',
+						'typescript',
+						'python',
+						'php',
+						'bash',
+						'json',
+						'html',
+						'css',
+						'vue',
+						'markdown'
+					]
+				}
+			}
 		}
 	},
 

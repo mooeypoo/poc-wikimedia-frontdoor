@@ -76,5 +76,8 @@
   "search-results-locale-heading": "Results in {{bidi:$1}}",
   "search-no-locale-results": "No results in {{bidi:$1}} for {{bidi:$2}}.",
   "search-all-languages-cta": "Search all languages",
-  "search-no-results-any-language": "No results found for {{bidi:$1}} in any language."
+  "search-no-results-any-language": "No results found for {{bidi:$1}} in any language.",
+  "content-heading-anchor-label": "Link to this section",
+  "content-external-link-label": "external link",
+  "content-page-nav-label": "Page navigation"
 }

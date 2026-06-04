@@ -40,7 +40,7 @@ These two surfaces have different rules. Know which one you are working on.
 - **Content translation:** per-locale Markdown directories via Nuxt Content
 - **API explorer:** `@scalar/api-reference` Vue component — used directly, NOT via `@scalar/nuxt`
 - **Auth:** Wikimedia OAuth 2.0 with PKCE — session state in Pinia
-- **Search:** Lunr.js with `lunr-languages`
+- **Search:** `@nuxt/content` FTS5 via `useSearchCollection`; locale partitioning handled in `useContentSearch`
 - **State management:** Pinia
 - **CSS direction:** native CSS logical properties for first-party CSS; no global CSS flipping layer for third-party explorer styles in the current phase
 
@@ -139,6 +139,20 @@ Do not:
 - Assume the Scalar explorer should mirror all chrome direction changes; keep explorer direction decisions explicit and content-driven
 
 See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
+
+### 9. Content components use Codex
+
+Vue components placed in `app/components/content/` are auto-registered as MDC components and callable from Markdown. When building or modifying these components, use Codex widgets wherever a suitable one exists. Do not introduce bespoke styling for things Codex already covers (buttons, messages/callouts, tabs, icons).
+
+- Use `CdxIcon` + `cdxIconLink` in `ProseH2.vue` … `ProseH6.vue` for heading anchor icons. The default `@nuxtjs/mdc` heading component wraps the full heading text in `<a>` — the override renders heading text as plain text and places a `CdxIcon` link alongside it, shown on hover via CSS.
+- Use `CdxMessage` for callout/alert boxes — its `type` prop covers `notice`, `warning`, and `error` variants.
+- Use `CdxTabs` + `CdxTab` for tabbed code groups.
+- Use `CdxButton` for inline call-to-action buttons.
+- Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
+
+All other rules apply inside content components: banana-i18n for interface strings, `<bdi>` for external strings, CSS logical properties.
+
+For the full feature status and implementation plan see `ARCHITECTURE.md` → "Markdown content pages" and `docs/TECH_DECISIONS.md` → "Markdown content pages".
 
 ---
 

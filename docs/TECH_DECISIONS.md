@@ -187,6 +187,51 @@ When content is unavailable in the requested locale, the fallback chain declared
 
 ---
 
+## Markdown content pages
+
+### Rendering stack
+
+| Concern | Decision |
+|---|---|
+| Markdown parser | Nuxt Content (micromark + unified) — no alternative considered; built-in |
+| Syntax highlighting | Shiki — bundled with `@nuxt/content`; automatic for all fenced code blocks |
+| Custom components in Markdown | MDC (Markdown Components) via `@nuxtjs/mdc` — bundled with `@nuxt/content` |
+| Component system for content components | Codex (`@wikimedia/codex`) — same as the rest of the UI; no exceptions |
+
+### No new packages required
+
+All planned markdown features are achievable with packages already installed:
+
+- `@shikijs/transformers` is a transitive dependency of `@nuxt/content` — activating line numbers, line highlighting, and diff annotations requires only `nuxt.config.ts` changes.
+- MDC is bundled — custom components require only new `.vue` files in `app/components/content/`.
+- Codex is already installed — all content components use it where a suitable widget exists.
+
+### Feature status
+
+| Feature | Status | What is needed |
+|---|---|---|
+| Syntax highlighting | ✅ Works today | Nothing |
+| Heading anchors + link icon | Needs component | `app/components/content/ProseH2.vue` … `ProseH6.vue` using `CdxIcon` + `cdxIconLink`. Default `@nuxtjs/mdc` wraps the full heading text in `<a>`; these components replace that with plain heading text + icon on hover |
+| External link icons | Needs component | `app/components/content/ProseA.vue` using `CdxIcon` + `cdxIconLinkExternal` |
+| Line numbers | Needs config | Add `transformerMetaLineNumbers()` to `content.highlight.transformers` |
+| Line highlighting | Needs config | Add `transformerMetaHighlight()` to `content.highlight.transformers` |
+| Diff annotations | Needs config | Add `transformerNotationDiff()` to `content.highlight.transformers` |
+| External link icons | Needs component | `app/components/content/ProseA.vue` using `CdxIcon` + `cdxIconLinkExternal` |
+| Callouts (info / warning) | Needs component | `app/components/content/Callout.vue` using `CdxMessage` |
+| Code tabs | Needs component | `app/components/content/CodeTabs.vue` + `CodeTab.vue` using `CdxTabs` + `CdxTab` |
+| Buttons | Needs component | `app/components/content/AppButton.vue` using `CdxButton` |
+| Next / Previous navigation | Needs page change | Read `prev` / `next` frontmatter in `[...slug].vue`; render with `CdxButton` + arrow icons |
+| File inclusion | Needs verification | MDC `::include` built-in; test against `content/[locale]/` path structure |
+
+### MDC component conventions
+
+- Components live in `app/components/content/` and are auto-registered.
+- Block components use `::component-name{props}\ncontent\n::` syntax in Markdown.
+- All new content components follow the same RTL/BiDi and logical-property rules as the rest of the codebase.
+- Interface labels within content components go through banana-i18n.
+
+---
+
 ## Experiments
 
 Three experiments validate the core unknowns before full implementation. Each produces a concrete go/no-go signal.
