@@ -30,8 +30,8 @@
   "explorer-browse-api-modules-before": "Explorar modulos de API de ",
   "explorer-browse-api-modules-after": "",
   "explorer-opt-in-label": "Opt-in",
-  "explorer-opt-in-beta-endpoints": "Endpoints beta",
-  "explorer-opt-in-internal-endpoints": "Endpoints internos",
+  "explorer-opt-in-beta-endpoints": "Módulos y endpoints beta",
+  "explorer-opt-in-internal-endpoints": "Módulos y endpoints internos",
   "explorer-wiki-project-label": "Proyecto wiki",
   "explorer-wiki-project-help": "Selecciona el proyecto contra el que quieres ejecutar solicitudes",
   "explorer-module-rail-title": "Indice de modulos",
@@ -76,5 +76,12 @@
   "search-results-locale-heading": "Resultados en {{bidi:$1}}",
   "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}.",
   "search-all-languages-cta": "Buscar en todos los idiomas",
-  "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma."
+  "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma.",
+  "explorer-opt-in-popover-title": "Módulos y endpoints de inclusión voluntaria",
+  "explorer-opt-in-popover-trigger-label": "Más información sobre los módulos y endpoints de inclusión voluntaria",
+  "explorer-opt-in-popover-intro": "Incluye endpoints y módulos no recomendados para uso público:",
+  "explorer-opt-in-popover-beta-label": "Beta",
+  "explorer-opt-in-popover-beta-body": ": Para pruebas, sujetos a cambios y de corta duración intencionalmente. Los módulos beta se elevarán a endpoints oficiales o se eliminarán por completo cuando termine la fase beta.",
+  "explorer-opt-in-popover-internal-label": "Interno",
+  "explorer-opt-in-popover-internal-body": ": Solo para el personal y los servicios de la Fundación Wikimedia. No se garantiza la estabilidad y se desaconseja su uso fuera de los casos de la Fundación Wikimedia."
 }

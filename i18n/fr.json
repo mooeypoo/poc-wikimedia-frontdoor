@@ -30,8 +30,8 @@
   "explorer-browse-api-modules-before": "Parcourir les modules API de ",
   "explorer-browse-api-modules-after": "",
   "explorer-opt-in-label": "Opt-in",
-  "explorer-opt-in-beta-endpoints": "Points d'acces beta",
-  "explorer-opt-in-internal-endpoints": "Points d'acces internes",
+  "explorer-opt-in-beta-endpoints": "Modules et points d'accès bêta",
+  "explorer-opt-in-internal-endpoints": "Modules et points d'accès internes",
   "explorer-wiki-project-label": "Projet wiki",
   "explorer-wiki-project-help": "Selectionnez le projet sur lequel vous souhaitez executer des requetes",
   "explorer-module-rail-title": "Index des modules",
@@ -76,5 +76,12 @@
   "search-results-locale-heading": "Résultats en {{bidi:$1}}",
   "search-no-locale-results": "Aucun résultat en {{bidi:$1}} pour {{bidi:$2}}.",
   "search-all-languages-cta": "Rechercher dans toutes les langues",
-  "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue."
+  "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue.",
+  "explorer-opt-in-popover-title": "Modules et points d'accès en opt-in",
+  "explorer-opt-in-popover-trigger-label": "Plus d'informations sur les modules et points d'accès en opt-in",
+  "explorer-opt-in-popover-intro": "Inclure les points d'accès et modules non recommandés pour un usage public :",
+  "explorer-opt-in-popover-beta-label": "Bêta",
+  "explorer-opt-in-popover-beta-body": " : À des fins de test, susceptibles de changer et volontairement de courte durée. Les modules bêta seront soit promus en points d'accès officiels, soit supprimés à la fin de la phase bêta.",
+  "explorer-opt-in-popover-internal-label": "Interne",
+  "explorer-opt-in-popover-internal-body": " : Destiné uniquement au personnel et aux services de la Wikimedia Foundation. La stabilité n'est pas garantie et l'usage en dehors des cas de la Fondation est déconseillé."
 }

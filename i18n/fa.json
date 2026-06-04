@@ -23,8 +23,8 @@
   "explorer-browse-api-modules-before": "مرور ماژول‌های API ",
   "explorer-browse-api-modules-after": "",
   "explorer-opt-in-label": "انتخاب اختیاری",
-  "explorer-opt-in-beta-endpoints": "نقطه‌های پایانی بتا",
-  "explorer-opt-in-internal-endpoints": "نقطه‌های پایانی داخلی",
+  "explorer-opt-in-beta-endpoints": "ماژول‌ها و نقطه‌های پایانی بتا",
+  "explorer-opt-in-internal-endpoints": "ماژول‌ها و نقطه‌های پایانی داخلی",
   "explorer-wiki-project-label": "پروژه ویکی",
   "explorer-wiki-project-help": "پروژه‌ای را که می‌خواهید درخواست‌ها را علیه آن اجرا کنید انتخاب کنید",
   "explorer-module-rail-title": "فهرست ماژول‌ها",
@@ -67,5 +67,12 @@
   "search-results-locale-heading": "نتایج به زبان {{bidi:$1}}",
   "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد.",
   "search-all-languages-cta": "جستجو در همه زبان‌ها",
-  "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد."
+  "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد.",
+  "explorer-opt-in-popover-title": "ماژول‌ها و نقطه‌های پایانی انتخاب اختیاری",
+  "explorer-opt-in-popover-trigger-label": "اطلاعات بیشتر درباره ماژول‌ها و نقطه‌های پایانی انتخاب اختیاری",
+  "explorer-opt-in-popover-intro": "شامل نقطه‌های پایانی و ماژول‌هایی که برای استفاده عمومی توصیه نمی‌شوند:",
+  "explorer-opt-in-popover-beta-label": "بتا",
+  "explorer-opt-in-popover-beta-body": ": برای آزمایش، مستعد تغییر و عمداً کوتاه‌مدت. ماژول‌های بتا یا به نقطه‌های پایانی رسمی ارتقا می‌یابند یا پس از پایان فاز بتا به‌طور کامل حذف می‌شوند.",
+  "explorer-opt-in-popover-internal-label": "داخلی",
+  "explorer-opt-in-popover-internal-body": ": فقط برای کارکنان و خدمات بنیاد ویکی‌مدیا. پایداری تضمین نمی‌شود و استفاده خارج از موارد بنیاد ویکی‌مدیا توصیه نمی‌شود."
 }

@@ -30,8 +30,8 @@
   "explorer-browse-api-modules-before": "עיון במודולי API של ",
   "explorer-browse-api-modules-after": "",
   "explorer-opt-in-label": "הצטרפות",
-  "explorer-opt-in-beta-endpoints": "נקודות קצה בגרסת בטא",
-  "explorer-opt-in-internal-endpoints": "נקודות קצה פנימיות",
+  "explorer-opt-in-beta-endpoints": "מודולים ונקודות קצה בגרסת בטא",
+  "explorer-opt-in-internal-endpoints": "מודולים ונקודות קצה פנימיים",
   "explorer-wiki-project-label": "פרויקט ויקי",
   "explorer-wiki-project-help": "בחרו את הפרויקט שעליו תריצו בקשות",
   "explorer-module-rail-title": "אינדקס מודולים",
@@ -76,5 +76,12 @@
   "search-results-locale-heading": "תוצאות ב{{bidi:$1}}",
   "search-no-locale-results": "אין תוצאות ב{{bidi:$1}} עבור {{bidi:$2}}.",
   "search-all-languages-cta": "חפש בכל השפות",
-  "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה."
+  "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה.",
+  "explorer-opt-in-popover-title": "מודולים ונקודות קצה בהצטרפות",
+  "explorer-opt-in-popover-trigger-label": "מידע נוסף על מודולים ונקודות קצה בהצטרפות",
+  "explorer-opt-in-popover-intro": "כלול נקודות קצה ומודולים שאינם מומלצים לשימוש ציבורי:",
+  "explorer-opt-in-popover-beta-label": "בטא",
+  "explorer-opt-in-popover-beta-body": ": למטרות בדיקה, עלולים להשתנות ומיועדים לטווח קצר. מודולי בטא יועלו לנקודות קצה רשמיות או יוסרו לחלוטין עם סיום שלב הבטא.",
+  "explorer-opt-in-popover-internal-label": "פנימי",
+  "explorer-opt-in-popover-internal-body": ": מיועד לשימוש של צוות ושירותי קרן ויקימדיה בלבד. יציבות אינה מובטחת ושימוש מחוץ למקרי השימוש של הקרן אינו מומלץ."
 }

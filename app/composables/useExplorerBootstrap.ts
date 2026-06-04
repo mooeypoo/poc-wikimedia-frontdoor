@@ -59,6 +59,8 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  *
  * @param selectedWikiInstanceId - Reactive wiki instance id.
  * @returns Reactive bootstrap state, selected module state, and selection actions.
+ *   {@link isExplorerModuleRailVisible} is true only after bootstrap succeeds so the end-column
+ *   rail mounts together with module data and aligned project controls.
  *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
 export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
@@ -80,6 +82,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 
 	const isInstanceBootstrapping = computed( () => instanceBootstrapState.value === 'loading' )
 	const hasInstanceBootstrapError = computed( () => instanceBootstrapState.value === 'error' )
+	const isExplorerModuleRailVisible = computed( () => instanceBootstrapState.value === 'ready' )
 	const isScalarSwitching = computed( () => scalarSwitchState.value === 'switching' )
 
 	const selectedModule = computed( () => {
@@ -238,6 +241,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		instanceBootstrapState.value = 'loading'
 		instanceBootstrapErrorMessage.value = ''
 		modules.value = []
+		wikiDisplayName.value = ''
 		selectedModuleName.value = ''
 		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
@@ -375,6 +379,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		openApiSpecUrl,
 		pendingOperationTarget,
 		isInstanceBootstrapping,
+		isExplorerModuleRailVisible,
 		hasInstanceBootstrapError,
 		instanceBootstrapErrorMessage,
 		isScalarSwitching,

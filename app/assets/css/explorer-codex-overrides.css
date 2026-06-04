@@ -6,6 +6,19 @@
  * (see ExplorerScalarReference.client.vue).
  */
 
+/*
+ * Opt-in help popover (ExplorerProjectControls): merge arrow with panel.
+ *
+ * Codex uses a separate .cdx-popover__arrow (placement bottom-start → top: -9px).
+ * More negative top moves the arrow away from the panel and widens the seam; nudge
+ * down (less negative top) plus drop the arrow shadow so the junction matches the demo.
+ */
+.cdx-popover.explorer-project-controls__opt-in-help-popover .cdx-popover__arrow {
+	box-shadow: none !important;
+	/* Between Codex -9px (hairline gap) and -7px (arrow bites into body). */
+	top: -8px !important;
+}
+
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
 	display: flex;
 	align-items: center;
