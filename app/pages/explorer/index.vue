@@ -8,6 +8,8 @@ import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOp
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
+import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
+import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
@@ -118,6 +120,9 @@ const { scalarConfiguration } = useScalarConfig( visibleOpenApiSpecUrl, {
 		} )
 	}
 } )
+
+useScalarWriteRequestTestWiki( scalarConfiguration )
+useScalarWriteRequestAddressBarSync( scalarInterface, selectedWikiInstanceId )
 
 /**
  * Forces ApiReference remount when the spec context changes.

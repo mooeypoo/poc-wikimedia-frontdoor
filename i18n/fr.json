@@ -6,6 +6,8 @@
   "explorer-browse-api-modules-before": "Parcourir les modules API de ",
   "explorer-debug-empty": "Aucun evenement de diagnostic pour le moment.",
   "explorer-scalar-write-endpoint-warning": "Exécuter cette requête modifiera les données en direct sur le wiki actuel. Pour expérimenter en toute sécurité, choisissez d'exécuter vos appels contre $1.",
+  "explorer-scalar-write-test-wiki-toggle-label": "Exécuter la requête contre $1",
+  "explorer-scalar-write-test-wiki-toggle-description": "Si désactivé, les modifications seront appliquées en production",
   "explorer-debug-title": "Diagnostics",
   "explorer-description": "Basculez les instances wiki et les modules REST via les donnees de decouverte.",
   "explorer-discovery-error": "La requete de decouverte a echoue pour cette instance.",
