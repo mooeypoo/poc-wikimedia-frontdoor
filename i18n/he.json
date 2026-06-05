@@ -77,5 +77,7 @@
   "search-no-locale-results": "אין תוצאות ב{{bidi:$1}} עבור {{bidi:$2}}.",
   "search-all-languages-cta": "חפש בכל השפות",
   "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה.",
-  "explorer-scalar-write-endpoint-warning": "ביצוע בקשה זו ישנה נתונים חיים בוויקי הנוכחי. כדי להתנסות בבטחה, בחרו להפעיל את הקריאות שלכם מול $1."
+  "explorer-scalar-write-endpoint-warning": "ביצוע בקשה זו ישנה נתונים חיים בוויקי הנוכחי. כדי להתנסות בבטחה, בחרו להפעיל את הקריאות שלכם מול $1.",
+  "explorer-scalar-write-test-wiki-toggle-label": "הרצת הבקשה מול $1",
+  "explorer-scalar-write-test-wiki-toggle-description": "אם האפשרות מושבתת, השינויים יחולו על סביבת הייצור"
 }

@@ -2,7 +2,8 @@
  * Scalar API client modal write-endpoint warnings (DOM injection + ClientPlugin).
  */
 .scalar-client-write-endpoint-warning,
-.scalar-client-write-endpoint-warning-mount {
+.scalar-client-write-endpoint-warning-mount,
+.scalar-client-write-endpoint-controls {
 	position: relative;
 	z-index: 1;
 }

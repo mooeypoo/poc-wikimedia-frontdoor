@@ -80,5 +80,7 @@
   "content-heading-anchor-label": "Accessible label for the anchor link icon shown on hover next to each heading in content pages. Reads aloud when keyboard users focus the link.",
   "content-external-link-label": "Accessible label for the external-link icon appended to links that go to external sites. Indicates to screen reader users that the link leaves the site.",
   "content-page-nav-label": "Accessible name for the prev/next page navigation landmark at the bottom of content pages.",
-  "explorer-scalar-write-endpoint-warning": "Warning in the Scalar Test Request modal for write HTTP methods (POST, PUT, DELETE, PATCH). $1 is the test wiki URL for the selected project (for example test.wikipedia.org or https://test-commons.wikimedia.org/)."
+  "explorer-scalar-write-endpoint-warning": "Warning in the Scalar Test Request modal for write HTTP methods (POST, PUT, DELETE, PATCH). Shown when the test-wiki toggle is disabled. $1 is the test wiki hostname for the selected project (for example test.wikipedia.org).",
+  "explorer-scalar-write-test-wiki-toggle-label": "Primary label for the test-wiki toggle in the Scalar Test Request modal for write HTTP methods. $1 is the test wiki hostname (for example test.wikipedia.org). Render the hostname in bold in the UI.",
+  "explorer-scalar-write-test-wiki-toggle-description": "Helper text below the test-wiki toggle in the Scalar Test Request modal. Explains that disabling the toggle sends write requests to production."
 }

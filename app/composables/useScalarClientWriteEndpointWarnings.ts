@@ -7,6 +7,10 @@ import {
 import ScalarClientWriteEndpointWarning from '../components/explorer/scalar/ScalarClientWriteEndpointWarning.vue'
 import { SCALAR_CLIENT_MODAL_VIEW_SLOTS } from '../scalar/scalarClientWriteEndpointPlugins'
 import type { ScalarInterfaceHandle } from './useExplorerScalarFocus'
+import {
+	resetScalarWriteRequestTestWikiPreference,
+	scheduleScalarWriteRequestAddressBarSync
+} from '../utils/explorerScalarWriteRequestContext'
 import { createScalarWriteEndpointWarningElement } from '../utils/createScalarWriteEndpointWarningElement'
 import { findOpenScalarClientModal } from '../utils/findOpenScalarClientModal'
 import { isWriteHttpMethod } from '../utils/isWriteHttpMethod'
@@ -114,6 +118,10 @@ export function useScalarClientWriteEndpointWarnings(
 		}
 
 		const testRequestButton = clickTarget.closest( '.show-api-client-button' )
+
+		if ( testRequestButton ) {
+			resetScalarWriteRequestTestWikiPreference()
+		}
 
 		if ( !testRequestButton ) {
 			return
@@ -256,6 +264,7 @@ export function useScalarClientWriteEndpointWarnings(
 		}
 
 		injectWarningsIntoModal( modalDialog, httpMethod )
+		scheduleScalarWriteRequestAddressBarSync.value?.()
 	}
 
 	/**
@@ -317,6 +326,8 @@ export function useScalarClientWriteEndpointWarnings(
 	 * @returns Nothing.
 	 */
 	function onModalOpen( payload: unknown ): void {
+		resetScalarWriteRequestTestWikiPreference()
+
 		if (
 			payload
 			&& typeof payload === 'object'

@@ -68,5 +68,7 @@
   "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد.",
   "search-all-languages-cta": "جستجو در همه زبان‌ها",
   "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد.",
-  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در ویکی فعلی را تغییر می‌دهد. برای آزمایش ایمن، انتخاب کنید درخواست‌های خود را در برابر $1 اجرا کنید."
+  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در ویکی فعلی را تغییر می‌دهد. برای آزمایش ایمن، انتخاب کنید درخواست‌های خود را در برابر $1 اجرا کنید.",
+  "explorer-scalar-write-test-wiki-toggle-label": "اجرای درخواست در برابر $1",
+  "explorer-scalar-write-test-wiki-toggle-description": "در صورت غیرفعال بودن، تغییرات در محیط تولید اعمال می‌شوند"
 }
