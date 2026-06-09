@@ -457,15 +457,16 @@ MDC ships a built-in `Include` component via `@nuxtjs/mdc`. The syntax is `::inc
 
 ---
 
-## Wiki content sync
+## Remote content fetching
 
-On-wiki pages with translations (policy, descriptions) are fetched at build time by `scripts/sync-wiki-content.js`. The script:
-1. Reads sync targets from `config/wikiContentSources.js`
-2. Calls the MediaWiki Action API (`action=parse`) for each page and language
-3. Converts HTML output to Markdown using Turndown
-4. Writes files to `content/[locale]/[path].md`
+Build-time content fetching is handled by `scripts/fetch-remote-content.mjs`. The script:
+1. Reads remote sources from `config/remoteContentSources.ts`
+2. Fetches content from configured remote URLs according to each source's `strategy`
+3. Phase 1 (`strategy: 'markdown-url'`) fetches raw Markdown directly
+4. Phase 2 (`strategy: 'html-url'` and `strategy: 'mediawiki-action-api'`) will convert HTML to Markdown using Turndown (not yet a dependency)
+5. Writes files to `content/[locale]/[path].md`
 
-The script is run as part of the build pipeline before `nuxt generate`. It is idempotent — running it multiple times produces the same output.
+The script is run as part of the build pipeline before `nuxt generate` and `nuxt build`. It is idempotent and graceful: fetch failures do not fail the build. A stale copy is kept if available; otherwise an empty placeholder is written. See `docs/adr-remote-content-fetching.md` for the full decision record.
 
 ---
 

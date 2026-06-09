@@ -79,5 +79,6 @@
   "search-no-results-any-language": "No results found for {{bidi:$1}} in any language.",
   "content-heading-anchor-label": "Link to this section",
   "content-external-link-label": "external link",
-  "content-page-nav-label": "Page navigation"
+  "content-page-nav-label": "Page navigation",
+  "nav-remote-md": "Remote MD"
 }
