@@ -39,7 +39,7 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				id: 'enterprise-apis',
 				messageKey: 'explorer-side-nav-enterprise-apis',
 				mode: 'enterprise-full',
-				enabled: false
+				enabled: true
 			},
 			{
 				id: 'enterprise-apis-limited',

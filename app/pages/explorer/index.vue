@@ -51,7 +51,7 @@ const {
 	selectModule,
 	markScalarReady,
 	clearPendingOperationTarget
-} = useExplorerBootstrap( selectedWikiInstanceId )
+} = useExplorerBootstrap( selectedWikiInstanceId, isCommunityMode )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 const referenceHeaderRef = ref<HTMLElement | null>( null )

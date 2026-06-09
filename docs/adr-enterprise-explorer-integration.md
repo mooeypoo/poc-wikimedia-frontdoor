@@ -1,6 +1,6 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** In progress — Phase A complete; Phase B ready to begin
+**Status:** In progress — Phase A and B complete; Phase C in progress (enterprise-full enabled, proxy verified, bootstrap guard in place)
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration
 
 ---
@@ -749,14 +749,14 @@ Manually set `enabled: false` on each Enterprise entry in turn and confirm behav
 |---|---|---|---|
 | A1 — Spec verification | A | ✅ Complete | — |
 | A2 — Scalar audit | A | ✅ Complete | — |
-| B1a — Enterprise spec proxy route | B | Pending | 1 hr |
-| B1b — `config/enterpriseExplorer.ts` | B | Pending | 1 hr |
-| B2 — Side nav config | B | Pending | 30 min |
-| B3 — `ExplorerSideNav.vue` | B | Pending | 2 hrs |
-| B4 — `useEnterpriseExplorer.ts` | B | Pending | 1 hr |
-| B5 — Explorer page wiring | B | Pending | 3 hrs |
-| B6 — i18n keys | B | Pending | 30 min |
-| C1 — Full mode QA | C | Pending | 1 day |
+| B1a — Enterprise spec proxy route | B | ✅ Complete | — |
+| B1b — `config/enterpriseExplorer.ts` | B | ✅ Complete | — |
+| B2 — Side nav config | B | ✅ Complete | — |
+| B3 — `ExplorerSideNav.vue` | B | ✅ Complete | — |
+| B4 — `useEnterpriseExplorer.ts` | B | ✅ Complete | — |
+| B5 — Explorer page wiring | B | ✅ Complete | — |
+| B6 — i18n keys | B | ✅ Complete | — |
+| C1 — Full mode QA | C | In progress (needs browser QA) | 1 day |
 | D1 — Limited mode (path TBD per §7.3) | D | Pending | 1–3 days |
 | E1 — Toggle verification | E | Pending | 30 min |
 
