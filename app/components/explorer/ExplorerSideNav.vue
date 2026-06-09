@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { EXPLORER_SIDE_NAV_SECTIONS } from '../../../config/explorerSideNav'
+import type { ExplorerMode } from '../../composables/useEnterpriseExplorer'
 
 /**
  * ExplorerSideNav — left-hand section navigation for the API Explorer page.
  *
- * Renders placeholder section links from config; no routes are wired yet.
+ * Renders section links from config; items with enabled=false are hidden.
+ * Emits mode-change when the user clicks an item that has a mode field.
  */
+const props = defineProps<{
+	activeMode: ExplorerMode
+}>()
+
+const emit = defineEmits<{
+	'mode-change': [ ExplorerMode ]
+}>()
+
 const { $bananaI18n } = useNuxtApp()
 
 const navigationLabel = computed( () => $bananaI18n( 'explorer-side-nav-label' ) )
@@ -14,13 +24,22 @@ const navigationSections = computed( () => {
 	return EXPLORER_SIDE_NAV_SECTIONS.map( ( section ) => ( {
 		id: section.id,
 		title: $bananaI18n( section.titleMessageKey ),
-		items: section.items.map( ( item ) => ( {
-			id: item.id,
-			label: $bananaI18n( item.messageKey ),
-			isActive: Boolean( item.isActive )
-		} ) )
+		items: section.items
+			.filter( ( item ) => item.enabled !== false )
+			.map( ( item ) => ( {
+				id: item.id,
+				label: $bananaI18n( item.messageKey ),
+				mode: item.mode as ExplorerMode | undefined,
+				isActive: item.mode !== undefined ? item.mode === props.activeMode : false
+			} ) )
 	} ) )
 } )
+
+function onItemClick( mode: ExplorerMode | undefined ): void {
+	if ( mode !== undefined ) {
+		emit( 'mode-change', mode )
+	}
+}
 </script>
 
 <template>
@@ -47,7 +66,7 @@ const navigationSections = computed( () => {
 						class="explorer-side-nav__link"
 						:class="{ 'explorer-side-nav__link--active': item.isActive }"
 						:aria-current="item.isActive ? 'page' : undefined"
-						@click.prevent
+						@click.prevent="onItemClick( item.mode )"
 					>
 						{{ item.label }}
 					</a>

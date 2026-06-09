@@ -41,6 +41,8 @@
   "explorer-side-nav-label": "תיעוד סייר ה-API",
   "explorer-side-nav-api-explorer-title": "סייר API",
   "explorer-side-nav-wikimedia-api-modules": "מודולי API של ויקימדיה",
+  "explorer-side-nav-enterprise-apis": "ממשקי API ארגוניים",
+  "explorer-side-nav-enterprise-apis-limited": "ממשק API ארגוני מוגבל",
   "explorer-side-nav-overview-title": "סקירה",
   "explorer-side-nav-access-policy": "מדיניות גישה",
   "explorer-side-nav-rate-limits": "מגבלות קצב",

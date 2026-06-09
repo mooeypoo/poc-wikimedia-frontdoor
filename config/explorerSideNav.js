@@ -6,10 +6,15 @@
  */
 
 /**
+ * @typedef {'community' | 'enterprise-full' | 'enterprise-limited'} ExplorerMode
+ */
+
+/**
  * @typedef {object} ExplorerSideNavItem
  * @property {string} id - Stable id for the nav item.
  * @property {string} messageKey - banana-i18n message key for the link label.
- * @property {boolean} [isActive] - When true, the item is shown as the current section.
+ * @property {ExplorerMode} mode - Explorer mode this item activates.
+ * @property {boolean} [enabled] - When false, the item is hidden entirely. Defaults to true.
  */
 
 /**
@@ -28,7 +33,19 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 			{
 				id: 'wikimedia-api-modules',
 				messageKey: 'explorer-side-nav-wikimedia-api-modules',
-				isActive: true
+				mode: 'community'
+			},
+			{
+				id: 'enterprise-apis',
+				messageKey: 'explorer-side-nav-enterprise-apis',
+				mode: 'enterprise-full',
+				enabled: false
+			},
+			{
+				id: 'enterprise-apis-limited',
+				messageKey: 'explorer-side-nav-enterprise-apis-limited',
+				mode: 'enterprise-limited',
+				enabled: false
 			}
 		]
 	},

@@ -33,6 +33,8 @@
   "explorer-side-nav-label": "مستندات کاوشگر API",
   "explorer-side-nav-api-explorer-title": "کاوشگر API",
   "explorer-side-nav-wikimedia-api-modules": "ماژول‌های API ویکی‌مدیا",
+  "explorer-side-nav-enterprise-apis": "APIهای سازمانی",
+  "explorer-side-nav-enterprise-apis-limited": "API سازمانی محدود",
   "explorer-side-nav-overview-title": "نمای کلی",
   "explorer-side-nav-access-policy": "سیاست دسترسی",
   "explorer-side-nav-rate-limits": "محدودیت‌های نرخ",

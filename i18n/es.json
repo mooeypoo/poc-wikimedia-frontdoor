@@ -41,6 +41,8 @@
   "explorer-side-nav-label": "Documentacion del explorador de API",
   "explorer-side-nav-api-explorer-title": "Explorador de API",
   "explorer-side-nav-wikimedia-api-modules": "Modulos de API de Wikimedia",
+  "explorer-side-nav-enterprise-apis": "APIs empresariales",
+  "explorer-side-nav-enterprise-apis-limited": "API empresarial limitada",
   "explorer-side-nav-overview-title": "Resumen",
   "explorer-side-nav-access-policy": "Politica de acceso",
   "explorer-side-nav-rate-limits": "Limites de tasa",

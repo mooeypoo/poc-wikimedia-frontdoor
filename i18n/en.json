@@ -42,6 +42,8 @@
   "explorer-side-nav-label": "API Explorer documentation",
   "explorer-side-nav-api-explorer-title": "API Explorer",
   "explorer-side-nav-wikimedia-api-modules": "Wikimedia API modules",
+  "explorer-side-nav-enterprise-apis": "Enterprise APIs",
+  "explorer-side-nav-enterprise-apis-limited": "Limited Enterprise API",
   "explorer-side-nav-overview-title": "Overview",
   "explorer-side-nav-access-policy": "Access policy",
   "explorer-side-nav-rate-limits": "Rate limits",

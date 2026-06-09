@@ -8,6 +8,8 @@ import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
+import { useExplorerMode } from '../../composables/useExplorerMode'
+import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
 
 definePageMeta( {
@@ -21,6 +23,16 @@ const { $bananaI18n } = useNuxtApp()
 /** Whether this page is still the active route (disables teleports on exit). */
 const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { selectedWikiInstanceId } = useDirection()
+const { explorerMode } = useExplorerMode()
+const isCommunityMode = computed( () => explorerMode.value === 'community' )
+
+const enterpriseMode = computed( () =>
+	explorerMode.value === 'enterprise-full' || explorerMode.value === 'enterprise-limited'
+		? explorerMode.value
+		: 'enterprise-full' as const
+)
+const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides } =
+	useEnterpriseExplorer( enterpriseMode )
 const {
 	modules,
 	failedModules,
@@ -96,6 +108,25 @@ const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
 	}
 } )
 
+watch( explorerMode, ( nextMode ) => {
+	if ( nextMode === 'community' ) {
+		Object.assign( scalarConfiguration, {
+			showSidebar: false,
+			hideTestRequestButton: false,
+			hideDownloadButton: false,
+			hideClientButton: false,
+			hiddenClients: false,
+			hideModels: false,
+			spec: { url: openApiSpecUrl.value ?? '' }
+		} )
+	} else {
+		Object.assign( scalarConfiguration, {
+			...enterpriseScalarOverrides.value,
+			spec: { url: enterpriseSpecUrl.value }
+		} )
+	}
+} )
+
 /**
  * Forces ApiReference remount when the spec context changes.
  *
@@ -108,6 +139,7 @@ const scalarReferenceKey = computed( () => {
 		route.fullPath,
 		selectedWikiInstanceId.value,
 		selectedModuleName.value,
+		explorerMode.value,
 		openApiSpecUrl.value ?? ''
 	].join( ':' )
 } )
@@ -172,7 +204,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			</header>
 
 			<div
-				v-if="!isInstanceBootstrapping"
+				v-if="!isInstanceBootstrapping && isCommunityMode"
 				ref="projectControlsRef"
 				class="explorer-page__project-controls-anchor frontdoor-page-nav-align-anchor"
 			>
@@ -185,7 +217,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			</div>
 		</div>
 
-		<ClientOnly>
+		<ClientOnly v-if="isCommunityMode">
 			<Teleport
 				to="#explorer-end-panel"
 				:disabled="!isActiveExplorerRoute"
@@ -206,7 +238,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		</ClientOnly>
 
 		<section
-			v-if="isInstanceBootstrapping"
+			v-if="isCommunityMode && isInstanceBootstrapping"
 			class="explorer-page__bootstrap-loading"
 		>
 			<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
@@ -216,7 +248,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 		<template v-else>
 			<CdxMessage
-				v-if="hasInstanceBootstrapError"
+				v-if="isCommunityMode && hasInstanceBootstrapError"
 				type="error"
 			>
 				{{ bootstrapErrorLabel }} <bdi>{{ instanceBootstrapErrorMessage }}</bdi>
@@ -225,7 +257,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			<template v-else>
 				<section class="explorer-page__reference-panel">
 					<header
-						v-if="selectedModule"
+						v-if="isCommunityMode && selectedModule"
 						ref="referenceHeaderRef"
 						class="explorer-page__reference-header"
 					>
@@ -247,7 +279,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					</header>
 
 					<CdxMessage
-						v-if="!openApiSpecUrl"
+						v-if="isCommunityMode && !openApiSpecUrl"
 						type="warning"
 					>
 						{{ missingSpecLabel }}
