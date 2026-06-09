@@ -61,8 +61,36 @@ export interface RemoteContentSource {
 	/**
 	 * Locale for the primary (or only) fetched file.
 	 * Defaults to 'en'. See ADR §4 for multi-locale planned shape.
+	 *
+	 * Phase 1: Use this field for single-locale sources.
+	 * Phase 2: Will be replaced by `localeFiles` for multi-locale sources.
+	 * Both can coexist; script prioritizes `localeFiles` if present.
 	 */
 	locale?: string
+
+	/**
+	 * Multi-locale file URLs — Phase 2, not yet implemented.
+	 *
+	 * When a source has translations available at different URLs for different
+	 * locales, use this instead of the single `remoteUrl` + `locale` combo.
+	 *
+	 * Example:
+	 * ```ts
+	 * localeFiles: {
+	 *   en: 'https://example.org/docs/page.md',
+	 *   fr: 'https://example.org/docs/fr/page.md',
+	 *   ar: 'https://example.org/docs/ar/page.md',
+	 * }
+	 * ```
+	 *
+	 * Each URL is fetched and written to the corresponding `content/[locale]/` path.
+	 * Locales not listed fall back via the language fallback chain in config/languages.ts.
+	 *
+	 * Phase 2 implementation: script will fetch all URLs in `localeFiles`,
+	 * apply `overrideFrontmatter` to each (per-locale overrides TBD),
+	 * and write to `content/[locale]/[localPath].md`.
+	 */
+	localeFiles?: Record<string, string>
 
 	/**
 	 * Frontmatter fields to inject into (or override in) the fetched file.

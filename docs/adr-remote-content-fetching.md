@@ -32,107 +32,69 @@ Maintaining two parallel scripts (`sync-wiki-content.js` for wiki sources and a 
 **Config shape:**
 
 ```ts
-/**
- * Declares remote content sources fetched at build time by
- * scripts/fetch-remote-content.mjs.
- *
- * Each entry maps a remote URL to a local content path. Fetched files are
- * written to content/[locale]/[localPath].md before nuxt build runs.
- *
- * Phase 1 supports strategy 'markdown-url' only.
- * Phase 2 will add 'mediawiki-action-api' and 'html-url' as additional
- * strategy values without changing the shape of existing entries.
- */
 export interface RemoteContentSource {
-  /** Unique identifier — used in log output and error messages. */
   id: string
-
-  /**
-   * Fetch strategy.
-   *
-   * 'markdown-url'         — fetch raw Markdown from remoteUrl (Phase 1, implemented)
-   * 'mediawiki-action-api' — fetch via MediaWiki Action API, convert HTML→Markdown (Phase 2)
-   * 'html-url'             — fetch HTML from remoteUrl, convert to Markdown (Phase 2)
-   */
-  strategy: 'markdown-url'  // extend the union type when Phase 2 strategies are added
-
-  /** URL from which to fetch the raw Markdown content. */
+  strategy: 'markdown-url'  // extend when Phase 2 strategies added
   remoteUrl: string
-
-  /**
-   * Path under content/[locale]/ where the file will be written, without
-   * extension. Determines the resulting route.
-   *
-   * Example: 'terms-of-use' writes to content/en/terms-of-use.md
-   * and is served at /terms-of-use (or /fr/terms-of-use via locale fallback).
-   */
   localPath: string
 
-  /**
-   * Locale for the primary (or only) fetched file.
-   * Defaults to 'en'. See §4 for multi-locale planned shape.
-   */
+  // Phase 1: single locale (defaults to 'en')
   locale?: string
 
-  /**
-   * Frontmatter fields to inject into (or override in) the fetched file.
-   * Merged on top of any frontmatter the remote file declares, so the
-   * portal controls page title and nav metadata regardless of source.
-   *
-   * At minimum, set `title` here if the remote file does not guarantee
-   * a frontmatter title block.
-   */
-  overrideFrontmatter?: Record<string, unknown>
+  // Phase 2: multi-locale URLs (reserved, not yet used by script)
+  // When implemented: fetch each URL per locale, write to content/[locale]/
+  // Existing sources don't change; script checks for localeFiles first
+  localeFiles?: Record<string, string>
 
-  /**
-   * When present, registers a navigation entry for this page.
-   * See §5 for full shape and nav target details.
-   */
+  overrideFrontmatter?: Record<string, unknown>
   navEntry?: RemoteContentNavEntry
 }
 
 export interface RemoteContentNavEntry {
-  /**
-   * Which navigation surface to add the entry to.
-   *
-   * 'primary' — merge into the primary top nav bar (implemented in Phase 1).
-   * 'explorer-side' — add to the API Explorer left side nav (planned, not yet
-   *                   implemented; requires extending config/explorerSideNav.js).
-   */
-  target: 'primary'  // extend to 'primary' | 'explorer-side' when Phase 2 nav is added
-
-  /** banana-i18n message key for the nav label. Must exist in all i18n/*.json files. */
+  target: 'primary'  // 'explorer-side' planned for Phase 2
   messageKey: string
-
-  /**
-   * Position in the primary nav among all merged items.
-   * Use a numeric index (0-based) or 'after:{id}' referencing a
-   * MAIN_NAVIGATION_ITEMS entry id (e.g. 'after:learn').
-   */
   navPosition: number | `after:${string}`
 }
 
-export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
-  // Populate with real sources when available.
-  // Example:
-  // {
-  //   id: 'terms-of-use',
-  //   strategy: 'markdown-url',
-  //   remoteUrl: 'https://example.org/portal-docs/terms.md',
-  //   localPath: 'terms-of-use',
-  //   overrideFrontmatter: { title: 'Terms of Use' },
-  //   navEntry: {
-  //     target: 'primary',
-  //     messageKey: 'nav-terms',
-  //     navPosition: 'after:about',
-  //   },
-  // },
-]
+// Phase 1 example:
+// {
+//   id: 'terms-of-use',
+//   strategy: 'markdown-url',
+//   remoteUrl: 'https://example.org/portal-docs/terms.md',
+//   localPath: 'terms-of-use',
+//   locale: 'en',
+//   overrideFrontmatter: { title: 'Terms of Use' },
+//   navEntry: {
+//     target: 'primary',
+//     messageKey: 'nav-terms',
+//     navPosition: 'after:about',
+//   },
+// }
+
+// Phase 2 example (when multi-locale is implemented):
+// {
+//   id: 'api-docs',
+//   strategy: 'markdown-url',
+//   localPath: 'api-overview',
+//   localeFiles: {
+//     en: 'https://example.org/docs/api.md',
+//     fr: 'https://example.org/docs/fr/api.md',
+//     ar: 'https://example.org/docs/ar/api.md',
+//   },
+//   overrideFrontmatter: { title: 'API Overview' },
+//   navEntry: {
+//     target: 'primary',
+//     messageKey: 'nav-api-docs',
+//     navPosition: 'after:api-explorer',
+//   },
+// }
 ```
 
 **Consequences:**
 - The script imports this config directly; no discovery, no runtime reading.
 - Adding a new remote source requires a code change to this file and a deploy — this is intentional. Remote sources are explicit declarations, not dynamic.
+- Phase 1 sources use `remoteUrl` + `locale`; Phase 2 will use `localeFiles` instead. Both can coexist in the same config file.
+- Gitignore prevents fetched files from being committed; they are always regenerated from remote sources at build time.
 
 ---
 
@@ -164,20 +126,19 @@ The remote Markdown file must not:
 
 ---
 
-## 4. Locale: English by default; multi-locale planned but not implemented
+## 4. Locale: English by default; multi-locale reserved for Phase 2
 
 **Decision:** In Phase 1, fetched files are written to `content/en/[localPath].md`. The locale defaults to `'en'` unless `source.locale` is explicitly set. Other locales fall back to the English file via the existing fallback chain in `config/languages.ts`.
 
 **Context:** The current content directory is structured as `content/[locale]/`. The existing `useLocalizedContentPage` composable walks a fallback chain when a locale-specific file is absent. Remote content declared without an explicit locale will therefore be served to visitors of all locales via the English fallback — which is correct for Phase 1, where the remote source is English-only content.
 
-**Multi-locale planned shape (Phase 2, not implemented):** When the same content is available in multiple languages, a single source entry should declare a primary file and locale-specific override URLs. The shape reserved for this:
+**Multi-locale feature (Phase 2):** When the same content is available in multiple languages from different remote URLs, a single source entry will declare locale-specific URLs. The shape reserved for this:
 
 ```ts
-// Phase 2 — not yet in RemoteContentSource; shown here for planning purposes only.
-// When implemented, this replaces the single `remoteUrl` + `locale` fields.
 localeFiles?: {
   [localeCode: string]: string  // locale code → remote URL for that locale's file
 }
+
 // Example:
 // localeFiles: {
 //   en: 'https://example.org/docs/terms.md',
@@ -188,11 +149,22 @@ localeFiles?: {
 
 Each `localeFiles` entry would be fetched and written to the appropriate `content/[locale]/[localPath].md` path. The fallback chain handles locales not listed.
 
-**Decision deferred:** The Phase 1 type uses `locale?: string` (a single locale, defaults to `'en'`). When Phase 2 multi-locale is implemented, `locale` and `remoteUrl` are replaced by `localeFiles`. No migration of existing source entries is needed — they just add the new field. The transition is non-breaking.
+**Phase 1 shape uses single-locale fields:**
+- `remoteUrl`: URL for the primary file (typically English)
+- `locale?: string`: which locale directory to write to (defaults to `'en'`)
+
+**Phase 2 transition (non-breaking):**
+- Add `localeFiles` as an optional field in the type
+- When Phase 2 script is implemented: check if `localeFiles` exists; if so, fetch all per-locale URLs; else fall back to single-URL mode
+- Existing Phase 1 entries (with `remoteUrl` + `locale`) continue to work unchanged
+- New Phase 2 entries use `localeFiles` instead
+- No migration of existing entries needed
 
 **Consequences:**
-- Phase 1 sources do not need to change when Phase 2 is implemented; the script adds a branch for `localeFiles` and falls through to the single-file path when it is absent.
-- The reserved `localeFiles` shape should appear in the type file as a comment block so future implementers can see the intended form before they design it.
+- Phase 1 sources do not need to change when Phase 2 is implemented
+- The `localeFiles` field is now reserved in the type (`config/remoteContentSources.ts`) with full documentation so future implementers understand the intent
+- Script logic in Phase 2 must prioritize `localeFiles` if present, falling through to single-URL path when absent
+- Per-locale `overrideFrontmatter` handling is deferred to Phase 2 design
 
 ---
 

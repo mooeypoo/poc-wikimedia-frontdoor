@@ -39,8 +39,7 @@ function remoteSourceToNavLink(
 	localeCode: string,
 	bananaI18n: (key: string) => string
 ): MainNavigationLink {
-	const sourceLocale = source.locale ?? 'en'
-	const path = `/${ sourceLocale }/${ source.localPath }`
+	const path = `/${ source.localPath }`
 
 	return {
 		id: source.id,

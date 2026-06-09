@@ -119,7 +119,7 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Language fallback chains
 - OAuth client ID and endpoint URLs
 - Scalar configuration defaults
-- Wiki content sync sources
+- Remote content sources (Markdown, HTML, or MediaWiki API URLs fetched at build time; see `config/remoteContentSources.ts`)
 
 Do not hardcode these values anywhere else in the codebase. If a component or composable needs a config value, it imports from `config/`.
 
