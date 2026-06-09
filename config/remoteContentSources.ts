@@ -99,4 +99,17 @@ export interface RemoteContentSource {
  *   },
  * }
  */
-export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = []
+export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
+	{
+		id: 'wikimedia-spectral-ruleset',
+		strategy: 'markdown-url',
+		remoteUrl: 'https://gitlab.wikimedia.org/repos/ci-tools/wikimedia-spectral-ruleset/-/raw/main/README.md?ref_type=heads',
+		localPath: 'demo-remote-markdown',
+		overrideFrontmatter: { title: 'Demo Remote Markdown' },
+		navEntry: {
+			target: 'primary',
+			messageKey: 'nav-remote-md',
+			navPosition: 'after:about'
+		}
+	}
+]

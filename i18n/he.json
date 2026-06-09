@@ -76,5 +76,6 @@
   "search-results-locale-heading": "תוצאות ב{{bidi:$1}}",
   "search-no-locale-results": "אין תוצאות ב{{bidi:$1}} עבור {{bidi:$2}}.",
   "search-all-languages-cta": "חפש בכל השפות",
-  "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה."
+  "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה.",
+  "nav-remote-md": "Remote MD"
 }
