@@ -144,5 +144,8 @@
   "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma.",
   "search-results-locale-heading": "Resultados en {{bidi:$1}}",
   "search-all-languages-cta": "Buscar en todos los idiomas",
-  "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}."
+  "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}.",
+  "content-page-nav-label": "Page navigation",
+  "content-heading-anchor-label": "Link to this section",
+  "content-external-link-label": "external link"
 }

@@ -135,5 +135,17 @@
   "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد.",
   "search-results-locale-heading": "نتایج به زبان {{bidi:$1}}",
   "search-all-languages-cta": "جستجو در همه زبان‌ها",
-  "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد."
+  "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد.",
+  "content-page-nav-label": "Page navigation",
+  "header-search-button-label": "Search",
+  "nav-utility-label": "Utility navigation",
+  "header-settings-label": "Settings",
+  "explorer-endpoint-fallback": "Endpoint",
+  "explorer-module-unavailable": "Not available for this project",
+  "explorer-api-modules-title": "API modules",
+  "header-search-placeholder": "Search the developer portal",
+  "header-login-label": "Log in",
+  "content-external-link-label": "external link",
+  "nav-primary-label": "Site navigation",
+  "content-heading-anchor-label": "Link to this section"
 }
