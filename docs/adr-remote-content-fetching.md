@@ -293,6 +293,47 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 
 ---
 
+## Rejected Alternative: MDX Support
+
+**Why MDX was considered:** Nuxt Content's constraint that fetched files must be in **MDC format** (Markdown with Vue component syntax `::component-name`) rather than **MDX** (JSX-based Markdown) might seem limiting if a remote source only provides MDX content with `import` statements and JSX component syntax.
+
+**Why MDX is rejected for Phase 1 and 2:**
+
+1. **No native support in Nuxt Content v3.** MDX is a framework-agnostic format that requires compilation to JavaScript. Nuxt Content uses Remark + Micromark for parsing and outputs a Markdown AST, which ContentRenderer then renders to HTML. MDX requires the `@mdx-js/mdx` compiler (JavaScript/bundler-centric), not a Vue parser. No direct bridge exists.
+
+2. **Framework mismatch.** MDX is React-first; Vue integration is non-trivial. The `remark-mdx` plugin only handles tokenization, not compilation or execution. Adapting MDX for Vue would require custom work.
+
+3. **Security and predictability.** MDX files contain `import` statements and arbitrary JavaScript. Executing untrusted remote MDX at build time introduces supply-chain risk. MDC constrains content to Vue component slots and props — much safer.
+
+4. **No identified use case.** Today, no remote content sources require MDX. All documented Phase 2 sources (wiki pages, external HTML) can be converted to Markdown; if component integration is needed, MDC provides that.
+
+**If MDX support becomes necessary in the future:**
+
+1. **Assess the real need:** Is the remote source team genuinely unable to provide Markdown or MDC? Or do they need interactive React components? If the latter, a separately-hosted sandbox might be more appropriate than embedding in the portal.
+
+2. **Evaluate the cost:** Adding MDX support would require:
+   - Installing `@mdx-js/mdx` and related compiler dependencies (bundler integration)
+   - Custom remark plugin or build-time compiler bridge to compile MDX → Vue-renderable components
+   - A Nuxt Content integration layer to handle MDX files separately from Markdown
+   - Security review of imported remote code (imports in fetched files)
+   - Performance impact: MDX compilation is more expensive than Markdown parsing
+
+3. **Alternative: MDX in a separate surface.** If a future content source truly requires MDX + JSX, consider:
+   - Hosting that content in a separate Nuxt app with native MDX support (via `@mdx-js/mdx` + React, or via Comark when available)
+   - Embedding that app as an `<iframe>` in the portal, if isolation is acceptable
+   - This avoids mixing MDX and MDC compilation pipelines
+
+4. **Future Nuxt/MDC direction:** The Vue/Nuxt team is deprecating MDC in favor of **Comark** (framework-agnostic, AI-friendly, no longer Vue-specific). MDX may gain traction in this ecosystem; revisit this decision when Comark is adopted.
+
+**Constraint going forward:** Remote content sources must provide either:
+- **Markdown** (`.md`) with optional MDC component syntax — required for Phase 1
+- **HTML** — convertible to Markdown via Phase 2b
+- **MediaWiki wiki pages** — fetchable via Action API and convertible via Phase 2c
+
+**Do not** accept MDX, JSX, or import-heavy content without an explicit architectural decision to support it.
+
+---
+
 ## Corrections to existing documentation
 
 | Document | Section | Required correction |
