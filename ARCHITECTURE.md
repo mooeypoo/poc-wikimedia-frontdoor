@@ -47,7 +47,6 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 ├── app/                        # Nuxt 4 app directory
 │   ├── pages/
 │   │   ├── index.vue           # Landing page (static, pre-rendered)
-│   │   ├── login.vue           # Prototype developer login (Experiment 2 → real OAuth)
 │   │   ├── account.vue         # Prototype account dashboard (token management)
 │   │   ├── explorer/
 │   │   │   └── index.vue       # Explorer page (client-only, ssr: false)
@@ -62,7 +61,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
 │   │   └── explorer-route-navigation.client.ts  # Full reload across /explorer boundary
 │   ├── utils/
-│   │   ├── localeAwarePath.ts   # Locale-prefixed paths (login, account, content)
+│   │   ├── localeAwarePath.ts   # Locale-prefixed paths (account, content)
 │   │   ├── openUrlInNewTab.ts    # Client-only helper for Meta-Wiki / doc links opened from composables
 │   │   ├── accountTokenSecret.ts # Masking and clipboard helpers for token list items
 │   │   ├── accountTokenRowActions.ts # OAuth list overflow menu items and action predicates
@@ -77,7 +76,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── mainNavigation.ts       # Primary shell nav order and paths
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
-│   ├── auth.ts                 # Login/account paths, Meta-Wiki OAuth URLs, prototype defaults
+│   ├── auth.ts                 # Account path, Meta-Wiki OAuth URLs, prototype defaults
 │   ├── tokenManagement.ts      # Prototype token row types and seed data
 │   └── scalar.js               # Scalar component defaults
 │
@@ -166,12 +165,11 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
-| `useLoginPath()` / `useAccountPath()` | Locale-aware paths for login and account routes (`buildLocaleAwarePath` in `app/utils/localeAwarePath.ts`) |
-| `usePrototypeAuthSession()` | Prototype sign-in/out, route guard, navigation; wraps `prototypeAuthSession` store (Experiment 2 → `useOAuthSession`) |
-| `useLoginPage()` | Login form state, banana labels, submit handler |
+| `useAccountPath()` | Locale-aware path for the account dashboard (`buildLocaleAwarePath` in `app/utils/localeAwarePath.ts`) |
+| `usePrototypeAuthSession()` | Prototype account session seeding and reset; wraps `prototypeAuthSession` store (Experiment 2 → `useOAuthSession`) |
 | `useAccountDashboardPage()` | Account page labels and aria strings (UI layer) |
 | `useDeveloperTokenDashboard()` | Token list state, list item view-models, metadata label prefixes, Meta-Wiki URLs from `config/auth.ts`, delete/manage actions |
-| `useShellAuthNavigation()` | Shell header: **Log in** → `/login` when signed out; **wiki username** → `/account` when prototype session is active |
+| `useShellAuthNavigation()` | Shell header link to `/account`; shows prototype wiki username when a session is active |
 
 **Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards; `AccountTokenSecretCell` handles masked credentials.
 

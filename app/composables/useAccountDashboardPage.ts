@@ -14,9 +14,8 @@ export function useAccountDashboardPage() {
 	const { $bananaI18n } = useNuxtApp()
 	const {
 		username,
-		requireAuthentication,
-		ensureDashboardSeedData,
-		signOutAndGoToLogin
+		initializePrototypeAccountSession,
+		resetPrototypeAccountSession
 	} = usePrototypeAuthSession()
 	const tokenDashboard = useDeveloperTokenDashboard()
 
@@ -73,9 +72,8 @@ export function useAccountDashboardPage() {
 	// (refs nested under `tokenDashboard` do not auto-unwrap in Vue templates).
 	return {
 		username,
-		requireAuthentication,
-		ensureDashboardSeedData,
-		signOutAndGoToLogin,
+		initializePrototypeAccountSession,
+		resetPrototypeAccountSession,
 		...tokenDashboard,
 		pageTitleBefore,
 		pageTitleAfter,

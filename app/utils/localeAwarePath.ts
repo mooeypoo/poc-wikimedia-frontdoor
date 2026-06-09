@@ -4,7 +4,7 @@ export const DEFAULT_CONTENT_LOCALE = 'en'
 /**
  * Builds a locale-aware app route path for `prefix_except_default` i18n strategy.
  *
- * @param basePath - Locale-agnostic path (e.g. `/login`, `/account`).
+ * @param basePath - Locale-agnostic path (e.g. `/account`, `/get-started`).
  * @param localeCode - Active interface / content locale code.
  * @returns Path with locale prefix when required.
  */

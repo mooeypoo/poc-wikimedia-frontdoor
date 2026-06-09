@@ -13,7 +13,7 @@ export const usePrototypeAuthSessionStore = defineStore( 'prototypeAuthSession',
 	/**
 	 * Records a prototype session for the given wiki username.
 	 *
-	 * @param wikiUsername - Username entered on the login form (trimmed by caller).
+	 * @param wikiUsername - Wiki username shown on the account dashboard.
 	 * @returns Nothing.
 	 */
 	function signIn( wikiUsername: string ): void {

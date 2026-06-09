@@ -3,21 +3,17 @@
  *
  * Real Wikimedia OAuth 2.0 + PKCE integration is planned for Experiment 2
  * (`stores/oauthSession` + `useOAuthSession()` per ARCHITECTURE.md). Prototype
- * sign-in uses `stores/prototypeAuthSession.ts` until that work lands.
+ * account dashboard state uses `stores/prototypeAuthSession.ts` until that work lands.
  */
-
-/** Route to the developer login page (locale prefix applied at runtime). */
-export const LOGIN_PAGE_PATH = '/login'
 
 /**
  * Route to the developer account dashboard (token management prototype).
- * Accessible after prototype sign-in from the login page.
+ * Open directly at `/account` (locale prefix applied at runtime when required).
  */
 export const ACCOUNT_PAGE_PATH = '/account'
 
 /**
- * Fallback wiki username when the prototype login form is submitted empty.
- * Not shown in the UI; only used to seed the prototype session.
+ * Default wiki username for the prototype account dashboard when `/account` is opened directly.
  */
 export const PROTOTYPE_DEFAULT_WIKI_USERNAME = 'ExampleDeveloper'
 

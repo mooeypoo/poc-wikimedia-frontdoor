@@ -12,9 +12,8 @@ import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumer
  */
 const {
 	username,
-	requireAuthentication,
-	ensureDashboardSeedData,
-	signOutAndGoToLogin,
+	initializePrototypeAccountSession,
+	resetPrototypeAccountSession,
 	hasDeveloperJwts,
 	hasOAuthConsumers,
 	requestDeveloperJwtUrl,
@@ -66,8 +65,7 @@ const {
 } = useAccountDashboardPage()
 
 onMounted( () => {
-	requireAuthentication()
-	ensureDashboardSeedData()
+	initializePrototypeAccountSession()
 } )
 </script>
 
@@ -205,7 +203,7 @@ onMounted( () => {
 			<CdxButton
 				action="destructive"
 				weight="normal"
-				@click="signOutAndGoToLogin"
+				@click="resetPrototypeAccountSession"
 			>
 				{{ signOutButtonLabel }}
 			</CdxButton>

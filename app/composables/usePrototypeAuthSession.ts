@@ -1,65 +1,60 @@
+import { PROTOTYPE_DEFAULT_WIKI_USERNAME } from '../../config/auth'
 import { usePrototypeAuthSessionStore } from '../../stores/prototypeAuthSession'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { useAccountPath } from './useAccountPath'
-import { useLoginPath } from './useLoginPath'
 
 /**
- * Prototype authentication session for login and account routes.
+ * Prototype account dashboard session state.
  *
  * Wraps `prototypeAuthSession` and `prototypeDeveloperTokens` stores (Experiment 2 → `useOAuthSession`).
+ * The account page is opened directly at `/account`; no separate login route.
  *
  * @returns {{
  *   isAuthenticated: import('vue').ComputedRef<boolean>,
  *   username: import('vue').ComputedRef<string>,
  *   accountPath: import('vue').ComputedRef<string>,
- *   loginPath: import('vue').ComputedRef<string>,
- *   signInAndGoToAccount: (wikiUsername: string) => void,
- *   signOutAndGoToLogin: () => void,
- *   requireAuthentication: () => void,
+ *   initializePrototypeAccountSession: () => void,
+ *   resetPrototypeAccountSession: () => void,
  *   ensureDashboardSeedData: () => void
- * }} Session state, locale-aware paths, and navigation helpers.
+ * }} Session state, locale-aware account path, and dashboard helpers.
  */
 export function usePrototypeAuthSession() {
 	const prototypeAuthSessionStore = usePrototypeAuthSessionStore()
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
 	const { accountPath } = useAccountPath()
-	const { loginPath } = useLoginPath()
-	const router = useRouter()
 
 	const isAuthenticated = computed( () => prototypeAuthSessionStore.isAuthenticated )
 	const username = computed( () => prototypeAuthSessionStore.username )
 
 	/**
-	 * Starts a prototype session and navigates to the account dashboard.
+	 * Ensures a prototype session exists for the account dashboard (client-only).
 	 *
-	 * @param wikiUsername - Username from the login form.
-	 * @returns Nothing.
-	 */
-	function signInAndGoToAccount( wikiUsername: string ): void {
-		prototypeAuthSessionStore.signIn( wikiUsername )
-		prototypeDeveloperTokensStore.resetToSeedData()
-		router.push( accountPath.value )
-	}
-
-	/**
-	 * Clears the prototype session and returns to the login page.
+	 * Seeds the default wiki username when `/account` is opened without an active session.
 	 *
 	 * @returns Nothing.
 	 */
-	function signOutAndGoToLogin(): void {
-		prototypeAuthSessionStore.signOut()
-		router.push( loginPath.value )
-	}
-
-	/**
-	 * Redirects unauthenticated visitors to the login page (client-only guard).
-	 *
-	 * @returns Nothing.
-	 */
-	function requireAuthentication(): void {
-		if ( import.meta.client && !prototypeAuthSessionStore.isAuthenticated ) {
-			router.replace( loginPath.value )
+	function initializePrototypeAccountSession(): void {
+		if ( !import.meta.client ) {
+			return
 		}
+
+		if ( !prototypeAuthSessionStore.isAuthenticated ) {
+			prototypeAuthSessionStore.signIn( PROTOTYPE_DEFAULT_WIKI_USERNAME )
+			prototypeDeveloperTokensStore.resetToSeedData()
+		}
+
+		ensureDashboardSeedData()
+	}
+
+	/**
+	 * Clears the prototype session and restores default dashboard seed data in place.
+	 *
+	 * @returns Nothing.
+	 */
+	function resetPrototypeAccountSession(): void {
+		prototypeAuthSessionStore.signOut()
+		prototypeDeveloperTokensStore.resetToSeedData()
+		prototypeAuthSessionStore.signIn( PROTOTYPE_DEFAULT_WIKI_USERNAME )
 	}
 
 	/**
@@ -85,10 +80,8 @@ export function usePrototypeAuthSession() {
 		isAuthenticated,
 		username,
 		accountPath,
-		loginPath,
-		signInAndGoToAccount,
-		signOutAndGoToLogin,
-		requireAuthentication,
+		initializePrototypeAccountSession,
+		resetPrototypeAccountSession,
 		ensureDashboardSeedData
 	}
 }

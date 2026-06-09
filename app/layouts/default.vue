@@ -30,7 +30,7 @@ const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
 const {
 	headerAuthLinkPath,
-	headerLoginLabel,
+	headerAccountLabel,
 	headerAuthLinkAccessibleLabel,
 	isAuthenticated: isHeaderAuthAuthenticated,
 	username: headerAuthUsername
@@ -255,11 +255,11 @@ useHead( {
 							</div>
 							<NuxtLink
 								:to="headerAuthLinkPath"
-								class="frontdoor-shell__login-link"
+								class="frontdoor-shell__account-link"
 								:aria-label="isHeaderAuthAuthenticated ? headerAuthLinkAccessibleLabel : undefined"
 							>
 								<bdi v-if="isHeaderAuthAuthenticated">{{ headerAuthUsername }}</bdi>
-								<template v-else>{{ headerLoginLabel }}</template>
+								<template v-else>{{ headerAccountLabel }}</template>
 							</NuxtLink>
 						</div>
 					</header>
@@ -400,7 +400,7 @@ useHead( {
 	flex-shrink: 0;
 }
 
-.frontdoor-shell__login-link {
+.frontdoor-shell__account-link {
 	flex-shrink: 0;
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );

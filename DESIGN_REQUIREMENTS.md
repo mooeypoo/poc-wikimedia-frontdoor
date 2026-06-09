@@ -17,7 +17,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 **In scope (implemented as design exploration):**
 
 - **Layout system** — Codex responsive grid (mobile 4-col, tablet 8-col, desktop / desktop-wide 24-col), 2-panel desktop pattern, and shell column split; see **Layout system** below for full specification and prototype status
-- Shell header with search, settings, language, and login placeholders
+- Shell header with search, settings, language, and account link
 - Primary site navigation below the header
 - API Explorer page layout, module rail, project controls, loading states
 - Scalar visual alignment with Codex tokens
@@ -25,7 +25,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 **Explicitly prototype / not final:**
 
 - The site is not yet fully responsive
-- Search, settings, and login controls are present but **disabled** or non-functional
+- Search and settings controls are present but **disabled** or non-functional; the account link navigates to `/account`
 - API Explorer page's **left side nav** links use `href="#"` and do not route anywhere
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
