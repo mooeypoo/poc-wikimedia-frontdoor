@@ -1,6 +1,6 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** Proposed — pending design sign-off and ambiguity resolution (see §9)
+**Status:** In progress — Phase A complete; Phase B ready to begin
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration
 
 ---
@@ -312,19 +312,49 @@ Shared prerequisite for both Enterprise modes.  Neither Enterprise entry need be
 
 ## 7. Scalar configuration properties for limited mode — gap analysis
 
-The following UI elements are listed in the product requirements as candidates for hiding in "extreme limited" mode.  Their current status in the Scalar configuration API is as follows:
+**Audit date:** 2026-06-09 — `@scalar/api-reference` installed version, `dist/` type declarations inspected directly.
 
-| UI element | Scalar config property | Status |
+### 7.1 Available hide/show flags (complete list)
+
+| Config property | Type | Effect |
 |---|---|---|
-| "Client libraries" section (global) | `hideClientButton`? | **Unverified** — needs audit of installed version |
-| Per-endpoint code preview ("Client libraries") | Unknown | **Unverified** |
-| "Test request" button | `hideTestRequestButton: true` | ✅ Supported (already in defaults) |
-| Schema and response example box | Unknown | **Unverified** |
-| Parameter sections | Unknown | **Unverified** |
-| "Responses" section | Unknown | **Unverified** |
-| Download spec button | `hideDownloadButton: true` | ✅ Supported (already in defaults) |
+| `hideClientButton` | `boolean` | Hides the global "Client libraries" button/panel |
+| `hiddenClients` | `true \| string[] \| Record<string, boolean \| string[]>` | Hides all (`true`) or specific HTTP client code snippets per endpoint |
+| `hideTestRequestButton` | `boolean` | Hides the "Test request" / "Try it" button |
+| `hideDownloadButton` | `boolean` | Hides the spec download button |
+| `hideModels` | `boolean` | Hides the global Models / Schemas section |
+| `hideSearch` | `boolean` | Hides the search bar |
+| `hideDarkModeToggle` | `boolean` | Hides the dark/light mode toggle |
+| `showSidebar` | `boolean` | Shows/hides the Scalar sidebar (we use `true` for enterprise modes) |
+| `showDeveloperTools` | `'never' \| 'always' \| 'localhost'` | Controls developer tools panel |
+| `customCss` | `string` | Injects arbitrary CSS — usable as an escape hatch (see §7.2) |
 
-**Action required (§9.1):** A targeted audit of the installed `@scalar/api-reference` package's configuration type definitions and changelog is needed before limited mode can be scoped.  This is a prerequisite — if Scalar cannot hide the required elements, a custom component is the fallback, which significantly increases effort.
+### 7.2 Gap analysis against product requirements for limited mode
+
+| Required element to hide | Scalar config flag | Verdict |
+|---|---|---|
+| "Client libraries" section (global) | `hideClientButton: true` | ✅ Supported |
+| Per-endpoint code snippets | `hiddenClients: true` | ✅ Supported |
+| "Test request" button | `hideTestRequestButton: true` | ✅ Supported |
+| Spec download button | `hideDownloadButton: true` | ✅ Supported |
+| Global Models / Schema section | `hideModels: true` | ✅ Supported |
+| Per-endpoint parameter sections | **No config flag** | ❌ Not supported via config |
+| Per-endpoint "Responses" section | **No config flag** | ❌ Not supported via config |
+| Inline request/response schema boxes | **No config flag** | ❌ Not supported via config |
+
+### 7.3 Conclusion: limited mode cannot be fully achieved by config alone
+
+The three unsupported elements (parameters, responses, inline schemas) are structural to Scalar's per-endpoint rendering.  There is no configuration flag to suppress them.
+
+**Three paths forward for Phase D:**
+
+**Path D-a — Config-only (partial):** Apply all supported hide flags.  Parameters, responses, and inline schemas remain visible.  This may be acceptable if the product's working definition of "limited" is refined to match what config can actually deliver.
+
+**Path D-b — CSS injection via `customCss`:** Scalar accepts a `customCss` string that is injected into the rendered document.  CSS selectors could visually hide parameter/response sections.  This is fragile — it depends on Scalar's internal DOM structure and class names, which can change across Scalar version upgrades.  Suitable as a short-term workaround; not recommended for long-term maintenance.
+
+**Path D-c — Custom component:** Build `ExplorerEnterpriseEndpointList.vue` that reads the Enterprise spec and renders a minimal endpoint list without Scalar.  This is the highest-effort path (~3 additional days) but the only one that fully satisfies the "extreme limited info" requirement as described.
+
+**Decision needed (§8.1, resolved):** Both modes are built.  Limited mode enters Phase D.  Product chooses which path is acceptable for Phase D based on these findings.  Path D-a or D-b can ship in ~1 day; Path D-c in ~3–4 days.
 
 ---
 
@@ -367,24 +397,30 @@ When switching to enterprise mode, the module rail and project controls disappea
 **Decision needed from:** Design
 **Implementation impact:** CSS grid column spans on the Explorer page.
 
-### 8.5 Technical: Scalar sidebar shows Enterprise tags — but which tags?
+### 8.5 Resolved: Enterprise spec tags — more granular than product described
 
-The product requirement states "Enterprise has one spec per API (Snapshot, On-demand, Realtime), which mimics the current behavior for API modules."  This implies the Enterprise spec YAML already uses OpenAPI `tags` correctly.  However, this has not been verified against the live spec.
+**Finding (Step A1):** The spec at `https://api.enterprise.wikimedia.com/spec/spec.yaml` declares **9 tags**, not the 3 groupings product described ("Snapshot, On-demand, Realtime").  The actual tags and their groupings are:
 
-**Action required:** Load `https://api.enterprise.wikimedia.com/spec/spec.yaml` and confirm:
-- Tags exist in the spec (`tags:` top-level array populated)
-- All operations are tagged
-- Tag names match expected groupings (Snapshot, On-demand, Realtime)
+| Tag name | Product group |
+|---|---|
+| `codes` | Metadata |
+| `languages` | Metadata |
+| `projects` | Metadata |
+| `namespaces` | Metadata |
+| `snapshots` | Snapshot API |
+| `structured-snapshots` | (BETA) Structured Contents Snapshot API |
+| `articles` | On-demand API |
+| `structured-contents` | (Beta) Structured Contents On-demand API |
+| `batches` | Realtime Batch API |
 
-**Implementation impact:** If tags are absent or incorrect in the spec, Scalar's sidebar will render a flat endpoint list.  Tagging would require either forking the spec (not desirable) or a custom grouping overlay.
+All operations in the spec carry `tags:` fields.  Scalar's sidebar will render all 9 tag groups — which is more granular than the 3 groups product anticipated.
 
-### 8.6 Technical: Authorization — Bearer token input mechanism
+**Impact:** The sidebar experience will show 9 sections, not 3.  This may be desirable (fine-grained navigation), but Product should confirm the expectation.  Scalar provides `tagsSorter: 'alpha'` or a custom sort function, and `defaultOpenFirstTag` / `defaultOpenAllTags` to control initial expansion state — all usable in `ENTERPRISE_FULL_SCALAR_OVERRIDES`.
 
-Product states: "If a user already has an Enterprise account, they may request their token credentials and embed them in subsequent calls."
+### 8.6 Resolved: Bearer token security scheme — declared and applied globally
 
-Scalar provides a built-in authentication panel for APIs that declare security schemes.  If the Enterprise spec declares `bearerAuth` (HTTP Bearer token) as a security scheme, Scalar will surface an auth input automatically.
+**Finding (Step A1):** The Enterprise spec declares `bearerAuth` correctly at `components.securitySchemes`:
 
-**Action required:** Confirm the Enterprise spec declares a Bearer token security scheme:
 ```yaml
 components:
   securitySchemes:
@@ -393,9 +429,9 @@ components:
       scheme: bearer
 ```
 
-If declared, Scalar handles the auth input natively.  If not, either the spec needs updating (not our repo) or a custom auth overlay is required.
+The top-level `security: [{ bearerAuth: [] }]` applies it globally to all operations.  Scalar will surface a Bearer token input in its auth panel automatically — no custom auth overlay is needed.
 
-**Also ambiguous:** The requirement states "if an auth header is provided, confirm that requests can be successfully made."  This implies a verification step, not just a UI step — CORS policy, preflight handling, and Scalar's proxy behavior all affect whether test requests from the browser succeed against `api.enterprise.wikimedia.com`.
+**Remaining open question:** Whether test requests from the browser succeed end-to-end depends on CORS preflight behavior for authenticated requests.  This is verified in Step C1, not Step A1.  A OPTIONS preflight for a request with an `Authorization` header may behave differently from a plain GET, even if the spec itself is proxied.
 
 ### 8.7 Technical: ExplorerScalarFocus composable — compatibility with enterprise mode
 
@@ -413,11 +449,22 @@ Removing `isActive` from the config and making it computed from `explorerMode` i
 
 Requirements note "Account creation remains on the Enterprise website."  Should the Enterprise mode surface a prominent link/CTA to the Enterprise registration page?  This affects the UI layout in enterprise mode but is unspecified.
 
-### 8.10 Technical: CORS / network access for the Enterprise spec
+### 8.10 Resolved: CORS — spec requires a server-side proxy
 
-The Enterprise spec at `https://api.enterprise.wikimedia.com/spec/spec.yaml` is fetched by Scalar directly from the browser (not proxied through the Front Door server, unlike the community discovery flow).  If the Enterprise spec server does not return appropriate CORS headers, Scalar will fail to load it in the browser.
+**Finding (Step A1):** The response from `https://api.enterprise.wikimedia.com/spec/spec.yaml` contains **no CORS headers**:
 
-**Action required:** Verify CORS headers on `api.enterprise.wikimedia.com/spec/spec.yaml` before committing to browser-side spec loading.  If CORS is blocked, the spec must be proxied through a new server route (similar to `/server/api/discovery.get.ts`).
+```
+HTTP/2 200
+content-type: text/yaml; charset=utf-8
+x-request-id: ...
+server: istio-envoy
+```
+
+There is no `Access-Control-Allow-Origin` header.  The spec cannot be fetched directly by the browser.  Scalar will fail silently or throw a CORS error if given this URL as `spec.url`.
+
+**Decision:** A server-side proxy route is required — `/server/api/enterprise-spec.get.ts` — following the same pattern as `/server/api/discovery.get.ts`.  The route fetches the spec from the Enterprise server and forwards the response.  `ENTERPRISE_SPEC_URL` in `config/enterpriseExplorer.ts` must point to this proxy route (`/api/enterprise-spec`), not to the external URL directly.
+
+**Implementation impact (Step B1):** The proxy route must be created in Phase B alongside `config/enterpriseExplorer.ts`.  The config constant `ENTERPRISE_SPEC_URL` is set to `/api/enterprise-spec` from the start.  The external URL is an internal constant in the proxy route, not exported.
 
 ---
 
@@ -425,29 +472,15 @@ The Enterprise spec at `https://api.enterprise.wikimedia.com/spec/spec.yaml` is 
 
 The following must be resolved before implementation work starts, in priority order:
 
-### 9.1 Scalar capability audit (blocking for limited mode)
+### 9.1 Resolved: Scalar capability audit complete (see §7)
 
-Load the installed version of `@scalar/api-reference` and enumerate all available configuration properties.  Specifically confirm whether the following can be hidden via config:
+All configuration flags enumerated from `@scalar/api-reference` type declarations.  Limited mode cannot be fully achieved by config alone — parameters, responses, and inline schemas have no hide flags.  Three paths identified in §7.3; Product to choose.
 
-- Schema / response examples
-- Parameter sections
-- "Responses" section
-- Client library code preview per endpoint
+### 9.2 Resolved: Enterprise spec verification complete (see §8.5, §8.6, §8.10)
 
-**Who:** Engineering
-**When:** Before limited-mode implementation is scoped
-**Output:** List of supported hide flags, or confirmation that a custom component is required
-
-### 9.2 Enterprise spec verification (blocking for all implementation)
-
-Load `https://api.enterprise.wikimedia.com/spec/spec.yaml` and confirm:
-
-- CORS allows browser-side fetch (or decide to proxy)
-- Tags are present and correctly represent Snapshot/On-demand/Realtime
-- Bearer token security scheme is declared
-
-**Who:** Engineering (30-minute task)
-**When:** Immediately
+- **CORS:** No CORS headers — server proxy required (added to Phase B as Step B1a)
+- **Tags:** 9 tags present, all operations tagged; more granular than product described
+- **Bearer auth:** Correctly declared and globally applied
 
 ### 9.3 Resolved: both modes are built and toggled via config
 
@@ -480,69 +513,76 @@ Each step has a defined verification criterion.  Steps within the same phase are
 
 ### Phase A: Prerequisites — no code, unblocks everything
 
-#### Step A1 — Verify the Enterprise spec (Engineering, ~30 min)
+#### Step A1 — Verify the Enterprise spec ✅ Complete
 
-**What:**
-1. Fetch `https://api.enterprise.wikimedia.com/spec/spec.yaml` from a browser and from `curl` with `--head` to inspect response headers.
-2. Check `Access-Control-Allow-Origin` header — if absent or restricted, a proxy route is required.
-3. Open the YAML and check for a top-level `tags:` array; verify all `paths` operations carry `tags:` fields.
-4. Check `components.securitySchemes` for a Bearer HTTP scheme.
+**Findings:**
+- **CORS:** ❌ No `Access-Control-Allow-Origin` header. Spec cannot be browser-fetched. Server proxy required — added to Phase B as Step B1a.
+- **Tags:** ✅ 9 tags present, all operations tagged. Groups: Metadata (codes, languages, projects, namespaces), Snapshot API (snapshots, structured-snapshots), On-demand API (articles, structured-contents), Realtime Batch API (batches). More granular than product's "3 APIs" description — Product confirmation needed (§8.5).
+- **Auth:** ✅ `bearerAuth` HTTP Bearer scheme declared at `components.securitySchemes`, applied globally via top-level `security:`. Scalar will surface auth input natively.
 
-**Verify:**
-- [ ] CORS: spec is browser-fetchable without a proxy, OR decision is made to proxy through `/server/api/enterprise-spec.get.ts`
-- [ ] Tags: `tags:` array exists and matches expected groupings (Snapshot, On-demand, Realtime, or current actual values)
-- [ ] Auth: Bearer security scheme is declared and applied to operations
-
-**Output:** Document findings inline in §8.5, §8.6, §8.10 of this ADR.  Unblocks all subsequent steps.
+Full findings recorded in §8.5, §8.6, §8.10.
 
 ---
 
-#### Step A2 — Scalar capability audit (Engineering, ~2–4 hours)
+#### Step A2 — Scalar capability audit ✅ Complete
 
-**What:**
-1. Open `node_modules/@scalar/api-reference/dist/` (or the package's TypeScript types) and enumerate the full configuration interface.
-2. Record every property that begins with `hide` or affects rendering of: client code examples, schema boxes, parameter sections, response sections.
-3. Test each candidate flag against a local Scalar instance with the Enterprise spec URL.
+**Findings:** All configuration flags enumerated from `@scalar/api-reference` dist type declarations (`@scalar/types/dist/api-reference/api-reference-configuration.d.ts`).
 
-**Verify:**
-- [ ] §7 table is fully populated — every "Unverified" row is resolved to a specific flag name or "Not supported"
-- [ ] If any required element cannot be hidden by config alone, the custom component path is explicitly acknowledged
+**Supported hide flags:**
+- `hideClientButton: true` — hides global client libraries button
+- `hiddenClients: true` — hides all per-endpoint code snippets
+- `hideTestRequestButton: true` — hides "Test request" button
+- `hideDownloadButton: true` — hides spec download
+- `hideModels: true` — hides global Models/Schemas section
+- `hideSearch: true` — hides search
+- `customCss: string` — CSS escape hatch (see Path D-b in §7.3)
 
-**Output:** Updated §7 table.  Determines whether Phase D is 2 days or 5 days.
+**Not supported:**
+- Per-endpoint parameter sections — no flag
+- Per-endpoint "Responses" section — no flag
+- Inline request/response schema boxes — no flag
+
+**Conclusion:** Limited mode cannot be fully achieved by config alone. Three paths documented in §7.3. Full findings in §7.
 
 ---
 
 ### Phase B: Infrastructure — mode switching
 
-#### Step B1 — Create `config/enterpriseExplorer.ts` (Engineering, ~1 hour)
+#### Step B1 — Create `config/enterpriseExplorer.ts` and proxy route (Engineering, ~2 hours)
 
 **What:**
-Create `/config/enterpriseExplorer.ts` with:
-- `ENTERPRISE_SPEC_URL` constant
-- `ENTERPRISE_FULL_SCALAR_OVERRIDES` — stub object (will be populated in Step C1)
-- `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` — stub object (will be populated in Step D1)
-- JSDoc on each export
+
+**B1a — Server proxy route** (required due to Step A1 CORS finding):
+Create `/server/api/enterprise-spec.get.ts` following the pattern of `/server/api/discovery.get.ts`.  The route fetches the spec from the external URL and forwards the response body with `content-type: text/yaml`.  The external URL is an internal constant in this route file — not exported, not in `config/`.
+
+**B1b — Config file:**
+Create `/config/enterpriseExplorer.ts`:
+- `ENTERPRISE_SPEC_URL = '/api/enterprise-spec'` — points to the proxy, never the external URL
+- `ENTERPRISE_FULL_SCALAR_OVERRIDES` — `{ showSidebar: true }` (stub; expanded in Step C1)
+- `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` — all supported hide flags applied; path D decision pending (stub until Phase D)
 
 ```ts
-export const ENTERPRISE_SPEC_URL = 'https://api.enterprise.wikimedia.com/spec/spec.yaml'
+export const ENTERPRISE_SPEC_URL = '/api/enterprise-spec'
 
-/** Scalar overrides for the full Enterprise experience. */
 export const ENTERPRISE_FULL_SCALAR_OVERRIDES = {
   showSidebar: true
 }
 
-/** Scalar overrides for the limited Enterprise experience. */
 export const ENTERPRISE_LIMITED_SCALAR_OVERRIDES = {
   showSidebar: true,
   hideTestRequestButton: true,
-  hideDownloadButton: true
-  // remaining flags populated after Step A2 audit
+  hideDownloadButton: true,
+  hideClientButton: true,
+  hiddenClients: true as const,
+  hideModels: true
+  // parameters / responses / inline schemas: path D decision pending (see §7.3)
 }
 ```
 
 **Verify:**
-- [ ] TypeScript compiles with no errors
-- [ ] Config is importable from a composable
+- [ ] `GET /api/enterprise-spec` returns `200` with `content-type: text/yaml` and the spec body
+- [ ] TypeScript compiles, config is importable
+- [ ] No external URL appears outside the proxy route file
 
 ---
 
@@ -705,19 +745,20 @@ Manually set `enabled: false` on each Enterprise entry in turn and confirm behav
 
 ### Summary checklist
 
-| Step | Phase | Blocking | Estimated effort |
+| Step | Phase | Status | Estimated effort |
 |---|---|---|---|
-| A1 — Spec verification | A | Yes (unblocks all) | 30 min |
-| A2 — Scalar audit | A | Yes (unblocks D) | 2–4 hrs |
-| B1 — `config/enterpriseExplorer.ts` | B | No | 1 hr |
-| B2 — Side nav config | B | No | 30 min |
-| B3 — `ExplorerSideNav.vue` | B | After B2 | 2 hrs |
-| B4 — `useEnterpriseExplorer.ts` | B | After B1 | 1 hr |
-| B5 — Explorer page wiring | B | After B3, B4 | 3 hrs |
-| B6 — i18n keys | B | No | 30 min |
-| C1 — Full mode QA | C | After A1, B5 | 1 day |
-| D1 — Limited mode overrides | D | After A2, B5 | 1–3 days |
-| E1 — Toggle verification | E | After C1, D1 | 30 min |
+| A1 — Spec verification | A | ✅ Complete | — |
+| A2 — Scalar audit | A | ✅ Complete | — |
+| B1a — Enterprise spec proxy route | B | Pending | 1 hr |
+| B1b — `config/enterpriseExplorer.ts` | B | Pending | 1 hr |
+| B2 — Side nav config | B | Pending | 30 min |
+| B3 — `ExplorerSideNav.vue` | B | Pending | 2 hrs |
+| B4 — `useEnterpriseExplorer.ts` | B | Pending | 1 hr |
+| B5 — Explorer page wiring | B | Pending | 3 hrs |
+| B6 — i18n keys | B | Pending | 30 min |
+| C1 — Full mode QA | C | Pending | 1 day |
+| D1 — Limited mode (path TBD per §7.3) | D | Pending | 1–3 days |
+| E1 — Toggle verification | E | Pending | 30 min |
 
 ---
 
@@ -736,16 +777,21 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 
 ---
 
-## 12. Decisions deferred from this ADR
+## 12. Decision log
 
-| Decision | Deferred to |
-|---|---|
-| Which Scalar UI elements can be hidden in limited mode | Step A2 audit |
-| URL representation of enterprise mode | Product/Engineering (§8.3) |
-| Enterprise layout specification | Design (§9.5) |
-| Operational separation adequacy | Product (§9.4) |
-| Registration CTA in enterprise view | Design/Product (§8.9) |
-| Bearer token CORS proxy decision | Engineering post Step A1 |
+| Decision | Status | Owner |
+|---|---|---|
+| Which Scalar UI elements can be hidden in limited mode | ✅ Resolved — see §7 | — |
+| CORS proxy required for Enterprise spec | ✅ Resolved — proxy route in Phase B | — |
+| Bearer auth mechanism | ✅ Resolved — native Scalar auth panel | — |
+| Both modes ship as toggled nav entries | ✅ Resolved — see §8.1 | — |
+| Full vs. limited mode first | ✅ Resolved — both built, `enabled` flag controls exposure | — |
+| Enterprise spec tags (9 vs. 3 expected) | Open — confirm expectation | Product |
+| Limited mode path (D-a config / D-b CSS / D-c custom component) | Open | Product |
+| URL representation of enterprise mode | Open | Product / Engineering (§8.3) |
+| Enterprise layout specification | Open | Design (§9.5) |
+| Operational separation adequacy | Open | Product (§9.4) |
+| Registration CTA in enterprise view | Open | Design / Product (§8.9) |
 
 ---
 
@@ -753,13 +799,14 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 
 | File | Nature of change |
 |---|---|
+| `server/api/enterprise-spec.get.ts` | New file — proxy route for Enterprise spec (CORS workaround, see §8.10) |
 | `config/explorerSideNav.js` | Add two Enterprise items with `mode` + `enabled` fields; remove static `isActive` |
-| `config/enterpriseExplorer.ts` | New file — spec URL, `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` |
+| `config/enterpriseExplorer.ts` | New file — `ENTERPRISE_SPEC_URL` (proxy path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` |
 | `app/components/explorer/ExplorerSideNav.vue` | Accept `activeMode` prop, filter by `enabled`, emit `mode-change`, compute `isActive` dynamically |
 | `app/pages/explorer/index.vue` | Add `explorerMode` state, `mode-change` handler, conditional rendering of rail + controls, conditional Scalar config |
 | `app/composables/useEnterpriseExplorer.ts` | New file — returns spec URL + per-mode Scalar overrides |
 | `i18n/en.json` (and other locales) | Two new message keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited` |
-| `ARCHITECTURE.md` | Document three-mode explorer switching pattern and `enabled` toggle mechanism |
+| `ARCHITECTURE.md` | Document three-mode explorer switching pattern, `enabled` toggle mechanism, and spec proxy pattern |
 
 ## Appendix B: Files that will NOT change
 
