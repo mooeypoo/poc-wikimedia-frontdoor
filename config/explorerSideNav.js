@@ -45,7 +45,7 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				id: 'enterprise-apis-limited',
 				messageKey: 'explorer-side-nav-enterprise-apis-limited',
 				mode: 'enterprise-limited',
-				enabled: false
+				enabled: true
 			}
 		]
 	},

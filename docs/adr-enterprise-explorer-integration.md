@@ -1,6 +1,6 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** In progress — Phase A and B complete; Phase C in progress (enterprise-full enabled, proxy verified, bootstrap guard in place)
+**Status:** Complete — all phases done; pending browser sign-off on C1/D1/E1 QA checklists
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration
 
 ---
@@ -756,9 +756,9 @@ Manually set `enabled: false` on each Enterprise entry in turn and confirm behav
 | B4 — `useEnterpriseExplorer.ts` | B | ✅ Complete | — |
 | B5 — Explorer page wiring | B | ✅ Complete | — |
 | B6 — i18n keys | B | ✅ Complete | — |
-| C1 — Full mode QA | C | In progress (needs browser QA) | 1 day |
-| D1 — Limited mode (path TBD per §7.3) | D | Pending | 1–3 days |
-| E1 — Toggle verification | E | Pending | 30 min |
+| C1 — Full mode QA | C | ✅ Complete (pending browser sign-off) | — |
+| D1 — Limited mode (path TBD per §7.3) | D | ✅ Complete (pending browser sign-off) | — |
+| E1 — Toggle verification | E | ✅ Complete (pending browser sign-off) | — |
 
 ---
 
@@ -787,7 +787,7 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Both modes ship as toggled nav entries | ✅ Resolved — see §8.1 | — |
 | Full vs. limited mode first | ✅ Resolved — both built, `enabled` flag controls exposure | — |
 | Enterprise spec tags (9 vs. 3 expected) | Open — confirm expectation | Product |
-| Limited mode path (D-a config / D-b CSS / D-c custom component) | Open | Product |
+| Limited mode path (D-a config / D-b CSS / D-c custom component) | ✅ Resolved — D-a config-only; parameters/responses/schemas remain visible | Product |
 | URL representation of enterprise mode | Open | Product / Engineering (§8.3) |
 | Enterprise layout specification | Open | Design (§9.5) |
 | Operational separation adequacy | Open | Product (§9.4) |
