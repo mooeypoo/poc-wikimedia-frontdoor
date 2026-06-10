@@ -11,7 +11,6 @@ import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { useContentSearch } from '../composables/useContentSearch'
 import { useExplorerMode } from '../composables/useExplorerMode'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
-import type { ExplorerMode } from '../composables/useEnterpriseExplorer'
 
 /**
  * Default layout — the Front Door application shell.
@@ -25,10 +24,6 @@ import type { ExplorerMode } from '../composables/useEnterpriseExplorer'
 const { direction } = useDirection()
 const { explorerMode } = useExplorerMode()
 const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
-
-function onExplorerModeChange( mode: ExplorerMode ): void {
-	explorerMode.value = mode
-}
 const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
@@ -182,7 +177,6 @@ useHead( {
 					<ExplorerSideNav
 					v-if="isExplorerRoute"
 					:active-mode="explorerMode"
-					@mode-change="onExplorerModeChange"
 				/>
 				</div>
 			</template>

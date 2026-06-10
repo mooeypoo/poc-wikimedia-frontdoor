@@ -1,14 +1,20 @@
+import { computed } from 'vue'
+import { explorerModeFromPath } from '../utils/explorerRoute'
 import type { ExplorerMode } from './useEnterpriseExplorer'
 
 /**
- * SSR-safe singleton for the active explorer mode.
+ * Reactive Explorer mode derived from the current route path.
  *
- * Shared between the layout (ExplorerSideNav) and the explorer page so that
- * a mode change in the nav is immediately reflected in the Scalar configuration.
+ * The URL is the single source of truth — community lives at `/explorer`,
+ * Enterprise modes live at `/explorer/enterprise` and
+ * `/explorer/enterprise-limited`. Side-nav navigation is driven by NuxtLink
+ * (see `ExplorerSideNav.vue`), so consumers only need to read this mode
+ * to react to the active route.
  *
- * @returns Reactive explorerMode ref.
+ * @returns The reactive explorer mode.
  */
 export function useExplorerMode() {
-	const explorerMode = useState<ExplorerMode>( 'explorerMode', () => 'community' )
+	const route = useRoute()
+	const explorerMode = computed<ExplorerMode>( () => explorerModeFromPath( route.path ) )
 	return { explorerMode }
 }

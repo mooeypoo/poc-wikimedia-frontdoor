@@ -11,6 +11,7 @@ import { useScalarConfig } from '../../composables/useScalarConfig'
 import { useExplorerMode } from '../../composables/useExplorerMode'
 import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
+import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
 
 definePageMeta( {
 	i18n: false,
@@ -99,33 +100,43 @@ onMounted( () => {
 	refreshEndPanelNavAlign()
 } )
 
-const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
-	onLoaded: () => {
-		markScalarReady()
-		requestAnimationFrame( () => {
-			focusPendingOperationInScalar()
-		} )
-	}
-} )
+/** Whether Scalar has finished loading its spec for the current mode. */
+const isScalarReady = ref( false )
 
-watch( explorerMode, ( nextMode ) => {
-	if ( nextMode === 'community' ) {
-		Object.assign( scalarConfiguration, {
-			showSidebar: false,
-			hideTestRequestButton: false,
-			hideDownloadButton: false,
-			hideClientButton: false,
-			hiddenClients: false,
-			hideModels: false,
-			spec: { url: openApiSpecUrl.value ?? '' }
-		} )
-	} else {
-		Object.assign( scalarConfiguration, {
-			...enterpriseScalarOverrides.value,
-			spec: { url: enterpriseSpecUrl.value }
-		} )
-	}
-} )
+/**
+ * Shared onLoaded handler. Marks Scalar ready for the loading overlay,
+ * lets the community switch state settle, and resumes any pending focus.
+ *
+ * @returns Nothing.
+ */
+function onScalarLoaded(): void {
+	isScalarReady.value = true
+	markScalarReady()
+	requestAnimationFrame( () => {
+		focusPendingOperationInScalar()
+	} )
+}
+
+// Per-mode Scalar configurations — keeping them separate avoids mutating a
+// shared reactive object across modes, which previously produced a
+// "Document not found in configList" warning from Scalar during transitions.
+const { scalarConfiguration: communityScalarConfiguration } = useScalarConfig(
+	openApiSpecUrl,
+	{ onLoaded: onScalarLoaded }
+)
+
+const enterpriseScalarConfiguration = computed( () => ( {
+	...SCALAR_DEFAULT_CONFIGURATION,
+	...enterpriseScalarOverrides.value,
+	spec: { url: enterpriseSpecUrl.value },
+	onLoaded: onScalarLoaded
+} ) )
+
+const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
+	isCommunityMode.value
+		? communityScalarConfiguration as unknown as Record<string, unknown>
+		: enterpriseScalarConfiguration.value
+)
 
 /**
  * Forces ApiReference remount when the spec context changes.
@@ -144,8 +155,29 @@ const scalarReferenceKey = computed( () => {
 	].join( ':' )
 } )
 
-const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
-const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
+// Re-arm the loading overlay whenever the Scalar instance is about to remount
+// (mode change, module switch, or wiki instance change). onScalarLoaded clears it.
+watch( scalarReferenceKey, () => {
+	isScalarReady.value = false
+} )
+
+// Title matches the side-nav label for the active mode (same wording,
+// already translated in every locale).
+const explorerTitle = computed( () => {
+	switch ( explorerMode.value ) {
+		case 'enterprise-full':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis' )
+		case 'enterprise-limited':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis-limited' )
+		case 'community':
+		default:
+			return $bananaI18n( 'explorer-side-nav-wikimedia-api-modules' )
+	}
+} )
+
+const explorerDescription = computed( () =>
+	isCommunityMode.value ? $bananaI18n( 'explorer-description' ) : ''
+)
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
@@ -200,7 +232,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<h1>
 					{{ explorerTitle }}
 				</h1>
-				<p>{{ explorerDescription }}</p>
+				<p v-if="explorerDescription">{{ explorerDescription }}</p>
 			</header>
 
 			<div
@@ -291,15 +323,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 							class="explorer-page__scalar-shell"
 						>
 							<div
-								v-if="isScalarSwitching"
-								class="explorer-page__scalar-switching-mask"
+								v-if="!isScalarReady || isScalarSwitching"
+								class="explorer-page__scalar-loading-overlay"
 							>
 								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-								<p>{{ scalarSwitchingLabel }}</p>
+								<p>{{ isScalarSwitching ? scalarSwitchingLabel : explorerInterfaceLoadingLabel }}</p>
 							</div>
 							<ExplorerScalarReference
 								:key="scalarReferenceKey"
-								:configuration="scalarConfiguration"
+								:configuration="activeScalarConfiguration"
 								@interface-ready="onScalarInterfaceReady"
 							/>
 						</div>
@@ -462,8 +494,20 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	animation: explorer-loading-spin 0.9s linear infinite;
 }
 
-.explorer-page__scalar-switching-mask {
-	display: none;
+.explorer-page__scalar-loading-overlay {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	gap: var( --spacing-100 );
+	background-color: color-mix( in srgb, var( --background-color-base ) 92%, transparent );
+	backdrop-filter: blur( 2px );
+	z-index: 2;
+	text-align: center;
+}
+
+.explorer-page__scalar-loading-overlay p {
+	margin: 0;
 }
 
 @media screen and ( min-width: 960px ) {
@@ -480,21 +524,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		min-block-size: 0;
 		overflow: auto;
 		overscroll-behavior: contain;
-	}
-
-	.explorer-page__scalar-switching-mask {
-		position: absolute;
-		inset: 0;
-		display: grid;
-		place-items: center;
-		gap: var( --spacing-100 );
-		background-color: color-mix( in srgb, var( --background-color-base ) 78%, transparent );
-		backdrop-filter: blur( 2px );
-		z-index: 2;
-	}
-
-	.explorer-page__scalar-switching-mask p {
-		margin: 0;
 	}
 }
 

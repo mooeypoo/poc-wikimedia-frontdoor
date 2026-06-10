@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { EXPLORER_SIDE_NAV_SECTIONS } from '../../../config/explorerSideNav'
+import { pathForExplorerMode } from '../../utils/explorerRoute'
 import type { ExplorerMode } from '../../composables/useEnterpriseExplorer'
 
 /**
  * ExplorerSideNav — left-hand section navigation for the API Explorer page.
  *
  * Renders section links from config; items with enabled=false are hidden.
- * Emits mode-change when the user clicks an item that has a mode field.
+ * Items with a mode field render as NuxtLinks pointing at the URL that
+ * encodes that mode (community → /explorer, enterprise modes → sub-routes,
+ * see {@link pathForExplorerMode}). Items without a mode are inert
+ * placeholders for now.
  */
-const props = defineProps<{
+defineProps<{
 	activeMode: ExplorerMode
-}>()
-
-const emit = defineEmits<{
-	'mode-change': [ ExplorerMode ]
 }>()
 
 const { $bananaI18n } = useNuxtApp()
@@ -26,20 +26,17 @@ const navigationSections = computed( () => {
 		title: $bananaI18n( section.titleMessageKey ),
 		items: section.items
 			.filter( ( item ) => item.enabled !== false )
-			.map( ( item ) => ( {
-				id: item.id,
-				label: $bananaI18n( item.messageKey ),
-				mode: item.mode as ExplorerMode | undefined,
-				isActive: item.mode !== undefined ? item.mode === props.activeMode : false
-			} ) )
+			.map( ( item ) => {
+				const mode = item.mode as ExplorerMode | undefined
+				return {
+					id: item.id,
+					label: $bananaI18n( item.messageKey ),
+					mode,
+					to: mode !== undefined ? pathForExplorerMode( mode ) : null
+				}
+			} )
 	} ) )
 } )
-
-function onItemClick( mode: ExplorerMode | undefined ): void {
-	if ( mode !== undefined ) {
-		emit( 'mode-change', mode )
-	}
-}
 </script>
 
 <template>
@@ -61,12 +58,20 @@ function onItemClick( mode: ExplorerMode | undefined ): void {
 					:key="item.id"
 					class="explorer-side-nav__item"
 				>
+					<NuxtLink
+						v-if="item.to !== null"
+						:to="item.to"
+						class="explorer-side-nav__link"
+						:class="{ 'explorer-side-nav__link--active': item.mode === activeMode }"
+						:aria-current="item.mode === activeMode ? 'page' : undefined"
+					>
+						{{ item.label }}
+					</NuxtLink>
 					<a
+						v-else
 						href="#"
 						class="explorer-side-nav__link"
-						:class="{ 'explorer-side-nav__link--active': item.isActive }"
-						:aria-current="item.isActive ? 'page' : undefined"
-						@click.prevent="onItemClick( item.mode )"
+						@click.prevent
 					>
 						{{ item.label }}
 					</a>

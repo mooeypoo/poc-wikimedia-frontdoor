@@ -375,20 +375,28 @@ The requirements identify operational product concerns around presenting Enterpr
 **Decision needed from:** Product
 **Implementation impact:** If stronger separation is required (separate route, separate page, interstitial before entry), the architecture in §5 changes.
 
-### 8.3 UX: Should enterprise mode have a URL representation?
+### 8.3 Resolved: enterprise modes get sub-route deep-links; community stays at `/explorer`
 
-Currently the Explorer page is a single route (`/explorer`).  Should enterprise mode be at `/explorer` with a query param (`?mode=enterprise`), or a sub-route (`/explorer/enterprise`), or purely in-memory state?
+**Decision:** Each Enterprise mode gets its own sub-route under the Explorer page.  Community remains at the bare `/explorer` path so the existing entry point and all inbound links are unaffected.
 
-URL representation allows:
-- Deep-linking directly to the Enterprise view
-- Browser back/forward working correctly when switching modes
+| URL | Resolved mode |
+|---|---|
+| `/explorer` | `community` (default) |
+| `/explorer/enterprise` | `enterprise-full` |
+| `/explorer/enterprise-limited` | `enterprise-limited` |
 
-In-memory state means:
-- Simpler implementation (no routing changes)
-- No shareable URL for the Enterprise view
+Any unknown trailing segment falls through to community — a stale or mistyped deep-link renders the default Explorer rather than 404-ing.
 
-**Decision needed from:** Product / Engineering
-**Recommendation:** Use a query param (`?view=enterprise`) — minimal routing change, preserves shareability, consistent with how the Explorer page already handles no sub-routes.
+**Implementation shape:**
+
+- A single Vue Router record serves all three paths via Nuxt's optional-dynamic file-based routing: the page lives at `app/pages/explorer/[[view]].vue` (renamed from `index.vue`).  This maps to `/explorer/:view?` in the router and matches `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-limited` natively — no `definePageMeta({ alias })` needed (which was unreliable in dev mode).  Navigating between paths is a same-route transition: no Scalar full remount, no SSR cycle.
+- The mode is **derived** from `route.path` (single source of truth).  `useExplorerMode()` returns a computed mode that recomputes whenever the route changes.  No setter is exposed — the side-nav uses `NuxtLink` for navigation, so router.push is handled by the framework and the URL stays the source of truth in both directions (visible href, middle-click, right-click → copy link all work).
+- The `explorer-route-navigation.client.ts` plugin's full-reload trigger is scoped to crossing the Explorer boundary.  With `isExplorerRoutePath` updated to match `/explorer` and `/explorer/<segment>`, switching between modes stays client-side; only entering/leaving the Explorer entirely still forces a reload.
+- The page's `definePageMeta({ i18n: false })` is preserved — Enterprise sub-routes are not locale-prefixed (matching the existing Explorer behavior).
+
+**Why sub-route over query param:** Stronger separation in the URL (a sub-path reads as a distinct destination, a query param reads as a modifier).  Consistent with how product describes the modes operationally — separate experiences, not toggled views.  Both modes get equally first-class URLs.
+
+**URL ↔ mode segment mapping:** Public URL uses the shorter `enterprise` for the primary entry; the internal mode identifier remains `enterprise-full`.  This keeps the URL ergonomic without renaming the internal mode taxonomy.  See `app/utils/explorerRoute.ts` for the canonical mapping.
 
 ### 8.4 UX: What happens to the layout in enterprise mode?
 
@@ -607,15 +615,14 @@ export const ENTERPRISE_LIMITED_SCALAR_OVERRIDES = {
 **What:**
 - Accept `activeMode` prop typed as `'community' | 'enterprise-full' | 'enterprise-limited'`
 - In `navigationSections` computed: filter `items` to `enabled !== false` before mapping
-- Compute `isActive` per item as `item.mode === props.activeMode`
-- Wire click handler on each item: `emit('mode-change', item.mode)`
-- Remove `@click.prevent` no-op; replace with actual handler
-- Update `defineEmits` to declare `'mode-change': [mode: ExplorerMode]`
+- For items with a `mode` field, render a `<NuxtLink>` whose `to` is `pathForExplorerMode( mode )` (see Step B6.5).  Items without a `mode` remain inert placeholders.
+- Compute `isActive` per item as `item.mode === activeMode`; active styling and `aria-current="page"` apply to that item only
 
 **Verify:**
 - [ ] With `activeMode='community'` (default): "Wikimedia API modules" renders with active styling; Enterprise entries render without
-- [ ] Clicking "Enterprise APIs" emits `mode-change` with value `'enterprise-full'`
-- [ ] Clicking "Limited Enterprise API" emits `mode-change` with value `'enterprise-limited'`
+- [ ] Each Enterprise nav item is an `<a href="/explorer/...">` (not `href="#"`); middle-click opens in a new tab; right-click → copy link yields the sub-route URL
+- [ ] Clicking "Enterprise APIs" navigates to `/explorer/enterprise`; clicking "Limited Enterprise API" navigates to `/explorer/enterprise-limited`
+- [ ] Active styling follows the route — after navigation the destination item is the only one with `--active`
 - [ ] Setting `enabled: false` on any entry in config causes it to disappear from rendered nav
 - [ ] Accessibility: `aria-current="page"` present only on the active item
 
@@ -648,29 +655,52 @@ export function useEnterpriseExplorer( mode: Ref<'enterprise-full' | 'enterprise
 
 ---
 
-#### Step B5 — Update Explorer page (`index.vue`) (Engineering, ~3 hours)
+#### Step B5 — Update Explorer page (`[[view]].vue`) (Engineering, ~3 hours)
 
 **What:**
-- Add `explorerMode` ref: `const explorerMode = ref<ExplorerMode>('community')`
-- Pass `activeMode` prop to `ExplorerSideNav`: `:activeMode="explorerMode"`
-- Handle `@mode-change` event: `(mode) => { explorerMode.value = mode }`
-- Wrap `useExplorerBootstrap()` call (and its reactive effects) so it only runs when `explorerMode.value === 'community'`
-- Guard `useExplorerScalarFocus` init similarly — no-op when mode is enterprise
-- Conditionally render: `<ExplorerProjectControls v-if="explorerMode === 'community'" />`
-- Conditionally render: `<ExplorerModuleRail v-if="explorerMode === 'community'" />`
-- When `explorerMode` is an enterprise value, instantiate `useEnterpriseExplorer` and pass its `specUrl` and `scalarOverrides` into the Scalar config
+- Derive `explorerMode` from the current route via `useExplorerMode()` (single source of truth — see Step B6.5)
+- Gate `useExplorerBootstrap()` with `isCommunityMode` so the community discovery fetch only fires in community mode
+- Conditionally render: `<ExplorerProjectControls v-if="isCommunityMode" />`
+- Conditionally render: `<ExplorerModuleRail v-if="isCommunityMode" />`
+- **Build the Scalar configuration per mode rather than mutating a shared reactive object.**  Community keeps `useScalarConfig( openApiSpecUrl, ... )`; enterprise builds a fresh computed config that merges `SCALAR_DEFAULT_CONFIGURATION` with the active enterprise overrides and the proxy spec URL.  An `activeScalarConfiguration` computed picks the right one based on `isCommunityMode`.  Cross-mode mutation of a single reactive config produced Scalar's "Document not found in configList" warning during transitions (the old ApiReference instance saw the new URL before unmount); separate per-mode configs avoid that race.
+- Page title binds to the active mode (reuses the matching `explorer-side-nav-*` translation key so wording stays in sync with the side nav).  Community description is suppressed in enterprise modes since the existing text is community-specific.
+- Add an `isScalarReady` page-local ref that resets to `false` whenever the `scalarReferenceKey` changes (mode switch, module switch, wiki instance change) and is set to `true` from the shared `onScalarLoaded` handler.  The Scalar shell shows a loading overlay until `isScalarReady` is true, so the spinner persists across all three modes through the spec fetch.
 
 **Verify:**
 - [ ] Default state: community mode, module rail visible, project controls visible, community bootstrap runs
 - [ ] Click "Enterprise APIs" → module rail disappears, project controls disappear, bootstrap does not re-run
-- [ ] Scalar loads the Enterprise spec URL (confirm in browser network tab)
+- [ ] Scalar loads the Enterprise spec URL (confirm in browser network tab) — no "Document not found in configList" warning during transition
+- [ ] Page H1 changes to "Enterprise APIs" / "Limited Enterprise API" / "Wikimedia API modules" depending on the active mode
+- [ ] Loading overlay (spinner + label) covers the Scalar shell on every mode entry until Scalar's `onLoaded` fires; clears as soon as the spec finishes rendering
 - [ ] Click "Wikimedia API modules" → community layout fully restores, community bootstrap resumes for selected instance
 - [ ] Click "Limited Enterprise API" → same layout as enterprise-full (module rail hidden); Scalar loads with limited overrides
 - [ ] No spurious network calls to `/api/explorer-bootstrap` when in enterprise mode
 
 ---
 
-#### Step B6 — i18n keys (Engineering, ~30 min)
+#### Step B6.5 — URL representation for Enterprise modes (Engineering, ~1 hour)
+
+**What:**
+Add sub-route deep-links so each Enterprise mode is directly addressable (see §8.3).  Routes are registered via Nuxt's file-based optional-dynamic routing: the page is named `[[view]].vue`, which maps to `/explorer/:view?` — matching `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-limited` natively.  Side-nav navigation is driven by `NuxtLink` so the URL is the source of truth in both directions (visible `href`, middle-click, copy link).
+
+- `app/utils/explorerRoute.ts` — broaden `isExplorerRoutePath` to match `/explorer` and `/explorer/<segment>`; add `explorerModeFromPath( path )` and `pathForExplorerMode( mode )` helpers.  Unknown trailing segments fall through to community.
+- `app/composables/useExplorerMode.ts` — derive `explorerMode` from `route.path` (single source of truth).  No setter is exposed; the side-nav navigates directly.
+- `app/components/explorer/ExplorerSideNav.vue` — items with a `mode` render as `<NuxtLink :to="pathForExplorerMode(mode)">`; items without a mode remain inert placeholders.  Active state is computed from `activeMode === mode` so it updates as soon as the route changes.
+- `app/layouts/default.vue` — drop the `@mode-change` handler (the nav no longer emits).
+- `app/pages/explorer/[[view]].vue` — renamed from `index.vue`; the optional-dynamic filename is the route registration (no `alias` in `definePageMeta` needed).
+
+**Verify:**
+- [ ] `GET /explorer` lands in community mode (default)
+- [ ] `GET /explorer/enterprise` lands in enterprise-full mode directly (no community flash)
+- [ ] `GET /explorer/enterprise-limited` lands in enterprise-limited mode directly
+- [ ] `GET /explorer/garbage` falls through to community
+- [ ] Clicking nav items pushes the corresponding URL and updates `route.path`
+- [ ] Browser back/forward correctly traverses mode changes
+- [ ] Crossing into/out of `/explorer*` still triggers a full reload (per the navigation plugin); switching between modes does NOT reload
+
+---
+
+#### Step B7 — i18n keys (Engineering, ~30 min)
 
 **What:**
 Add two message keys to all `i18n/*.json` locale files:
@@ -755,7 +785,8 @@ Manually set `enabled: false` on each Enterprise entry in turn and confirm behav
 | B3 — `ExplorerSideNav.vue` | B | ✅ Complete | — |
 | B4 — `useEnterpriseExplorer.ts` | B | ✅ Complete | — |
 | B5 — Explorer page wiring | B | ✅ Complete | — |
-| B6 — i18n keys | B | ✅ Complete | — |
+| B6.5 — URL representation (sub-route deep-links) | B | ✅ Complete | — |
+| B7 — i18n keys | B | ✅ Complete | — |
 | C1 — Full mode QA | C | ✅ Complete (pending browser sign-off) | — |
 | D1 — Limited mode (path TBD per §7.3) | D | ✅ Complete (pending browser sign-off) | — |
 | E1 — Toggle verification | E | ✅ Complete (pending browser sign-off) | — |
@@ -771,7 +802,9 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Enterprise spec URL + Scalar overrides | `config/enterpriseExplorer.ts` |
 | Side nav with Enterprise item | `config/explorerSideNav.js` (extended) |
 | Mode enum type | `app/composables/useEnterpriseExplorer.ts` or `app/types/explorer.ts` |
-| Mode state + switching logic | `app/pages/explorer/index.vue` |
+| Mode state | `app/composables/useExplorerMode.ts` (derived from route; no setter — nav uses NuxtLink) |
+| Mode ↔ URL path mapping | `app/utils/explorerRoute.ts` |
+| Sub-route deep-link registration | File-based optional-dynamic route — `app/pages/explorer/[[view]].vue` |
 | Enterprise composable | `app/composables/useEnterpriseExplorer.ts` |
 | i18n labels | `i18n/*.json` — keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited` |
 
@@ -788,7 +821,7 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Full vs. limited mode first | ✅ Resolved — both built, `enabled` flag controls exposure | — |
 | Enterprise spec tags (9 vs. 3 expected) | Open — confirm expectation | Product |
 | Limited mode path (D-a config / D-b CSS / D-c custom component) | ✅ Resolved — D-a config-only; parameters/responses/schemas remain visible | Product |
-| URL representation of enterprise mode | Open | Product / Engineering (§8.3) |
+| URL representation of enterprise mode | ✅ Resolved — sub-route per mode (`/explorer/enterprise`, `/explorer/enterprise-limited`); community stays at `/explorer` | Engineering (§8.3) |
 | Enterprise layout specification | Open | Design (§9.5) |
 | Operational separation adequacy | Open | Product (§9.4) |
 | Registration CTA in enterprise view | Open | Design / Product (§8.9) |
@@ -802,9 +835,11 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | `server/api/enterprise-spec.get.ts` | New file — proxy route for Enterprise spec (CORS workaround, see §8.10) |
 | `config/explorerSideNav.js` | Add two Enterprise items with `mode` + `enabled` fields; remove static `isActive` |
 | `config/enterpriseExplorer.ts` | New file — `ENTERPRISE_SPEC_URL` (proxy path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` |
-| `app/components/explorer/ExplorerSideNav.vue` | Accept `activeMode` prop, filter by `enabled`, emit `mode-change`, compute `isActive` dynamically |
-| `app/pages/explorer/index.vue` | Add `explorerMode` state, `mode-change` handler, conditional rendering of rail + controls, conditional Scalar config |
+| `app/components/explorer/ExplorerSideNav.vue` | Accept `activeMode` prop, filter by `enabled`, render mode-bearing items as `NuxtLink` to their sub-route, compute `isActive` dynamically |
+| `app/pages/explorer/[[view]].vue` | Renamed from `index.vue` to make `/explorer/:view?` an optional-dynamic file-based route (matches `/explorer`, `/explorer/enterprise`, `/explorer/enterprise-limited`).  Adds `explorerMode` state derivation, conditional rendering of rail + controls, conditional Scalar config |
 | `app/composables/useEnterpriseExplorer.ts` | New file — returns spec URL + per-mode Scalar overrides |
+| `app/composables/useExplorerMode.ts` | Derives mode from `route.path` (read-only; side-nav drives navigation via NuxtLink) |
+| `app/utils/explorerRoute.ts` | Broadened `isExplorerRoutePath` to match sub-routes; added `explorerModeFromPath` and `pathForExplorerMode` helpers |
 | `i18n/en.json` (and other locales) | Two new message keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited` |
 | `ARCHITECTURE.md` | Document three-mode explorer switching pattern, `enabled` toggle mechanism, and spec proxy pattern |
 
