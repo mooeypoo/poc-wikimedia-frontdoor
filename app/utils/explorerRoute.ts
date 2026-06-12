@@ -11,6 +11,9 @@ const ENTERPRISE_FULL_SEGMENT = 'enterprise'
 /** Path segment that selects the limited Enterprise mode. */
 const ENTERPRISE_LIMITED_SEGMENT = 'enterprise-limited'
 
+/** Path segment that selects the custom (non-Scalar) Enterprise mode. */
+const ENTERPRISE_CUSTOM_SEGMENT = 'enterprise-custom'
+
 /**
  * Returns whether a route path is the API Explorer (any mode, locale-independent).
  *
@@ -38,6 +41,9 @@ export function isExplorerRoutePath( path: string ): boolean {
  */
 export function explorerModeFromPath( path: string ): ExplorerMode {
 	const normalizedPath = path.replace( /\/+$/, '' ) || '/'
+	if ( new RegExp( `/explorer/${ ENTERPRISE_CUSTOM_SEGMENT }$` ).test( normalizedPath ) ) {
+		return 'enterprise-custom'
+	}
 	if ( new RegExp( `/explorer/${ ENTERPRISE_LIMITED_SEGMENT }$` ).test( normalizedPath ) ) {
 		return 'enterprise-limited'
 	}
@@ -62,6 +68,8 @@ export function pathForExplorerMode( mode: ExplorerMode ): string {
 			return `/explorer/${ ENTERPRISE_FULL_SEGMENT }`
 		case 'enterprise-limited':
 			return `/explorer/${ ENTERPRISE_LIMITED_SEGMENT }`
+		case 'enterprise-custom':
+			return `/explorer/${ ENTERPRISE_CUSTOM_SEGMENT }`
 		case 'community':
 		default:
 			return '/explorer'

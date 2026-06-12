@@ -6,7 +6,11 @@ import {
 	ENTERPRISE_LIMITED_SCALAR_OVERRIDES
 } from '../../config/enterpriseExplorer'
 
-export type ExplorerMode = 'community' | 'enterprise-full' | 'enterprise-limited'
+export type ExplorerMode =
+	| 'community'
+	| 'enterprise-full'
+	| 'enterprise-limited'
+	| 'enterprise-custom'
 
 /**
  * Returns the spec URL and Scalar config overrides for the active Enterprise mode.

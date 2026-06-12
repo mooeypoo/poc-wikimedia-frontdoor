@@ -7,6 +7,7 @@ import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
+import ExplorerEnterpriseCustom from '../../components/explorer/ExplorerEnterpriseCustom.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 import { useExplorerMode } from '../../composables/useExplorerMode'
 import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
@@ -26,10 +27,15 @@ const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) 
 const { selectedWikiInstanceId } = useDirection()
 const { explorerMode } = useExplorerMode()
 const isCommunityMode = computed( () => explorerMode.value === 'community' )
+const isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )
+/** True for Scalar-bearing Enterprise modes (full / limited), false for community and custom. */
+const isScalarEnterpriseMode = computed(
+	() => explorerMode.value === 'enterprise-full' || explorerMode.value === 'enterprise-limited'
+)
 
 const enterpriseMode = computed( () =>
-	explorerMode.value === 'enterprise-full' || explorerMode.value === 'enterprise-limited'
-		? explorerMode.value
+	isScalarEnterpriseMode.value
+		? explorerMode.value as 'enterprise-full' | 'enterprise-limited'
 		: 'enterprise-full' as const
 )
 const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides } =
@@ -169,6 +175,8 @@ const explorerTitle = computed( () => {
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis' )
 		case 'enterprise-limited':
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis-limited' )
+		case 'enterprise-custom':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis-custom' )
 		case 'community':
 		default:
 			return $bananaI18n( 'explorer-side-nav-wikimedia-api-modules' )
@@ -316,6 +324,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					>
 						{{ missingSpecLabel }}
 					</CdxMessage>
+
+					<ClientOnly v-else-if="isCustomEnterpriseMode">
+						<ExplorerEnterpriseCustom />
+						<template #fallback>
+							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
+								<div class="explorer-page__scalar-loading">
+									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<p>{{ explorerInterfaceLoadingLabel }}</p>
+								</div>
+							</div>
+						</template>
+					</ClientOnly>
 
 					<ClientOnly v-else>
 						<div

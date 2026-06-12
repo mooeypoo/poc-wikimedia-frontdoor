@@ -1,7 +1,7 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** Complete — all phases done; pending browser sign-off on C1/D1/E1 QA checklists
-**Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration
+**Status:** All phases (A–F) complete; pending browser sign-off on C1/D1/E1/F1–F5 QA checklists
+**Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration, plus a custom (non-Scalar) tag-driven Enterprise viewer
 
 ---
 
@@ -175,16 +175,16 @@ The Explorer page gains a single reactive state value: `explorerMode`.
 ### 5.1 State
 
 ```ts
-type ExplorerMode = 'community' | 'enterprise-full' | 'enterprise-limited'
+type ExplorerMode = 'community' | 'enterprise-full' | 'enterprise-limited' | 'enterprise-custom'
 ```
 
 This state is managed on the Explorer page itself (not in a Pinia store — it is page-local and does not need to survive navigation away from the Explorer).
 
-Both Enterprise modes share the same spec URL.  They differ only in which Scalar configuration overrides are applied (see §5.4 and `config/enterpriseExplorer.ts`).
+All three Enterprise modes share the same spec source (the `/api/enterprise-spec` proxy).  `enterprise-full` and `enterprise-limited` consume it as YAML directly inside Scalar; `enterprise-custom` consumes a server-parsed JSON projection of it (see §7.4 and §10 Phase F).  The first two differ only in which Scalar configuration overrides are applied; the third bypasses Scalar entirely and renders a custom tag-driven viewer.
 
 ### 5.2 Side nav configuration change
 
-`config/explorerSideNav.js` gains two new items under "API Explorer" — one per Enterprise mode:
+`config/explorerSideNav.js` gains three new items under "API Explorer" — one per Enterprise mode:
 
 ```js
 {
@@ -207,6 +207,12 @@ Both Enterprise modes share the same spec URL.  They differ only in which Scalar
       id: 'enterprise-apis-limited',
       messageKey: 'explorer-side-nav-enterprise-apis-limited',
       mode: 'enterprise-limited',
+      enabled: true   // ← set false to remove from nav without touching any component
+    },
+    {
+      id: 'enterprise-apis-custom',
+      messageKey: 'explorer-side-nav-enterprise-apis-custom',
+      mode: 'enterprise-custom',
       enabled: true   // ← set false to remove from nav without touching any component
     }
   ]
@@ -248,6 +254,7 @@ Scalar configuration differs per mode:
 - Community: `SCALAR_DEFAULT_CONFIGURATION` (current behavior, unchanged)
 - Enterprise full: `SCALAR_DEFAULT_CONFIGURATION` merged with `ENTERPRISE_FULL_SCALAR_OVERRIDES` from `config/enterpriseExplorer.ts` — at minimum `showSidebar: true` to expose the tag-grouped sidebar
 - Enterprise limited: `SCALAR_DEFAULT_CONFIGURATION` merged with `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` from `config/enterpriseExplorer.ts` — all available hide flags applied (populated after the §9.1 audit)
+- Enterprise custom: **no Scalar** — the Scalar reference panel slot is replaced by `ExplorerEnterpriseCustom.vue`, which reads a server-parsed JSON projection of the spec and renders a single-select tag sidebar + endpoint detail panel.  See §7.4 and Phase F
 
 ---
 
@@ -307,6 +314,23 @@ Shared prerequisite for both Enterprise modes.  Neither Enterprise entry need be
 | Phase A + B + C (full enterprise mode live and verified) | ~4 days |
 | Phase A + B + C + D config-only limited mode | ~6 days |
 | Phase A + B + C + D custom component limited mode | ~9 days |
+| Phase F (custom Enterprise mode `enterprise-custom`, additive on top of A–E) | ~2.5–3 days |
+
+### 6.6 Phase F (custom Enterprise mode) — detailed estimate
+
+Additive to Phases A–E; does not change effort for existing modes.
+
+| Task | Effort | File(s) |
+|---|---|---|
+| Extend `ExplorerMode` + routing helpers | XS | `app/utils/explorerRoute.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/explorerSideNav.js` |
+| Side-nav entry + i18n in 5 locales + qqq | XS | `config/explorerSideNav.js`, `i18n/*.json` |
+| Server-parsed spec endpoint (YAML→JSON, tag grouping) | S | `server/api/enterprise-spec-parsed.get.ts`, `server/api/enterprise-spec.get.ts` (export upstream URL) |
+| `useEnterpriseSpecOutline` composable | S | `app/composables/useEnterpriseSpecOutline.ts` |
+| `ExplorerEnterpriseCustom.vue` (tablist sidebar + endpoint panel + Markdown rendering) | M–L | `app/components/explorer/ExplorerEnterpriseCustom.vue` |
+| Page wiring in `[[view]].vue` (mode branch, render swap) | S | `app/pages/explorer/[[view]].vue` |
+| QA: deep-link, hash fragment, RTL, a11y tablist keyboard | S | — |
+
+**Subtotal: ~2.5–3 days**
 
 ---
 
@@ -346,15 +370,92 @@ Shared prerequisite for both Enterprise modes.  Neither Enterprise entry need be
 
 The three unsupported elements (parameters, responses, inline schemas) are structural to Scalar's per-endpoint rendering.  There is no configuration flag to suppress them.
 
-**Three paths forward for Phase D:**
+**Three paths forward, and how they are deployed:**
 
 **Path D-a — Config-only (partial):** Apply all supported hide flags.  Parameters, responses, and inline schemas remain visible.  This may be acceptable if the product's working definition of "limited" is refined to match what config can actually deliver.
 
 **Path D-b — CSS injection via `customCss`:** Scalar accepts a `customCss` string that is injected into the rendered document.  CSS selectors could visually hide parameter/response sections.  This is fragile — it depends on Scalar's internal DOM structure and class names, which can change across Scalar version upgrades.  Suitable as a short-term workaround; not recommended for long-term maintenance.
 
-**Path D-c — Custom component:** Build `ExplorerEnterpriseEndpointList.vue` that reads the Enterprise spec and renders a minimal endpoint list without Scalar.  This is the highest-effort path (~3 additional days) but the only one that fully satisfies the "extreme limited info" requirement as described.
+**Path D-c — Custom component:** Build a non-Scalar Vue component that reads the Enterprise spec and renders a minimal endpoint list.  Highest-effort path, but the only one that fully satisfies the "extreme limited info" requirement.  Now also the foundation of the new `enterprise-custom` mode (see §7.4).
 
-**Decision needed (§8.1, resolved):** Both modes are built.  Limited mode enters Phase D.  Product chooses which path is acceptable for Phase D based on these findings.  Path D-a or D-b can ship in ~1 day; Path D-c in ~3–4 days.
+**Decision (revisited 2026-06-11):** Path **D-a** ships as the `enterprise-limited` mode (already complete — see Phase D in §10).  Path D-a is retained for that entry — limited mode keeps the Scalar-with-hide-flags rendering.  In addition, a separate `enterprise-custom` mode (the third Enterprise sidebar entry) is added that implements path **D-c** as its own self-contained, non-Scalar viewer.  Paths D-a and D-c now coexist as two independent Enterprise modes; the user picks via the side nav.  Path D-b is not adopted.
+
+### 7.4 Path D-c as the `enterprise-custom` mode (new)
+
+**Decision (2026-06-11):** A third Enterprise sidebar entry — "Enterprise (Custom)" — is added.  Internal mode id `enterprise-custom`; public URL `/explorer/enterprise-custom`.  The mode bypasses Scalar entirely and renders a custom Vue component that reads a server-parsed projection of the Enterprise OpenAPI spec.
+
+**UI shape:**
+
+- A two-pane layout that lives inside the existing Explorer center column (the Scalar reference panel slot).  The page's start column (Explorer side nav) and end column (module rail in community mode) are unchanged from the other Enterprise modes — module rail and project controls remain hidden, matching §5.4.
+- **Inline-start pane — tag sidebar:** vertical list of OpenAPI tags from the spec.  Single-select, with `role="tablist"`; each tag is a `role="tab"` button.  Mimics Scalar's sidebar visually but with our own a11y semantics (selection, not collapse).
+- **Inline-end pane — endpoint detail panel:** for the currently selected tag, lists every operation tagged with it.  Each row shows method badge + path (monospace, `dir="ltr"` on the method), the operation `summary`, and the operation `description` rendered as Markdown.  The panel has `role="tabpanel"` associated with the selected sidebar tab.
+
+**Data flow (server-parsed JSON):**
+
+- Add `/server/api/enterprise-spec-parsed.get.ts`.  It fetches the same upstream YAML used by the existing `/api/enterprise-spec` proxy (the URL constant lives in one place — the existing proxy file — and the new route imports it), parses YAML server-side, and returns JSON of the shape:
+
+  ```ts
+  type EnterpriseSpecOutline = {
+    tags: Array<{
+      name: string                  // OpenAPI tag id (slug-safe)
+      displayName: string           // x-displayName or name
+      description?: string          // OpenAPI tag description (Markdown)
+    }>
+    operationsByTag: Record<string, Array<{
+      operationId?: string
+      method: 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options'
+      path: string                  // e.g. /v2/articles/{name}
+      summary?: string
+      description?: string          // Markdown — rendered client-side
+    }>>
+  }
+  ```
+
+- Operations carry their primary tag (first entry in `tags[]`); operations without a tag are grouped under a synthetic `__untagged__` bucket and surfaced as the last sidebar entry only when non-empty.  Tag ordering follows the spec's root-level `tags:` array (if present), with any tags discovered only inside operations appended after.
+
+- The composable `useEnterpriseSpecOutline()` calls the new endpoint with `$fetch`, returns `{ tags, operationsByTag, isLoading, hasError, errorMessage }`.  Component-level fetch is forbidden by AGENTS.md rule §5 — the component reads from the composable only.
+
+**Why server-side parsing:**
+
+- Keeps the YAML parser off the client bundle.
+- Respects the engine/data-layer separation in ARCHITECTURE.md.
+- The existing `/api/enterprise-spec` proxy is untouched, so the other two Enterprise modes (which feed Scalar raw YAML) are unaffected.
+- The two routes share one source-of-truth constant for the upstream URL by importing it from the existing proxy file.
+
+**Summary / description resolution (implementation note):**
+
+OpenAPI 3.0 §4.7.9.2 permits `summary` and `description` at the path-item level as well as the operation level.  The Enterprise spec relies on the path-item level for most endpoints; reading only operation-level fields produced rows with no documentation in the custom viewer.  The parser therefore reads operation-level first and falls back to path-item level when the operation does not carry its own values.  When neither level has the field, the property stays `undefined` and the template skips rendering — no placeholder text.
+
+**Markdown rendering for `description`:**
+
+- Use a small client-side Markdown renderer (e.g. `marked` or `markdown-it`) inside the component, OR delegate to Nuxt Content's `<ContentRenderer>` if it can render an arbitrary string without a route-bound file.  Choice deferred to Phase F Step F4; the composable layer is unaffected — descriptions stay strings until they reach the component.
+- All rendered Markdown output is wrapped in a single `<bdi>` boundary so spec-derived strings stay BiDi-isolated per AGENTS.md rule §2.
+
+**Hash-based tag deep-linking:**
+
+- The active tag lives in the URL as `#tag=<tag-name>` (URI-encoded).  This is shareable but does not require expanding the optional-dynamic route shape.
+- On mount, the component reads `route.hash`; if `#tag=<name>` resolves to a known tag, that tag is selected.  Otherwise it falls back to the first tag.
+- Tag selection updates the hash via `router.replace({ hash })` (no extra history entry per click).  Browser back/forward across selections is intentionally not implemented in this phase.
+
+**Layout placement (re §8.4):**
+
+- In Enterprise modes, the right end column is reserved-empty per §5.4 (`ExplorerModuleRail` is hidden).  This stays true for `enterprise-custom`.
+- The two-pane structure of the custom viewer is **internal** to the center column — it does not consume the end column.  This keeps the page-level grid identical across the three Enterprise modes.
+- Pane proportions are an internal CSS-grid concern of the component (initial proposal: tag sidebar `minmax(12rem, 14rem)`, endpoint panel `minmax(0, 1fr)`).  Below the explorer's wide breakpoint (`min-width: 960px` — see DESIGN_REQUIREMENTS Reference panel wide rule), the two panes stack with the tag sidebar above.
+
+**Page-level wiring in `[[view]].vue`:**
+
+- Add a third branch: when `explorerMode === 'enterprise-custom'`, the page does NOT instantiate `useEnterpriseExplorer` (which currently only handles full/limited) and does NOT mount `ExplorerScalarReference`.  Instead it mounts `ExplorerEnterpriseCustom` in the reference-panel slot.
+- `useEnterpriseExplorer`'s `Ref<'enterprise-full' | 'enterprise-limited'>` parameter type is unchanged; `enterprise-custom` does not flow through that composable at all.
+- `scalarReferenceKey` is unaffected; `isScalarReady` / `isScalarSwitching` are gated on community mode + the Scalar-bearing Enterprise modes only.
+- Page title still reuses the side-nav i18n key for the active mode (`explorer-side-nav-enterprise-apis-custom`).
+
+**Out of scope for this phase:**
+
+- "Try it" / request execution.  No request UI in the custom mode.
+- Per-endpoint deep-linking inside a tag (only the tag is in the URL hash).
+- Search/filter across endpoints inside the panel.
+- OAuth or Bearer token entry.
 
 ---
 
@@ -384,8 +485,10 @@ The requirements identify operational product concerns around presenting Enterpr
 | `/explorer` | `community` (default) |
 | `/explorer/enterprise` | `enterprise-full` |
 | `/explorer/enterprise-limited` | `enterprise-limited` |
+| `/explorer/enterprise-custom` | `enterprise-custom` |
+| `/explorer/enterprise-custom#tag=<tag>` | `enterprise-custom` with `<tag>` pre-selected in the sidebar (see §7.4) |
 
-Any unknown trailing segment falls through to community — a stale or mistyped deep-link renders the default Explorer rather than 404-ing.
+Any unknown trailing segment falls through to community — a stale or mistyped deep-link renders the default Explorer rather than 404-ing.  An unknown `#tag=` fragment falls through to the first available tag.
 
 **Implementation shape:**
 
@@ -765,11 +868,127 @@ Using findings from Step A2:
 **What:**
 Manually set `enabled: false` on each Enterprise entry in turn and confirm behavior.
 
+**Verify (after Phase D is live):**
+- [ ] Setting `enterprise-full` entry `enabled: false` → that nav item disappears; other Enterprise entries still present
+- [ ] Setting `enterprise-limited` entry `enabled: false` → that nav item disappears; other Enterprise entries still present
+- [ ] Setting all Enterprise entries to `enabled: false` → side nav renders with only "Wikimedia API modules"; no console errors; community mode unaffected
+- [ ] Restoring all to `enabled: true` → all entries reappear
+
+**Verify (after Phase F is live — extends E1):**
+- [ ] Setting `enterprise-custom` entry `enabled: false` → that nav item disappears; Scalar-bearing Enterprise entries unaffected
+- [ ] With `enterprise-custom` enabled and the other two disabled → only the custom entry appears under "API Explorer"; clicking it lands in the custom view
+
+---
+
+### Phase F: Custom Enterprise mode (path D-c) — `enterprise-custom`
+
+Independent of Phase D's `enterprise-limited` mode (which stays as path D-a, Scalar with hide flags).  Phase F adds a third side-nav entry that opens a non-Scalar tag-driven viewer.  Steps F2–F5 can be implemented in order; F1 is a small prerequisite and can ship alongside F2.  Phase E's checklist is extended (see above) to cover the third `enabled` toggle once F2 lands.
+
+---
+
+#### Step F1 — Extend ExplorerMode and routing (Engineering, ~1 hour)
+
+**What:**
+- Add `'enterprise-custom'` to the `ExplorerMode` type in `app/composables/useEnterpriseExplorer.ts` (the canonical type) and to the JSDoc typedef in `config/explorerSideNav.js`.
+- Add `ENTERPRISE_CUSTOM_SEGMENT = 'enterprise-custom'` to `app/utils/explorerRoute.ts`.
+- Extend `explorerModeFromPath()` to map `/explorer/enterprise-custom` → `'enterprise-custom'` (placed alongside the existing full/limited checks; unknown segments still fall through to community).
+- Extend `pathForExplorerMode()` to return `/explorer/enterprise-custom` for the new mode.
+- No new page file — the existing `app/pages/explorer/[[view]].vue` optional-dynamic route already covers the new sub-route.
+
 **Verify:**
-- [ ] Setting `enterprise-full` entry `enabled: false` → that nav item disappears; limited entry still present
-- [ ] Setting `enterprise-limited` entry `enabled: false` → that nav item disappears; full entry still present
-- [ ] Setting both to `enabled: false` → side nav renders with only "Wikimedia API modules"; no console errors; community mode unaffected
-- [ ] Restoring both to `enabled: true` → both entries reappear
+- [ ] `pathForExplorerMode( 'enterprise-custom' )` returns `/explorer/enterprise-custom`
+- [ ] `explorerModeFromPath( '/explorer/enterprise-custom' )` returns `'enterprise-custom'`
+- [ ] `useExplorerMode()` returns `'enterprise-custom'` when the route is `/explorer/enterprise-custom`
+- [ ] TypeScript compiles across all consumers of `ExplorerMode`
+
+---
+
+#### Step F2 — Side nav entry + i18n (Engineering, ~30 min)
+
+**What:**
+- Add a fourth item to the `api-explorer` section of `config/explorerSideNav.js`: `id: 'enterprise-apis-custom'`, `messageKey: 'explorer-side-nav-enterprise-apis-custom'`, `mode: 'enterprise-custom'`, `enabled: true`.
+- Add the message key `explorer-side-nav-enterprise-apis-custom` to every locale file in `i18n/` (`en.json`, `es.json`, `fa.json`, `fr.json`, `he.json`) and a documentation entry to `qqq.json`.
+
+**Verify:**
+- [ ] Three Enterprise entries appear in the rendered side nav (one is the new "Enterprise (Custom)")
+- [ ] Setting `enabled: false` on the new entry removes it without code change
+- [ ] No missing-key warnings in browser console
+- [ ] `aria-current="page"` follows the active route across all four entries
+
+---
+
+#### Step F3 — Server-parsed spec endpoint (Engineering, ~3 hours)
+
+**What:**
+- Add `/server/api/enterprise-spec-parsed.get.ts`.  Source the upstream URL by importing the constant from the existing `/server/api/enterprise-spec.get.ts` (export it from there; one source of truth).
+- Install `yaml` as a server-side dependency (no client bundle impact).
+- The handler:
+  1. Fetches the upstream YAML with the existing user-agent header.
+  2. Parses YAML → JS object.
+  3. Walks `paths.*.<method>` extracting `{ operationId, method, path, summary, description, tags }` for each operation.  Methods are restricted to a known whitelist (`get`, `post`, `put`, `patch`, `delete`, `head`, `options`); anything else is dropped.
+  4. Builds `operationsByTag` by primary tag; operations without tags go to `__untagged__`.
+  5. Builds `tags` from spec-root `tags:` (preserving order), then appends any tag found in operations but not in the root list.  `__untagged__` is appended last only when non-empty.
+  6. Returns JSON with `content-type: application/json` and `cache-control: public, max-age=300`.
+- On upstream failure: throw the same `502` shape as the existing proxy.
+
+**Verify:**
+- [ ] `GET /api/enterprise-spec-parsed` returns 200 with `content-type: application/json`
+- [ ] Response shape matches `EnterpriseSpecOutline` (see §7.4)
+- [ ] All operations from the upstream YAML are present in exactly one tag bucket
+- [ ] Tag ordering reflects the spec's root `tags:` order, with extras appended
+
+---
+
+#### Step F4 — Composable + custom component (Engineering, ~1–1.5 days)
+
+**What:**
+- `app/composables/useEnterpriseSpecOutline.ts` — calls `$fetch('/api/enterprise-spec-parsed')`, exposes `{ tags, operationsByTag, isLoading, hasError, errorMessage }`.  No URL construction (path is the proxy route, treated as opaque); full JSDoc.
+- `app/components/explorer/ExplorerEnterpriseCustom.vue`:
+  - Consumes `useEnterpriseSpecOutline()`.
+  - Reads `route.hash` on mount; selects the matching tag or falls back to the first non-empty tag.
+  - Sidebar: `role="tablist"`, vertical `aria-orientation="vertical"`; each tag is a button with `role="tab"`, `aria-selected`, and `tabindex` per the active-tab pattern.  Tag display name in `<bdi>`.
+  - Detail panel: `role="tabpanel"`, `aria-labelledby` the selected tab's id.  Each row contains method (LTR, monospace, method-coloured per DESIGN_REQUIREMENTS §Endpoint rows), path (`<bdi>`, monospace), summary (`<bdi>`), description rendered as Markdown inside a single `<bdi>`.
+  - Selection updates `route.hash` via `router.replace({ hash: '#tag=' + encodeURIComponent(name) })`.
+  - Loading state uses the same spinner pattern as the Scalar shell (reuses `.explorer-page__scalar-loading-indicator` class via shared CSS, OR replicates locally with logical-property CSS).
+  - Error state uses `CdxMessage type="error"` with the upstream error message in `<bdi>`.
+- Markdown renderer: decision between (a) Nuxt Content `<ContentRenderer>` for arbitrary strings, (b) `markdown-it` minimal config.  Whichever is chosen, output is sanitized (no raw HTML execution from external spec strings) and wrapped in `<bdi>`.
+
+**Verify:**
+- [ ] Sidebar lists every tag from the spec, in spec order, in `<bdi>`
+- [ ] Selecting a tag swaps the detail panel to that tag's endpoints; method colours match DESIGN_REQUIREMENTS
+- [ ] Method tokens render `dir="ltr"` even in an RTL interface
+- [ ] Descriptions render Markdown (links, lists, code spans, fenced code) cleanly
+- [ ] `aria-selected` and `aria-labelledby` wiring is correct in screen reader output
+- [ ] Keyboard: ←/↑/→/↓ traverse tabs, Home/End jump (standard WAI-ARIA tab pattern); Enter/Space selects
+- [ ] No Vue reactivity warnings, no `console.error`
+- [ ] Component never calls `$fetch` directly (all data flows through the composable)
+
+---
+
+#### Step F5 — Page wiring + layout polish (Engineering, ~3 hours)
+
+**What:**
+- In `app/pages/explorer/[[view]].vue`:
+  - Add `isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )`.
+  - Gate `useEnterpriseExplorer( enterpriseMode )` so it only runs for full/limited (current behaviour for community is already gated; extend the same shape).
+  - Replace the `ExplorerScalarReference` slot when `isCustomEnterpriseMode` is true: render `<ExplorerEnterpriseCustom />` in lieu of the Scalar shell.  Reuse the existing `.explorer-page__reference-panel` wrapper (border, sticky behaviour ≥ 960px) so the visual frame matches.
+  - Keep `selectedModule` / `wikiDisplayName` rendering gated on `isCommunityMode` (already the case for the chip).
+  - `isScalarReady` / `isScalarSwitching` overlays are unused in custom mode; the component owns its own loading state.
+- Page title for the custom mode uses `explorer-side-nav-enterprise-apis-custom`.
+- Verify the existing crossing-boundary plugin still works: `isExplorerRoutePath` already matches `/explorer/<segment>` so no change needed there.
+- Verify `useExplorerScalarFocus` is unaffected (it is page-scoped but receives no input in Enterprise modes).
+
+**Verify:**
+- [ ] Default state: community mode unchanged
+- [ ] Clicking "Enterprise APIs" → Scalar-full mode (unchanged)
+- [ ] Clicking "Limited Enterprise API" → Scalar with hide flags (unchanged)
+- [ ] Clicking "Enterprise (Custom)" → no Scalar in the DOM; custom component renders
+- [ ] Direct deep-link to `/explorer/enterprise-custom` → custom component renders without a community flash
+- [ ] `/explorer/enterprise-custom#tag=articles` → "articles" tab is selected on first render
+- [ ] Switching between the three Enterprise modes does not leave Scalar artifacts when leaving the custom mode (custom mode never mounts Scalar in the first place)
+- [ ] Switching from Custom back to Community fully restores the community layout
+- [ ] RTL: with interface language `he` or `fa`, the tag sidebar moves to the inline-start side; method tokens stay LTR; everything still BiDi-isolated
+- [ ] Setting `enterprise-custom`'s `enabled: false` in config removes the entry; deep-link to `/explorer/enterprise-custom` still resolves to the mode (the route is the source of truth, not the nav) — Product to confirm whether this is desired or whether the route should also be gated
 
 ---
 
@@ -788,8 +1007,13 @@ Manually set `enabled: false` on each Enterprise entry in turn and confirm behav
 | B6.5 — URL representation (sub-route deep-links) | B | ✅ Complete | — |
 | B7 — i18n keys | B | ✅ Complete | — |
 | C1 — Full mode QA | C | ✅ Complete (pending browser sign-off) | — |
-| D1 — Limited mode (path TBD per §7.3) | D | ✅ Complete (pending browser sign-off) | — |
+| D1 — Limited mode (path D-a, see §7.3) | D | ✅ Complete (pending browser sign-off) | — |
 | E1 — Toggle verification | E | ✅ Complete (pending browser sign-off) | — |
+| F1 — Extend ExplorerMode + routing | F | ✅ Complete | — |
+| F2 — Side nav entry + i18n | F | ✅ Complete | — |
+| F3 — Server-parsed spec endpoint | F | ✅ Complete (path-item summary/description fallback added) | — |
+| F4 — Composable + custom component | F | ✅ Complete (pending browser sign-off) | — |
+| F5 — Page wiring + layout polish | F | ✅ Complete (pending browser sign-off) | — |
 
 ---
 
@@ -800,13 +1024,17 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | What | Where |
 |---|---|
 | Enterprise spec URL + Scalar overrides | `config/enterpriseExplorer.ts` |
-| Side nav with Enterprise item | `config/explorerSideNav.js` (extended) |
-| Mode enum type | `app/composables/useEnterpriseExplorer.ts` or `app/types/explorer.ts` |
+| Side nav with Enterprise items (full, limited, custom) | `config/explorerSideNav.js` (extended) |
+| Mode enum type (`community` / `enterprise-full` / `enterprise-limited` / `enterprise-custom`) | `app/composables/useEnterpriseExplorer.ts` |
 | Mode state | `app/composables/useExplorerMode.ts` (derived from route; no setter — nav uses NuxtLink) |
 | Mode ↔ URL path mapping | `app/utils/explorerRoute.ts` |
 | Sub-route deep-link registration | File-based optional-dynamic route — `app/pages/explorer/[[view]].vue` |
-| Enterprise composable | `app/composables/useEnterpriseExplorer.ts` |
-| i18n labels | `i18n/*.json` — keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited` |
+| Enterprise composable (Scalar-bearing modes) | `app/composables/useEnterpriseExplorer.ts` |
+| Enterprise spec outline composable (custom mode) | `app/composables/useEnterpriseSpecOutline.ts` (Phase F) |
+| Server proxy (YAML, for Scalar) | `server/api/enterprise-spec.get.ts` |
+| Server endpoint (JSON outline, for custom mode) | `server/api/enterprise-spec-parsed.get.ts` (Phase F) |
+| Custom Enterprise viewer component | `app/components/explorer/ExplorerEnterpriseCustom.vue` (Phase F) |
+| i18n labels | `i18n/*.json` — keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited`, `explorer-side-nav-enterprise-apis-custom` |
 
 ---
 
@@ -820,8 +1048,14 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Both modes ship as toggled nav entries | ✅ Resolved — see §8.1 | — |
 | Full vs. limited mode first | ✅ Resolved — both built, `enabled` flag controls exposure | — |
 | Enterprise spec tags (9 vs. 3 expected) | Open — confirm expectation | Product |
-| Limited mode path (D-a config / D-b CSS / D-c custom component) | ✅ Resolved — D-a config-only; parameters/responses/schemas remain visible | Product |
-| URL representation of enterprise mode | ✅ Resolved — sub-route per mode (`/explorer/enterprise`, `/explorer/enterprise-limited`); community stays at `/explorer` | Engineering (§8.3) |
+| Limited mode path (D-a config / D-b CSS / D-c custom component) | ✅ Resolved — `enterprise-limited` stays on D-a (Scalar with hide flags); D-c implemented separately as the new `enterprise-custom` mode (see §7.4) | Product (2026-06-11) |
+| Add a third `enterprise-custom` mode (path D-c, non-Scalar tag viewer) | ✅ Resolved 2026-06-11 — see §7.4 + Phase F | Product / Engineering |
+| Sidebar interaction in custom mode (single-select vs. accordion) | ✅ Resolved 2026-06-11 — single-select tablist | Product |
+| Endpoint description rendering in custom mode | ✅ Resolved 2026-06-11 — Markdown | Product |
+| Spec parsing location for custom mode | ✅ Resolved 2026-06-11 — server-side endpoint returning JSON | Engineering |
+| Active-tag deep-linking in custom mode | ✅ Resolved 2026-06-11 — hash fragment `#tag=<name>` | Product |
+| URL representation of enterprise mode | ✅ Resolved — sub-route per mode (`/explorer/enterprise`, `/explorer/enterprise-limited`, `/explorer/enterprise-custom`); community stays at `/explorer` | Engineering (§8.3) |
+| Custom mode: gate route when nav entry is disabled? | Open — does setting `enabled: false` on `enterprise-custom` also need to redirect `/explorer/enterprise-custom`? | Product |
 | Enterprise layout specification | Open | Design (§9.5) |
 | Operational separation adequacy | Open | Product (§9.4) |
 | Registration CTA in enterprise view | Open | Design / Product (§8.9) |
@@ -832,16 +1066,20 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 
 | File | Nature of change |
 |---|---|
-| `server/api/enterprise-spec.get.ts` | New file — proxy route for Enterprise spec (CORS workaround, see §8.10) |
-| `config/explorerSideNav.js` | Add two Enterprise items with `mode` + `enabled` fields; remove static `isActive` |
-| `config/enterpriseExplorer.ts` | New file — `ENTERPRISE_SPEC_URL` (proxy path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` |
-| `app/components/explorer/ExplorerSideNav.vue` | Accept `activeMode` prop, filter by `enabled`, render mode-bearing items as `NuxtLink` to their sub-route, compute `isActive` dynamically |
-| `app/pages/explorer/[[view]].vue` | Renamed from `index.vue` to make `/explorer/:view?` an optional-dynamic file-based route (matches `/explorer`, `/explorer/enterprise`, `/explorer/enterprise-limited`).  Adds `explorerMode` state derivation, conditional rendering of rail + controls, conditional Scalar config |
-| `app/composables/useEnterpriseExplorer.ts` | New file — returns spec URL + per-mode Scalar overrides |
-| `app/composables/useExplorerMode.ts` | Derives mode from `route.path` (read-only; side-nav drives navigation via NuxtLink) |
-| `app/utils/explorerRoute.ts` | Broadened `isExplorerRoutePath` to match sub-routes; added `explorerModeFromPath` and `pathForExplorerMode` helpers |
-| `i18n/en.json` (and other locales) | Two new message keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited` |
-| `ARCHITECTURE.md` | Document three-mode explorer switching pattern, `enabled` toggle mechanism, and spec proxy pattern |
+| `server/api/enterprise-spec.get.ts` | New file (Phase B) — proxy route for Enterprise spec (CORS workaround, see §8.10).  Phase F: export the upstream URL constant for reuse by the parsed endpoint |
+| `server/api/enterprise-spec-parsed.get.ts` | **New file (Phase F)** — server-side YAML→JSON conversion, returns `{tags, operationsByTag}` for the custom mode |
+| `config/explorerSideNav.js` | Phase B: add two Enterprise items with `mode` + `enabled` fields; remove static `isActive`.  Phase F: add a third Enterprise item for `enterprise-custom` |
+| `config/enterpriseExplorer.ts` | New file (Phase B) — `ENTERPRISE_SPEC_URL` (proxy path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES`.  Phase F: no change (custom mode does not flow through Scalar overrides) |
+| `app/components/explorer/ExplorerSideNav.vue` | Phase B: accept `activeMode` prop, filter by `enabled`, render mode-bearing items as `NuxtLink` to their sub-route, compute `isActive` dynamically.  Phase F: no change — new entry uses the existing pattern |
+| `app/components/explorer/ExplorerEnterpriseCustom.vue` | **New file (Phase F)** — tag-driven custom viewer (tablist sidebar + endpoint detail panel with Markdown descriptions) |
+| `app/pages/explorer/[[view]].vue` | Phase B: optional-dynamic route, `explorerMode` derivation, conditional rendering of rail + controls, per-mode Scalar config.  Phase F: add `enterprise-custom` branch that mounts `ExplorerEnterpriseCustom` instead of `ExplorerScalarReference` |
+| `app/composables/useEnterpriseExplorer.ts` | Phase B: returns spec URL + per-mode Scalar overrides.  Phase F: extend `ExplorerMode` union with `'enterprise-custom'` (composable itself still only services full/limited) |
+| `app/composables/useEnterpriseSpecOutline.ts` | **New file (Phase F)** — fetches `/api/enterprise-spec-parsed`, exposes reactive `{tags, operationsByTag, isLoading, hasError, errorMessage}` |
+| `app/composables/useExplorerMode.ts` | Phase B: derives mode from `route.path` (read-only).  Phase F: no change — new mode resolved via `explorerModeFromPath` |
+| `app/utils/explorerRoute.ts` | Phase B: broadened `isExplorerRoutePath`; added `explorerModeFromPath` and `pathForExplorerMode` helpers.  Phase F: add `ENTERPRISE_CUSTOM_SEGMENT` and route it in the helpers |
+| `i18n/en.json` (and other locales) | Phase B: two new keys.  Phase F: third key `explorer-side-nav-enterprise-apis-custom` in all 5 locales + qqq documentation |
+| `ARCHITECTURE.md` | Document four-mode explorer switching pattern, `enabled` toggle mechanism, spec proxy + parsed-outline pattern |
+| `package.json` | Phase F: add `yaml` dependency (server-side only) |
 
 ## Appendix B: Files that will NOT change
 
@@ -849,7 +1087,11 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 |---|---|
 | `server/api/explorer-bootstrap.get.ts` | Enterprise uses static spec, no bootstrap needed |
 | `server/api/discovery.get.ts` | Enterprise does not use MediaWiki discovery |
-| `app/composables/useExplorerBootstrap.ts` | Community-only; untouched |
+| `app/composables/useExplorerBootstrap.ts` | Community-only; untouched (already gated by `isCommunityMode`) |
 | `config/instances.ts` | No per-wiki variation for Enterprise |
-| `app/components/explorer/ExplorerModuleRail.vue` | Hidden in enterprise mode, but component is unchanged |
-| `scripts/fetch-remote-content.mjs` | Enterprise spec is runtime-fetched by Scalar, not build-time fetched |
+| `app/components/explorer/ExplorerModuleRail.vue` | Hidden in all Enterprise modes (incl. custom), component itself unchanged |
+| `app/components/explorer/ExplorerProjectControls.vue` | Hidden in all Enterprise modes (incl. custom), component itself unchanged |
+| `app/components/explorer/ExplorerScalarReference.client.vue` | Custom mode bypasses Scalar entirely; the component is unchanged and continues to serve community / enterprise-full / enterprise-limited |
+| `config/enterpriseExplorer.ts` | Phase F adds no new Scalar overrides — custom mode does not use Scalar |
+| `app/plugins/explorer-route-navigation.client.ts` | `isExplorerRoutePath` already matches `/explorer/<segment>`; no boundary change needed for the new sub-route |
+| `scripts/fetch-remote-content.mjs` | Enterprise spec is runtime-fetched, not build-time fetched |

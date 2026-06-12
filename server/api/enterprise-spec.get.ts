@@ -1,12 +1,18 @@
 import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
-const ENTERPRISE_SPEC_UPSTREAM_URL = 'https://api.enterprise.wikimedia.com/spec/spec.yaml'
-const USER_AGENT = 'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
+/**
+ * Upstream URL for the Enterprise OpenAPI spec. Exported so sibling server
+ * routes (e.g. enterprise-spec-parsed) share a single source of truth.
+ */
+export const ENTERPRISE_SPEC_UPSTREAM_URL = 'https://api.enterprise.wikimedia.com/spec/spec.yaml'
+
+/** User-Agent sent with every upstream fetch. Exported for reuse. */
+export const ENTERPRISE_SPEC_USER_AGENT = 'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
 
 export default defineEventHandler( async ( event ) => {
 	try {
 		const spec = await $fetch<string>( ENTERPRISE_SPEC_UPSTREAM_URL, {
-			headers: { 'user-agent': USER_AGENT },
+			headers: { 'user-agent': ENTERPRISE_SPEC_USER_AGENT },
 			responseType: 'text'
 		} )
 		setResponseHeader( event, 'content-type', 'text/yaml; charset=utf-8' )
