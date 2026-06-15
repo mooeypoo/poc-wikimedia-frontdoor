@@ -56,7 +56,8 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   └── shared/             # Components used across both surfaces
 │   │       ├── PageGrid.vue            # Shell responsive grid wrapper
 │   │       ├── ShellBrandLogo.vue      # Start-column wordmark (prototype)
-│   │       └── ShellSidePanelNav.vue   # Start-column section menu (prototype)
+│   │       ├── ShellSidePanelNav.vue   # Start-column section menu (prototype)
+│   │       └── ShellPrimaryNav.vue     # Header primary nav quiet tabs
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
 │   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
@@ -156,6 +157,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
 | `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
+| `usePrimaryNavigationTab()` | Active primary nav tab id from current route; pairs with `ShellPrimaryNav` |
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route (content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`); prototype active states only |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
 | `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
@@ -188,7 +190,101 @@ ShellSidePanelNav (default.vue start slot)
 
 **Superseded component.** `app/components/explorer/ExplorerSideNav.vue` is retained but **not mounted** by the layout; explorer sections are rendered through the shared `ShellSidePanelNav` path above.
 
+**Primary navigation.** `ShellPrimaryNav` uses Codex quiet tabs for route switching. Tab panels are hidden (`display: none` on `.cdx-tabs__content`) because page content lives in the main column — navigation-only usage, documented in `DESIGN_REQUIREMENTS.md`.
+
 **Fixed width.** The start column uses `--fd-layout-start-panel-inline-size` (**241px**, Figma side panel) from `page-grid.css`. Responsive collapse into the header is **deferred**.
+
+---
+
+## Shell layout and chrome
+
+The default layout (`app/layouts/default.vue`) mounts the application shell inside `PageGrid` (`app/components/shared/PageGrid.vue`). Layout tokens and breakpoint rules live in `app/assets/css/page-grid.css`. Visual and interaction decisions are recorded in `DESIGN_REQUIREMENTS.md` → Shell chrome.
+
+### Grid structure
+
+```
+.fd-page-grid                    ← Codex page margins (padding-inline)
+├── .fd-page-grid__start        ← brand logo + section nav (241px fixed, tablet+)
+├── .fd-page-grid__main         ← display: contents at tablet+ (hoists children)
+│   └── .frontdoor-shell__content   ← display: contents at tablet+
+│       ├── .frontdoor-shell__chrome   ← header utility row + primary nav (grid row 1)
+│       ├── .frontdoor-shell__main     ← page slot (grid row 2, column 2 only)
+│       └── .frontdoor-shell__footer   ← footer band (grid row 3, column 2 only)
+└── .fd-page-grid__end          ← module rail / reserved space (desktop+)
+```
+
+**Rendering.** The layout calls composables for navigation state only (`usePrimaryNavigationTab`, `usePageSectionNav`, `useContentSearch`, etc.). Components in the start column and header receive resolved props — they do not fetch data or read route config directly.
+
+### Header chrome grid placement
+
+At **tablet and above** (≥ 640px), `.fd-page-grid__main` and `.frontdoor-shell__content` use **`display: contents`** so `.frontdoor-shell__chrome`, `.frontdoor-shell__main`, and `.frontdoor-shell__footer` become direct grid items on `.fd-page-grid`. This spans the header across the full **content band** without restructuring `PageGrid.vue`:
+
+| Viewport | Chrome grid span | Notes |
+|----------|------------------|-------|
+| **640px–1119px** | Column 2 | Fluid beside start panel; end panel hidden (interim tablet layout) |
+| **≥ 1120px** | Columns 2–3 | Spans main + end panel band |
+
+The start column (and end column at desktop) use **`grid-row: 1 / -1`** so side panels remain full-height beside the header and page content. The page grid uses **`grid-template-rows: auto 1fr auto`** at tablet+ so the main slot expands and the footer sits at the bottom of column 2.
+
+**Mobile (&lt; 640px):** Stacked interim layout — chrome remains inside the flex column wrapper; footer pinning uses **`margin-block-start: auto`**. Side-panel collapse into the header is **deferred**.
+
+**Disclaimer:** `display: contents` removes the wrapper box from the layout tree. This pattern is approved for shell-chrome exploration; revisit if it causes accessibility-tree or focus-management issues in audit.
+
+### Chrome width and start-panel connection
+
+**Fluid width (viewport &lt; 1440px):** Header chrome grows with the content band from the start-panel inline edge to the page inline-end, respecting Codex page margins per breakpoint (`--fd-layout-page-margin`).
+
+**Locked width (viewport ≥ 1440px):** Chrome **`max-inline-size`** is set to `--fd-layout-chrome-max-inline-size` — the width the header would occupy at a **1440px** viewport with desktop page margins and the fixed start panel (currently **1135px**: 1440 − 64 − 241). Wider viewports grow **outer margins only** for the header bar; the bar itself does not widen.
+
+**Start-panel connection (tablet+):** Negative **`margin-inline-start: calc(-1 * var(--fd-layout-grid-gutter))`** pulls the chrome box across the grid gutter so its **bottom border meets the start panel**. Matching **`padding-inline-start: var(--fd-layout-grid-gutter)`** insets header content so tabs and search align with main-column content below.
+
+**Main content alignment:** `.frontdoor-shell__main` uses **`padding-block: var(--spacing-200)`** only — no inline-start padding. Horizontal alignment with header content comes from the shared grid gutter inset on chrome content, not from duplicate padding on the main slot.
+
+**Disclaimer — 1440px vs Codex desktop-wide:** **`1440px` is a project-specific breakpoint** (Figma shell chrome), not a Codex design token. The **page grid** still caps at **1679px** (`--max-width-breakpoint-desktop`) at **≥ 1680px**. Between **1440px and 1679px** viewport width, header chrome is fixed-width while main and end columns remain fluid within the grid. Whether body content should also lock at 1440px is **unresolved** — see `DESIGN_REQUIREMENTS.md` → Open questions.
+
+### Layout CSS tokens (shell)
+
+| Token | Value / source | Purpose |
+|-------|----------------|---------|
+| `--fd-layout-start-panel-inline-size` | 241px (15.0625rem) | Fixed start column width |
+| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Codex page margins on `.fd-page-grid` |
+| `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Gaps between grid columns |
+| `--fd-layout-grid-max-inline-size` | Codex `--max-width-breakpoint-desktop` (1679px) | Whole grid cap at ≥ 1680px |
+| `--fd-layout-chrome-lock-viewport-inline-size` | 1440px (90rem) | Header width lock reference (**not Codex**) |
+| `--fd-layout-chrome-max-inline-size` | `calc(lock − 2×desktop margin − start panel)` | Header `max-inline-size` at ≥ 1440px |
+
+Media queries in `page-grid.css` and `default.vue` use **px literals** aligned to Codex tokens (`640px`, `1120px`, `1680px`) plus the project **`1440px`** chrome lock, because custom properties are unreliable inside `@media` conditions in many browsers.
+
+### Shell chrome components
+
+| Component | Role | Config / composable |
+|-----------|------|---------------------|
+| `ShellBrandLogo.vue` | Start-column wordmark; links to Get started | `useMainNavigationLinks()` |
+| `ShellSidePanelNav.vue` | Flat section menu in start column | `usePageSectionNav()` |
+| `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
+
+### Codex exceptions (shell chrome)
+
+1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list.
+2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** — `.frontdoor-shell__chrome` owns the single header edge per Figma.
+3. **Search field** — Codex `CdxSearchInput` minimum width overridden in the layout so a **container query** can collapse to an icon-only control below ~640px container width. Full header responsive behaviour is **deferred**.
+
+### Prototype / non-final shell behaviour
+
+The following are **intentional placeholders** in the design-chrome exploration — not production-ready features:
+
+| Area | Status |
+|------|--------|
+| Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
+| Search icon button (narrow header) | **Disabled** prototype |
+| Settings button | **Disabled** prototype |
+| Log in link | **Non-functional** (`@click.prevent`) |
+| Brand logo SVG | **Prototype asset** — not final brand guidance |
+| Start column responsive collapse | **Deferred** — fixed 241px until header-collapse work |
+| Header container-query search collapse | **Interim** — not full responsive chrome |
+| Header vs body width at ≥ 1440px | Header locks; body remains fluid until 1680px grid cap — **may need alignment** |
+
+Functional in prototype: interface language `CdxSelect`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing.
 
 ---
 

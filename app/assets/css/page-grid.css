@@ -12,6 +12,10 @@
  * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
  *
  * Page margins: --spacing-100 (mobile), --spacing-150 (tablet), --spacing-200 (desktop).
+ *
+ * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
+ * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
+ * caps at Codex desktop max (1679px) at ≥ 1680px — see ARCHITECTURE.md → Shell layout.
  */
 
 :root {
@@ -37,6 +41,22 @@
 	/* Mobile defaults */
 	--fd-layout-page-margin: var( --spacing-100 );
 	--fd-layout-grid-gutter: var( --spacing-100 );
+
+	/*
+	 * Header chrome locks at this viewport width; wider viewports grow outer margins only.
+	 * Not a Codex breakpoint — Figma shell chrome specification.
+	 */
+	--fd-layout-chrome-lock-viewport-inline-size: 90rem; /* 1440px */
+
+	/*
+	 * Fluid chrome span from start-panel edge to page inline-end at the lock viewport,
+	 * using desktop page margins (32px each side at ≥ 1120px).
+	 */
+	--fd-layout-chrome-max-inline-size: calc(
+		var( --fd-layout-chrome-lock-viewport-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+		- var( --fd-layout-start-panel-inline-size )
+	);
 
 	/*
 	 * Fallback sticky offset for the explorer module rail (project controls block).

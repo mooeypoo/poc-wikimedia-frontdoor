@@ -68,26 +68,10 @@ body {
 /* Shell chrome navigation (Home / About / API Explorer) has no font rule in the
  * layout; re-assert the Codex sans stack so links do not pick up generic sans-serif
  * (often computed as Arial on Windows). */
-.frontdoor-shell__main-nav,
-.frontdoor-shell__main-nav :where( a ),
 .shell-side-panel,
-.shell-side-panel-nav {
+.shell-side-panel-nav,
+.shell-primary-nav {
 	font-family: var( --font-family-sans-stack );
-}
-
-/* Navigation menus: base text, not progressive links. */
-.frontdoor-shell__main-nav :where( a ) {
-	color: var( --color-base );
-	text-decoration: none;
-}
-
-.frontdoor-shell__main-nav :where( a:hover ) {
-	text-decoration: underline;
-}
-
-.frontdoor-shell__main-nav :where( a.router-link-active ) {
-	color: var( --color-emphasized );
-	font-weight: var( --font-weight-bold );
 }
 
 .frontdoor-shell__brand {

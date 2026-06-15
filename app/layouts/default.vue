@@ -7,8 +7,8 @@ import {
 } from '@wikimedia/codex'
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
-import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
+import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
 import { useContentSearch } from '../composables/useContentSearch'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
@@ -19,6 +19,12 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  * content slot, and footer inside the site-wide grid. The start column
  * hosts the brand logo and route-aware section navigation (`usePageSectionNav`);
  * the header holds search and utility controls with primary navigation below.
+ *
+ * **Shell chrome layout:** At tablet+, `.fd-page-grid__main` and
+ * `.frontdoor-shell__content` use `display: contents` so header chrome spans
+ * the full content band (main + end columns on desktop). Header width locks
+ * at ≥ 1440px viewport; page grid caps at Codex desktop-wide (1680px).
+ * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
  */
 
 const { direction } = useDirection()
@@ -27,7 +33,7 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
-const { mainNavigationLinks } = useMainNavigationLinks()
+const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
 	hasPageSectionNavigation,
 	navigationLabel: pageSectionNavigationLabel,
@@ -153,6 +159,22 @@ const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label'
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
+
+/**
+ * Navigates to the primary nav destination when a header tab is selected.
+ *
+ * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
+ */
+function handlePrimaryNavigationSelect( navigationId: string ): void {
+	const navigationLink = mainNavigationLinks.value.find(
+		( link ) => link.id === navigationId
+	)
+
+	if ( navigationLink ) {
+		navigateTo( navigationLink.to )
+	}
+}
+
 useHead( {
 	htmlAttrs: {
 		dir: direction,
@@ -255,28 +277,23 @@ useHead( {
 									:default-label="interfaceLanguagePlaceholder"
 									:aria-label="interfaceLanguageLabel"
 								/>
+								<a
+									href="#"
+									class="frontdoor-shell__login-link"
+									@click.prevent
+								>
+									{{ loginLinkLabel }}
+								</a>
 							</div>
-							<a
-								href="#"
-								class="frontdoor-shell__login-link"
-								@click.prevent
-							>
-								{{ loginLinkLabel }}
-							</a>
 						</div>
 					</header>
-					<nav
-						class="frontdoor-shell__main-nav"
+					<SharedShellPrimaryNav
+						class="frontdoor-shell__primary-nav"
 						:aria-label="primaryNavigationLabel"
-					>
-						<NuxtLink
-							v-for="navigationLink in mainNavigationLinks"
-							:key="navigationLink.id"
-							:to="navigationLink.to"
-						>
-							{{ navigationLink.label }}
-						</NuxtLink>
-					</nav>
+						:navigation-links="mainNavigationLinks"
+						:active-navigation-id="activeNavigationId"
+						@navigation-select="handlePrimaryNavigationSelect"
+					/>
 				</div>
 
 				<main class="frontdoor-shell__main">
@@ -314,16 +331,85 @@ useHead( {
 	min-inline-size: 0;
 }
 
+/*
+ * Tablet+: hoist chrome, main, and footer onto the page grid so the header spans
+ * the full content band (main + end columns on desktop) within Codex page margins.
+ */
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__page-grid {
+		grid-template-rows: auto 1fr auto;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__main ),
+	.frontdoor-shell__content {
+		display: contents;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		grid-row: 1 / -1;
+	}
+
+	.frontdoor-shell__chrome {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.frontdoor-shell__main {
+		grid-column: 2;
+		grid-row: 2;
+	}
+
+	.frontdoor-shell__footer {
+		grid-column: 2;
+		grid-row: 3;
+	}
+}
+
+@media screen and ( min-width: 1120px ) {
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
+		grid-row: 1 / -1;
+	}
+
+	.frontdoor-shell__chrome {
+		grid-column: 2 / -1;
+	}
+}
+
+/*
+ * At ≥ 1440px viewport, chrome width locks; only outer page margins grow wider.
+ */
+@media screen and ( min-width: 1440px ) {
+	.frontdoor-shell__chrome {
+		max-inline-size: var( --fd-layout-chrome-max-inline-size );
+	}
+}
+
 .frontdoor-shell__chrome {
 	position: relative;
 	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-150 );
 	background-color: var( --background-color-base );
+	border-block-end: 1px solid var( --border-color-subtle );
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: 0;
+	padding-inline-end: var( --spacing-200 );
+}
+
+/*
+ * Side-by-side grid: pull chrome into the gutter so its bottom border meets the
+ * start panel; inset header content by the gutter width to align with main below.
+ */
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__chrome {
+		margin-inline-start: calc( -1 * var( --fd-layout-grid-gutter ) );
+		padding-inline-start: var( --fd-layout-grid-gutter );
+	}
 }
 
 .frontdoor-shell__header {
-	block-size: 4rem;
-	min-block-size: 4rem;
-	max-block-size: 4rem;
+	min-inline-size: 0;
 }
 
 .frontdoor-shell__header-inner {
@@ -332,16 +418,16 @@ useHead( {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
+	justify-content: flex-end;
 	gap: var( --spacing-100 );
-	block-size: 100%;
 	min-inline-size: 0;
 }
 
 .frontdoor-shell__search-wrap {
 	position: relative;
-	flex: 1 1 0;
+	flex: 1 1 auto;
 	min-inline-size: 0;
-	max-inline-size: 36rem;
+	max-inline-size: 40rem;
 	display: flex;
 	align-items: center;
 }
@@ -381,9 +467,12 @@ useHead( {
 .frontdoor-shell__utilities {
 	display: flex;
 	align-items: center;
-	gap: var( --spacing-100 ); /* 16px between search, settings, and language controls */
+	gap: var( --spacing-100 );
 	flex-shrink: 0;
-	margin-inline-start: auto;
+}
+
+.frontdoor-shell__primary-nav {
+	min-inline-size: 0;
 }
 
 /* Collapse when the header cannot fit the search field (Codex minimum 256px). */
@@ -407,6 +496,12 @@ useHead( {
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
 	white-space: nowrap;
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.frontdoor-shell__login-link:hover {
+	text-decoration: underline;
 }
 
 .frontdoor-shell__side-nav,
@@ -441,19 +536,6 @@ useHead( {
 	gap: var( --spacing-50 );
 }
 
-.frontdoor-shell__main-nav {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var( --spacing-100 ); /* 16px between nav items */
-	padding-block: var( --spacing-100 );
-}
-
-.frontdoor-shell__main-nav a {
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-}
-
 .frontdoor-shell__main {
 	flex: 1;
 	min-inline-size: 0;
@@ -461,10 +543,25 @@ useHead( {
 }
 
 .frontdoor-shell__footer {
-	margin-block-start: auto;
 	padding-block: var( --spacing-100 );
 	background-color: var( --background-color-neutral-subtle );
 	font-size: var( --font-size-small );
+}
+
+@media screen and ( max-width: 639px ) {
+	.frontdoor-shell__footer {
+		margin-block-start: auto;
+	}
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__main {
+		flex: unset;
+	}
+
+	.frontdoor-shell__footer {
+		align-self: end;
+	}
 }
 
 .frontdoor-shell__footer-text {
