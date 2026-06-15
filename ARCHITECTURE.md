@@ -266,9 +266,9 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 ### Codex exceptions (shell chrome)
 
 1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list.
-2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** — `.frontdoor-shell__chrome` owns the single header edge per Figma.
+2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome` owns the single header edge per Figma.
 3. **Search field** — Codex `CdxSearchInput` minimum width overridden in the layout so a **container query** can collapse to an icon-only control below ~640px container width. Full header responsive behaviour is **deferred**.
-4. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule.
+4. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
 
 ### Interface locale picker (shell)
 
@@ -285,7 +285,13 @@ The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n
 
 **Routing:** On content routes, changing locale navigates via `switchLocalePath()` when the path differs. On `/explorer`, locale updates in place without URL prefix change — see `DESIGN_REQUIREMENTS.md` → Interface locale on explorer.
 
+**Direction changes:** `:key="direction"` on the select remounts the control when interface locale flips LTR ↔ RTL. Codex RTL stylesheet toggling is handled by `codex-rtl-styles.client.ts` (see **RTL and BiDi** below).
+
+**Utility row layout:** Search, settings, language select, and log in share one end-aligned flex row (`.frontdoor-shell__header-actions`, Figma `Header/Default`). Search shrinks first (`flex: 0 1 40rem`); log in uses `flex: 0 0 auto`; language select is capped at **11rem** with ellipsized labels so long locale names do not overlap the log in link.
+
 **Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot).
+
+### Prototype / non-final shell behaviour
 
 The following are **intentional placeholders** in the design-chrome exploration — not production-ready features:
 
@@ -299,6 +305,7 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Start column responsive collapse | **Deferred** — fixed 241px until header-collapse work |
 | Header container-query search collapse | **Interim** — not full responsive chrome |
 | Header vs body width at ≥ 1440px | Header locks; body remains fluid until 1680px grid cap — **may need alignment** |
+| Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
 
 Functional in prototype: interface language `CdxSelect`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing.
 
@@ -448,19 +455,13 @@ The OAuth callback route (`server/routes/oauth/callback.ts`) is a Nuxt server ro
 
 ### Layout direction
 
-The `<html>` element's `dir` attribute is set reactively in `app/layouts/default.vue` using `useDirection()`, which reads from `config/languages.js`. The Codex RTL stylesheet is loaded conditionally:
+The `<html>` element's `dir` attribute is set reactively in `app/layouts/default.vue` using `useDirection()`, which reads interface locale direction from `config/languages.js`.
 
-```vue
-<script setup>
-const { direction } = useDirection()
-useHead({
-  htmlAttrs: { dir: direction },
-  link: direction.value === 'rtl'
-    ? [{ rel: 'stylesheet', href: '/codex.style-rtl.css' }]
-    : []
-})
-</script>
-```
+**Codex RTL stylesheet:** LTR base styles load globally via `nuxt.config.ts` (`codex.style.css`). The client plugin `app/plugins/codex-rtl-styles.client.ts` injects `codex.style-rtl.css` via a persistent `<link id="fd-codex-rtl-stylesheet">` when `direction === 'rtl'` and sets **`link.disabled = true`** when direction returns to `ltr`. Without toggling, Codex components (e.g. header `CdxSelect`) keep mirrored physical layout after switching from Hebrew/Persian back to an LTR interface locale until a full reload.
+
+**Disclaimer:** This relies on Codex’s global RTL mirror sheet (physical property overrides), not per-component `dir`. It is a **prototype workaround** for runtime locale switching. Third-party quiet-tabs borders are suppressed in `app/assets/css/shell-primary-nav-overrides.css`, re-imported when RTL is enabled so rules load after `codex.style-rtl.css`.
+
+**Language select remount:** Header `CdxSelect` uses `:key="direction"` so the closed control re-renders when direction changes.
 
 ### BiDi isolation rule
 

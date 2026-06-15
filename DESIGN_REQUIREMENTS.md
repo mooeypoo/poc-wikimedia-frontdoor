@@ -185,8 +185,10 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Header fluid below 1440px | Chrome spans content band within page margins | Respects Codex `--fd-layout-page-margin` per breakpoint |
 | Header locks at ≥ 1440px | `--fd-layout-chrome-max-inline-size` | **Not a Codex breakpoint**; body grid stays fluid until 1680px cap |
 | Start column no edge border | Removed `border-inline-end` on start panel | Background-only separation |
-| Quiet tabs duplicate border removed | CSS override in `ShellPrimaryNav` | Chrome owns single bottom edge |
-| Interface language icon on trigger only | `CdxSelect` `#label` slot in `default.vue` | Menu items text-only; `isolateLabel()` for BiDi without `<bdi>` |
+| Quiet tabs duplicate border removed | `shell-primary-nav-overrides.css` | Codex uses physical `border-bottom`; override re-imported after RTL sheet load |
+| Header utility row (Figma) | `.frontdoor-shell__header-actions` in `default.vue` | Search shrinks first; log in never flex-shrinks; language select max **11rem** + ellipsis |
+| Interface language icon on trigger only | `CdxSelect` `#label` slot + `:key="direction"` | Menu items text-only; `isolateLabel()` for BiDi; remount on LTR ↔ RTL |
+| Codex RTL sheet toggled on locale switch | `codex-rtl-styles.client.ts` | **`link.disabled`** prototype — prevents stale RTL layout on LTR locales without reload |
 
 **Architecture reference:** `ARCHITECTURE.md` → Shell layout and chrome.
 
@@ -209,9 +211,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Start panel connection:** On tablet and above, negative `margin-inline-start` pulls `.frontdoor-shell__chrome` across the grid gutter so its **bottom border meets the start panel**. Content padding equals the gutter width so tabs and search align with main-column content below.
 
-**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **Codex override:** the quiet-tabs header bottom border is removed (`ShellPrimaryNav`) because `.frontdoor-shell__chrome` already draws the single header edge (Figma layout).
+**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` and re-imported after `codex.style-rtl.css` in `codex-rtl-styles.client.ts`) because `.frontdoor-shell__chrome` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`.
 
-**Utility row alignment:** Controls are grouped at the **inline-end** (search grows up to 640px, then settings, language, log in).
+**Utility row layout (Figma `Header/Default`, node 225:4548):** One end-aligned flex row — `.frontdoor-shell__header-actions` — with **`gap: var(--spacing-100)`** (16px). Order: search (max **640px**, shrinks first), settings, language select, log in. The log in link is a **sibling** in the same row (not nested inside a shrinking group) and uses **`flex: 0 0 auto`** so it stays visible for all interface locales.
+
+**Utility row alignment:** Controls are grouped at the **inline-end** in `.frontdoor-shell__header-actions`.
 
 | Element | Behaviour |
 |---------|-----------|
@@ -226,8 +230,10 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 - **`menuItems`** — `value` + `label` only (no `icon` on items).
 - **`#label` slot** — renders `CdxIcon` (`cdxIconLanguage`) beside the selected label (or placeholder). **`defaultIcon` is not used** — Codex applies that prop only when no item is selected; the slot keeps the icon visible whenever a locale is active.
 - **BiDi** — labels pass through `isolateLabel()` (Unicode FSI/PDI) because Codex menu item labels cannot be wrapped in `<bdi>` (same constraint as combobox options).
+- **Width** — `max-inline-size: 11rem` on `.frontdoor-shell__language-select`; long locale names ellipsize so the control does not overlap the log in link.
+- **LTR ↔ RTL switching** — `:key="direction"` remounts the select; `codex-rtl-styles.client.ts` enables/disables `codex.style-rtl.css` so Codex mirrored rules do not persist after switching back to an LTR interface locale (**prototype workaround** — no full reload required).
 
-**Source:** `app/layouts/default.vue` — `.frontdoor-shell__language-select`, `.frontdoor-shell__language-select-label`.
+**Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-actions`, `.frontdoor-shell__language-select`, `.frontdoor-shell__language-select-label`.
 
 **Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()`.
 
@@ -433,6 +439,8 @@ Top to bottom:
 
 **Decision:** Scalar content is not globally direction-flipped; portal maps link colours only. See `ARCHITECTURE.md` → RTL and BiDi.
 
+**Decision (interface locale switch):** When the user changes interface language between LTR and RTL (or back), shell `dir` updates immediately. Codex RTL mirror CSS is toggled via `app/plugins/codex-rtl-styles.client.ts` (`link.disabled` on `#fd-codex-rtl-stylesheet`). Header `CdxSelect` remounts via `:key="direction"`. **Disclaimer:** This is a prototype workaround for Codex’s global RTL stylesheet; other Codex widgets may need similar treatment if locale switching expands beyond the header.
+
 **Supported interface locales in shell:** en, es, fr, he, fa (banana + content routing).
 
 ---
@@ -476,6 +484,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 9. **Editorial content** for Learn, Enterprise, Community, Contribute, Get help.
 10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
 11. **Review `display: contents`** shell pattern for accessibility-tree and focus-management impact.
+12. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. build-time RTL bundle, per-component direction props) before production.
 
 ---
 
@@ -487,6 +496,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Start column chrome | `app/components/shared/ShellBrandLogo.vue`, `app/components/shared/ShellSidePanelNav.vue`, `app/composables/usePageSectionNav.ts` |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/composables/usePrimaryNavigationTab.ts` |
+| Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css`, `app/plugins/codex-rtl-styles.client.ts` |
 | Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
 | Explorer page | `app/pages/explorer/index.vue` |

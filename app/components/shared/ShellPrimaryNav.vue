@@ -73,13 +73,9 @@ const activeTabName = computed( {
 }
 
 /*
- * Quiet tabs ship a header bottom border; the shell chrome already draws one
- * edge (see .frontdoor-shell__chrome). Remove the duplicate line per Figma layout.
+ * Quiet-tabs header border suppression lives in shell-primary-nav-overrides.css
+ * (imported from main.css and after codex.style-rtl.css in codex-rtl-styles.client.ts).
  */
-.shell-primary-nav__tabs:deep( .cdx-tabs__header ) {
-	margin-inline: 0;
-	border-block-end: none;
-}
 
 /*
  * Figma quiet tab row: 4px block-start, 12px block-end (extra vs Codex default 4px),

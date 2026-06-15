@@ -227,36 +227,36 @@ useHead( {
 				<div class="frontdoor-shell__chrome">
 					<header class="frontdoor-shell__header">
 						<div class="frontdoor-shell__header-inner">
-							<div
-								class="frontdoor-shell__search-wrap"
-								@focusout="handleSearchAreaFocusOut"
-							>
-								<CdxSearchInput
-									v-model="searchQuery"
-									class="frontdoor-shell__search"
-									dir="auto"
-									:use-button="false"
-									:placeholder="searchPlaceholderLabel"
-									@focusin="handleSearchFocusIn"
-								/>
+							<div class="frontdoor-shell__header-actions">
 								<div
-									v-if="isSearchPanelOpen && hasQuery"
-									class="frontdoor-shell__search-panel"
-									@mousedown.prevent
+									class="frontdoor-shell__search-wrap"
+									@focusout="handleSearchAreaFocusOut"
 								>
-									<SharedSearchResults
-										:locale-results="localeResults"
-										:fallback-results="fallbackResults"
-										:all-locale-result-groups="allLocaleResultGroups"
-										:is-all-locales-mode="isAllLocalesMode"
-										:active-locale="$interfaceLocale"
-										:search-query="searchQuery"
-										@result-select="handleResultSelect"
-										@activate-all-locales="activateAllLocalesSearch"
+									<CdxSearchInput
+										v-model="searchQuery"
+										class="frontdoor-shell__search"
+										dir="auto"
+										:use-button="false"
+										:placeholder="searchPlaceholderLabel"
+										@focusin="handleSearchFocusIn"
 									/>
+									<div
+										v-if="isSearchPanelOpen && hasQuery"
+										class="frontdoor-shell__search-panel"
+										@mousedown.prevent
+									>
+										<SharedSearchResults
+											:locale-results="localeResults"
+											:fallback-results="fallbackResults"
+											:all-locale-result-groups="allLocaleResultGroups"
+											:is-all-locales-mode="isAllLocalesMode"
+											:active-locale="$interfaceLocale"
+											:search-query="searchQuery"
+											@result-select="handleResultSelect"
+											@activate-all-locales="activateAllLocalesSearch"
+										/>
+									</div>
 								</div>
-							</div>
-							<div class="frontdoor-shell__utilities">
 								<CdxButton
 									class="frontdoor-shell__search-toggle"
 									:aria-label="searchButtonLabel"
@@ -272,6 +272,7 @@ useHead( {
 									<CdxIcon :icon="cdxIconConfigure" />
 								</CdxButton>
 								<CdxSelect
+									:key="direction"
 									v-model:selected="selectedInterfaceLocale"
 									class="frontdoor-shell__language-select"
 									:menu-items="languageMenuItems"
@@ -281,7 +282,9 @@ useHead( {
 									<template #label="{ selectedMenuItem, defaultLabel }">
 										<span class="frontdoor-shell__language-select-label">
 											<CdxIcon :icon="cdxIconLanguage" />
-											<span>{{ selectedMenuItem?.label ?? defaultLabel }}</span>
+											<span class="frontdoor-shell__language-select-text">
+												{{ selectedMenuItem?.label ?? defaultLabel }}
+											</span>
 										</span>
 									</template>
 								</CdxSelect>
@@ -423,17 +426,27 @@ useHead( {
 .frontdoor-shell__header-inner {
 	container-type: inline-size;
 	container-name: frontdoor-header;
+	min-inline-size: 0;
+}
+
+/*
+ * Figma Header/Default: one end-aligned row — search (max 640px), settings,
+ * language select, log in — with spacing-100 gaps. Search shrinks first.
+ */
+.frontdoor-shell__header-actions {
 	display: flex;
+	flex: 1 1 auto;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: flex-end;
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
+	inline-size: 100%;
 }
 
 .frontdoor-shell__search-wrap {
 	position: relative;
-	flex: 1 1 auto;
+	flex: 0 1 40rem;
 	min-inline-size: 0;
 	max-inline-size: 40rem;
 	display: flex;
@@ -469,14 +482,11 @@ useHead( {
 
 .frontdoor-shell__search-toggle {
 	display: none;
-	flex-shrink: 0;
+	flex: 0 0 auto;
 }
 
-.frontdoor-shell__utilities {
-	display: flex;
-	align-items: center;
-	gap: var( --spacing-100 );
-	flex-shrink: 0;
+.frontdoor-shell__settings-button {
+	flex: 0 0 auto;
 }
 
 .frontdoor-shell__primary-nav {
@@ -495,8 +505,21 @@ useHead( {
 }
 
 .frontdoor-shell__language-select {
-	inline-size: min( 12rem, 100% );
-	flex-shrink: 0;
+	flex: 0 1 auto;
+	min-inline-size: 0;
+	max-inline-size: 11rem;
+}
+
+/* Keep the closed select within its flex track; long locale names ellipsize. */
+.frontdoor-shell__language-select:deep( .cdx-select-vue ) {
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__language-select:deep( .cdx-select-vue__handle ) {
+	max-inline-size: 100%;
+	min-inline-size: 0;
+	overflow: hidden;
 }
 
 .frontdoor-shell__language-select-label {
@@ -504,10 +527,19 @@ useHead( {
 	align-items: center;
 	gap: var( --spacing-50 );
 	min-inline-size: 0;
+	max-inline-size: 100%;
+	overflow: hidden;
+}
+
+.frontdoor-shell__language-select-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-inline-size: 0;
 }
 
 .frontdoor-shell__login-link {
-	flex-shrink: 0;
+	flex: 0 0 auto;
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
 	white-space: nowrap;
