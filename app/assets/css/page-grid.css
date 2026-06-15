@@ -1,11 +1,11 @@
 /**
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
- * Desktop (≥ 1120px, Codex --min-width-breakpoint-desktop): 2-panel layout — 4 | 16 | 4
- * with both side columns always reserved on every route.
+ * Desktop (≥ 1120px): fixed 241px start panel + main:end in 16:4 ratio (4fr / 1fr).
+ * Tablet (≥ 640px): fixed 241px start + fluid main. Mobile: stacked interim layout.
  *
  * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
- * future commit). Tablet uses 2 + 6 without a stacked end row; mobile stacks main first.
+ * future commit). The start column width is locked until collapse-into-header work.
  *
  * @media uses px literals matching Codex breakpoint tokens — CSS variables are unreliable
  * inside media query conditions in many browsers.
@@ -18,7 +18,10 @@
 	/* Locked shell width at desktop wide (Codex max-width-breakpoint-desktop, 1679px) */
 	--fd-layout-grid-max-inline-size: var( --max-width-breakpoint-desktop );
 
-	/* Column spans on 24-column desktop */
+	/* Fixed start (left) side panel width — Figma side panel; responsive collapse deferred */
+	--fd-layout-start-panel-inline-size: 15.0625rem; /* 241px */
+
+	/* Column spans on 24-column desktop (main:end ratio = 16:4) */
 	--fd-layout-grid-columns: 24;
 	--fd-layout-side-span: 4;
 	--fd-layout-main-span: 16;
@@ -91,17 +94,20 @@
 
 	.fd-page-grid {
 		display: grid;
-		grid-template-columns: repeat( var( --fd-layout-tablet-columns ), minmax( 0, 1fr ) );
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
 		gap: var( --fd-layout-grid-gutter );
 	}
 
 	.fd-page-grid__main {
 		order: unset;
-		grid-column: calc( var( --fd-layout-tablet-side-span ) + 1 ) / span var( --fd-layout-tablet-main-span );
+		grid-column: 2;
 	}
 
 	.fd-page-grid__start {
-		grid-column: 1 / span var( --fd-layout-tablet-side-span );
+		grid-column: 1;
+		inline-size: var( --fd-layout-start-panel-inline-size );
+		min-inline-size: var( --fd-layout-start-panel-inline-size );
+		max-inline-size: var( --fd-layout-start-panel-inline-size );
 	}
 }
 
@@ -114,7 +120,7 @@
 
 	.fd-page-grid {
 		display: grid;
-		grid-template-columns: repeat( var( --fd-layout-grid-columns ), minmax( 0, 1fr ) );
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 4fr ) minmax( 0, 1fr );
 		gap: var( --fd-layout-grid-gutter );
 	}
 
@@ -124,28 +130,28 @@
 	}
 
 	.fd-page-grid__start {
-		grid-column: 1 / span var( --fd-layout-side-span );
+		grid-column: 1;
 		grid-row: 1;
+		inline-size: var( --fd-layout-start-panel-inline-size );
+		min-inline-size: var( --fd-layout-start-panel-inline-size );
+		max-inline-size: var( --fd-layout-start-panel-inline-size );
 	}
 
 	.fd-page-grid__main {
-		grid-column: calc( var( --fd-layout-side-span ) + 1 ) / span var( --fd-layout-main-span );
+		grid-column: 2;
 		grid-row: 1;
 	}
 
 	.fd-page-grid__end {
-		grid-column: calc( var( --fd-layout-side-span ) + var( --fd-layout-main-span ) + 1 ) / span var( --fd-layout-side-span );
+		grid-column: 3;
 		grid-row: 1;
 	}
 }
 
-/* --- Desktop wide (≥ 1680px): lock shell width; 24 × 40px column tracks --- */
+/* --- Desktop wide (≥ 1680px): lock shell width; fixed start panel + 16:4 main:end --- */
 @media screen and ( min-width: 1680px ) {
 	.fd-page-grid {
 		max-inline-size: var( --fd-layout-grid-max-inline-size );
-		grid-template-columns: repeat(
-			var( --fd-layout-grid-columns ),
-			var( --fd-layout-desktop-wide-column-width )
-		);
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 4fr ) minmax( 0, 1fr );
 	}
 }

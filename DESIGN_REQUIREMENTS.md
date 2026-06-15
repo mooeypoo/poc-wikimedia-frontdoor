@@ -54,20 +54,40 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 
 **Rationale:** Mirrors a full developer-portal IA while keeping explorer outside locale-prefixed routing.
 
-### Brand link
+### Brand logo
 
-**Decision:** Application title in the **left grid column** links to **Get started** (localized home path), not a separate “home” label.
+**Decision:** The start column shows a **Wikimedia Developer Portal** wordmark (`public/images/developer-portal-logo.svg`, 153×48) above the section menu. The logo links to **Get started** (localized home path) via `ShellBrandLogo.vue`.
 
-### API Explorer left navigation (side nav)
+**Status:** **Prototype asset** — temporary SVG wordmark for chrome exploration; not final brand guidance.
 
-**Decision:** On `/explorer` only, the start column shows a **two-section** vertical nav:
+**Source:** `app/components/shared/ShellBrandLogo.vue`, `app/composables/useMainNavigationLinks.ts`.
 
-1. **API Explorer** — single active item: “Wikimedia API modules”
-2. **Overview** — placeholder links (access policy, rate limits, authentication, licensing, stability, changelog, libraries/SDKs)
+### Start column section navigation
 
-**Source:** `config/explorerSideNav.js`.
+**Decision:** On every route that maps to a primary nav item, the start column shows a **flat** vertical section menu below the logo:
 
-**Status:** Visual/IA mock only. Links do not navigate; `isActive` is config-driven for the modules item only.
+- **Section headings** (bold) and **page links** share one list — no nested sub-menus or extra indent for items under a heading.
+- **Horizontal dividers** (`--border-color-subtle`) separate section groups within the menu.
+- **No `border-inline-end`** on the start column (panel edge is background-only).
+- **Fixed width** **241px** (`--fd-layout-start-panel-inline-size`) at tablet and above; collapse into the header is **deferred** until responsive chrome work.
+- **Exactly one** menu item shows a selected state at a time (current page). On Get started (`/`), only **Introduction** is selected.
+
+**Content sources:**
+
+| Primary nav | Config | Notes |
+|-------------|--------|-------|
+| Get started, Learn, Enterprise, Community, Contribute, Get help, About | `config/sectionNavigation.js` | IA from Developer Portal v2 |
+| API Explorer | `config/explorerSideNav.js` | Two sections: API Explorer + Overview placeholders |
+
+**Rendering:** `usePageSectionNav()` → `ShellSidePanelNav.vue` in `app/layouts/default.vue`. Labels via banana-i18n only.
+
+**Codex exception:** `CdxMenuItem` is used **standalone** (not inside `CdxMenu`). Approved for this static shell list; do not reuse for floating menus without review.
+
+**Status:** **Visual/IA prototype only.** All item links use `href="#"` with `@click.prevent`. Active state comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts` (content routes) or `isActive` in `explorerSideNav.js` (explorer). Wiring to real content routes is future work.
+
+**Superseded:** `ExplorerSideNav.vue` is no longer mounted; explorer uses the shared side panel component.
+
+**Design reference:** [Unified Developer Front Door — side panel (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=334-5128)
 
 ---
 
@@ -86,21 +106,23 @@ Layout follows the **Codex responsive grid** and the **2-panel desktop layout** 
 | **Desktop** | 1120px–1679px | **24 columns** | 24px | 32px | Fluid within margins |
 | **Desktop wide** | ≥ 1680px | **24 columns** (40px column width) | 24px | **Grow with viewport** | **Fixed** at desktop maximum width; extra space becomes margin |
 
-**Desktop wide behaviour:** At viewports wider than 1679px, the **page content block keeps the same width** as at 1679px; only the **outer start and end margins increase**. Column width on the 24-column grid is **40px** at this breakpoint (Codex spec).
+**Desktop wide behaviour:** At viewports wider than 1679px, the **page content block keeps the same width** as at 1679px; only the **outer start and end margins increase**. Main and end columns share remaining space in a **16:4** ratio (`4fr` / `1fr` grid tracks).
 
 **Rationale:** Aligns with Codex layout tokens and Wikimedia portal conventions; wide screens avoid over-long line lengths in the main column.
 
-### Shell column distribution (desktop, 24-column grid)
+### Shell column distribution (desktop)
 
-On **desktop** and **desktop wide**, the implemented shell uses a **4 + 16 + 4** column split within the 24-column grid:
+On **desktop** and **desktop wide**, the implemented shell uses a **fixed start panel** plus fluid main and end columns:
 
-| Area | Span | Role |
-|------|------|------|
-| **Start** | 4 cols | Brand; on `/explorer`, left documentation side nav; reserved on all other pages for future section navigation |
-| **Main** | 16 cols | Header utilities, primary nav, page content |
-| **End** | 4 cols | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
+| Area | Width | Role |
+|------|-------|------|
+| **Start** | **241px fixed** | Brand logo + section navigation (`ShellBrandLogo`, `ShellSidePanelNav`) |
+| **Main** | **4fr** (≈16/20 of remainder) | Header utilities, primary nav, page content |
+| **End** | **1fr** (≈4/20 of remainder) | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
 
-On **desktop** and **desktop wide**, both side columns are **always present** in the grid (**4 + 16 + 4**). Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
+On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
+
+**Note:** The Codex **4 \| 16 \| 4** mental model is preserved via the main:end **16:4** ratio; the start column is **not** a fluid grid fraction — it is locked to the Figma side-panel width until responsive collapse is implemented.
 
 **Source (prototype):** `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue`.
 
@@ -111,18 +133,18 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Design spec | Status | Implementation |
 |-------------|--------|------------------|
 | Mobile 320px–639px (4-col tokens, 16px gutter/margins, stacked) | **Implemented** | `page-grid.css` — `--spacing-100` page margin and gutter |
-| Tablet 640px–1119px (8-col, 2 \| 6, 24px gutter/margins) | **Interim** | `page-grid.css` — start + main only; end panel hidden until desktop |
-| Desktop 1120px–1679px (24-col fluid, 4 \| 16 \| 4, 32px margins) | **Implemented** | `page-grid.css` — `--spacing-200` page margin; both side panels on sides, always reserved |
-| Desktop wide ≥ 1680px (fixed 1679px shell, 24 × 40px tracks) | **Implemented** | `page-grid.css` — `@media (min-width: 1680px)`, `--max-width-breakpoint-desktop` cap |
+| Tablet 640px–1119px (fixed start + fluid main, 24px gutter/margins) | **Interim** | `page-grid.css` — `241px` start + `1fr` main; end panel hidden until desktop |
+| Desktop 1120px–1679px (fixed start + 4fr \| 1fr main:end, 32px margins) | **Implemented** | `page-grid.css` — `--spacing-200` page margin; both side panels on sides, always reserved |
+| Desktop wide ≥ 1680px (fixed 1679px shell, fixed start + 16:4 main:end) | **Implemented** | `page-grid.css` — `@media (min-width: 1680px)`, `--max-width-breakpoint-desktop` cap |
 
 **Responsive behaviour summary:**
 
 | Viewport | Shell layout |
 |----------|----------------|
-| **&lt; 640px** | **Interim:** main first, then start (brand); end panel hidden — full side-panel responsive deferred |
-| **640px–1119px** | **Interim:** 8-column **2 \| 6** (start + main); end panel hidden until desktop |
-| **≥ 1120px** | 24-column grid: **4 \| 16 \| 4** (both side panels on sides, all routes); start column `border-inline-end` |
-| **≥ 1680px** | Same column spans; grid box **max 1679px** centered; column tracks **40px** fixed |
+| **&lt; 640px** | **Interim:** main first, then start (brand + section nav); end panel hidden — full side-panel responsive deferred |
+| **640px–1119px** | **Interim:** **241px** fixed start + fluid main; end panel hidden until desktop |
+| **≥ 1120px** | Fixed **241px** start + **4fr \| 1fr** main:end (both side panels on sides, all routes); **no** start-column edge border |
+| **≥ 1680px** | Same tracks; grid box **max 1679px** centered |
 
 **Note:** `@media` conditions in `page-grid.css` use **px literals** aligned to Codex breakpoint tokens (`640px`, `1120px`, `1680px`) because custom properties are unreliable in media query conditions.
 
@@ -169,6 +191,14 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 **Decision:** Main slot uses **`padding-block: var(--spacing-200)`** (32px). Page titles (`h1`) have **no extra top margin**; vertical rhythm comes from main padding only (aligned with explorer page title).
 
 **Source:** `app/layouts/default.vue`, `app/assets/css/main.css`.
+
+### Start column chrome
+
+**Decision:** The start column (`.shell-side-panel`) uses **`--background-color-neutral-subtle`**, padding **`--spacing-150`** top / **`--spacing-100`** bottom / **`--spacing-200`** inline-start / **`--spacing-75`** inline-end. A subtle divider separates the logo from the section menu when navigation is shown.
+
+**Status:** Prototype styling aligned to [Unified Developer Front Door (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=334-5128). Responsive collapse deferred.
+
+**Source:** `app/layouts/default.vue`, `app/assets/css/main.css` (shell side-panel font stack).
 
 ---
 
@@ -372,13 +402,15 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 ## Open questions / future design work
 
-1. **Wire explorer side nav** to real doc routes or in-page anchors.
-2. **Implement search** in header (Lunr per `ARCHITECTURE.md`).
-3. **Apply opt-in filters** to module/endpoint lists and Scalar display.
-4. **Mobile explorer** — dedicated small-screen module rail placement (currently stacked, start column hidden).
-5. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
-6. **Editorial content** for Learn, Enterprise, Community, Contribute, Get help.
-7. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
+1. **Wire section navigation** to real content routes (replace `href="#"` placeholders and prototype active map).
+2. **Collapse start column** into header on small viewports (responsive chrome).
+3. **Wire explorer side nav** to real doc routes or in-page anchors.
+4. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
+5. **Apply opt-in filters** to module/endpoint lists and Scalar display.
+6. **Mobile explorer** — dedicated small-screen module rail placement (currently stacked, start column hidden).
+7. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
+8. **Editorial content** for Learn, Enterprise, Community, Contribute, Get help.
+9. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
 
 ---
 
@@ -388,11 +420,13 @@ Mapping of notable commits to design areas (newest first among design-only work)
 |------|----------------|
 | Site grid | `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue` |
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
+| Start column chrome | `app/components/shared/ShellBrandLogo.vue`, `app/components/shared/ShellSidePanelNav.vue`, `app/composables/usePageSectionNav.ts` |
+| Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
 | Explorer page | `app/pages/explorer/index.vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue` |
-| Explorer side nav | `app/components/explorer/ExplorerSideNav.vue`, `config/explorerSideNav.js` |
+| Explorer side nav (legacy) | `app/components/explorer/ExplorerSideNav.vue` — superseded by `ShellSidePanelNav` |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |

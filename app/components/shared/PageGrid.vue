@@ -2,8 +2,9 @@
 /**
  * PageGrid — Codex-aligned responsive shell layout (see DESIGN_REQUIREMENTS.md).
  *
- * Desktop (≥ 1120px): 24-column 4 + 16 + 4 with both side panels reserved on every route.
- * Below desktop: interim layout; full side-panel responsive behaviour is deferred.
+ * Desktop (≥ 1120px): fixed 241px start panel + main + end (16:4 main:end ratio).
+ * Tablet (≥ 640px): fixed 241px start + fluid main. Mobile: stacked interim layout.
+ * Full side-panel responsive behaviour (collapse into header) is deferred.
  */
 </script>
 

@@ -8,6 +8,7 @@ import {
 import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
 import { useDirection } from '../composables/useDirection'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
+import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { useContentSearch } from '../composables/useContentSearch'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
@@ -15,9 +16,9 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  * Default layout — the Front Door application shell.
  *
  * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer inside the site-wide 24-column grid. The site
- * brand lives in the left column; the header holds search and utility
- * controls with primary navigation directly below.
+ * content slot, and footer inside the site-wide grid. The start column
+ * hosts the brand logo and route-aware section navigation (`usePageSectionNav`);
+ * the header holds search and utility controls with primary navigation below.
  */
 
 const { direction } = useDirection()
@@ -26,7 +27,12 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
-const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
+const { mainNavigationLinks } = useMainNavigationLinks()
+const {
+	hasPageSectionNavigation,
+	navigationLabel: pageSectionNavigationLabel,
+	navigationSections: pageSectionNavigationSections
+} = usePageSectionNav()
 
 interface PickerMenuItem {
 	label: string
@@ -159,20 +165,24 @@ useHead( {
 <template>
 	<div
 		class="frontdoor-shell"
-		:class="{ 'frontdoor-shell--explorer': isExplorerRoute }"
+		:class="{
+			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--has-section-nav': hasPageSectionNavigation
+		}"
 	>
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
-				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start frontdoor-shell__side-nav">
-					<div class="frontdoor-shell__brand-area">
-						<NuxtLink
-							:to="getStartedPath"
-							class="frontdoor-shell__brand"
-						>
-							{{ applicationTitle }}
-						</NuxtLink>
-					</div>
-					<ExplorerSideNav v-if="isExplorerRoute" />
+				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel">
+					<SharedShellBrandLogo />
+					<hr
+						v-if="hasPageSectionNavigation"
+						class="shell-side-panel__divider"
+					>
+					<SharedShellSidePanelNav
+						v-if="hasPageSectionNavigation"
+						:aria-label="pageSectionNavigationLabel"
+						:sections="pageSectionNavigationSections"
+					/>
 				</div>
 			</template>
 
@@ -399,17 +409,36 @@ useHead( {
 	white-space: nowrap;
 }
 
-.frontdoor-shell__side-nav {
+.frontdoor-shell__side-nav,
+.shell-side-panel {
 	display: flex;
 	flex-direction: column;
-	padding-inline: var( --spacing-100 );
+	gap: var( --spacing-50 );
 	min-block-size: 100%;
 	min-inline-size: 0;
 }
 
-/* Align the side nav first row with .frontdoor-shell__main-nav (no extra gap below the brand). */
-.frontdoor-shell--explorer .frontdoor-shell__side-nav {
-	gap: 0;
+.shell-side-panel {
+	background-color: var( --background-color-neutral-subtle );
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: var( --spacing-100 );
+	padding-inline-start: var( --spacing-200 );
+	padding-inline-end: var( --spacing-75 );
+	inline-size: 100%;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+.shell-side-panel__divider {
+	border: none;
+	border-block-start: 1px solid var( --border-color-subtle );
+	margin: 0;
+	inline-size: 100%;
+}
+
+.frontdoor-shell--explorer .shell-side-panel,
+.frontdoor-shell--has-section-nav .shell-side-panel {
+	gap: var( --spacing-50 );
 }
 
 .frontdoor-shell__main-nav {
@@ -423,24 +452,6 @@ useHead( {
 .frontdoor-shell__main-nav a {
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
-}
-
-.frontdoor-shell__brand-area {
-	block-size: 4rem;
-	min-block-size: 4rem;
-	max-block-size: 4rem;
-	display: flex;
-	align-items: center;
-}
-
-.frontdoor-shell__brand {
-	font-size: var( --font-size-large );
-	font-weight: var( --font-weight-bold );
-	display: inline-flex;
-	align-items: center;
-	line-height: var( --line-height-xx-small );
-	max-block-size: 100%;
-	overflow: hidden;
 }
 
 .frontdoor-shell__main {
@@ -482,7 +493,6 @@ useHead( {
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		border-inline-end: 1px solid var( --border-color-subtle );
 		align-self: stretch;
 	}
 
@@ -512,12 +522,6 @@ useHead( {
 		align-items: stretch;
 		align-self: start;
 		min-inline-size: 0;
-	}
-}
-
-@media screen and ( min-width: 640px ) and ( max-width: 1119px ) {
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		border-inline-end: 1px solid var( --border-color-subtle );
 	}
 }
 </style>

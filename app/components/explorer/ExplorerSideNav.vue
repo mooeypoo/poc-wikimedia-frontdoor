@@ -4,7 +4,8 @@ import { EXPLORER_SIDE_NAV_SECTIONS } from '../../../config/explorerSideNav'
 /**
  * ExplorerSideNav — left-hand section navigation for the API Explorer page.
  *
- * Renders placeholder section links from config; no routes are wired yet.
+ * @deprecated Superseded by `ShellSidePanelNav` + `usePageSectionNav()`.
+ * Retained for reference; the layout no longer mounts this component.
  */
 const { $bananaI18n } = useNuxtApp()
 

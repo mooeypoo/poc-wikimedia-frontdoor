@@ -54,20 +54,25 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   ├── explorer/           # Components used only in the explorer
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
+│   │       ├── PageGrid.vue            # Shell responsive grid wrapper
+│   │       ├── ShellBrandLogo.vue      # Start-column wordmark (prototype)
+│   │       └── ShellSidePanelNav.vue   # Start-column section menu (prototype)
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
 │   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
 │   │   └── explorer-route-navigation.client.ts  # Full reload across /explorer boundary
 │   ├── utils/
-│   │   └── explorerRoute.ts    # isExplorerRoutePath() for layout and plugins
+│   │   ├── explorerRoute.ts    # isExplorerRoutePath() for layout and plugins
+│   │   └── contentRoute.ts     # Main-nav id from route path; locale prefix stripping
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
 │   └── layouts/
-│       └── default.vue         # Shell layout; primary nav; sets dir on <html>
+│       └── default.vue         # Shell layout; primary nav; section nav; sets dir on <html>
 │
 ├── config/                     # Project-level configuration (not Nuxt config)
 │   ├── instances.ts            # Wiki instance definitions and base URLs
 │   ├── languages.js            # Supported languages with explicit dir declarations
 │   ├── mainNavigation.ts       # Primary shell nav order and paths
+│   ├── sectionNavigation.js    # Content-page left-rail sections (keyed by main nav id)
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   └── scalar.js               # Scalar component defaults
@@ -151,10 +156,39 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
 | `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
+| `usePageSectionNav()` | Resolves start-column section navigation for the current route (content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`); prototype active states only |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
 | `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
+
+---
+
+## Shell section navigation (start column)
+
+The **start column** hosts the brand logo and a **route-aware section menu** on every primary-nav surface (Get started, Learn, Enterprise, Community, Contribute, Get help, About, and API Explorer). This is **chrome prototype** behaviour: links do not navigate to real destinations yet, and active/selected states are driven by a prototype map or config flags — not by deep content routing.
+
+```
+Route path
+    ↓
+getMainNavigationIdFromPath()     ← app/utils/contentRoute.ts
+    ↓
+usePageSectionNav()
+    ├── api-explorer → config/explorerSideNav.js
+    └── other ids    → config/sectionNavigation.js
+    ↓
+banana-i18n labels + single global active item
+    ↓
+ShellSidePanelNav (default.vue start slot)
+```
+
+**Rendering.** `app/layouts/default.vue` mounts `SharedShellBrandLogo` and `SharedShellSidePanelNav` in the start column. The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly.
+
+**Codex exception.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown). See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+
+**Superseded component.** `app/components/explorer/ExplorerSideNav.vue` is retained but **not mounted** by the layout; explorer sections are rendered through the shared `ShellSidePanelNav` path above.
+
+**Fixed width.** The start column uses `--fd-layout-start-panel-inline-size` (**241px**, Figma side panel) from `page-grid.css`. Responsive collapse into the header is **deferred**.
 
 ---
 
@@ -380,6 +414,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
 | `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
+| `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
 | `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |

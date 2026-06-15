@@ -70,8 +70,8 @@ body {
  * (often computed as Arial on Windows). */
 .frontdoor-shell__main-nav,
 .frontdoor-shell__main-nav :where( a ),
-.frontdoor-shell__side-nav,
-.frontdoor-shell__side-nav :where( a ) {
+.shell-side-panel,
+.shell-side-panel-nav {
 	font-family: var( --font-family-sans-stack );
 }
 
