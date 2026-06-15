@@ -268,8 +268,24 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list.
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** — `.frontdoor-shell__chrome` owns the single header edge per Figma.
 3. **Search field** — Codex `CdxSearchInput` minimum width overridden in the layout so a **container query** can collapse to an icon-only control below ~640px container width. Full header responsive behaviour is **deferred**.
+4. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule.
 
-### Prototype / non-final shell behaviour
+### Interface locale picker (shell)
+
+The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n interface locale (`$setInterfaceLocale`, Vue I18n `locale`). Supported values: `en`, `es`, `fr`, `he`, `fa` (prototype subset).
+
+**Display pattern (Figma header):**
+
+| Surface | Icon | Label |
+|---------|------|-------|
+| Closed select (trigger) | Yes — `cdxIconLanguage` via `#label` slot | Selected language name or placeholder |
+| Dropdown menu items | No | Language name only |
+
+**BiDi:** Labels are passed through `isolateLabel()` so mixed-direction language names remain stable inside Codex menu rendering without HTML `<bdi>` wrappers.
+
+**Routing:** On content routes, changing locale navigates via `switchLocalePath()` when the path differs. On `/explorer`, locale updates in place without URL prefix change — see `DESIGN_REQUIREMENTS.md` → Interface locale on explorer.
+
+**Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot).
 
 The following are **intentional placeholders** in the design-chrome exploration — not production-ready features:
 

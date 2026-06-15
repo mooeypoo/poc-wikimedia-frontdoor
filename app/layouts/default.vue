@@ -84,8 +84,7 @@ function handleResultSelect( _resultId: string ): void {
 	isSearchPanelOpen.value = false
 }
 
-// <option>-like rendering targets cannot include HTML tags, so FSI/PDI
-// markers isolate labels and keep mixed-direction names stable.
+// Codex Select / Combobox menu labels cannot use <bdi>; FSI/PDI isolate mixed-direction names.
 function isolateLabel( label: string ): string {
 	return `\u2068${ label }\u2069`
 }
@@ -142,11 +141,14 @@ watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
 	}
 }, { immediate: true } )
 
+/**
+ * Interface locale menu entries for the header CdxSelect (labels only — no icons).
+ * Icon display is handled by the Select `#label` slot; see DESIGN_REQUIREMENTS.md.
+ */
 const languageMenuItems = computed<PickerMenuItem[]>( () => {
 	return supportedInterfaceLocales.map( ( localeCode ) => ( {
 		value: localeCode,
-		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) ),
-		icon: cdxIconLanguage
+		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) )
 	} ) )
 } )
 
@@ -273,10 +275,16 @@ useHead( {
 									v-model:selected="selectedInterfaceLocale"
 									class="frontdoor-shell__language-select"
 									:menu-items="languageMenuItems"
-									:default-icon="cdxIconLanguage"
 									:default-label="interfaceLanguagePlaceholder"
 									:aria-label="interfaceLanguageLabel"
-								/>
+								>
+									<template #label="{ selectedMenuItem, defaultLabel }">
+										<span class="frontdoor-shell__language-select-label">
+											<CdxIcon :icon="cdxIconLanguage" />
+											<span>{{ selectedMenuItem?.label ?? defaultLabel }}</span>
+										</span>
+									</template>
+								</CdxSelect>
 								<a
 									href="#"
 									class="frontdoor-shell__login-link"
@@ -489,6 +497,13 @@ useHead( {
 .frontdoor-shell__language-select {
 	inline-size: min( 12rem, 100% );
 	flex-shrink: 0;
+}
+
+.frontdoor-shell__language-select-label {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-50 );
+	min-inline-size: 0;
 }
 
 .frontdoor-shell__login-link {

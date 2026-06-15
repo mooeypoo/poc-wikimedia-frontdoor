@@ -186,6 +186,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Header locks at ≥ 1440px | `--fd-layout-chrome-max-inline-size` | **Not a Codex breakpoint**; body grid stays fluid until 1680px cap |
 | Start column no edge border | Removed `border-inline-end` on start panel | Background-only separation |
 | Quiet tabs duplicate border removed | CSS override in `ShellPrimaryNav` | Chrome owns single bottom edge |
+| Interface language icon on trigger only | `CdxSelect` `#label` slot in `default.vue` | Menu items text-only; `isolateLabel()` for BiDi without `<bdi>` |
 
 **Architecture reference:** `ARCHITECTURE.md` → Shell layout and chrome.
 
@@ -217,8 +218,16 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Search (`CdxSearchInput`) | Functional when header container fits the field; interim container query collapses to icon-only below ~640px — **full header responsive deferred** |
 | Search icon button | Shown when container &lt; ~640px; **disabled** prototype |
 | Settings (`CdxButton` + configure icon) | **Disabled** prototype |
-| Interface language (`CdxSelect`) | **Functional** — switches interface locale; on explorer, does not change URL |
+| Interface language (`CdxSelect`) | **Functional** — switches interface locale; on explorer, does not change URL. **Icon on closed select only** — dropdown items are text-only; see below |
 | Log in | Text link (`--color-progressive`), `@click.prevent` — **non-functional** prototype |
+
+**Interface language select (icon display):** Per Figma header chrome, the globe icon appears on the **closed** select trigger only — not on each dropdown option. Implementation:
+
+- **`menuItems`** — `value` + `label` only (no `icon` on items).
+- **`#label` slot** — renders `CdxIcon` (`cdxIconLanguage`) beside the selected label (or placeholder). **`defaultIcon` is not used** — Codex applies that prop only when no item is selected; the slot keeps the icon visible whenever a locale is active.
+- **BiDi** — labels pass through `isolateLabel()` (Unicode FSI/PDI) because Codex menu item labels cannot be wrapped in `<bdi>` (same constraint as combobox options).
+
+**Source:** `app/layouts/default.vue` — `.frontdoor-shell__language-select`, `.frontdoor-shell__language-select-label`.
 
 **Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()`.
 
