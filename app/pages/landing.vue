@@ -5,7 +5,46 @@ definePageMeta( {
 
 onMounted( () => {
 	runTerminalAnimation()
+	scheduleBabyglobe()
 } )
+
+function scheduleBabyglobe(): void {
+	if ( window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) {
+		return
+	}
+	const globe = document.getElementById( 'landing-babyglobe' )
+	if ( !globe ) {
+		return
+	}
+	const gifs = [
+		'/babyglobe/Book_Baby_Globe.gif',
+		'/babyglobe/Headphones_Baby_Globe.gif',
+		'/babyglobe/Laptop_Baby_Globe.gif',
+		'/babyglobe/Phone_Baby_Globe.gif'
+	]
+	const narrowQuery = window.matchMedia( '(max-width: 900px)' )
+
+	function popOnce(): void {
+		const positions = narrowQuery.matches ? [ 't', 'b' ] : [ 'br', 'tr', 'r' ]
+		const gif = gifs[ Math.floor( Math.random() * gifs.length ) ]
+		const pos = positions[ Math.floor( Math.random() * positions.length ) ]
+		globe!.setAttribute( 'src', gif! )
+		globe!.setAttribute( 'data-pos', pos! )
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				globe!.classList.add( 'is-visible' )
+			} )
+		} )
+		const stayMs = 2500 + Math.random() * 1500
+		setTimeout( () => {
+			globe!.classList.remove( 'is-visible' )
+			const nextMs = 7000 + Math.random() * 9000
+			setTimeout( popOnce, nextMs )
+		}, stayMs )
+	}
+
+	setTimeout( popOnce, 5000 )
+}
 
 function runTerminalAnimation(): void {
 	const body = document.getElementById( 'landing-terminal-body' )
@@ -189,6 +228,12 @@ function runTerminalAnimation(): void {
 					role="img"
 					aria-label="Animated terminal showing a sample Wikimedia REST API request and JSON response"
 				>
+					<img
+						id="landing-babyglobe"
+						class="landing-babyglobe"
+						alt=""
+						aria-hidden="true"
+					>
 					<div class="landing-terminal">
 						<div class="landing-terminal__bar" aria-hidden="true">
 							<span class="landing-terminal__dot" />
@@ -541,6 +586,7 @@ function runTerminalAnimation(): void {
 	background: var( --landing-base );
 	color: var( --landing-text-primary );
 	-webkit-font-smoothing: antialiased;
+	overflow-x: clip;
 }
 
 .landing-skip {
@@ -778,6 +824,97 @@ function runTerminalAnimation(): void {
 .landing-terminal-wrap {
 	position: relative;
 }
+.landing-terminal-wrap .landing-terminal {
+	position: relative;
+	z-index: 1;
+}
+.landing-babyglobe {
+	position: absolute;
+	width: 96px;
+	height: 96px;
+	pointer-events: none;
+	opacity: 0;
+	z-index: 0;
+	transition:
+		transform 0.65s cubic-bezier( 0.34, 1.56, 0.64, 1 ),
+		opacity 0.4s ease-out;
+	filter: drop-shadow( 0 8px 16px rgba( 0, 0, 0, 0.35 ) );
+}
+.landing-babyglobe[data-pos="br"] {
+	bottom: -70px;
+	right: -70px;
+	transform: translate( -40px, -40px ) scale( 0.5 ) rotate( -15deg );
+}
+.landing-babyglobe[data-pos="tr"] {
+	top: -70px;
+	right: -70px;
+	transform: translate( -40px, 40px ) scale( 0.5 ) rotate( 15deg );
+}
+.landing-babyglobe[data-pos="r"] {
+	top: 50%;
+	right: -80px;
+	margin-top: -48px;
+	transform: translate( -40px, 0 ) scale( 0.5 );
+}
+.landing-babyglobe.is-visible[data-pos="br"] {
+	transform: translate( 0, 0 ) scale( 1 ) rotate( 6deg );
+	opacity: 1;
+}
+.landing-babyglobe.is-visible[data-pos="tr"] {
+	transform: translate( 0, 0 ) scale( 1 ) rotate( -6deg );
+	opacity: 1;
+}
+.landing-babyglobe.is-visible[data-pos="r"] {
+	transform: translate( 0, 0 ) scale( 1 );
+	opacity: 1;
+}
+/* On narrower viewports the terminal sits flush against the viewport edge, so
+   the desktop offsets push the globe entirely off-screen. Shrink it and pull
+   it back closer to the terminal so it still peeks out. */
+@media ( max-width: 900px ) {
+	.landing-babyglobe {
+		width: 72px;
+		height: 72px;
+	}
+	/* On narrow viewports the terminal is full-width, so peek above or below
+	   the terminal instead of from the side. Resting Y is shifted *into* the
+	   terminal so the globe rises/drops out of view when it pops. */
+	.landing-babyglobe[data-pos="t"] {
+		top: -60px;
+		left: 50%;
+		transform: translate( -50%, 30px ) scale( 0.5 ) rotate( -8deg );
+	}
+	.landing-babyglobe[data-pos="b"] {
+		bottom: -60px;
+		left: 78%;
+		transform: translate( -50%, -30px ) scale( 0.5 ) rotate( 8deg );
+	}
+	.landing-babyglobe.is-visible[data-pos="t"] {
+		transform: translate( -50%, 0 ) scale( 1 ) rotate( -4deg );
+		opacity: 1;
+	}
+	.landing-babyglobe.is-visible[data-pos="b"] {
+		transform: translate( -50%, 0 ) scale( 1 ) rotate( 4deg );
+		opacity: 1;
+	}
+	/* Fallback for the desktop position values, in case the viewport crosses
+	   the 900px threshold mid-animation. */
+	.landing-babyglobe[data-pos="br"] {
+		bottom: -36px;
+		right: -24px;
+		transform: translate( -20px, -20px ) scale( 0.5 ) rotate( -15deg );
+	}
+	.landing-babyglobe[data-pos="tr"] {
+		top: -36px;
+		right: -24px;
+		transform: translate( -20px, 20px ) scale( 0.5 ) rotate( 15deg );
+	}
+	.landing-babyglobe[data-pos="r"] {
+		right: -36px;
+		margin-top: -36px;
+		transform: translate( -20px, 0 ) scale( 0.5 );
+	}
+}
 .landing-terminal {
 	background: var( --landing-code-bg );
 	border-radius: var( --landing-radius-lg );
@@ -818,6 +955,7 @@ function runTerminalAnimation(): void {
 	position: absolute;
 	bottom: -14px;
 	left: 50%;
+	z-index: 2;
 	transform: translateX( -50% );
 	background: var( --landing-gold );
 	color: #1C1C1C;
