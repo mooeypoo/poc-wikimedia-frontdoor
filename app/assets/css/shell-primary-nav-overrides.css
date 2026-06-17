@@ -1,5 +1,5 @@
 /**
- * shell-primary-nav-overrides.css — quiet-tabs border suppression for shell chrome.
+ * shell-primary-nav-overrides.css — Codex quiet-tabs overrides for shell chrome.
  *
  * `.frontdoor-shell__chrome` owns the single header bottom edge (Figma). Codex quiet
  * tabs set physical `border-bottom` on `.cdx-tabs__header`. That rule is re-applied
@@ -12,4 +12,24 @@
 	border-block-end: none !important;
 	/* Codex third-party override — physical property required to beat codex.style*.css */
 	border-bottom: none !important;
+}
+
+/*
+ * Hide Codex horizontal tab scroll buttons (prev/next scroller affordances).
+ * CdxTabs shows them when the tab list overflows; on first paint they can flicker
+ * before layout/intersection observers settle. Shell chrome will use a separate
+ * responsive approach — scroll buttons are not wanted here.
+ */
+.shell-primary-nav .cdx-tabs__prev-scroller,
+.shell-primary-nav .cdx-tabs__next-scroller {
+	display: none !important;
+}
+
+/*
+ * Tab label weight: Codex sets font-weight: 700 on all quiet-tab labels.
+ * Shell chrome uses normal weight for every tab; selection is shown via colour
+ * and progressive underline (Codex default selected styles).
+ */
+.shell-primary-nav .cdx-tabs__list__item {
+	font-weight: var( --font-weight-normal );
 }

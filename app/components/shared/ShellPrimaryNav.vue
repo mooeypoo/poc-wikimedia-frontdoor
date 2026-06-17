@@ -12,8 +12,13 @@ import type { MainNavigationLink } from '../../composables/useMainNavigationLink
  * beyond Codex defaults for alignment with the header bottom border. The quiet-tabs
  * header border is suppressed — `.frontdoor-shell__chrome` owns the single edge.
  *
- * **Responsive:** Header chrome collapse is deferred; tab list scrolls horizontally
- * when labels overflow (built-in Codex Tabs behaviour).
+ * **Typography:** All tab labels use **normal** weight — Codex defaults every
+ * quiet-tab label to bold (`shell-primary-nav-overrides.css`); selection uses
+ * colour and underline only.
+ *
+ * **Responsive:** Codex tab scroll buttons are suppressed in
+ * `shell-primary-nav-overrides.css` (they flicker on load; header chrome
+ * responsiveness will use a separate approach).
  */
 const props = defineProps<{
 	/** Accessible name for the tab list. */

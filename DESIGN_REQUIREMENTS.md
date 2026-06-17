@@ -174,6 +174,8 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Footer short-page bottom pin + 48px inset | **Implemented** | `.frontdoor-shell__body-scroll` scrollport; `.frontdoor-shell__content` flex column (`min-block-size: 100%`); main `flex: 1`; `padding-block-end: --spacing-300` on footer |
 | Start panel viewport height (tablet+) | **Implemented** | Grid row capped by `100dvh` shell; start panel fills track, scrolls when nav overflows |
 | Independent column scroll (start + body) | **Implemented** | Start nav scrolls alone; `.frontdoor-shell__body-scroll` spans main + end with inline-end scrollbar |
+| Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
+| Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel always mounted | **Implemented** | `default.vue` — `.shell-side-panel` on every route; `ShellSidePanelNav` when sections exist |
 
 **Responsive behaviour summary:**
@@ -211,6 +213,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Legacy URL redirects | `config/contentRedirects.ts` → `nuxt.config` `routeRules` | `/learn`, `/about`, `/enterprise` → 301 |
 | Start column section nav | `ShellSidePanelNav`, `usePageSectionNav` | Panel always mounted; nav when sections exist; **Tools and bots** empty |
 | Primary nav as Codex quiet tabs | `ShellPrimaryNav`, `usePrimaryNavigationTab` | Tab panels hidden — **navigation-only** Codex exception |
+| Primary nav tab scroll buttons | `shell-primary-nav-overrides.css` | **Hidden** — Codex overflow scrollers flicker on load; separate responsive approach planned |
+| Primary nav tab label weight | `shell-primary-nav-overrides.css` | **Codex exception** — all labels `--font-weight-normal` (Codex defaults to bold); selection via colour/underline |
 | Two-row header (utility + tabs) | `default.vue` `.frontdoor-shell__chrome` inside full-bleed band | Settings **disabled**; log in **non-functional** |
 | Full-viewport header band | `.frontdoor-shell__chrome-band` in `default.vue` | Background + bottom border span viewport; inner content centred |
 | Header / start nav aligned at inline-start | Shared `--spacing-200` padding on chrome + start panel | Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548) |
@@ -247,7 +251,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Padding:** `--spacing-150` block-start on chrome; `--spacing-150` gap between utility row and tab row; **`padding-inline: var(--spacing-200)`** on `.frontdoor-shell__chrome` at tablet+ (matches start panel inline-start padding).
 
-**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` and re-imported after `codex.style-rtl.css` in `codex-rtl-styles.client.ts`) because `.frontdoor-shell__chrome-band` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`.
+**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **All tab labels** use **`--font-weight-normal`** — **Codex exception** (Codex quiet tabs set `font-weight: 700` on every label); the selected tab is distinguished by colour and progressive underline only. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` and re-imported after `codex.style-rtl.css` in `codex-rtl-styles.client.ts`) because `.frontdoor-shell__chrome-band` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — they flicker on first paint before overflow measurement; header responsiveness will use a separate approach.
 
 **Utility row layout (Figma `Header/Default`, node 284:11443):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and the start of the utility controls. `.frontdoor-shell__header-actions` uses **`flex: 1 1 auto`**. Search (`.frontdoor-shell__search-wrap`) uses **`flex: 1 1 auto`** with **`max-inline-size: min(40rem, 100%)`** so it grows and shrinks to fit the header beside settings, language select, and log in. Gaps **within** the actions row remain **`--spacing-100` (16px)**. Container query for search collapse is scoped to **`.frontdoor-shell__header-actions`** so it measures the utility track, not the full header width including the logo.
 
@@ -554,7 +558,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(pending)* | Shell scroll regions + body-band layout | `PageGrid` **body** slot; `.frontdoor-shell__body-scroll`; independent start/main scroll; footer pin + 48px inset |
+| *(uncommitted)* | Primary nav quiet-tabs overrides | `shell-primary-nav-overrides.css` — hide tab scroll buttons; normal tab label weight |
+| `0e9f156` | Shell scroll regions + body-band layout | `PageGrid` **body** slot only; `.frontdoor-shell__body-scroll`; independent start/body scroll; footer short-page pin + **48px** inset; reverted `footer` grid slot |
 | `2f9fa60` | Static site footer | `ShellSiteFooter`, `config/siteFooter.ts`, banana `footer-*` keys; Figma **393:4639** |
 | `38b4808` | Start column chrome | Transparent panel + `border-inline-end`; **281px** width; section nav hover (`--color-progressive`) |
 | `00f525e` | Explorer UI layer refactor | Code structure; no visual change intended |
