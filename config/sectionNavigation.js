@@ -4,10 +4,11 @@
  * Left-hand section navigation structure for content pages, keyed by
  * `MainNavigationItem.id` from `config/mainNavigation.ts`.
  *
+ * An entry with `sections: []` still mounts the start panel in the shell;
+ * `ShellSidePanelNav` is omitted until sections are defined.
+ *
  * Labels resolve at runtime via banana-i18n. Link targets are prototype
  * placeholders (`href="#"`) until content routes exist.
- *
- * Structure follows the Developer Portal v2 IA (Get started, Learn).
  */
 
 /**
@@ -74,12 +75,12 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 			}
 		]
 	},
-	learn: {
-		ariaLabelMessageKey: 'section-nav-learn-label',
+	'use-content-and-data': {
+		ariaLabelMessageKey: 'section-nav-use-content-and-data-label',
 		sections: [
 			{
-				id: 'learn',
-				titleMessageKey: 'section-nav-learn-title',
+				id: 'use-content-and-data',
+				titleMessageKey: 'section-nav-use-content-and-data-title',
 				items: [
 					{ id: 'get-started-link', messageKey: 'section-nav-learn-get-started-link' }
 				]
@@ -126,17 +127,9 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 			}
 		]
 	},
-	enterprise: {
-		ariaLabelMessageKey: 'section-nav-enterprise-label',
-		sections: [
-			{
-				id: 'enterprise',
-				titleMessageKey: 'section-nav-enterprise-title',
-				items: [
-					{ id: 'overview', messageKey: 'section-nav-overview' }
-				]
-			}
-		]
+	'tools-and-bots': {
+		ariaLabelMessageKey: 'section-nav-tools-and-bots-label',
+		sections: [] // Empty — start panel still mounts; no ShellSidePanelNav links
 	},
 	community: {
 		ariaLabelMessageKey: 'section-nav-community-label',
@@ -187,18 +180,6 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'section-nav-get-help-title',
 				items: [
 					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide' }
-				]
-			}
-		]
-	},
-	about: {
-		ariaLabelMessageKey: 'section-nav-about-label',
-		sections: [
-			{
-				id: 'about',
-				titleMessageKey: 'section-nav-about-title',
-				items: [
-					{ id: 'overview', messageKey: 'section-nav-overview' }
 				]
 			}
 		]

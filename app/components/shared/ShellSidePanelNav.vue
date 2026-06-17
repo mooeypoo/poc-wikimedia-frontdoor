@@ -3,7 +3,8 @@ import { CdxMenuItem } from '@wikimedia/codex'
 import type { ResolvedSectionNavSection } from '../../composables/usePageSectionNav'
 
 /**
- * ShellSidePanelNav — left-hand section navigation in the shell start column.
+ * ShellSidePanelNav — section navigation in the start column, directly below the
+ * full-width header band (not beside the header).
  *
  * Section headings and page links share one flat list (no nested sub-menus).
  * Horizontal dividers separate section groups; the start column has no edge border.

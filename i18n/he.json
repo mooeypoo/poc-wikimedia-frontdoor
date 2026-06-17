@@ -1,7 +1,10 @@
 {
   "app-title": "פורטל המפתחים של ויקימדיה",
+  "brand-wordmark-wikimedia": "WIKIMEDIA",
+  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
   "nav-get-started": "תחילת העבודה",
-  "nav-learn": "למידה",
+  "nav-use-content-and-data": "Use content and data",
+  "nav-tools-and-bots": "Tools and bots",
   "nav-about": "אודות",
   "nav-api": "סייר API",
   "nav-enterprise": "ארגוני",

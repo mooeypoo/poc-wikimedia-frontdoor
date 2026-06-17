@@ -1,6 +1,7 @@
 import { EXPLORER_SIDE_NAV_SECTIONS } from '../../config/explorerSideNav'
 import { SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID } from '../../config/sectionNavigation'
 import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
+import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 export interface ResolvedSectionNavItem {
 	id: string
@@ -34,12 +35,11 @@ interface SectionNavigationSource {
  */
 const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string, itemId: string } | null> = {
 	'/': { sectionId: 'get-started', itemId: 'introduction' },
-	'/learn': null,
-	'/enterprise': { sectionId: 'enterprise', itemId: 'overview' },
+	'/use-content-and-data': null,
+	'/tools-and-bots': null,
 	'/community': null,
 	'/contribute': null,
-	'/get-help': null,
-	'/about': { sectionId: 'about', itemId: 'overview' }
+	'/get-help': null
 }
 
 /**
@@ -50,10 +50,10 @@ const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string,
  * may be selected across the entire menu.
  *
  * @returns {{
- *   hasPageSectionNavigation: import('vue').ComputedRef<boolean>,
  *   navigationLabel: import('vue').ComputedRef<string>,
  *   navigationSections: import('vue').ComputedRef<ResolvedSectionNavSection[]>
- * }} Reactive section navigation for the shell start column.
+ * }} Reactive section navigation for the shell start column. The start panel
+ * is always mounted in the layout; `navigationSections` may be empty.
  */
 export function usePageSectionNav() {
 	const route = useRoute()
@@ -61,41 +61,37 @@ export function usePageSectionNav() {
 
 	const mainNavigationId = computed( () => getMainNavigationIdFromPath( route.path ) )
 
-	const navigationSource = computed<SectionNavigationSource | null>( () => {
-		const navigationId = mainNavigationId.value
-
-		if ( !navigationId ) {
-			return null
-		}
-
-		if ( navigationId === 'api-explorer' ) {
+	const navigationSource = computed<SectionNavigationSource>( () => {
+		if ( isExplorerRoutePath( route.path ) ) {
 			return {
 				ariaLabelMessageKey: 'explorer-side-nav-label',
 				sections: EXPLORER_SIDE_NAV_SECTIONS
 			}
 		}
 
-		return SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID[ navigationId ] ?? null
+		const navigationId = mainNavigationId.value
+
+		if ( navigationId ) {
+			return SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID[ navigationId ] ?? {
+				ariaLabelMessageKey: 'section-nav-site-label',
+				sections: []
+			}
+		}
+
+		return {
+			ariaLabelMessageKey: 'section-nav-site-label',
+			sections: []
+		}
 	} )
 
 	const navigationLabel = computed( () => {
-		const source = navigationSource.value
-
-		if ( !source ) {
-			return ''
-		}
-
-		return $bananaI18n( source.ariaLabelMessageKey )
+		return $bananaI18n( navigationSource.value.ariaLabelMessageKey )
 	} )
 
 	const navigationSections = computed<ResolvedSectionNavSection[]>( () => {
 		const source = navigationSource.value
 
-		if ( !source ) {
-			return []
-		}
-
-		const contentPath = mainNavigationId.value === 'api-explorer'
+		const contentPath = isExplorerRoutePath( route.path )
 			? null
 			: stripContentLocalePrefix( route.path )
 
@@ -134,10 +130,7 @@ export function usePageSectionNav() {
 		} ) )
 	} )
 
-	const hasPageSectionNavigation = computed( () => navigationSections.value.length > 0 )
-
 	return {
-		hasPageSectionNavigation,
 		navigationLabel,
 		navigationSections
 	}

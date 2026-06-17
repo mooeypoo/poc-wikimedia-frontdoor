@@ -1,7 +1,10 @@
 {
   "app-title": "API REST ویکی‌مدیا",
+  "brand-wordmark-wikimedia": "WIKIMEDIA",
+  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
   "nav-get-started": "شروع کنید",
-  "nav-learn": "یادگیری",
+  "nav-use-content-and-data": "Use content and data",
+  "nav-tools-and-bots": "Tools and bots",
   "nav-about": "درباره",
   "nav-api": "کاوشگر API",
   "nav-enterprise": "سازمانی",

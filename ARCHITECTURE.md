@@ -55,8 +55,8 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
 │   │       ├── PageGrid.vue            # Shell responsive grid wrapper
-│   │       ├── ShellBrandLogo.vue      # Start-column wordmark (prototype)
-│   │       ├── ShellSidePanelNav.vue   # Start-column section menu (prototype)
+│   │       ├── ShellHeaderBrand.vue    # Header compact brand lockup (prototype)
+│   │       ├── ShellSidePanelNav.vue   # Start-column section menu (when sections exist)
 │   │       └── ShellPrimaryNav.vue     # Header primary nav quiet tabs
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
@@ -67,19 +67,20 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   └── contentRoute.ts     # Main-nav id from route path; locale prefix stripping
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
 │   └── layouts/
-│       └── default.vue         # Shell layout; primary nav; section nav; sets dir on <html>
+│       └── default.vue         # Shell layout: full-bleed header band; always-on start panel; section nav
 │
 ├── config/                     # Project-level configuration (not Nuxt config)
 │   ├── instances.ts            # Wiki instance definitions and base URLs
 │   ├── languages.js            # Supported languages with explicit dir declarations
-│   ├── mainNavigation.ts       # Primary shell nav order and paths
+│   ├── mainNavigation.ts       # Primary shell nav order, paths, API explorer link constant
+│   ├── contentRedirects.ts     # Legacy URL 301 redirects (learn, about, enterprise)
 │   ├── sectionNavigation.js    # Content-page left-rail sections (keyed by main nav id)
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
-│   ├── en/                     # English content (index, learn, about, …)
+│   ├── en/                     # English content (index, use-content-and-data, …)
 │   ├── ar/                     # Arabic content (where available)
 │   └── [locale]/               # Per-locale Markdown directories
 │
@@ -158,7 +159,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route; pairs with `ShellPrimaryNav` |
-| `usePageSectionNav()` | Resolves start-column section navigation for the current route (content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`); prototype active states only |
+| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` only when sections are non-empty. Prototype active states only |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
 | `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
@@ -168,23 +169,29 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 
 ## Shell section navigation (start column)
 
-The **start column** hosts the brand logo and a **route-aware section menu** on every primary-nav surface (Get started, Learn, Enterprise, Community, Contribute, Get help, About, and API Explorer). This is **chrome prototype** behaviour: links do not navigate to real destinations yet, and active/selected states are driven by a prototype map or config flags — not by deep content routing.
+The **start column** is **always mounted** on every page (tablet+: fixed **241px** track). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** with the same background (e.g. **Tools and bots**). **API Explorer** uses `config/explorerSideNav.js` via `isExplorerRoutePath()` — not via a primary-nav tab id. Routes without a section config entry still get an empty panel (`section-nav-site-label`). This is **chrome prototype** behaviour: links do not navigate to real destinations yet, and active/selected states are driven by a prototype map or config flags — not by deep content routing.
 
 ```
 Route path
     ↓
+isExplorerRoutePath()?  → yes → config/explorerSideNav.js
+    ↓ no
 getMainNavigationIdFromPath()     ← app/utils/contentRoute.ts
+    (null on /explorer; matches remote primary-nav sources by localPath)
     ↓
 usePageSectionNav()
-    ├── api-explorer → config/explorerSideNav.js
-    └── other ids    → config/sectionNavigation.js
+    └── main nav id → config/sectionNavigation.js (sections may be empty)
     ↓
 banana-i18n labels + single global active item
     ↓
-ShellSidePanelNav (default.vue start slot)
+.shell-side-panel (always) + ShellSidePanelNav (when sections.length > 0)
 ```
 
-**Rendering.** `app/layouts/default.vue` mounts `SharedShellBrandLogo` and `SharedShellSidePanelNav` in the start column. The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly.
+**Rendering.** `app/layouts/default.vue` always mounts the start panel (`.shell-side-panel`); `SharedShellSidePanelNav` renders only when `navigationSections` is non-empty. The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly.
+
+**Panel height (tablet+).** The start panel stretches to the **bottom of the viewport** below the header band (`min-block-size: 100%` on the page grid and `.frontdoor-shell__side-panel--start`), matching the visible shell height while main content may scroll longer.
+
+**Panel background.** `#F3F3F3` via `--fd-layout-start-panel-background-color` in `page-grid.css` — an **exploratory Codex surface value not yet shipped as a theme token** (see `DESIGN_REQUIREMENTS.md` → Start column chrome). Revisit when Codex publishes the official token.
 
 **Codex exception.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown). See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
@@ -203,55 +210,53 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 ### Grid structure
 
 ```
-.fd-page-grid                    ← Codex page margins (padding-inline)
-├── .fd-page-grid__start        ← brand logo + section nav (241px fixed, tablet+)
-├── .fd-page-grid__main         ← display: contents at tablet+ (hoists children)
-│   └── .frontdoor-shell__content   ← display: contents at tablet+
-│       ├── .frontdoor-shell__chrome   ← header utility row + primary nav (grid row 1)
-│       ├── .frontdoor-shell__main     ← page slot (grid row 2, column 2 only)
-│       └── .frontdoor-shell__footer   ← footer band (grid row 3, column 2 only)
-└── .fd-page-grid__end          ← module rail / reserved space (desktop+)
+.frontdoor-shell
+├── .frontdoor-shell__chrome-band     ← full viewport width (background + bottom border)
+│   └── .frontdoor-shell__chrome-inner   ← centred; matches PageGrid max width + margins
+│       └── .frontdoor-shell__chrome     ← utility row + primary nav (+ API Explorer link)
+└── .frontdoor-shell__page-grid (PageGrid)
+    ├── .fd-page-grid__start        ← start panel always mounted (241px fixed, tablet+); nav optional
+    ├── .fd-page-grid__main
+    │   └── .frontdoor-shell__content
+    │       ├── .frontdoor-shell__main     ← page slot
+    │       └── .frontdoor-shell__footer   ← footer band
+    └── .fd-page-grid__end          ← module rail / reserved space (desktop+)
 ```
 
 **Rendering.** The layout calls composables for navigation state only (`usePrimaryNavigationTab`, `usePageSectionNav`, `useContentSearch`, etc.). Components in the start column and header receive resolved props — they do not fetch data or read route config directly.
 
-### Header chrome grid placement
+### Header chrome placement
 
-At **tablet and above** (≥ 640px), `.fd-page-grid__main` and `.frontdoor-shell__content` use **`display: contents`** so `.frontdoor-shell__chrome`, `.frontdoor-shell__main`, and `.frontdoor-shell__footer` become direct grid items on `.fd-page-grid`. This spans the header across the full **content band** without restructuring `PageGrid.vue`:
+The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-shell__chrome-band`: `inline-size: 100vw`, centred breakout via `margin-inline-start: calc(50% - 50vw)`). Inner content (`.frontdoor-shell__chrome-inner`) is **centred** with the same page margins and max width as `.fd-page-grid`.
 
-| Viewport | Chrome grid span | Notes |
-|----------|------------------|-------|
-| **640px–1119px** | Column 2 | Fluid beside start panel; end panel hidden (interim tablet layout) |
-| **≥ 1120px** | Columns 2–3 | Spans main + end panel band |
+**Inline-start alignment (Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)):** Header brand and primary nav share the same **`--spacing-200` (32px)** inline-start inset as the start column section menu — applied via `padding-inline` on `.frontdoor-shell__chrome` and `padding-inline-start` on `.shell-side-panel` (tablet+). The header spans the full inner width; it is **not** offset into the main column.
 
-The start column (and end column at desktop) use **`grid-row: 1 / -1`** so side panels remain full-height beside the header and page content. The page grid uses **`grid-template-rows: auto 1fr auto`** at tablet+ so the main slot expands and the footer sits at the bottom of column 2.
+The **start column** holds section navigation **below** the header band only. Side panels use a single grid row at desktop.
 
-**Mobile (&lt; 640px):** Stacked interim layout — chrome remains inside the flex column wrapper; footer pinning uses **`margin-block-start: auto`**. Side-panel collapse into the header is **deferred**.
+**Mobile (&lt; 640px):** Stacked interim layout — start panel (always mounted; nav when sections exist), then main; header and start panel use **`--spacing-100` (16px)** inline padding to match mobile page margins. Footer pinning uses **`margin-block-start: auto`**. Side-panel collapse into the header is **deferred**.
 
-**Disclaimer:** `display: contents` removes the wrapper box from the layout tree. This pattern is approved for shell-chrome exploration; revisit if it causes accessibility-tree or focus-management issues in audit.
+### Chrome width
 
-### Chrome width and start-panel connection
+**Fluid width (viewport &lt; 1440px):** Header band is full viewport; inner content grows with the centred shell up to page margins.
 
-**Fluid width (viewport &lt; 1440px):** Header chrome grows with the content band from the start-panel inline edge to the page inline-end, respecting Codex page margins per breakpoint (`--fd-layout-page-margin`).
+**Locked width (viewport ≥ 1440px):** `.frontdoor-shell__chrome-inner` **`max-inline-size`** is `--fd-layout-grid-content-max-inline-size` (full grid inner width at 1440px: lock viewport minus desktop margins). At **≥ 1680px**, inner max width reverts to `--fd-layout-grid-max-inline-size` (Codex desktop cap, 1679px).
 
-**Locked width (viewport ≥ 1440px):** Chrome **`max-inline-size`** is set to `--fd-layout-chrome-max-inline-size` — the width the header would occupy at a **1440px** viewport with desktop page margins and the fixed start panel (currently **1135px**: 1440 − 64 − 241). Wider viewports grow **outer margins only** for the header bar; the bar itself does not widen.
+**Main content alignment:** `.frontdoor-shell__main` uses **`padding-block: var(--spacing-200)`** only — no inline-start padding. Main column content aligns with the header utility row via the grid gutter between start and main columns.
 
-**Start-panel connection (tablet+):** Negative **`margin-inline-start: calc(-1 * var(--fd-layout-grid-gutter))`** pulls the chrome box across the grid gutter so its **bottom border meets the start panel**. Matching **`padding-inline-start: var(--fd-layout-grid-gutter)`** insets header content so tabs and search align with main-column content below.
-
-**Main content alignment:** `.frontdoor-shell__main` uses **`padding-block: var(--spacing-200)`** only — no inline-start padding. Horizontal alignment with header content comes from the shared grid gutter inset on chrome content, not from duplicate padding on the main slot.
-
-**Disclaimer — 1440px vs Codex desktop-wide:** **`1440px` is a project-specific breakpoint** (Figma shell chrome), not a Codex design token. The **page grid** still caps at **1679px** (`--max-width-breakpoint-desktop`) at **≥ 1680px**. Between **1440px and 1679px** viewport width, header chrome is fixed-width while main and end columns remain fluid within the grid. Whether body content should also lock at 1440px is **unresolved** — see `DESIGN_REQUIREMENTS.md` → Open questions.
+**Disclaimer — 1440px vs Codex desktop-wide:** **`1440px` is a project-specific breakpoint** (Figma shell chrome), not a Codex design token. The **page grid** still caps at **1679px** (`--max-width-breakpoint-desktop`) at **≥ 1680px**. Whether body content should also lock at 1440px is **unresolved** — see `DESIGN_REQUIREMENTS.md` → Open questions.
 
 ### Layout CSS tokens (shell)
 
 | Token | Value / source | Purpose |
 |-------|----------------|---------|
 | `--fd-layout-start-panel-inline-size` | 241px (15.0625rem) | Fixed start column width |
+| `--fd-layout-start-panel-background-color` | `#f3f3f3` | Start panel background (**exploratory** — not a Codex token yet; see `DESIGN_REQUIREMENTS.md`) |
 | `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Codex page margins on `.fd-page-grid` |
 | `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Gaps between grid columns |
 | `--fd-layout-grid-max-inline-size` | Codex `--max-width-breakpoint-desktop` (1679px) | Whole grid cap at ≥ 1680px |
 | `--fd-layout-chrome-lock-viewport-inline-size` | 1440px (90rem) | Header width lock reference (**not Codex**) |
-| `--fd-layout-chrome-max-inline-size` | `calc(lock − 2×desktop margin − start panel)` | Header `max-inline-size` at ≥ 1440px |
+| `--fd-layout-grid-content-max-inline-size` | `calc(1440px lock − 2×desktop margin)` | Header inner `max-inline-size` at ≥ 1440px |
+| `--fd-layout-chrome-max-inline-size` | `calc(lock − 2×desktop margin − start panel)` | Legacy content-band width (main + end only); superseded by full-bleed header |
 
 Media queries in `page-grid.css` and `default.vue` use **px literals** aligned to Codex tokens (`640px`, `1120px`, `1680px`) plus the project **`1440px`** chrome lock, because custom properties are unreliable inside `@media` conditions in many browsers.
 
@@ -259,16 +264,19 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 
 | Component | Role | Config / composable |
 |-----------|------|---------------------|
-| `ShellBrandLogo.vue` | Start-column wordmark; links to Get started | `useMainNavigationLinks()` |
-| `ShellSidePanelNav.vue` | Flat section menu in start column | `usePageSectionNav()` |
+| `ShellHeaderBrand.vue` | Compact header brand (32px mark SVG + wordmark); links to Get started | `useMainNavigationLinks()` |
+| `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
+
+**API Explorer header link.** Not a tab. `default.vue` renders a `NuxtLink` to `API_EXPLORER_NAVIGATION_PATH` (`/explorer` from `config/mainNavigation.ts`) **immediately after** the quiet tab list in `.frontdoor-shell__primary-nav-row`. Tabs use **`flex: 0 1 auto`** (intrinsic width) so the link follows the last tab, not the inline-end of the row. **`gap: var(--spacing-150)` (24px)** between the last tab and the link. Uses `cdxIconArrowNext` (`--color-progressive` on the icon). Active state when `isExplorerRoutePath()`; no primary tab is selected on explorer routes (`getMainNavigationIdFromPath` returns `null`).
 
 ### Codex exceptions (shell chrome)
 
 1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list.
-2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome` owns the single header edge per Figma.
-3. **Search field** — Codex `CdxSearchInput` minimum width overridden in the layout so a **container query** can collapse to an icon-only control below ~640px container width. Full header responsive behaviour is **deferred**.
-4. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
+2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge per Figma.
+3. **Start panel background** — **`#F3F3F3`** via project token `--fd-layout-start-panel-background-color` while Codex evaluates a matching surface token. **Not** `--background-color-neutral-subtle`. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
+4. **Search field** — `CdxSearchInput` in a flex track (`flex: 1 1 auto`, max **40rem**) beside the header brand; **24px** gap (`--spacing-150`) between brand and utilities. Codex `.cdx-text-input` `min-inline-size` overridden to **0** so the field can shrink with the header; a **container query** on `.frontdoor-shell__header-actions` collapses to an icon-only control when the actions row is too narrow. Full header responsive behaviour is **deferred**.
+5. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
 
 ### Interface locale picker (shell)
 
@@ -287,9 +295,11 @@ The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n
 
 **Direction changes:** `:key="direction"` on the select remounts the control when interface locale flips LTR ↔ RTL. Codex RTL stylesheet toggling is handled by `codex-rtl-styles.client.ts` (see **RTL and BiDi** below).
 
-**Utility row layout:** Search, settings, language select, and log in share one end-aligned flex row (`.frontdoor-shell__header-actions`, Figma `Header/Default`). Search shrinks first (`flex: 0 1 40rem`); log in uses `flex: 0 0 auto`; language select is capped at **11rem** with ellipsized labels so long locale names do not overlap the log in link.
+**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `.frontdoor-shell__header-actions` (inline-end, `flex: 1 1 auto`). **Gap between logo and search: `var(--spacing-150)` (24px).** Inside actions: search (`flex: 1 1 auto`, grows/shrinks up to **40rem**), settings, language select (**8–11rem**, ellipsized labels), log in (`flex: 0 0 auto`). Container query for search icon collapse is scoped to **`.frontdoor-shell__header-actions`**.
 
-**Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot).
+**Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`, intrinsic width) plus the **API Explorer** progressive link (`flex: 0 0 auto`) on the same baseline, **24px** (`--spacing-150`) after the last tab. See `DESIGN_REQUIREMENTS.md` → Shell chrome.
+
+**Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot, `.frontdoor-shell__api-explorer-link`).
 
 ### Prototype / non-final shell behaviour
 
@@ -297,14 +307,16 @@ The following are **intentional placeholders** in the design-chrome exploration 
 
 | Area | Status |
 |------|--------|
+| Empty start panel (e.g. Tools and bots) | Panel always mounted; `ShellSidePanelNav` omitted when `sections` is empty |
+| Start panel background `#F3F3F3` | Project token only — **not** a shipped Codex theme token yet |
 | Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
 | Settings button | **Disabled** prototype |
 | Log in link | **Non-functional** (`@click.prevent`) |
-| Brand logo SVG | **Prototype asset** — not final brand guidance |
+| Brand logo SVG | **Prototype asset** — `developer-portal-logo-mark.svg` in header; not final brand guidance |
 | Start column responsive collapse | **Deferred** — fixed 241px until header-collapse work |
 | Header container-query search collapse | **Interim** — not full responsive chrome |
-| Header vs body width at ≥ 1440px | Header locks; body remains fluid until 1680px grid cap — **may need alignment** |
+| Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
 | Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
 
 Functional in prototype: interface language `CdxSelect`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing.
@@ -526,7 +538,8 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
-| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the header link (not a tab) |
+| `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
 | `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
@@ -535,6 +548,22 @@ All project-level configuration lives in `config/`. Files are documented with a 
 Environment-specific values use Nuxt `runtimeConfig`:
 - `runtimeConfig.public.*` — values safe to expose to the client (OAuth client ID, API base URLs)
 - `runtimeConfig.*` — server-only values (OAuth client secret)
+
+### Legacy content redirects
+
+Removed or renamed markdown routes are handled by **`config/contentRedirects.ts`**, which builds Nuxt **`routeRules`** entries (HTTP **301**) merged in `nuxt.config.ts`:
+
+| Legacy path | Redirect target |
+|-------------|-----------------|
+| `/learn` | `/use-content-and-data` |
+| `/about` | `/` (home) |
+| `/enterprise` | `/` (home) |
+
+Each mapping is duplicated for locale prefixes (`es`, `fr`, `he`, `fa`), e.g. `/fr/learn` → `/fr/use-content-and-data`, `/fr/about` → `/fr`. **About** and **Enterprise** markdown files are removed from `content/`; only redirects remain for old bookmarks.
+
+**Primary navigation IA (v2, Figma node 284:11443):** Tabs — Get started, Use content and data, Tools and bots, Contribute, Community, Get help, plus **Remote MD** merged from `REMOTE_CONTENT_SOURCES`. **API Explorer** is a header link only. See `DESIGN_REQUIREMENTS.md` → Information architecture.
+
+**Route → nav id:** `app/utils/contentRoute.ts` → `getMainNavigationIdFromPath()` returns `null` on explorer routes, matches `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`, and strips locale prefixes before matching.
 
 ### Netlify deployment
 
@@ -601,7 +630,7 @@ MDC ships a built-in `Include` component via `@nuxtjs/mdc`. The syntax is `::inc
 
 ### Demo page
 
-`content/en/learn.md` exercises every feature listed above with inline status notes (works today / not yet configured / not yet implemented). Use it as the acceptance test surface when implementing any item in this section.
+`content/en/use-content-and-data.md` exercises every feature listed above with inline status notes (works today / not yet configured / not yet implemented). Use it as the acceptance test surface when implementing any item in this section.
 
 ---
 
@@ -662,6 +691,24 @@ The discovery response lists all REST modules available for that instance, inclu
 The `useDiscovery(instance)` composable is the single point of access for this data. It fetches the discovery endpoint, caches the result per instance, and returns the full module list. `useWikiModules(instance)` wraps it to expose just the module list to the UI layer. Neither composable constructs a spec URL from parts.
 
 This approach means the application automatically reflects any changes to available modules or spec URLs on any instance without any code changes — the source of truth is always the live discovery endpoint.
+
+---
+
+## Related files (implementation index)
+
+Shell chrome and layout work on the `design-chrome` branch is documented in **`DESIGN_REQUIREMENTS.md`** (visual/IA decisions) and this file (structure and data flow). Key implementation paths:
+
+| Area | Primary files |
+|------|----------------|
+| Site grid + layout tokens | `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue` |
+| Shell layout | `app/layouts/default.vue`, `app/assets/css/main.css` |
+| Start column (always mounted) | `app/layouts/default.vue` (`.shell-side-panel`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
+| Start panel background (`#F3F3F3`) | `app/assets/css/page-grid.css` (`--fd-layout-start-panel-background-color`) |
+| Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
+| Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
+| Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
+| Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
+| Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 
 ---
 

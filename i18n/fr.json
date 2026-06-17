@@ -1,7 +1,10 @@
 {
   "app-title": "Portail des développeurs Wikimedia",
+  "brand-wordmark-wikimedia": "WIKIMEDIA",
+  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
   "nav-get-started": "Commencer",
-  "nav-learn": "Apprendre",
+  "nav-use-content-and-data": "Use content and data",
+  "nav-tools-and-bots": "Tools and bots",
   "nav-about": "A propos",
   "nav-api": "Explorateur API",
   "nav-enterprise": "Entreprise",

@@ -1,5 +1,6 @@
 import { useMainNavigationLinks } from './useMainNavigationLinks'
 import { getMainNavigationIdFromPath } from '../utils/contentRoute'
+import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
  * Resolves the active primary navigation tab for the shell header.
@@ -21,6 +22,10 @@ export function usePrimaryNavigationTab() {
 
 		if ( navigationId ) {
 			return navigationId
+		}
+
+		if ( isExplorerRoutePath( route.path ) ) {
+			return ''
 		}
 
 		return mainNavigationLinks.value[ 0 ]?.id ?? ''

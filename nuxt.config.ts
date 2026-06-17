@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
@@ -70,7 +72,8 @@ export default defineNuxtConfig( {
 
 	routeRules: {
 		'/explorer': { ssr: false },
-		'/explorer/**': { ssr: false }
+		'/explorer/**': { ssr: false },
+		...buildLegacyContentRedirectRouteRules()
 	},
 
 	vite: {

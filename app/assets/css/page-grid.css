@@ -16,6 +16,10 @@
  * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
  * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
  * caps at Codex desktop max (1679px) at ≥ 1680px — see ARCHITECTURE.md → Shell layout.
+ *
+ * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is an
+ * exploratory Codex surface value not yet shipped as a theme token — see
+ * DESIGN_REQUIREMENTS.md → Start column chrome.
  */
 
 :root {
@@ -49,8 +53,24 @@
 	--fd-layout-chrome-lock-viewport-inline-size: 90rem; /* 1440px */
 
 	/*
-	 * Fluid chrome span from start-panel edge to page inline-end at the lock viewport,
-	 * using desktop page margins (32px each side at ≥ 1120px).
+	 * Start panel background — exploratory Codex surface colour (#F3F3F3) under review
+	 * by the Codex team; not yet shipped as a design token. See DESIGN_REQUIREMENTS.md
+	 * → Start column chrome. Swap for the official Codex token when published.
+	 */
+	--fd-layout-start-panel-background-color: #f3f3f3;
+
+	/*
+	 * Full shell inner width at the chrome lock viewport (start + gutter + main + end),
+	 * using desktop page margins. Used by the full-bleed header band inner wrapper.
+	 */
+	--fd-layout-grid-content-max-inline-size: calc(
+		var( --fd-layout-chrome-lock-viewport-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+	);
+
+	/*
+	 * Legacy: content-band chrome max (main + end only, excluding start panel).
+	 * Superseded by full-width header + --fd-layout-grid-content-max-inline-size.
 	 */
 	--fd-layout-chrome-max-inline-size: calc(
 		var( --fd-layout-chrome-lock-viewport-inline-size )
@@ -90,15 +110,11 @@
 
 /* --- Below desktop: interim layouts (full panel responsive deferred) --- */
 
-/* Mobile (< 640px): main first, start column visible, end hidden */
+/* Mobile (< 640px): start column (section nav) then main; end hidden */
 .fd-page-grid {
 	display: flex;
 	flex-direction: column;
 	gap: var( --fd-layout-grid-gutter );
-}
-
-.fd-page-grid__main {
-	order: -1;
 }
 
 .fd-page-grid__end {

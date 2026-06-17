@@ -6,8 +6,8 @@
  * Tablet (≥ 640px): fixed 241px start + fluid main. Mobile: stacked interim layout.
  * Full side-panel responsive behaviour (collapse into header) is deferred.
  *
- * Header chrome grid placement (`display: contents`, 1440px width lock) is applied
- * in `app/layouts/default.vue` — not in this component.
+ * Header chrome grid placement (`display: contents`, 1440px width lock) was
+ * superseded by a full-viewport header band in `app/layouts/default.vue`.
  */
 </script>
 

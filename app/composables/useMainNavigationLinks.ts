@@ -70,9 +70,7 @@ function mergeRemoteNavSources(
 	const baseLinks = items.map( ( navigationItem ) => ( {
 		...navigationItem,
 		label: bananaI18n( navigationItem.messageKey ),
-		to: navigationItem.path === '/explorer'
-			? '/explorer'
-			: buildContentRoutePath( navigationItem, localeCode )
+		to: buildContentRoutePath( navigationItem, localeCode )
 	} ) ) as MainNavigationLink[]
 
 	// Filter remote sources with primary nav target

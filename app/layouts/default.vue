@@ -5,7 +5,8 @@ import {
 	CdxSearchInput,
 	CdxSelect
 } from '@wikimedia/codex'
-import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
+import { cdxIconArrowNext, cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
+import { API_EXPLORER_NAVIGATION_PATH } from '../../config/mainNavigation'
 import { useDirection } from '../composables/useDirection'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
@@ -15,15 +16,11 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
 /**
  * Default layout — the Front Door application shell.
  *
- * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer inside the site-wide grid. The start column
- * hosts the brand logo and route-aware section navigation (`usePageSectionNav`);
- * the header holds search and utility controls with primary navigation below.
+ * Sets the <html> dir attribute and provides a full-viewport-width header band
+ * plus the two-panel page grid below. The start column panel is always mounted
+ * (empty when a route has no section links). Section navigation renders when
+ * config defines sections.
  *
- * **Shell chrome layout:** At tablet+, `.fd-page-grid__main` and
- * `.frontdoor-shell__content` use `display: contents` so header chrome spans
- * the full content band (main + end columns on desktop). Header width locks
- * at ≥ 1440px viewport; page grid caps at Codex desktop-wide (1680px).
  * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
  */
 
@@ -35,7 +32,6 @@ const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
-	hasPageSectionNavigation,
 	navigationLabel: pageSectionNavigationLabel,
 	navigationSections: pageSectionNavigationSections
 } = usePageSectionNav()
@@ -159,6 +155,7 @@ const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-place
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
+const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
 
@@ -190,44 +187,17 @@ useHead( {
 	<div
 		class="frontdoor-shell"
 		:class="{
-			'frontdoor-shell--explorer': isExplorerRoute,
-			'frontdoor-shell--has-section-nav': hasPageSectionNavigation
+			'frontdoor-shell--explorer': isExplorerRoute
 		}"
 	>
-		<SharedPageGrid class="frontdoor-shell__page-grid">
-			<template #start>
-				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel">
-					<SharedShellBrandLogo />
-					<hr
-						v-if="hasPageSectionNavigation"
-						class="shell-side-panel__divider"
-					>
-					<SharedShellSidePanelNav
-						v-if="hasPageSectionNavigation"
-						:aria-label="pageSectionNavigationLabel"
-						:sections="pageSectionNavigationSections"
-					/>
-				</div>
-			</template>
-
-			<template #end>
-				<div
-					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
-					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
-				>
-					<div
-						v-if="isExplorerRoute"
-						id="explorer-end-panel"
-						class="frontdoor-shell__explorer-end"
-					/>
-				</div>
-			</template>
-
-			<div class="frontdoor-shell__content">
+		<div class="frontdoor-shell__chrome-band">
+			<div class="frontdoor-shell__chrome-inner">
 				<div class="frontdoor-shell__chrome">
 					<header class="frontdoor-shell__header">
 						<div class="frontdoor-shell__header-inner">
-							<div class="frontdoor-shell__header-actions">
+							<div class="frontdoor-shell__header-top">
+								<SharedShellHeaderBrand />
+								<div class="frontdoor-shell__header-actions">
 								<div
 									class="frontdoor-shell__search-wrap"
 									@focusout="handleSearchAreaFocusOut"
@@ -295,18 +265,62 @@ useHead( {
 								>
 									{{ loginLinkLabel }}
 								</a>
+								</div>
 							</div>
 						</div>
 					</header>
-					<SharedShellPrimaryNav
-						class="frontdoor-shell__primary-nav"
-						:aria-label="primaryNavigationLabel"
-						:navigation-links="mainNavigationLinks"
-						:active-navigation-id="activeNavigationId"
-						@navigation-select="handlePrimaryNavigationSelect"
+					<div class="frontdoor-shell__primary-nav-row">
+						<SharedShellPrimaryNav
+							class="frontdoor-shell__primary-nav"
+							:aria-label="primaryNavigationLabel"
+							:navigation-links="mainNavigationLinks"
+							:active-navigation-id="activeNavigationId"
+							@navigation-select="handlePrimaryNavigationSelect"
+						/>
+						<NuxtLink
+							:to="API_EXPLORER_NAVIGATION_PATH"
+							class="frontdoor-shell__api-explorer-link"
+							:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
+						>
+							{{ apiExplorerLinkLabel }}
+							<CdxIcon
+								:icon="cdxIconArrowNext"
+								:flip-for-rtl="true"
+								class="frontdoor-shell__api-explorer-link-icon"
+							/>
+						</NuxtLink>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<SharedPageGrid class="frontdoor-shell__page-grid">
+			<template #start>
+				<div
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel"
+				>
+					<SharedShellSidePanelNav
+						v-if="pageSectionNavigationSections.length > 0"
+						:aria-label="pageSectionNavigationLabel"
+						:sections="pageSectionNavigationSections"
 					/>
 				</div>
+			</template>
 
+			<template #end>
+				<div
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
+					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+				>
+					<div
+						v-if="isExplorerRoute"
+						id="explorer-end-panel"
+						class="frontdoor-shell__explorer-end"
+					/>
+				</div>
+			</template>
+
+			<div class="frontdoor-shell__content">
 				<main class="frontdoor-shell__main">
 					<div
 						:key="route.path"
@@ -328,95 +342,90 @@ useHead( {
 
 <style scoped>
 .frontdoor-shell {
+	display: flex;
+	flex-direction: column;
 	min-block-size: 100vh;
 }
 
 .frontdoor-shell__page-grid {
-	min-block-size: 100vh;
+	flex: 1 1 auto;
+	min-block-size: 0;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__page-grid {
+		flex: 1 1 auto;
+		min-block-size: 100%;
+		align-items: stretch;
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		display: flex;
+		flex-direction: column;
+		align-self: stretch;
+	}
+
+	.frontdoor-shell__side-panel--start {
+		flex: 1 1 auto;
+		min-block-size: 100%;
+	}
+}
+
+/*
+ * Full-viewport header band; inner content matches PageGrid width. Logo and
+ * primary nav align at the same inline-start inset as the start column menu
+ * (Figma Navigation 225:4548 — 32px / --spacing-200 at tablet+).
+ */
+.frontdoor-shell__chrome-band {
+	position: relative;
+	z-index: 10;
+	inline-size: 100vw;
+	margin-inline-start: calc( 50% - 50vw );
+	background-color: var( --background-color-base );
+	border-block-end: 1px solid var( --border-color-subtle );
+}
+
+.frontdoor-shell__chrome-inner {
+	box-sizing: border-box;
+	margin-inline: auto;
+	inline-size: 100%;
+	max-inline-size: var( --fd-layout-grid-max-inline-size );
+	padding-inline: var( --fd-layout-page-margin );
+}
+
+@media screen and ( min-width: 1440px ) {
+	.frontdoor-shell__chrome-inner {
+		max-inline-size: var( --fd-layout-grid-content-max-inline-size );
+	}
+}
+
+@media screen and ( min-width: 1680px ) {
+	.frontdoor-shell__chrome-inner {
+		max-inline-size: var( --fd-layout-grid-max-inline-size );
+	}
+}
+
+.frontdoor-shell__chrome {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-150 );
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: 0;
+	padding-inline: var( --spacing-100 );
+	min-inline-size: 0;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__chrome {
+		padding-inline: var( --spacing-200 );
+	}
 }
 
 .frontdoor-shell__content {
 	display: flex;
 	flex-direction: column;
-	min-block-size: 100vh;
+	min-block-size: 100%;
 	min-inline-size: 0;
-}
-
-/*
- * Tablet+: hoist chrome, main, and footer onto the page grid so the header spans
- * the full content band (main + end columns on desktop) within Codex page margins.
- */
-@media screen and ( min-width: 640px ) {
-	.frontdoor-shell__page-grid {
-		grid-template-rows: auto 1fr auto;
-	}
-
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__main ),
-	.frontdoor-shell__content {
-		display: contents;
-	}
-
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		grid-row: 1 / -1;
-	}
-
-	.frontdoor-shell__chrome {
-		grid-column: 2;
-		grid-row: 1;
-	}
-
-	.frontdoor-shell__main {
-		grid-column: 2;
-		grid-row: 2;
-	}
-
-	.frontdoor-shell__footer {
-		grid-column: 2;
-		grid-row: 3;
-	}
-}
-
-@media screen and ( min-width: 1120px ) {
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		grid-row: 1 / -1;
-	}
-
-	.frontdoor-shell__chrome {
-		grid-column: 2 / -1;
-	}
-}
-
-/*
- * At ≥ 1440px viewport, chrome width locks; only outer page margins grow wider.
- */
-@media screen and ( min-width: 1440px ) {
-	.frontdoor-shell__chrome {
-		max-inline-size: var( --fd-layout-chrome-max-inline-size );
-	}
-}
-
-.frontdoor-shell__chrome {
-	position: relative;
-	z-index: 10;
-	display: flex;
-	flex-direction: column;
-	gap: var( --spacing-150 );
-	background-color: var( --background-color-base );
-	border-block-end: 1px solid var( --border-color-subtle );
-	padding-block-start: var( --spacing-150 );
-	padding-block-end: 0;
-	padding-inline-end: var( --spacing-200 );
-}
-
-/*
- * Side-by-side grid: pull chrome into the gutter so its bottom border meets the
- * start panel; inset header content by the gutter width to align with main below.
- */
-@media screen and ( min-width: 640px ) {
-	.frontdoor-shell__chrome {
-		margin-inline-start: calc( -1 * var( --fd-layout-grid-gutter ) );
-		padding-inline-start: var( --fd-layout-grid-gutter );
-	}
 }
 
 .frontdoor-shell__header {
@@ -424,14 +433,28 @@ useHead( {
 }
 
 .frontdoor-shell__header-inner {
-	container-type: inline-size;
-	container-name: frontdoor-header;
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+/*
+ * Figma Header/Default row 1: compact brand lockup (inline-start) and utility
+ * actions (inline-end). Gap between logo and search is spacing-150 (24px).
+ */
+.frontdoor-shell__header-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var( --spacing-150 );
+	inline-size: 100%;
 	min-inline-size: 0;
 }
 
 /*
- * Figma Header/Default: one end-aligned row — search (max 640px), settings,
+ * Figma Header/Default: utility actions — search (max 640px), settings,
  * language select, log in — with spacing-100 gaps. Search shrinks first.
+ * Container query for search collapse is scoped to this row so it measures
+ * the actions track, not the full header including the brand lockup.
  */
 .frontdoor-shell__header-actions {
 	display: flex;
@@ -441,14 +464,15 @@ useHead( {
 	justify-content: flex-end;
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
-	inline-size: 100%;
+	container-type: inline-size;
+	container-name: frontdoor-header;
 }
 
 .frontdoor-shell__search-wrap {
 	position: relative;
-	flex: 0 1 40rem;
+	flex: 1 1 auto;
 	min-inline-size: 0;
-	max-inline-size: 40rem;
+	max-inline-size: min( 40rem, 100% );
 	display: flex;
 	align-items: center;
 }
@@ -459,10 +483,11 @@ useHead( {
 	inline-size: 100%;
 }
 
-/* Codex sets min-width: 256px on .cdx-text-input; override so the field can shrink
-   and the container query can switch to the icon-only control instead of wrapping. */
+/* Codex sets min-width: 256px on .cdx-text-input; shrink with the flex track down to
+   that minimum; the container query collapses to icon-only when utilities need space. */
 .frontdoor-shell__search:deep( .cdx-text-input ) {
 	min-inline-size: 0;
+	max-inline-size: 100%;
 	inline-size: 100%;
 }
 
@@ -490,7 +515,52 @@ useHead( {
 }
 
 .frontdoor-shell__primary-nav {
+	flex: 0 1 auto;
 	min-inline-size: 0;
+	inline-size: auto;
+}
+
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav ),
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav__tabs ) {
+	inline-size: auto;
+}
+
+/*
+ * Figma Header/MainNav row: quiet tabs plus a separate API Explorer link with
+ * arrow icon (not a tab). Link sits immediately after the last tab with 24px gap.
+ */
+.frontdoor-shell__primary-nav-row {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: nowrap;
+	gap: var( --spacing-150 );
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__api-explorer-link {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-25 );
+	flex: 0 0 auto;
+	padding-block-end: calc( var( --spacing-25 ) + var( --spacing-75 ) );
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	white-space: nowrap;
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.frontdoor-shell__api-explorer-link:hover {
+	text-decoration: underline;
+}
+
+.frontdoor-shell__api-explorer-link--active {
+	font-weight: var( --font-weight-bold );
+}
+
+.frontdoor-shell__api-explorer-link-icon {
+	color: var( --color-progressive );
 }
 
 /* Collapse when the header cannot fit the search field (Codex minimum 256px). */
@@ -506,7 +576,7 @@ useHead( {
 
 .frontdoor-shell__language-select {
 	flex: 0 1 auto;
-	min-inline-size: 0;
+	min-inline-size: 8rem;
 	max-inline-size: 11rem;
 }
 
@@ -556,35 +626,32 @@ useHead( {
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-50 );
-	min-block-size: 100%;
 	min-inline-size: 0;
 }
 
 .shell-side-panel {
-	background-color: var( --background-color-neutral-subtle );
+	background-color: var( --fd-layout-start-panel-background-color );
 	padding-block-start: var( --spacing-150 );
 	padding-block-end: var( --spacing-100 );
-	padding-inline-start: var( --spacing-200 );
+	padding-inline-start: var( --spacing-100 );
 	padding-inline-end: var( --spacing-75 );
 	inline-size: 100%;
 	max-inline-size: 100%;
 	box-sizing: border-box;
 }
 
-.shell-side-panel__divider {
-	border: none;
-	border-block-start: 1px solid var( --border-color-subtle );
-	margin: 0;
-	inline-size: 100%;
+@media screen and ( min-width: 640px ) {
+	.shell-side-panel {
+		padding-inline-start: var( --spacing-200 );
+	}
 }
 
-.frontdoor-shell--explorer .shell-side-panel,
-.frontdoor-shell--has-section-nav .shell-side-panel {
+.frontdoor-shell--explorer .shell-side-panel {
 	gap: var( --spacing-50 );
 }
 
 .frontdoor-shell__main {
-	flex: 1;
+	flex: 1 1 auto;
 	min-inline-size: 0;
 	padding-block: var( --spacing-200 );
 }
@@ -602,12 +669,10 @@ useHead( {
 }
 
 @media screen and ( min-width: 640px ) {
-	.frontdoor-shell__main {
-		flex: unset;
-	}
-
-	.frontdoor-shell__footer {
-		align-self: end;
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
+		display: flex;
+		flex-direction: column;
+		min-block-size: 100%;
 	}
 }
 
@@ -642,7 +707,7 @@ useHead( {
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		min-block-size: 100%;
+		min-block-size: 0;
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
@@ -651,7 +716,6 @@ useHead( {
 	}
 
 	.frontdoor-shell__side-panel {
-		min-block-size: 100%;
 		min-inline-size: 0;
 	}
 
