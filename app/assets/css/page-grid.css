@@ -68,6 +68,13 @@
 	--fd-layout-start-panel-background-color: #f3f3f3;
 
 	/*
+	 * Header utility row — search field minimum inline size when expanded (256px).
+	 * Collapse threshold is computed in config/headerChrome.ts and applied via
+	 * ResizeObserver in useHeaderUtilityCollapse.
+	 */
+	--fd-header-search-input-min-inline-size: 16rem;
+
+	/*
 	 * Full shell inner width at the chrome lock viewport (start + gutter + main + end),
 	 * using desktop page margins. Used by the full-bleed header band inner wrapper.
 	 */

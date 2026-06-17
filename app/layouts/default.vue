@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import {
-	CdxButton,
-	CdxIcon,
-	CdxSearchInput,
-	CdxSelect
-} from '@wikimedia/codex'
-import { cdxIconArrowNext, cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
+import { CdxIcon } from '@wikimedia/codex'
+import { cdxIconArrowNext } from '@wikimedia/codex-icons'
 import { API_EXPLORER_NAVIGATION_PATH } from '../../config/mainNavigation'
+import { SUPPORTED_INTERFACE_LOCALES } from '../../config/interfaceLocales'
 import { useDirection } from '../composables/useDirection'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
-import { useContentSearch } from '../composables/useContentSearch'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -36,54 +31,8 @@ const {
 	navigationSections: pageSectionNavigationSections
 } = usePageSectionNav()
 
-interface PickerMenuItem {
-	label: string
-	value: string
-}
-
-const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
+const supportedInterfaceLocales = SUPPORTED_INTERFACE_LOCALES
 const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
-
-const searchQuery = ref( '' )
-const isSearchPanelOpen = ref( false )
-
-const {
-	localeResults,
-	fallbackResults,
-	allLocaleResultGroups,
-	isAllLocalesMode,
-	activateAllLocalesSearch,
-	hasQuery
-} = useContentSearch( searchQuery, $interfaceLocale )
-
-watch( hasQuery, ( newHasQuery ) => {
-	if ( newHasQuery ) {
-		isSearchPanelOpen.value = true
-	}
-} )
-
-function handleSearchFocusIn(): void {
-	if ( hasQuery.value ) {
-		isSearchPanelOpen.value = true
-	}
-}
-
-function handleSearchAreaFocusOut( event: FocusEvent ): void {
-	const container = event.currentTarget as HTMLElement
-	if ( !container.contains( event.relatedTarget as Node ) ) {
-		isSearchPanelOpen.value = false
-	}
-}
-
-function handleResultSelect( _resultId: string ): void {
-	searchQuery.value = ''
-	isSearchPanelOpen.value = false
-}
-
-// Codex Select / Combobox menu labels cannot use <bdi>; FSI/PDI isolate mixed-direction names.
-function isolateLabel( label: string ): string {
-	return `\u2068${ label }\u2069`
-}
 
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
@@ -137,26 +86,9 @@ watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
 	}
 }, { immediate: true } )
 
-/**
- * Interface locale menu entries for the header CdxSelect (labels only — no icons).
- * Icon display is handled by the Select `#label` slot; see DESIGN_REQUIREMENTS.md.
- */
-const languageMenuItems = computed<PickerMenuItem[]>( () => {
-	return supportedInterfaceLocales.map( ( localeCode ) => ( {
-		value: localeCode,
-		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) )
-	} ) )
-} )
-
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
-const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
-const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
-const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
-const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
-const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
-const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
 
 /**
  * Navigates to the primary nav destination when a header tab is selected.
@@ -196,75 +128,9 @@ useHead( {
 						<div class="frontdoor-shell__header-inner">
 							<div class="frontdoor-shell__header-top">
 								<SharedShellHeaderBrand />
-								<div class="frontdoor-shell__header-actions">
-								<div
-									class="frontdoor-shell__search-wrap"
-									@focusout="handleSearchAreaFocusOut"
-								>
-									<CdxSearchInput
-										v-model="searchQuery"
-										class="frontdoor-shell__search"
-										dir="auto"
-										:use-button="false"
-										:placeholder="searchPlaceholderLabel"
-										@focusin="handleSearchFocusIn"
-									/>
-									<div
-										v-if="isSearchPanelOpen && hasQuery"
-										class="frontdoor-shell__search-panel"
-										@mousedown.prevent
-									>
-										<SharedSearchResults
-											:locale-results="localeResults"
-											:fallback-results="fallbackResults"
-											:all-locale-result-groups="allLocaleResultGroups"
-											:is-all-locales-mode="isAllLocalesMode"
-											:active-locale="$interfaceLocale"
-											:search-query="searchQuery"
-											@result-select="handleResultSelect"
-											@activate-all-locales="activateAllLocalesSearch"
-										/>
-									</div>
-								</div>
-								<CdxButton
-									class="frontdoor-shell__search-toggle"
-									:aria-label="searchButtonLabel"
-									disabled
-								>
-									<CdxIcon :icon="cdxIconSearch" />
-								</CdxButton>
-								<CdxButton
-									class="frontdoor-shell__settings-button"
-									:aria-label="settingsButtonLabel"
-									disabled
-								>
-									<CdxIcon :icon="cdxIconConfigure" />
-								</CdxButton>
-								<CdxSelect
-									:key="direction"
-									v-model:selected="selectedInterfaceLocale"
-									class="frontdoor-shell__language-select"
-									:menu-items="languageMenuItems"
-									:default-label="interfaceLanguagePlaceholder"
-									:aria-label="interfaceLanguageLabel"
-								>
-									<template #label="{ selectedMenuItem, defaultLabel }">
-										<span class="frontdoor-shell__language-select-label">
-											<CdxIcon :icon="cdxIconLanguage" />
-											<span class="frontdoor-shell__language-select-text">
-												{{ selectedMenuItem?.label ?? defaultLabel }}
-											</span>
-										</span>
-									</template>
-								</CdxSelect>
-								<a
-									href="#"
-									class="frontdoor-shell__login-link"
-									@click.prevent
-								>
-									{{ loginLinkLabel }}
-								</a>
-								</div>
+								<SharedShellHeaderUtilityActions
+									v-model:selected-interface-locale="selectedInterfaceLocale"
+								/>
 							</div>
 						</div>
 					</header>
@@ -512,70 +378,6 @@ useHead( {
 	min-inline-size: 0;
 }
 
-/*
- * Figma Header/Default: utility actions — search (max 640px), settings,
- * language select, log in — with spacing-100 gaps. Search shrinks first.
- * Container query for search collapse is scoped to this row so it measures
- * the actions track, not the full header including the brand lockup.
- */
-.frontdoor-shell__header-actions {
-	display: flex;
-	flex: 1 1 auto;
-	flex-wrap: nowrap;
-	align-items: center;
-	justify-content: flex-end;
-	gap: var( --spacing-100 );
-	min-inline-size: 0;
-	container-type: inline-size;
-	container-name: frontdoor-header;
-}
-
-.frontdoor-shell__search-wrap {
-	position: relative;
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	max-inline-size: min( 40rem, 100% );
-	display: flex;
-	align-items: center;
-}
-
-.frontdoor-shell__search {
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	inline-size: 100%;
-}
-
-/* Codex sets min-width: 256px on .cdx-text-input; shrink with the flex track down to
-   that minimum; the container query collapses to icon-only when utilities need space. */
-.frontdoor-shell__search:deep( .cdx-text-input ) {
-	min-inline-size: 0;
-	max-inline-size: 100%;
-	inline-size: 100%;
-}
-
-.frontdoor-shell__search-panel {
-	position: absolute;
-	inset-block-start: 100%;
-	inset-inline-start: 0;
-	inset-inline-end: 0;
-	z-index: 20;
-	background-color: var( --background-color-base );
-	border: 1px solid var( --border-color-base );
-	border-radius: var( --border-radius-base );
-	box-shadow: var( --box-shadow-drop-medium );
-	max-block-size: min( 24rem, 80dvh );
-	overflow-y: auto;
-}
-
-.frontdoor-shell__search-toggle {
-	display: none;
-	flex: 0 0 auto;
-}
-
-.frontdoor-shell__settings-button {
-	flex: 0 0 auto;
-}
-
 .frontdoor-shell__primary-nav {
 	flex: 0 1 auto;
 	min-inline-size: 0;
@@ -623,64 +425,6 @@ useHead( {
 
 .frontdoor-shell__api-explorer-link-icon {
 	color: var( --color-progressive );
-}
-
-/* Collapse when the header cannot fit the search field (Codex minimum 256px). */
-@container frontdoor-header ( max-width: var( --max-width-breakpoint-mobile ) ) {
-	.frontdoor-shell__search-wrap {
-		display: none;
-	}
-
-	.frontdoor-shell__search-toggle {
-		display: inline-flex;
-	}
-}
-
-.frontdoor-shell__language-select {
-	flex: 0 1 auto;
-	min-inline-size: 8rem;
-	max-inline-size: 11rem;
-}
-
-/* Keep the closed select within its flex track; long locale names ellipsize. */
-.frontdoor-shell__language-select:deep( .cdx-select-vue ) {
-	max-inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.frontdoor-shell__language-select:deep( .cdx-select-vue__handle ) {
-	max-inline-size: 100%;
-	min-inline-size: 0;
-	overflow: hidden;
-}
-
-.frontdoor-shell__language-select-label {
-	display: inline-flex;
-	align-items: center;
-	gap: var( --spacing-50 );
-	min-inline-size: 0;
-	max-inline-size: 100%;
-	overflow: hidden;
-}
-
-.frontdoor-shell__language-select-text {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	min-inline-size: 0;
-}
-
-.frontdoor-shell__login-link {
-	flex: 0 0 auto;
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-	white-space: nowrap;
-	color: var( --color-progressive );
-	text-decoration: none;
-}
-
-.frontdoor-shell__login-link:hover {
-	text-decoration: underline;
 }
 
 .frontdoor-shell__side-nav,

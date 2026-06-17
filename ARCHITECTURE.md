@@ -275,6 +275,8 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-chrome-max-inline-size` | `calc(lock − 2×desktop margin − start panel)` | Legacy content-band width (main + end only); superseded by full-bleed header |
 | `--fd-layout-shell-chrome-block-size-estimate` | `11rem` | Chrome height estimate for sticky panel max-heights |
 | `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
+| `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
+| `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `576px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row |
 | `--fd-layout-body-columns-max-inline-size` | `calc(1679px cap − margins − start − gutter)` | Main:end sub-grid max width at ≥ 1680px |
 
 **Page grid slots:** `PageGrid` exposes **`start`** and default **`body`** slots only (no `end` or `footer` grid tracks). The end panel and site footer are composed inside the **body** slot in `default.vue` (`.frontdoor-shell__body-scroll` → `.frontdoor-shell__body-columns`).
@@ -285,6 +287,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 
 | Component | Role | Config / composable |
 |-----------|------|---------------------|
+| `ShellHeaderUtilityActions.vue` | Utility row (search, settings, language, log in; responsive collapse) | `useShellHeaderUtilityMenu`, `useContentSearch`, `config/headerChrome.ts` |
 | `ShellHeaderBrand.vue` | Compact header brand (32px mark SVG + wordmark); links to Get started | `useMainNavigationLinks()` |
 | `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` |
 | `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
@@ -298,7 +301,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge per Figma. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — Codex shows them on overflow and they **flicker on first paint** before intersection observers settle; shell chrome will use a separate responsive approach. **Tab label weight:** all labels **`--font-weight-normal`** — Codex sets **700** on every quiet-tab label by default; selected state uses colour/underline only.
 3. **Start column edge** — **`border-inline-end`** with `--border-color-subtle` on `.fd-page-grid__start` instead of a filled panel background. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** (Figma 241px + one Codex 40px grid column). **Deviation from Figma** side-panel spec; prototype widening only.
-5. **Search field** — `CdxSearchInput` in a flex track (`flex: 1 1 auto`, max **40rem**) beside the header brand; **24px** gap (`--spacing-150`) between brand and utilities. Codex `.cdx-text-input` `min-inline-size` overridden to **0** so the field can shrink with the header; a **container query** on `.frontdoor-shell__header-actions` collapses to an icon-only control when the actions row is too narrow. Full header responsive behaviour is **deferred**.
+5. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**.
 6. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
 7. **`ShellSiteFooter` wordmark typography** — Figma Footer **393:4639** specifies **Montserrat**; shell uses Codex **`--font-family-sans-stack`** until brand fonts ship (same exception as `ShellHeaderBrand`).
 8. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px `developer-portal-logo-mark.svg` + banana `footer-brand-wordmark`** until the footer logo asset ships.
@@ -320,7 +323,7 @@ The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n
 
 **Direction changes:** `:key="direction"` on the select remounts the control when interface locale flips LTR ↔ RTL. Codex RTL stylesheet toggling is handled by `codex-rtl-styles.client.ts` (see **RTL and BiDi** below).
 
-**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `.frontdoor-shell__header-actions` (inline-end, `flex: 1 1 auto`). **Gap between logo and search: `var(--spacing-150)` (24px).** Inside actions: search (`flex: 1 1 auto`, grows/shrinks up to **40rem**), settings, language select (**8–11rem**, ellipsized labels), log in (`flex: 0 0 auto`). Container query for search icon collapse is scoped to **`.frontdoor-shell__header-actions`**.
+**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `ShellHeaderUtilityActions` (inline-end, `flex: 1 1 auto`). **Gap between logo and utilities: `var(--spacing-150)` (24px).** Expanded utilities: search (`flex: 1 1 auto`, **256px** min, max **40rem**), settings, language select (**8–11rem**), log in. Collapsed: search icon button + `CdxMenuButton` (`cdxIconEllipsis`). See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
 **Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`, intrinsic width) plus the **API Explorer** progressive link (`flex: 0 0 auto`) on the same baseline, **24px** (`--spacing-150`) after the last tab. See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
@@ -342,7 +345,15 @@ Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__co
 
 **Supersedes:** In-main-column `footer-title` band with `--background-color-neutral-subtle`; interim `PageGrid` **`footer`** slot spanning main + end (reverted); interim full-width footer bleed under the start column (reverted). Current placement: footer inside `.frontdoor-shell__content` only.
 
-**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`), `app/assets/css/page-grid.css`.
+**Placement history (reverted interim work):** During chrome exploration, footer placement was tried in three forms before the current layout:
+
+| Attempt | Mechanism | Why reverted |
+|---------|-----------|--------------|
+| `PageGrid` **`footer`** slot, `grid-column: 2 / -1` | Footer grid row below main + end | Superseded by body-band scrollport (`0e9f156`); footer moved into `.frontdoor-shell__content` |
+| Full-width bleed (`margin-inline` negative on footer) | Footer under start nav column | Does not match Figma — start nav must stay full-height beside main + footer band |
+| `grid-template-rows: 1fr auto` on outer `PageGrid` | Pin footer with grid row gap | Replaced by **flex column** on `.frontdoor-shell__content` (`min-block-size: 100%`, main `flex: 1`) inside `.frontdoor-shell__body-scroll` |
+
+**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`.
 
 ### Prototype / non-final shell behaviour
 
@@ -365,7 +376,8 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Log in link | **Non-functional** (`@click.prevent`) |
 | Brand logo SVG | **Prototype asset** — `developer-portal-logo-mark.svg` in header; not final brand guidance |
 | Start column responsive collapse | **Deferred** — fixed 281px until header-collapse work |
-| Header container-query search collapse | **Interim** — not full responsive chrome |
+| Header container-query search collapse | **Implemented** | `ShellHeaderUtilityActions` — 256px search min; `CdxMenuButton` for settings/language/log in |
+| Collapsed search button activation | **Deferred** | Icon visible; overlay/expansion behaviour not defined |
 | Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
 | Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
 
@@ -754,10 +766,10 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Shell layout | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Start column (always mounted) | `app/layouts/default.vue` (`.shell-side-panel`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
 | Start column edge + width | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
-| Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css` |
+| Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/main.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
-| Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
+| Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |

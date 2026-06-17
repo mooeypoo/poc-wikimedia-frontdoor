@@ -16,6 +16,7 @@
   "header-search-placeholder": "Placeholder text for the header search field prototype.",
   "header-search-button-label": "Accessible label for the collapsed header search icon button.",
   "header-settings-label": "Accessible label for the header settings button prototype.",
+  "header-utility-menu-label": "Accessible label for the collapsed header utility menu button (settings, language, log in).",
   "header-login-label": "Text for the non-functional Log in link in the header prototype.",
   "interface-language-label": "Label for the interface language selector in the top header.",
   "interface-language-placeholder": "Placeholder text for the interface language selector with no selected value.",
