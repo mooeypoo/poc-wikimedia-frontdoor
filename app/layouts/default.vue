@@ -9,6 +9,7 @@ import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/cod
 import { useDirection } from '../composables/useDirection'
 import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
 import { useContentSearch } from '../composables/useContentSearch'
+import { useExplorerMode } from '../composables/useExplorerMode'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -21,6 +22,7 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  */
 
 const { direction } = useDirection()
+const { explorerMode } = useExplorerMode()
 const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
 const { locale } = useI18n()
 const route = useRoute()
@@ -172,7 +174,10 @@ useHead( {
 							{{ applicationTitle }}
 						</NuxtLink>
 					</div>
-					<ExplorerSideNav v-if="isExplorerRoute" />
+					<ExplorerSideNav
+					v-if="isExplorerRoute"
+					:active-mode="explorerMode"
+				/>
 				</div>
 			</template>
 
