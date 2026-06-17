@@ -189,7 +189,7 @@ banana-i18n labels + single global active item
 
 **Rendering.** `app/layouts/default.vue` always mounts the start panel (`.shell-side-panel`); `SharedShellSidePanelNav` renders only when `navigationSections` is non-empty. The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly.
 
-**Panel height (tablet+).** The start panel stretches to the **bottom of the viewport** below the header band (`min-block-size: 100%` on the page grid and `.frontdoor-shell__side-panel--start`), matching the visible shell height while main content may scroll longer.
+**Panel height (tablet+).** The start column track is **viewport-height constrained** below the chrome band (grid row `minmax(0, 1fr)` inside a `100dvh` shell). When section nav content exceeds that height, **`.frontdoor-shell__side-panel--start`** scrolls with **`overflow-y: auto`** (browser default scrollbar). The main + end body band scrolls in **`.frontdoor-shell__body-scroll`** — see **Shell scroll regions** below.
 
 **Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` in `default.vue`. This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
@@ -218,12 +218,26 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 │       └── .frontdoor-shell__chrome     ← utility row + primary nav (+ API Explorer link)
 └── .frontdoor-shell__page-grid (PageGrid)
     ├── .fd-page-grid__start        ← start panel always mounted (281px fixed, tablet+); subtle inline-end border; nav optional
-    ├── .fd-page-grid__main
-    │   └── .frontdoor-shell__content → .frontdoor-shell__main (page slot) + ShellSiteFooter
-    └── .fd-page-grid__end          ← module rail / reserved space (desktop+)
+    └── .fd-page-grid__body         ← `.frontdoor-shell__body-scroll` (main + end scrollport)
+        └── .frontdoor-shell__body-columns (main:end 16:4 at desktop)
+            ├── .frontdoor-shell__content → .frontdoor-shell__main (page slot) + ShellSiteFooter
+            └── .frontdoor-shell__side-panel--end   ← module rail / reserved space (desktop+)
 ```
 
-**Page grid (tablet+).** Single content row: main (+ end at desktop). The site footer lives **inside** `.frontdoor-shell__content` so its width matches the main column. **`grid-template-rows: minmax(0, 1fr)`** — on short pages the main cell grows (`min-block-size: 100%`) and `.frontdoor-shell__content` uses a column flex layout so the footer sits on the shell bottom. See **Site footer** below.
+**Page grid (tablet+).** Two outer tracks: **start** + **body**. The body band contains a **main:end** sub-grid (`4fr | 1fr` at desktop) in `default.vue`. The site footer lives **inside** `.frontdoor-shell__content` (main track only). **`.frontdoor-shell__body-scroll`** is the vertical scrollport for main + end — scrollbar at the **inline-end** edge of the body band; wheel over the empty end column scrolls central content (Discord-style). On short pages, `.frontdoor-shell__content` uses **`min-block-size: 100%`** plus column flex so the footer sits on the shell bottom. See **Site footer** and **Shell scroll regions** below.
+
+**Shell scroll regions.** Reference: [Discord developer docs](https://docs.discord.com/developers/bots/overview) — fixed chrome, independent column scrollports.
+
+| Region | Scroll container | When scrollbar appears |
+|--------|------------------|------------------------|
+| **Document** | None (`body { overflow: hidden }`) | Never — shell owns vertical scroll |
+| **Shell** | `.frontdoor-shell` (`block-size: 100dvh`, `overflow: hidden`) | Never |
+| **Start column** | `.frontdoor-shell__side-panel--start` (tablet+) or `.fd-page-grid__start` (mobile stacked) | When section nav content exceeds visible body height |
+| **Main column** | `.frontdoor-shell__body-scroll` (viewport-bleed inline-end) | Scrollbar at **viewport inline-end**; main + end content width locked at desktop wide |
+
+**Mechanism:** Chrome band is **`flex-shrink: 0`**. Page grid is **`flex: 1; min-block-size: 0`**. Column tracks use **`min-block-size: 0; overflow: hidden`**; inner scrollports use **`overflow-y: auto`** and **`overscroll-behavior: contain`** (browser default scrollbar styling only — no custom scrollbar CSS). Sticky explorer panels and end-column nav max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus a chrome height estimate in `page-grid.css`).
+
+**Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/main.css`.
 
 **Rendering.** The layout calls composables for navigation state only (`usePrimaryNavigationTab`, `usePageSectionNav`, `useContentSearch`, etc.). Components in the start column and header receive resolved props — they do not fetch data or read route config directly.
 
@@ -235,7 +249,7 @@ The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-sh
 
 The **start column** holds section navigation **below** the header band only. At desktop, main and end share the content row; the footer is inside the main column (`frontdoor-shell__content`).
 
-**Mobile (&lt; 640px):** Stacked interim layout — start panel (always mounted; nav when sections exist), then main, then footer. Header and start panel use **`--spacing-100` (16px)** inline padding to match mobile page margins. On short pages, **`.fd-page-grid__main`** uses **`flex: 1 1 auto`** so the footer band sits on the shell bottom (see **Site footer**). Side-panel collapse into the header is **deferred**.
+**Mobile (&lt; 640px):** Stacked interim layout — start panel (always mounted; nav when sections exist; **max 40dvh** + scroll if long), then **body scrollport** (main + footer). Header and start panel use **`--spacing-100` (16px)** inline padding to match mobile page margins. On short pages, **`.frontdoor-shell__content`** uses **`min-block-size: 100%`** inside the body scrollport so the footer band sits on the shell bottom with **48px** inner inset (see **Site footer**). Side-panel collapse into the header is **deferred**.
 
 ### Chrome width
 
@@ -259,6 +273,11 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-chrome-lock-viewport-inline-size` | 1440px (90rem) | Header width lock reference (**not Codex**) |
 | `--fd-layout-grid-content-max-inline-size` | `calc(1440px lock − 2×desktop margin)` | Header inner `max-inline-size` at ≥ 1440px |
 | `--fd-layout-chrome-max-inline-size` | `calc(lock − 2×desktop margin − start panel)` | Legacy content-band width (main + end only); superseded by full-bleed header |
+| `--fd-layout-shell-chrome-block-size-estimate` | `11rem` | Chrome height estimate for sticky panel max-heights |
+| `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
+| `--fd-layout-body-columns-max-inline-size` | `calc(1679px cap − margins − start − gutter)` | Main:end sub-grid max width at ≥ 1680px |
+
+**Page grid slots:** `PageGrid` exposes **`start`** and default **`body`** slots only (no `end` or `footer` grid tracks). The end panel and site footer are composed inside the **body** slot in `default.vue` (`.frontdoor-shell__body-scroll` → `.frontdoor-shell__body-columns`).
 
 Media queries in `page-grid.css` and `default.vue` use **px literals** aligned to Codex tokens (`640px`, `1120px`, `1680px`) plus the project **`1440px`** chrome lock, because custom properties are unreliable inside `@media` conditions in many browsers.
 
@@ -313,7 +332,7 @@ Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__co
 
 **Width:** Matches the **main column** / central page content — same inline size as `.frontdoor-shell__content`. Does **not** span the end panel at desktop and does **not** extend under the start navigation column.
 
-**Short-page pin:** On viewports shorter than the content, the footer band’s **bottom edge** aligns with the shell bottom and legal copy sits **48px** above that edge (`padding-block-end: --spacing-300`). Mechanism: `.frontdoor-shell__content` is a **column flex** container (`flex: 1`); `.frontdoor-shell__main` uses **`flex: 1 1 auto`**; tablet+ **`.fd-page-grid__main`** has **`min-block-size: 100%`** and is a flex column (see `default.vue`); mobile **`.fd-page-grid__main`** uses **`flex: 1 1 auto`** (`page-grid.css`). No separate footer grid row and **no margin** below the footer element.
+**Short-page pin:** On viewports shorter than the content, the footer band’s **bottom edge** aligns with the shell bottom and legal copy sits **48px** above that edge (`padding-block-end: --spacing-300`). Mechanism: **`.frontdoor-shell__body-scroll`** is the body-band scrollport; **`.frontdoor-shell__content`** is a **column flex** container with **`min-block-size: 100%`**; `.frontdoor-shell__main` uses **`flex: 1 1 auto`**. When content is short, no scrollbar appears and flex growth pins the footer. When content is long, the body scrollport shows a browser default scrollbar at the **inline-end** edge of the main + end band. No separate footer grid row and **no margin** below the footer element.
 
 **Legal copy:** Three banana-i18n sentences (one per line) with an inline CC BY-SA link on the middle line. Brand wordmark and legal body use **`--color-subtle`**; policy and license links use **`--color-progressive`**.
 
@@ -321,7 +340,7 @@ Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__co
 
 **Codex exceptions:** (1) Figma specifies **Montserrat** for the footer wordmark; shell uses **`--font-family-sans-stack`** until brand fonts ship (same as `ShellHeaderBrand`). (2) Footer brand is **14px mark SVG + banana wordmark**, not the Figma **227×14px** horizontal lockup asset (not yet in `public/images/`).
 
-**Supersedes:** In-main-column `footer-title` band with `--background-color-neutral-subtle`; earlier experiment with a `PageGrid` **`footer`** slot spanning main + end (reverted).
+**Supersedes:** In-main-column `footer-title` band with `--background-color-neutral-subtle`; interim `PageGrid` **`footer`** slot spanning main + end (reverted); interim full-width footer bleed under the start column (reverted). Current placement: footer inside `.frontdoor-shell__content` only.
 
 **Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`), `app/assets/css/page-grid.css`.
 
@@ -335,7 +354,8 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Start column edge | Transparent panel + `border-inline-end` (`--border-color-subtle`); legacy `#F3F3F3` background token unused |
 | Start column width | **281px** (Figma 241px + 40px grid column) — prototype deviation |
 | Section nav hover | Custom `:hover` progressive text on non-selected `CdxMenuItem` — Codex exception (see above) |
-| Site footer | `ShellSiteFooter` inside `frontdoor-shell__content`; **main column width only** (Figma deviation — does not span end panel); **48px** bottom inset; short-page pin via content flex column |
+| Site footer | `ShellSiteFooter` inside `frontdoor-shell__content`; **main column width only** (Figma deviation — does not span end panel); **48px** bottom inset (`padding-block-end: --spacing-300`); short-page pin via content flex column inside body scrollport |
+| Shell column scroll | `body { overflow: hidden }`; independent `overflow-y: auto` on start panel + `.frontdoor-shell__body-scroll` (Discord-style docs reference) |
 | Footer brand lockup | 14px mark SVG + banana wordmark — not Figma horizontal footer logo asset yet |
 | Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
@@ -733,6 +753,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Start column (always mounted) | `app/layouts/default.vue` (`.shell-side-panel`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
 | Start column edge + width | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css` |
+| Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/main.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |

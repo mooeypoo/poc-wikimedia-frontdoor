@@ -17,9 +17,9 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  * Default layout — the Front Door application shell.
  *
  * Sets the <html> dir attribute and provides a full-viewport-width header band
- * plus the two-panel page grid below. The start column panel is always mounted
- * (empty when a route has no section links). Section navigation renders when
- * config defines sections.
+ * plus the two-panel page grid below. The shell locks to the viewport; the start
+ * column and main content band each scroll independently when content overflows.
+ * The start column panel is always mounted (empty when a route has no section links).
  *
  * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
  */
@@ -306,29 +306,30 @@ useHead( {
 				</div>
 			</template>
 
-			<template #end>
-				<div
-					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
-					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
-				>
-					<div
-						v-if="isExplorerRoute"
-						id="explorer-end-panel"
-						class="frontdoor-shell__explorer-end"
-					/>
-				</div>
-			</template>
-
-			<div class="frontdoor-shell__content">
-				<main class="frontdoor-shell__main">
-					<div
-						:key="route.path"
-						class="frontdoor-shell__page-slot"
-					>
-						<slot />
+			<div class="frontdoor-shell__body-scroll">
+				<div class="frontdoor-shell__body-columns">
+					<div class="frontdoor-shell__content">
+						<main class="frontdoor-shell__main">
+							<div
+								:key="route.path"
+								class="frontdoor-shell__page-slot"
+							>
+								<slot />
+							</div>
+						</main>
+						<SharedShellSiteFooter />
 					</div>
-				</main>
-				<SharedShellSiteFooter />
+					<div
+						class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
+						:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+					>
+						<div
+							v-if="isExplorerRoute"
+							id="explorer-end-panel"
+							class="frontdoor-shell__explorer-end"
+						/>
+					</div>
+				</div>
 			</div>
 		</SharedPageGrid>
 	</div>
@@ -338,7 +339,9 @@ useHead( {
 .frontdoor-shell {
 	display: flex;
 	flex-direction: column;
-	min-block-size: 100vh;
+	block-size: 100vh;
+	block-size: 100dvh;
+	overflow: hidden;
 }
 
 .frontdoor-shell__page-grid {
@@ -358,7 +361,7 @@ useHead( {
 @media screen and ( min-width: 640px ) {
 	.frontdoor-shell__page-grid {
 		flex: 1 1 auto;
-		min-block-size: 100%;
+		min-block-size: 0;
 		align-items: stretch;
 	}
 
@@ -368,9 +371,15 @@ useHead( {
 		align-self: stretch;
 	}
 
+	/*
+	 * Start column scrollport: section nav scrolls independently when taller than
+	 * the viewport body (Discord-style docs sidebar). Browser default scrollbar only.
+	 */
 	.frontdoor-shell__side-panel--start {
 		flex: 1 1 auto;
-		min-block-size: 100%;
+		min-block-size: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 }
 
@@ -382,6 +391,7 @@ useHead( {
 .frontdoor-shell__chrome-band {
 	position: relative;
 	z-index: 10;
+	flex: 0 0 auto;
 	inline-size: 100vw;
 	margin-inline-start: calc( 50% - 50vw );
 	background-color: var( --background-color-base );
@@ -430,6 +440,54 @@ useHead( {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	min-block-size: 0;
+	/* Footer pin on short pages — scroll lives on `.frontdoor-shell__body-scroll`. */
+	min-block-size: 100%;
+}
+
+/*
+ * Main + end body scrollport: extends to the viewport inline-end; scrollbar sits on
+ * the browser edge (Discord-style). Content inset keeps readable margins on narrow viewports.
+ */
+.frontdoor-shell__body-scroll {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	min-block-size: 100%;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding-inline-end: var( --fd-layout-page-margin );
+}
+
+.frontdoor-shell__body-columns {
+	display: grid;
+	grid-template-columns: minmax( 0, 1fr );
+	align-items: start;
+	min-block-size: 100%;
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__side-panel--end {
+	display: none;
+}
+
+@media screen and ( min-width: 1120px ) {
+	.frontdoor-shell__body-columns {
+		grid-template-columns: minmax( 0, 4fr ) minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+	}
+
+	.frontdoor-shell__side-panel--end {
+		display: flex;
+	}
+}
+
+@media screen and ( min-width: 1680px ) {
+	/*
+	 * Lock main:end content width at desktop wide; the scrollport still extends to
+	 * the viewport inline-end so the gutter/margin zone scrolls central content too.
+	 */
+	.frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-body-columns-max-inline-size );
+	}
 }
 
 .frontdoor-shell__header {
@@ -659,10 +717,11 @@ useHead( {
 	padding-block: var( --spacing-200 );
 }
 
-.frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
+.frontdoor-shell__page-grid :deep( .fd-page-grid__body ) {
 	display: flex;
 	flex-direction: column;
 	min-block-size: 0;
+	overflow: hidden;
 }
 
 /*
@@ -687,16 +746,11 @@ useHead( {
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
 		align-self: stretch;
-	}
-
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
 		min-block-size: 0;
 	}
 
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		align-self: stretch;
-		min-inline-size: 0;
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__body ) {
+		min-block-size: 0;
 	}
 
 	.frontdoor-shell__side-panel {
@@ -704,8 +758,9 @@ useHead( {
 	}
 
 	.frontdoor-shell__side-panel--end:not( .frontdoor-shell__side-panel--active ) {
-		/* Reserved 4-column panel for future page-level navigation. */
+		/* Reserved end column — empty area still participates in body scroll hit target. */
 		background-color: var( --background-color-base );
+		min-block-size: 100%;
 	}
 
 	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {

@@ -23,6 +23,12 @@
 }
 
 html,
+body,
+#__nuxt {
+	block-size: 100%;
+}
+
+html,
 body {
 	margin: 0;
 	padding: 0;
@@ -31,6 +37,14 @@ body {
 	font-family: var( --font-family-sans-stack );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-medium );
+}
+
+/*
+ * Shell scroll regions: the default layout locks to the viewport; column scroll
+ * happens inside `.frontdoor-shell` — not on `body`. See DESIGN_REQUIREMENTS.md.
+ */
+body {
+	overflow: hidden;
 }
 
 *,

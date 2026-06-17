@@ -438,7 +438,9 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	.explorer-page__reference-panel {
 		position: sticky;
 		inset-block-start: var( --spacing-150 );
-		block-size: calc( 100vh - ( var( --spacing-150 ) * 2 ) );
+		block-size: calc(
+			var( --fd-layout-shell-body-block-size-estimate ) - ( var( --spacing-150 ) * 2 )
+		);
 		grid-template-rows: auto minmax( 0, 1fr );
 		overflow: hidden;
 	}
