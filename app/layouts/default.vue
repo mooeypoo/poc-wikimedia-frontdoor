@@ -352,6 +352,15 @@ useHead( {
 	min-block-size: 0;
 }
 
+/*
+ * Start column edge: subtle inline-end border on the grid track (transparent panel).
+ * See DESIGN_REQUIREMENTS.md → Start column chrome; ARCHITECTURE.md → Shell section navigation.
+ */
+.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+	border-inline-end: 1px solid var( --border-color-subtle );
+	box-sizing: border-box;
+}
+
 @media screen and ( min-width: 640px ) {
 	.frontdoor-shell__page-grid {
 		flex: 1 1 auto;
@@ -630,7 +639,6 @@ useHead( {
 }
 
 .shell-side-panel {
-	background-color: var( --fd-layout-start-panel-background-color );
 	padding-block-start: var( --spacing-150 );
 	padding-block-end: var( --spacing-100 );
 	padding-inline-start: var( --spacing-100 );

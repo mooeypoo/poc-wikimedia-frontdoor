@@ -1,8 +1,8 @@
 /**
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
- * Desktop (≥ 1120px): fixed 241px start panel + main:end in 16:4 ratio (4fr / 1fr).
- * Tablet (≥ 640px): fixed 241px start + fluid main. Mobile: stacked interim layout.
+ * Desktop (≥ 1120px): fixed 281px start panel + main:end in 16:4 ratio (4fr / 1fr).
+ * Tablet (≥ 640px): fixed 281px start + fluid main. Mobile: stacked interim layout.
  *
  * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
  * future commit). The start column width is locked until collapse-into-header work.
@@ -17,17 +17,19 @@
  * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
  * caps at Codex desktop max (1679px) at ≥ 1680px — see ARCHITECTURE.md → Shell layout.
  *
- * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is an
- * exploratory Codex surface value not yet shipped as a theme token — see
- * DESIGN_REQUIREMENTS.md → Start column chrome.
+ * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
+ * legacy exploratory value — superseded by transparent panel + inline-end border.
+ * Token retained unused in :root for possible revert. See DESIGN_REQUIREMENTS.md.
  */
 
 :root {
 	/* Locked shell width at desktop wide (Codex max-width-breakpoint-desktop, 1679px) */
 	--fd-layout-grid-max-inline-size: var( --max-width-breakpoint-desktop );
 
-	/* Fixed start (left) side panel width — Figma side panel; responsive collapse deferred */
-	--fd-layout-start-panel-inline-size: 15.0625rem; /* 241px */
+	/* Fixed start (left) side panel width — Figma side panel + one grid column */
+	--fd-layout-start-panel-inline-size: calc(
+		15.0625rem + var( --fd-layout-desktop-wide-column-width )
+	); /* 281px */
 
 	/* Column spans on 24-column desktop (main:end ratio = 16:4) */
 	--fd-layout-grid-columns: 24;
@@ -53,9 +55,8 @@
 	--fd-layout-chrome-lock-viewport-inline-size: 90rem; /* 1440px */
 
 	/*
-	 * Start panel background — exploratory Codex surface colour (#F3F3F3) under review
-	 * by the Codex team; not yet shipped as a design token. See DESIGN_REQUIREMENTS.md
-	 * → Start column chrome. Swap for the official Codex token when published.
+	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
+	 * border-inline-end on .fd-page-grid__start. Retained unused for possible revert.
 	 */
 	--fd-layout-start-panel-background-color: #f3f3f3;
 

@@ -7,10 +7,13 @@ import type { ResolvedSectionNavSection } from '../../composables/usePageSection
  * full-width header band (not beside the header).
  *
  * Section headings and page links share one flat list (no nested sub-menus).
- * Horizontal dividers separate section groups; the start column has no edge border.
+ * Horizontal dividers separate section groups. The start column track uses an
+ * inline-end border on `.fd-page-grid__start` (see `default.vue`, DESIGN_REQUIREMENTS.md).
  *
- * **Codex exception:** uses `CdxMenuItem` outside a floating `CdxMenu` — approved
- * for this static shell list only (see DESIGN_REQUIREMENTS.md, ARCHITECTURE.md).
+ * **Codex exceptions:**
+ * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only.
+ * - Non-selected items: custom `:hover` CSS sets `--color-progressive` text. Codex hover
+ *   normally changes background only; `highlighted` is never toggled without a parent `CdxMenu`.
  *
  * **Prototype:** item links are `href="#"` placeholders; active state is supplied
  * by the parent via `usePageSectionNav()` — not by Vue Router.
@@ -86,10 +89,18 @@ defineProps<{
 }
 
 /* Flat list: section headings and items share the same inline alignment. */
-.shell-side-panel-nav__menu-item:deep( .cdx-menu-item ) {
+.shell-side-panel-nav :deep( .shell-side-panel-nav__menu-item.cdx-menu-item ),
+.shell-side-panel-nav :deep( .cdx-menu-item ) {
 	inline-size: 100%;
 	margin-inline-start: 0;
 	padding-inline-start: var( --spacing-75 );
 	padding-inline-end: var( --spacing-75 );
+}
+
+/* CdxMenuItem outside CdxMenu: highlighted prop is never set — use :hover for progressive text.
+ * Codex default hover only changes background, not unselected label colour. See ARCHITECTURE.md. */
+.shell-side-panel-nav :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover ),
+.shell-side-panel-nav :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .cdx-menu-item__content ) {
+	color: var( --color-progressive );
 }
 </style>

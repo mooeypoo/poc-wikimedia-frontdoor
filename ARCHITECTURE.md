@@ -169,7 +169,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 
 ## Shell section navigation (start column)
 
-The **start column** is **always mounted** on every page (tablet+: fixed **241px** track). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** with the same background (e.g. **Tools and bots**). **API Explorer** uses `config/explorerSideNav.js` via `isExplorerRoutePath()` — not via a primary-nav tab id. Routes without a section config entry still get an empty panel (`section-nav-site-label`). This is **chrome prototype** behaviour: links do not navigate to real destinations yet, and active/selected states are driven by a prototype map or config flags — not by deep content routing.
+The **start column** is **always mounted** on every page (tablet+: fixed **281px** track). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). **API Explorer** uses `config/explorerSideNav.js` via `isExplorerRoutePath()` — not via a primary-nav tab id. Routes without a section config entry still get an empty panel (`section-nav-site-label`). This is **chrome prototype** behaviour: links do not navigate to real destinations yet, and active/selected states are driven by a prototype map or config flags — not by deep content routing.
 
 ```
 Route path
@@ -191,15 +191,17 @@ banana-i18n labels + single global active item
 
 **Panel height (tablet+).** The start panel stretches to the **bottom of the viewport** below the header band (`min-block-size: 100%` on the page grid and `.frontdoor-shell__side-panel--start`), matching the visible shell height while main content may scroll longer.
 
-**Panel background.** `#F3F3F3` via `--fd-layout-start-panel-background-color` in `page-grid.css` — an **exploratory Codex surface value not yet shipped as a theme token** (see `DESIGN_REQUIREMENTS.md` → Start column chrome). Revisit when Codex publishes the official token.
+**Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` in `default.vue`. This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
-**Codex exception.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown). See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown). See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+
+**Codex exception — section nav hover colour.** Non-selected menu items use custom CSS (`:hover`) to set label text to **`--color-progressive`**. Codex `CdxMenuItem` hover normally only changes **background** (`--background-color-interactive-subtle--hover`); it does not turn unselected item text progressive. Additionally, when used outside `CdxMenu`, the `highlighted` prop is never toggled (the parent menu normally handles `@change` events), so shell styles must use **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items keep Codex’s built-in `--color-progressive` via `cdx-menu-item--selected`. Implemented in `ShellSidePanelNav.vue`.
 
 **Superseded component.** `app/components/explorer/ExplorerSideNav.vue` is retained but **not mounted** by the layout; explorer sections are rendered through the shared `ShellSidePanelNav` path above.
 
 **Primary navigation.** `ShellPrimaryNav` uses Codex quiet tabs for route switching. Tab panels are hidden (`display: none` on `.cdx-tabs__content`) because page content lives in the main column — navigation-only usage, documented in `DESIGN_REQUIREMENTS.md`.
 
-**Fixed width.** The start column uses `--fd-layout-start-panel-inline-size` (**241px**, Figma side panel) from `page-grid.css`. Responsive collapse into the header is **deferred**.
+**Fixed width.** The start column uses `--fd-layout-start-panel-inline-size` (**281px** = Figma side panel **241px** + one Codex desktop grid column **40px**) from `page-grid.css`. This is a **prototype deviation** from the Figma side-panel width. Responsive collapse into the header is **deferred**.
 
 ---
 
@@ -215,7 +217,7 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 │   └── .frontdoor-shell__chrome-inner   ← centred; matches PageGrid max width + margins
 │       └── .frontdoor-shell__chrome     ← utility row + primary nav (+ API Explorer link)
 └── .frontdoor-shell__page-grid (PageGrid)
-    ├── .fd-page-grid__start        ← start panel always mounted (241px fixed, tablet+); nav optional
+    ├── .fd-page-grid__start        ← start panel always mounted (281px fixed, tablet+); subtle inline-end border; nav optional
     ├── .fd-page-grid__main
     │   └── .frontdoor-shell__content
     │       ├── .frontdoor-shell__main     ← page slot
@@ -249,8 +251,8 @@ The **start column** holds section navigation **below** the header band only. Si
 
 | Token | Value / source | Purpose |
 |-------|----------------|---------|
-| `--fd-layout-start-panel-inline-size` | 241px (15.0625rem) | Fixed start column width |
-| `--fd-layout-start-panel-background-color` | `#f3f3f3` | Start panel background (**exploratory** — not a Codex token yet; see `DESIGN_REQUIREMENTS.md`) |
+| `--fd-layout-start-panel-inline-size` | 281px (`calc(15.0625rem + 2.5rem)`) | Fixed start column width (Figma 241px + one 40px grid column) |
+| `--fd-layout-start-panel-background-color` | `#f3f3f3` | **Legacy / unused** — superseded by transparent panel + inline-end border; retained for possible revert |
 | `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Codex page margins on `.fd-page-grid` |
 | `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Gaps between grid columns |
 | `--fd-layout-grid-max-inline-size` | Codex `--max-width-breakpoint-desktop` (1679px) | Whole grid cap at ≥ 1680px |
@@ -272,11 +274,12 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 
 ### Codex exceptions (shell chrome)
 
-1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list.
+1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list. **Additional override:** non-selected items use custom `:hover` CSS for `--color-progressive` text (see **Shell section navigation** — hover colour).
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge per Figma.
-3. **Start panel background** — **`#F3F3F3`** via project token `--fd-layout-start-panel-background-color` while Codex evaluates a matching surface token. **Not** `--background-color-neutral-subtle`. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
-4. **Search field** — `CdxSearchInput` in a flex track (`flex: 1 1 auto`, max **40rem**) beside the header brand; **24px** gap (`--spacing-150`) between brand and utilities. Codex `.cdx-text-input` `min-inline-size` overridden to **0** so the field can shrink with the header; a **container query** on `.frontdoor-shell__header-actions` collapses to an icon-only control when the actions row is too narrow. Full header responsive behaviour is **deferred**.
-5. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
+3. **Start column edge** — **`border-inline-end`** with `--border-color-subtle` on `.fd-page-grid__start` instead of a filled panel background. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
+4. **Start column width** — **281px** (Figma 241px + one Codex 40px grid column). **Deviation from Figma** side-panel spec; prototype widening only.
+5. **Search field** — `CdxSearchInput` in a flex track (`flex: 1 1 auto`, max **40rem**) beside the header brand; **24px** gap (`--spacing-150`) between brand and utilities. Codex `.cdx-text-input` `min-inline-size` overridden to **0** so the field can shrink with the header; a **container query** on `.frontdoor-shell__header-actions` collapses to an icon-only control when the actions row is too narrow. Full header responsive behaviour is **deferred**.
+6. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
 
 ### Interface locale picker (shell)
 
@@ -308,13 +311,15 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Area | Status |
 |------|--------|
 | Empty start panel (e.g. Tools and bots) | Panel always mounted; `ShellSidePanelNav` omitted when `sections` is empty |
-| Start panel background `#F3F3F3` | Project token only — **not** a shipped Codex theme token yet |
+| Start column edge | Transparent panel + `border-inline-end` (`--border-color-subtle`); legacy `#F3F3F3` background token unused |
+| Start column width | **281px** (Figma 241px + 40px grid column) — prototype deviation |
+| Section nav hover | Custom `:hover` progressive text on non-selected `CdxMenuItem` — Codex exception (see above) |
 | Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
 | Settings button | **Disabled** prototype |
 | Log in link | **Non-functional** (`@click.prevent`) |
 | Brand logo SVG | **Prototype asset** — `developer-portal-logo-mark.svg` in header; not final brand guidance |
-| Start column responsive collapse | **Deferred** — fixed 241px until header-collapse work |
+| Start column responsive collapse | **Deferred** — fixed 281px until header-collapse work |
 | Header container-query search collapse | **Interim** — not full responsive chrome |
 | Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
 | Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
@@ -703,7 +708,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Site grid + layout tokens | `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue` |
 | Shell layout | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Start column (always mounted) | `app/layouts/default.vue` (`.shell-side-panel`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
-| Start panel background (`#F3F3F3`) | `app/assets/css/page-grid.css` (`--fd-layout-start-panel-background-color`) |
+| Start column edge + width | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
