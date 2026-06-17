@@ -2,7 +2,12 @@
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
  * Desktop (≥ 1120px): fixed 281px start panel + main:end in 16:4 ratio (4fr / 1fr).
- * Tablet (≥ 640px): fixed 281px start + fluid main. Mobile: stacked interim layout.
+ * Tablet (≥ 640px): fixed 281px start + fluid main. Mobile: stacked interim layout;
+ * main flex-grows on short pages so the footer (inside `frontdoor-shell__content`)
+ * sits on the shell bottom.
+ *
+ * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
+ * `default.vue` (main column only — matches central page content, not main + end).
  *
  * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
  * future commit). The start column width is locked until collapse-into-header work.
@@ -122,7 +127,17 @@
 	display: none;
 }
 
-/* Tablet (640px–1119px): 8-column 2 | 6; end panel hidden until desktop */
+/* Mobile: grow main so the footer band (inside content) sits on the page bottom. */
+@media screen and ( max-width: 639px ) {
+	.fd-page-grid {
+		flex: 1 1 auto;
+		min-block-size: 0;
+	}
+
+	.fd-page-grid__main {
+		flex: 1 1 auto;
+	}
+}
 @media screen and ( min-width: 640px ) {
 	:root {
 		--fd-layout-page-margin: var( --spacing-150 );
@@ -132,16 +147,21 @@
 	.fd-page-grid {
 		display: grid;
 		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
-		gap: var( --fd-layout-grid-gutter );
+		grid-template-rows: minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+		row-gap: 0;
 	}
 
 	.fd-page-grid__main {
 		order: unset;
 		grid-column: 2;
+		grid-row: 1;
+		min-block-size: 100%;
 	}
 
 	.fd-page-grid__start {
 		grid-column: 1;
+		grid-row: 1;
 		inline-size: var( --fd-layout-start-panel-inline-size );
 		min-inline-size: var( --fd-layout-start-panel-inline-size );
 		max-inline-size: var( --fd-layout-start-panel-inline-size );
@@ -158,7 +178,9 @@
 	.fd-page-grid {
 		display: grid;
 		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 4fr ) minmax( 0, 1fr );
-		gap: var( --fd-layout-grid-gutter );
+		grid-template-rows: minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+		row-gap: 0;
 	}
 
 	.fd-page-grid__start,
@@ -177,6 +199,7 @@
 	.fd-page-grid__main {
 		grid-column: 2;
 		grid-row: 1;
+		min-block-size: 100%;
 	}
 
 	.fd-page-grid__end {

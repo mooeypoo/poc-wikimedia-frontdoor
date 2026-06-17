@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
-- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** (`--border-color-subtle`) separating main content; **281px** fixed width (Figma 241px + one grid column)
+- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** (`--border-color-subtle`); **281px** fixed width; **static site footer** (`ShellSiteFooter`) inside main content column with **48px** bottom inset
 
 ---
 
@@ -169,6 +169,9 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Start column inline-end border | **Implemented** | `default.vue` — `border-inline-end` with `--border-color-subtle` on `.fd-page-grid__start` |
 | Start column width 281px | **Implemented** | `page-grid.css` — `--fd-layout-start-panel-inline-size` (Figma 241px + 40px grid column) |
 | Section nav item hover (`--color-progressive`) | **Implemented** | `ShellSidePanelNav.vue` — custom `:hover` CSS; **Codex exception** (see Start column section navigation) |
+| Static site footer (Figma 393:4639) | **Implemented** | `ShellSiteFooter.vue`, `config/siteFooter.ts`, inside `frontdoor-shell__content` |
+| Footer width (main column only) | **Implemented** | Footer sibling of `.frontdoor-shell__main` — matches central page content; not main + end |
+| Footer short-page bottom pin + 48px inset | **Implemented** | `.frontdoor-shell__content` flex column + main `flex: 1`; `padding-block-end: --spacing-300` on `.shell-site-footer`; tablet+ `min-block-size: 100%` on `.fd-page-grid__main` |
 | Start panel always mounted | **Implemented** | `default.vue` — `.shell-side-panel` on every route; `ShellSidePanelNav` when sections exist |
 | Start panel full viewport height (tablet+) | **Implemented** | `default.vue` — `min-block-size: 100%` on grid + start panel below header band |
 
@@ -176,9 +179,9 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 
 | Viewport | Shell layout |
 |----------|----------------|
-| **&lt; 640px** | **Interim:** header band, then start panel (nav when sections exist), then main; end panel hidden — full side-panel responsive deferred |
-| **640px–1119px** | **Interim:** **281px** fixed start (always mounted) + fluid main; end panel hidden until desktop; start panel full height below header |
-| **≥ 1120px** | Fixed **281px** start (always mounted) + **4fr \| 1fr** main:end (both side panels on sides, all routes); start panel full viewport height below header; **`border-inline-end`** (`--border-color-subtle`) on start column |
+| **&lt; 640px** | **Interim:** header band, then start panel (nav when sections exist), then main, then footer; main **`flex: 1`** on short pages pins footer to shell bottom |
+| **640px–1119px** | **Interim:** **281px** fixed start beside fluid main column (start nav height matches main cell, which includes footer); footer in **main column only**; end panel hidden until desktop |
+| **≥ 1120px** | Fixed **281px** start + **4fr \| 1fr** main:end; footer in **main column only** (does not span end panel — **Figma deviation**); **`border-inline-end`** on start column |
 | **≥ 1680px** | Same tracks; grid box **max 1679px** centered |
 
 **Note:** `@media` conditions in `page-grid.css` and `default.vue` use **px literals** aligned to Codex breakpoint tokens (`640px`, `1120px`, `1680px`) plus the project-specific **`1440px`** header lock, because custom properties are unreliable in media query conditions.
@@ -215,7 +218,10 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Start column inline-end border | `border-inline-end` on `.fd-page-grid__start` | `--border-color-subtle`; supersedes filled `#F3F3F3` panel |
 | Start column width 281px | `--fd-layout-start-panel-inline-size` in `page-grid.css` | Figma 241px + one 40px Codex grid column — **deviation from Figma** |
 | Section nav hover colour | `:hover` override in `ShellSidePanelNav.vue` | **Codex exception** — progressive text on non-selected items |
-| Quiet tabs duplicate border removed | `shell-primary-nav-overrides.css` | Codex uses physical `border-bottom`; override re-imported after RTL sheet load |
+| Footer main column width | `ShellSiteFooter` inside `.frontdoor-shell__content` | Matches central page content; does not span end panel |
+| Footer flush under main | Footer is last child in `.frontdoor-shell__content` flex column | Sits directly below page slot — no grid row between main and footer |
+| Footer 48px page-bottom inset | `padding-block-end: --spacing-300` on `.shell-site-footer` | Short pages: `.frontdoor-shell__main` `flex: 1` + tablet+ `.fd-page-grid__main` `min-block-size: 100%` pin footer to shell bottom |
+| Footer width vs Figma | Main column only — not x=241 / width=1199 (main+end) | **Intentional deviation** from [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) |
 | Header utility row (Figma) | `.frontdoor-shell__header-top` + `.frontdoor-shell__header-actions` | **24px** logo–search gap (`--spacing-150`); search **flexes** in header (max **40rem**); language **8–11rem**; container query on actions row |
 | Interface language icon on trigger only | `CdxSelect` `#label` slot + `:key="direction"` | Menu items text-only; `isolateLabel()` for BiDi; remount on LTR ↔ RTL |
 | Codex RTL sheet toggled on locale switch | `codex-rtl-styles.client.ts` | **`link.disabled`** prototype — prevents stale RTL layout on LTR locales without reload |
@@ -275,11 +281,41 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Footer
 
-**Decision:** Footer band with **neutral subtle** background and centred small text in the **main column** (grid row 3, column 2 at tablet+).
+**Decision:** Static site footer at the **end of the main content band**, matching Figma Footer node **393:4639** ([Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548); layout reference [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034)).
 
-**Pinning:** On **mobile** (&lt; 640px), footer uses flex **`margin-block-start: auto`** inside `.frontdoor-shell__content`. On **tablet+**, `.fd-page-grid__main` is a flex column with **`min-block-size: 100%`** so the footer sits at the bottom of the main column.
+**Placement:** Rendered inside `.frontdoor-shell__content` in `default.vue` — sibling of `.frontdoor-shell__main`, after the page slot. **Not** a separate `PageGrid` slot.
 
-**Disclaimer:** Footer does **not** span the end column or the full content band — only the main column. Full-width footer alignment with header chrome is **future work** if required by final design.
+| Viewport | Footer width | Notes |
+|----------|--------------|-------|
+| **All** | **Main column only** | Same inline size as `.frontdoor-shell__content`; does **not** span end panel or start nav |
+
+**Figma deviation (width):** [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) shows the footer band spanning **main + end** (x=241, width=1199). Implementation keeps **main-column width only** by product decision.
+
+**Vertical rhythm:**
+
+- Footer is the **last child** in `.frontdoor-shell__content` (`display: flex; flex-direction: column`) — sits **flush** under main content (no grid row gap).
+- **Short pages:** `.frontdoor-shell__main` uses **`flex: 1 1 auto`** so the footer band’s outer edge aligns with the shell bottom; tablet+ **`.fd-page-grid__main`** uses **`min-block-size: 100%`** and is a flex column (`default.vue`); mobile **`.fd-page-grid__main`** uses **`flex: 1 1 auto`** (`page-grid.css`).
+- **Long pages:** Footer follows content in normal document flow.
+- **No `margin-block-end`** on the footer — **48px** bottom spacing is **`padding-block-end: var(--spacing-300)`** inside `.shell-site-footer` only.
+
+**Content (row 1):** Centred brand row — **14px** Wikimedia mark (`developer-portal-logo-mark.svg`) + single-line wordmark (`footer-brand-wordmark`) + **Privacy policy** and **Terms of use** links.
+
+**Content (row 2):** Centred legal attribution — **three sentences** (one per line) with an inline **Creative Commons Attribution-ShareAlike** link on the middle line.
+
+**Visual:** `--background-color-base`, **`border-block-start`** with `--border-color-muted`, **`padding-block-start: var(--spacing-150)` (24px)**, **`padding-block-end: var(--spacing-300)` (48px)** — **48px from legal copy to the page bottom** per Figma, **`padding-inline: var(--spacing-200)` (32px)**. Policy and license links use `--color-progressive`; brand wordmark and legal body text use **`--color-subtle`**.
+
+**URLs:** External Foundation / CC links from `config/siteFooter.ts` — not constructed in components.
+
+**i18n:** `footer-aria-label`, `footer-brand-wordmark`, `footer-privacy-policy`, `footer-terms-of-use`, `footer-policy-nav-label`, `footer-attribution-sentence-created-by`, `footer-attribution-sentence-license-before`, `footer-license-link-label`, `footer-attribution-sentence-license-after`, `footer-attribution-sentence-trademark` in `i18n/*.json` + `qqq.json`. Legal copy renders **one sentence per line** (three lines).
+
+**Codex exceptions:**
+
+1. **Footer wordmark typography** — Figma specifies **Montserrat**; shell uses Codex **`--font-family-sans-stack`** until brand fonts are integrated (same as header).
+2. **Footer brand asset** — Figma uses a horizontal **227×14px** lockup (mark + “WIKIMEDIA DEVELOPER PORTAL”); implementation composes **14px mark SVG + banana wordmark** until the footer logo asset is added to `public/images/`.
+
+**Supersedes:** Previous single-line `footer-title` band with `--background-color-neutral-subtle` inside the main column only (removed from `default.vue`).
+
+**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`.
 
 ### Main content padding
 
@@ -524,8 +560,10 @@ Mapping of notable commits to design areas (newest first among design-only work)
 8. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
 9. **Editorial content** for Use content and data, Community, Contribute, Get help.
 10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
-11. **Confirm start column chrome with design** — border vs filled panel, and **281px** width vs Figma **241px** side-panel spec.
-12. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. build-time RTL bundle, per-component direction props) before production.
+11. **Confirm footer width with design** — keep **main-column only** or adopt Figma [354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) main+end span.
+12. **Add footer horizontal logo asset** — replace composed 14px mark + wordmark with Figma **227×14px** lockup when asset is finalized.
+13. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. build-time RTL bundle, per-component direction props) before production.
+14. **Confirm start column chrome with design** — border vs filled panel, and **281px** width vs Figma **241px** side-panel spec.
 
 ---
 
@@ -537,6 +575,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `config/remoteContentSources.ts` |
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Start column chrome | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/components/shared/ShellSidePanelNav.vue`, `app/composables/usePageSectionNav.ts` |
+| Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `public/images/developer-portal-logo-mark.svg` |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/composables/usePrimaryNavigationTab.ts` |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css`, `app/plugins/codex-rtl-styles.client.ts` |

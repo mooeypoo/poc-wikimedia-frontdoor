@@ -150,7 +150,6 @@ const languageMenuItems = computed<PickerMenuItem[]>( () => {
 
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
-const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
@@ -329,12 +328,7 @@ useHead( {
 						<slot />
 					</div>
 				</main>
-
-				<footer class="frontdoor-shell__footer">
-					<p class="frontdoor-shell__footer-text">
-						{{ footerLabel }}
-					</p>
-				</footer>
+				<SharedShellSiteFooter />
 			</div>
 		</SharedPageGrid>
 	</div>
@@ -433,8 +427,9 @@ useHead( {
 .frontdoor-shell__content {
 	display: flex;
 	flex-direction: column;
-	min-block-size: 100%;
+	flex: 1 1 auto;
 	min-inline-size: 0;
+	min-block-size: 0;
 }
 
 .frontdoor-shell__header {
@@ -664,29 +659,10 @@ useHead( {
 	padding-block: var( --spacing-200 );
 }
 
-.frontdoor-shell__footer {
-	padding-block: var( --spacing-100 );
-	background-color: var( --background-color-neutral-subtle );
-	font-size: var( --font-size-small );
-}
-
-@media screen and ( max-width: 639px ) {
-	.frontdoor-shell__footer {
-		margin-block-start: auto;
-	}
-}
-
-@media screen and ( min-width: 640px ) {
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
-		display: flex;
-		flex-direction: column;
-		min-block-size: 100%;
-	}
-}
-
-.frontdoor-shell__footer-text {
-	margin: 0;
-	text-align: center;
+.frontdoor-shell__page-grid :deep( .fd-page-grid__main ) {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 0;
 }
 
 /*

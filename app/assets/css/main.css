@@ -54,7 +54,6 @@ body {
 .frontdoor-shell :where(
 	.frontdoor-description,
 	.frontdoor-help-text,
-	.frontdoor-shell__footer,
 	.explorer-page__header > p,
 	.explorer-page__reference-header > p,
 	.explorer-page__bootstrap-loading > p,

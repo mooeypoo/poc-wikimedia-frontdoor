@@ -219,11 +219,11 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 └── .frontdoor-shell__page-grid (PageGrid)
     ├── .fd-page-grid__start        ← start panel always mounted (281px fixed, tablet+); subtle inline-end border; nav optional
     ├── .fd-page-grid__main
-    │   └── .frontdoor-shell__content
-    │       ├── .frontdoor-shell__main     ← page slot
-    │       └── .frontdoor-shell__footer   ← footer band
+    │   └── .frontdoor-shell__content → .frontdoor-shell__main (page slot) + ShellSiteFooter
     └── .fd-page-grid__end          ← module rail / reserved space (desktop+)
 ```
+
+**Page grid (tablet+).** Single content row: main (+ end at desktop). The site footer lives **inside** `.frontdoor-shell__content` so its width matches the main column. **`grid-template-rows: minmax(0, 1fr)`** — on short pages the main cell grows (`min-block-size: 100%`) and `.frontdoor-shell__content` uses a column flex layout so the footer sits on the shell bottom. See **Site footer** below.
 
 **Rendering.** The layout calls composables for navigation state only (`usePrimaryNavigationTab`, `usePageSectionNav`, `useContentSearch`, etc.). Components in the start column and header receive resolved props — they do not fetch data or read route config directly.
 
@@ -233,9 +233,9 @@ The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-sh
 
 **Inline-start alignment (Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)):** Header brand and primary nav share the same **`--spacing-200` (32px)** inline-start inset as the start column section menu — applied via `padding-inline` on `.frontdoor-shell__chrome` and `padding-inline-start` on `.shell-side-panel` (tablet+). The header spans the full inner width; it is **not** offset into the main column.
 
-The **start column** holds section navigation **below** the header band only. Side panels use a single grid row at desktop.
+The **start column** holds section navigation **below** the header band only. At desktop, main and end share the content row; the footer is inside the main column (`frontdoor-shell__content`).
 
-**Mobile (&lt; 640px):** Stacked interim layout — start panel (always mounted; nav when sections exist), then main; header and start panel use **`--spacing-100` (16px)** inline padding to match mobile page margins. Footer pinning uses **`margin-block-start: auto`**. Side-panel collapse into the header is **deferred**.
+**Mobile (&lt; 640px):** Stacked interim layout — start panel (always mounted; nav when sections exist), then main, then footer. Header and start panel use **`--spacing-100` (16px)** inline padding to match mobile page margins. On short pages, **`.fd-page-grid__main`** uses **`flex: 1 1 auto`** so the footer band sits on the shell bottom (see **Site footer**). Side-panel collapse into the header is **deferred**.
 
 ### Chrome width
 
@@ -268,6 +268,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 |-----------|------|---------------------|
 | `ShellHeaderBrand.vue` | Compact header brand (32px mark SVG + wordmark); links to Get started | `useMainNavigationLinks()` |
 | `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` |
+| `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
 
 **API Explorer header link.** Not a tab. `default.vue` renders a `NuxtLink` to `API_EXPLORER_NAVIGATION_PATH` (`/explorer` from `config/mainNavigation.ts`) **immediately after** the quiet tab list in `.frontdoor-shell__primary-nav-row`. Tabs use **`flex: 0 1 auto`** (intrinsic width) so the link follows the last tab, not the inline-end of the row. **`gap: var(--spacing-150)` (24px)** between the last tab and the link. Uses `cdxIconArrowNext` (`--color-progressive` on the icon). Active state when `isExplorerRoutePath()`; no primary tab is selected on explorer routes (`getMainNavigationIdFromPath` returns `null`).
@@ -280,6 +281,8 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 4. **Start column width** — **281px** (Figma 241px + one Codex 40px grid column). **Deviation from Figma** side-panel spec; prototype widening only.
 5. **Search field** — `CdxSearchInput` in a flex track (`flex: 1 1 auto`, max **40rem**) beside the header brand; **24px** gap (`--spacing-150`) between brand and utilities. Codex `.cdx-text-input` `min-inline-size` overridden to **0** so the field can shrink with the header; a **container query** on `.frontdoor-shell__header-actions` collapses to an icon-only control when the actions row is too narrow. Full header responsive behaviour is **deferred**.
 6. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
+7. **`ShellSiteFooter` wordmark typography** — Figma Footer **393:4639** specifies **Montserrat**; shell uses Codex **`--font-family-sans-stack`** until brand fonts ship (same exception as `ShellHeaderBrand`).
+8. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px `developer-portal-logo-mark.svg` + banana `footer-brand-wordmark`** until the footer logo asset ships.
 
 ### Interface locale picker (shell)
 
@@ -304,6 +307,24 @@ The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n
 
 **Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot, `.frontdoor-shell__api-explorer-link`).
 
+### Site footer
+
+Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__content` in `default.vue` (sibling of `.frontdoor-shell__main`).
+
+**Width:** Matches the **main column** / central page content — same inline size as `.frontdoor-shell__content`. Does **not** span the end panel at desktop and does **not** extend under the start navigation column.
+
+**Short-page pin:** On viewports shorter than the content, the footer band’s **bottom edge** aligns with the shell bottom and legal copy sits **48px** above that edge (`padding-block-end: --spacing-300`). Mechanism: `.frontdoor-shell__content` is a **column flex** container (`flex: 1`); `.frontdoor-shell__main` uses **`flex: 1 1 auto`**; tablet+ **`.fd-page-grid__main`** has **`min-block-size: 100%`** and is a flex column (see `default.vue`); mobile **`.fd-page-grid__main`** uses **`flex: 1 1 auto`** (`page-grid.css`). No separate footer grid row and **no margin** below the footer element.
+
+**Legal copy:** Three banana-i18n sentences (one per line) with an inline CC BY-SA link on the middle line. Brand wordmark and legal body use **`--color-subtle`**; policy and license links use **`--color-progressive`**.
+
+**Figma deviation (width):** Figma [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) places the footer at **x=241**, **width=1199** (main + end). Implementation keeps the footer **main-column width only** — it does not span the end panel.
+
+**Codex exceptions:** (1) Figma specifies **Montserrat** for the footer wordmark; shell uses **`--font-family-sans-stack`** until brand fonts ship (same as `ShellHeaderBrand`). (2) Footer brand is **14px mark SVG + banana wordmark**, not the Figma **227×14px** horizontal lockup asset (not yet in `public/images/`).
+
+**Supersedes:** In-main-column `footer-title` band with `--background-color-neutral-subtle`; earlier experiment with a `PageGrid` **`footer`** slot spanning main + end (reverted).
+
+**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`), `app/assets/css/page-grid.css`.
+
 ### Prototype / non-final shell behaviour
 
 The following are **intentional placeholders** in the design-chrome exploration — not production-ready features:
@@ -314,6 +335,8 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Start column edge | Transparent panel + `border-inline-end` (`--border-color-subtle`); legacy `#F3F3F3` background token unused |
 | Start column width | **281px** (Figma 241px + 40px grid column) — prototype deviation |
 | Section nav hover | Custom `:hover` progressive text on non-selected `CdxMenuItem` — Codex exception (see above) |
+| Site footer | `ShellSiteFooter` inside `frontdoor-shell__content`; **main column width only** (Figma deviation — does not span end panel); **48px** bottom inset; short-page pin via content flex column |
+| Footer brand lockup | 14px mark SVG + banana wordmark — not Figma horizontal footer logo asset yet |
 | Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
 | Settings button | **Disabled** prototype |
@@ -709,6 +732,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Shell layout | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Start column (always mounted) | `app/layouts/default.vue` (`.shell-side-panel`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
 | Start column edge + width | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
+| Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
