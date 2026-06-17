@@ -18,11 +18,6 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 		path: '/'
 	},
 	{
-		id: 'landing',
-		messageKey: 'nav-landing',
-		path: '/landing'
-	},
-	{
 		id: 'learn',
 		messageKey: 'nav-learn',
 		path: '/learn'
