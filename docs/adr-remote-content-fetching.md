@@ -188,14 +188,14 @@ All nav labels remain banana-i18n message keys — no English literals in the me
 
 **Explorer side nav (`target: 'explorer-side'`) — planned, not implemented:**
 
-The explorer side nav (`config/explorerSideNav.js` → `ExplorerSideNav.vue`) uses a different data shape: sections containing items, where each item has a message key and optional link state. This differs structurally from the primary nav (a flat ordered list). Supporting `target: 'explorer-side'` requires:
+The explorer side nav (`config/explorerSideNav.js` → `usePageSectionNav()` + `ShellSidePanelNav`) uses a different data shape: sections containing items, where each item has a message key and optional `mode` for route wiring. This differs structurally from the primary nav (a flat ordered list). Supporting `target: 'explorer-side'` requires:
 - Extending the `RemoteContentNavEntry` type's `target` union to include `'explorer-side'`
 - Adding a `section` field to `RemoteContentNavEntry` identifying which side nav section the item belongs to
 - Updating `config/explorerSideNav.js` (or a new composable) to merge entries from remote sources
 
 This is out of scope for Phase 1. The `target` field is defined as a string union now so the extension is additive when the time comes.
 
-**Issue to note:** The explorer side nav currently links to `href="#"` placeholder links (non-functional, per `DESIGN_REQUIREMENTS.md`). Adding real links from remote sources would make those entries functional. Confirm before wiring this up that the explorer side nav is ready to serve real navigation.
+**Issue to note:** Overview section entries in the explorer side nav (no `mode` field) still use `href="#"` placeholders. Mode-bearing entries navigate to `/explorer` sub-routes. Confirm before wiring remote sources that new explorer-side entries include a `mode` when they should route, or remain inert placeholders.
 
 ---
 
