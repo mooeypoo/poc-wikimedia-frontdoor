@@ -3,11 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "build:netlify": "NITRO_PRESET=netlify nuxt build",
+    "build": "npm run fetch-remote-content && nuxt build",
+    "build:netlify": "NITRO_PRESET=netlify npm run fetch-remote-content && nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "generate:static": "nuxt generate",
+    "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
+    "generate": "npm run fetch-remote-content && nuxt generate",
+    "generate:static": "npm run fetch-remote-content && nuxt generate",
     "preview": "nuxt preview",
     "test:content-fallback": "node scripts/test-content-fallback.mjs"
   },
@@ -25,7 +26,9 @@
     "pinia": "^3.0.4",
     "sqlite3": "^6.0.1",
     "vue": "^3.5.34",
-    "vue-router": "^5.0.7"
+    "vue-router": "^5.0.7",
+    "yaml": "^2.5.0",
+    "markdown-it": "^14.1.0"
   },
   "devDependencies": {
     "oxc-parser": "^0.131.0",

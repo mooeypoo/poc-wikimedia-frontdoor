@@ -3,13 +3,22 @@
  *
  * Static section structure for the API Explorer left-hand navigation menu.
  * Labels are resolved at runtime via banana-i18n using each entry's messageKey.
+ *
+ * Items with a `mode` field are wired to real routes by `usePageSectionNav()`
+ * (`pathForExplorerMode` in `app/utils/explorerRoute.ts`). Active state is derived
+ * from the current route — do not set `isActive` in this config.
+ */
+
+/**
+ * @typedef {'community' | 'enterprise-full' | 'enterprise-limited' | 'enterprise-custom'} ExplorerMode
  */
 
 /**
  * @typedef {object} ExplorerSideNavItem
  * @property {string} id - Stable id for the nav item.
  * @property {string} messageKey - banana-i18n message key for the link label.
- * @property {boolean} [isActive] - When true, the item is shown as the current section.
+ * @property {ExplorerMode} mode - Explorer mode this item activates.
+ * @property {boolean} [enabled] - When false, the item is hidden entirely. Defaults to true.
  */
 
 /**
@@ -28,7 +37,25 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 			{
 				id: 'wikimedia-api-modules',
 				messageKey: 'explorer-side-nav-wikimedia-api-modules',
-				isActive: true
+				mode: 'community'
+			},
+			{
+				id: 'enterprise-apis',
+				messageKey: 'explorer-side-nav-enterprise-apis',
+				mode: 'enterprise-full',
+				enabled: true
+			},
+			{
+				id: 'enterprise-apis-limited',
+				messageKey: 'explorer-side-nav-enterprise-apis-limited',
+				mode: 'enterprise-limited',
+				enabled: true
+			},
+			{
+				id: 'enterprise-apis-custom',
+				messageKey: 'explorer-side-nav-enterprise-apis-custom',
+				mode: 'enterprise-custom',
+				enabled: true
 			}
 		]
 	},
