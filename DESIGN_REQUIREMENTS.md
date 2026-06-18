@@ -128,7 +128,7 @@ Layout follows the **Codex responsive grid** and the **2-panel desktop layout** 
 | **Desktop** | 1120px–1679px | **24 columns** | 24px | 32px | Fluid within margins |
 | **Desktop wide** | ≥ 1680px | **24 columns** (40px column width) | 24px | **Grow with viewport** | **Fixed** at desktop maximum width; extra space becomes margin |
 
-**Header chrome width (project-specific):** The header **band** spans the full viewport. Inner content (`.frontdoor-shell__chrome-inner`) is centred with Codex page margins and locks at **`--fd-layout-grid-content-max-inline-size`** at **≥ 1440px**. Header brand and primary nav align at the same inline-start inset as the start column menu (**`--spacing-200`** at tablet+).
+**Header chrome width (project-specific):** The header **band** spans the full viewport. Inner content (`.frontdoor-shell__chrome-inner`) is full width with **`--fd-layout-page-margin-inline-start`** (shared with `PageGrid`) and **`--fd-layout-page-margin`** inline-end. At tablet+, brand and tabs use the **same grid columns** as the start panel (`281px` + gutter + fluid body); utilities align to the inline-end of the body column.
 
 **Desktop wide behaviour:** At viewports wider than 1679px, the **page content block keeps the same width** as at 1679px; only the **outer start and end margins increase**. Main and end columns share remaining space in a **16:4** ratio (`4fr` / `1fr` grid tracks).
 
@@ -163,8 +163,8 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Desktop 1120px–1679px (fixed start + 4fr \| 1fr main:end, 32px margins) | **Implemented** | `page-grid.css` — `--spacing-200` page margin; both side panels on sides, always reserved |
 | Desktop wide ≥ 1680px (fixed 1679px shell, fixed start + 16:4 main:end) | **Implemented** | `page-grid.css` — `@media (min-width: 1680px)`, `--max-width-breakpoint-desktop` cap |
 | Header chrome fluid width (&lt; 1440px viewport) | **Implemented** | `default.vue` — full-bleed band; centred inner wrapper |
-| Header / start nav inline-start alignment | **Implemented** | `default.vue` — shared `--spacing-200` inset (Figma 225:4548) |
-| Header chrome width lock (≥ 1440px viewport) | **Implemented** | `page-grid.css` + `default.vue` — `--fd-layout-grid-content-max-inline-size` |
+| Header / start nav inline-start alignment | **Implemented** | `default.vue` — shared `--fd-layout-page-margin-inline-start` + start-panel grid column + `--spacing-75` content inset |
+| Header chrome width lock (≥ 1680px viewport) | **Implemented** | `page-grid.css` — `--fd-layout-page-margin-inline-start` grows with viewport |
 | Section nav below header | **Implemented** | Start column in `PageGrid`; header outside grid in `.frontdoor-shell__chrome-band` |
 | Start column inline-end border | **Implemented** | `default.vue` — `border-inline-end` with `--border-color-subtle` on `.fd-page-grid__start` |
 | Start column width 281px | **Implemented** | `page-grid.css` — `--fd-layout-start-panel-inline-size` (Figma 241px + 40px grid column) |
@@ -219,7 +219,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Primary nav tab label weight | `shell-primary-nav-overrides.css` | **Codex exception** — all labels `--font-weight-normal` (Codex defaults to bold); selection via colour/underline |
 | Two-row header (utility + tabs) | `default.vue` `.frontdoor-shell__chrome` inside full-bleed band | Settings **disabled**; log in **non-functional** |
 | Full-viewport header band | `.frontdoor-shell__chrome-band` in `default.vue` | Background + bottom border span viewport; inner content centred |
-| Header / start nav aligned at inline-start | Shared `--spacing-200` padding on chrome + start panel | Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548) |
+| Header / start nav aligned at inline-start | Start-panel grid column + `--spacing-75` inset | Matches `ShellSidePanelNav` item padding; Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548) |
+| Header utilities at inline-end | Body grid column + `justify-content: flex-end` | Search/settings/language/log in |
 | Start column below header | Section nav in `PageGrid` start slot only | Panel always mounted; viewport-height track on tablet+ |
 | Start panel scroll | `overflow-y: auto` on `.frontdoor-shell__side-panel--start` | Independent scroll when nav exceeds visible body; browser default scrollbar |
 | **Main column** | `.frontdoor-shell__body-scroll` | Page slot + footer; scrollbar at inline-end of main + end band |
@@ -248,11 +249,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxSelect`), Log in link |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`) plus separate **API Explorer** progressive link (`cdxIconArrowNext`) |
 
-**Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` matches `PageGrid` max width and margins. At **≥ 1440px**, inner **`max-inline-size`** locks to `--fd-layout-grid-content-max-inline-size`. At **≥ 1680px**, inner max width matches the Codex desktop-wide grid cap.
+**Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
 
-**Grid placement:** Header lives **above** `PageGrid` and spans the full centred inner width. Brand lockup and primary nav tabs align at the **inline-start** with the start column section menu below (**`--spacing-200`** inset at tablet+, per Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)). Utility controls remain at the inline-end of the header row.
+**Grid placement:** Header lives **above** `PageGrid`. Brand occupies the **start column**; utility actions occupy the **body column** aligned to the inline-end. Primary nav tabs + API Explorer link span the **full chrome width** (row 2) with the same **`--spacing-75`** inline-start inset as the brand — tabs need more than the 281px start track.
 
-**Padding:** `--spacing-150` block-start on chrome; `--spacing-150` gap between utility row and tab row; **`padding-inline: var(--spacing-200)`** on `.frontdoor-shell__chrome` at tablet+ (matches start panel inline-start padding).
+**Padding:** `--spacing-150` block-start on chrome; `--spacing-150` gap between utility row and tab row. Viewport-edge inset on `.frontdoor-shell__chrome-inner` only (`--fd-layout-page-margin-inline-start` / `--fd-layout-page-margin`).
 
 **Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **All tab labels** use **`--font-weight-normal`** — **Codex exception** (Codex quiet tabs set `font-weight: 700` on every label); the selected tab is distinguished by colour and progressive underline only. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` and re-imported after `codex.style-rtl.css` in `codex-rtl-styles.client.ts`) because `.frontdoor-shell__chrome-band` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — they flicker on first paint before overflow measurement; header responsiveness will use a separate approach.
 
@@ -345,7 +346,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Start column chrome
 
-**Decision:** The start column (`.shell-side-panel`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-100`** block-end / **`--spacing-200`** inline-start (tablet+) / **`--spacing-75`** inline-end. Inline-start padding matches the header chrome inset so section menu labels align with the brand lockup and primary nav tabs above.
+**Decision:** The start column (`.shell-side-panel`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-100`** block-end / **`--spacing-75`** inline-end. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome.
 
 **Height (tablet+):** The panel track fills the **visible shell body** below the chrome band. When section links exceed that height, **`.frontdoor-shell__side-panel--start`** scrolls with a **browser default** vertical scrollbar (`overflow-y: auto`, `overscroll-behavior: contain`).
 

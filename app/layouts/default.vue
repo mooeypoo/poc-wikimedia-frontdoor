@@ -124,36 +124,40 @@ useHead( {
 		<div class="frontdoor-shell__chrome-band">
 			<div class="frontdoor-shell__chrome-inner">
 				<div class="frontdoor-shell__chrome">
-					<header class="frontdoor-shell__header">
-						<div class="frontdoor-shell__header-inner">
-							<div class="frontdoor-shell__header-top">
+					<div class="frontdoor-shell__chrome-utility-band">
+						<div class="frontdoor-shell__chrome-start frontdoor-shell__chrome-start--brand">
+							<header class="frontdoor-shell__header">
 								<SharedShellHeaderBrand />
-								<SharedShellHeaderUtilityActions
-									v-model:selected-interface-locale="selectedInterfaceLocale"
-								/>
-							</div>
+							</header>
 						</div>
-					</header>
-					<div class="frontdoor-shell__primary-nav-row">
-						<SharedShellPrimaryNav
-							class="frontdoor-shell__primary-nav"
-							:aria-label="primaryNavigationLabel"
-							:navigation-links="mainNavigationLinks"
-							:active-navigation-id="activeNavigationId"
-							@navigation-select="handlePrimaryNavigationSelect"
-						/>
-						<NuxtLink
-							:to="API_EXPLORER_NAVIGATION_PATH"
-							class="frontdoor-shell__api-explorer-link"
-							:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
-						>
-							{{ apiExplorerLinkLabel }}
-							<CdxIcon
-								:icon="cdxIconArrowNext"
-								:flip-for-rtl="true"
-								class="frontdoor-shell__api-explorer-link-icon"
+						<div class="frontdoor-shell__chrome-main">
+							<SharedShellHeaderUtilityActions
+								v-model:selected-interface-locale="selectedInterfaceLocale"
 							/>
-						</NuxtLink>
+						</div>
+					</div>
+					<div class="frontdoor-shell__chrome-start frontdoor-shell__chrome-start--nav">
+						<div class="frontdoor-shell__primary-nav-row">
+							<SharedShellPrimaryNav
+								class="frontdoor-shell__primary-nav"
+								:aria-label="primaryNavigationLabel"
+								:navigation-links="mainNavigationLinks"
+								:active-navigation-id="activeNavigationId"
+								@navigation-select="handlePrimaryNavigationSelect"
+							/>
+							<NuxtLink
+								:to="API_EXPLORER_NAVIGATION_PATH"
+								class="frontdoor-shell__api-explorer-link"
+								:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
+							>
+								{{ apiExplorerLinkLabel }}
+								<CdxIcon
+									:icon="cdxIconArrowNext"
+									:flip-for-rtl="true"
+									class="frontdoor-shell__api-explorer-link-icon"
+								/>
+							</NuxtLink>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -250,9 +254,9 @@ useHead( {
 }
 
 /*
- * Full-viewport header band; inner content matches PageGrid width. Logo and
- * primary nav align at the same inline-start inset as the start column menu
- * (Figma Navigation 225:4548 — 32px / --spacing-200 at tablet+).
+ * Full-viewport header band. Horizontal inset matches `PageGrid` via
+ * `--fd-layout-page-margin-inline-start`; brand/tabs use the same column grid
+ * as the start panel (tablet+). Figma Navigation 225:4548.
  */
 .frontdoor-shell__chrome-band {
 	position: relative;
@@ -266,22 +270,10 @@ useHead( {
 
 .frontdoor-shell__chrome-inner {
 	box-sizing: border-box;
-	margin-inline: auto;
 	inline-size: 100%;
-	max-inline-size: var( --fd-layout-grid-max-inline-size );
-	padding-inline: var( --fd-layout-page-margin );
-}
-
-@media screen and ( min-width: 1440px ) {
-	.frontdoor-shell__chrome-inner {
-		max-inline-size: var( --fd-layout-grid-content-max-inline-size );
-	}
-}
-
-@media screen and ( min-width: 1680px ) {
-	.frontdoor-shell__chrome-inner {
-		max-inline-size: var( --fd-layout-grid-max-inline-size );
-	}
+	margin-inline: 0;
+	padding-inline-start: var( --fd-layout-page-margin-inline-start );
+	padding-inline-end: var( --fd-layout-page-margin );
 }
 
 .frontdoor-shell__chrome {
@@ -290,13 +282,60 @@ useHead( {
 	gap: var( --spacing-150 );
 	padding-block-start: var( --spacing-150 );
 	padding-block-end: 0;
-	padding-inline: var( --spacing-100 );
+	min-inline-size: 0;
+}
+
+/*
+ * Row 1 (mobile): brand and utility actions on one flex row. Tablet+: `display: contents`
+ * so brand and utilities land in the same grid columns as start panel / body band.
+ */
+.frontdoor-shell__chrome-utility-band {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var( --spacing-150 );
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome-start {
+	padding-inline-start: var( --spacing-75 );
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome-main {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: flex-end;
 	min-inline-size: 0;
 }
 
 @media screen and ( min-width: 640px ) {
 	.frontdoor-shell__chrome {
-		padding-inline: var( --spacing-200 );
+		display: grid;
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+		grid-template-rows: auto auto;
+	}
+
+	.frontdoor-shell__chrome-utility-band {
+		display: contents;
+	}
+
+	.frontdoor-shell__chrome-start--brand {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.frontdoor-shell__chrome-main {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.frontdoor-shell__chrome-start--nav {
+		/* Full header width — tabs need more than the start column track (281px). */
+		grid-column: 1 / -1;
+		grid-row: 2;
 	}
 }
 
@@ -360,35 +399,6 @@ useHead( {
 	min-inline-size: 0;
 }
 
-.frontdoor-shell__header-inner {
-	min-inline-size: 0;
-	inline-size: 100%;
-}
-
-/*
- * Figma Header/Default row 1: compact brand lockup (inline-start) and utility
- * actions (inline-end). Gap between logo and search is spacing-150 (24px).
- */
-.frontdoor-shell__header-top {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var( --spacing-150 );
-	inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.frontdoor-shell__primary-nav {
-	flex: 0 1 auto;
-	min-inline-size: 0;
-	inline-size: auto;
-}
-
-.frontdoor-shell__primary-nav:deep( .shell-primary-nav ),
-.frontdoor-shell__primary-nav:deep( .shell-primary-nav__tabs ) {
-	inline-size: auto;
-}
-
 /*
  * Figma Header/MainNav row: quiet tabs plus a separate API Explorer link with
  * arrow icon (not a tab). Link sits immediately after the last tab with 24px gap.
@@ -398,8 +408,19 @@ useHead( {
 	align-items: flex-end;
 	flex-wrap: nowrap;
 	gap: var( --spacing-150 );
-	inline-size: 100%;
 	min-inline-size: 0;
+}
+
+.frontdoor-shell__primary-nav {
+	flex: 0 0 auto;
+	min-inline-size: 0;
+	inline-size: auto;
+	max-inline-size: 100%;
+}
+
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav ),
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav__tabs ) {
+	inline-size: auto;
 }
 
 .frontdoor-shell__api-explorer-link {
@@ -438,17 +459,11 @@ useHead( {
 .shell-side-panel {
 	padding-block-start: var( --spacing-150 );
 	padding-block-end: var( --spacing-100 );
-	padding-inline-start: var( --spacing-100 );
+	/* Inline-start inset is `--fd-layout-page-margin` on `.fd-page-grid` — not duplicated here. */
 	padding-inline-end: var( --spacing-75 );
 	inline-size: 100%;
 	max-inline-size: 100%;
 	box-sizing: border-box;
-}
-
-@media screen and ( min-width: 640px ) {
-	.shell-side-panel {
-		padding-inline-start: var( --spacing-200 );
-	}
 }
 
 .frontdoor-shell--explorer .shell-side-panel {

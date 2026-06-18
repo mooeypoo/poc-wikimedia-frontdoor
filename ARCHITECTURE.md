@@ -214,7 +214,7 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 ```
 .frontdoor-shell
 ├── .frontdoor-shell__chrome-band     ← full viewport width (background + bottom border)
-│   └── .frontdoor-shell__chrome-inner   ← centred; matches PageGrid max width + margins
+│   └── .frontdoor-shell__chrome-inner   ← full width; same inline-start inset as PageGrid
 │       └── .frontdoor-shell__chrome     ← utility row + primary nav (+ API Explorer link)
 └── .frontdoor-shell__page-grid (PageGrid)
     ├── .fd-page-grid__start        ← start panel always mounted (281px fixed, tablet+); subtle inline-end border; nav optional
@@ -243,9 +243,9 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 
 ### Header chrome placement
 
-The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-shell__chrome-band`: `inline-size: 100vw`, centred breakout via `margin-inline-start: calc(50% - 50vw)`). Inner content (`.frontdoor-shell__chrome-inner`) is **centred** with the same page margins and max width as `.fd-page-grid`.
+The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-shell__chrome-band`: `inline-size: 100vw`, centred breakout via `margin-inline-start: calc(50% - 50vw)`). Inner content (`.frontdoor-shell__chrome-inner`) uses the **same inline-start inset** as `.fd-page-grid` via `--fd-layout-page-margin-inline-start` (full width — not independently centred with a narrower `max-inline-size`).
 
-**Inline-start alignment (Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)):** Header brand and primary nav share the same **`--spacing-200` (32px)** inline-start inset as the start column section menu — applied via `padding-inline` on `.frontdoor-shell__chrome` and `padding-inline-start` on `.shell-side-panel` (tablet+). The header spans the full inner width; it is **not** offset into the main column.
+**Inline-start alignment (Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)):** At tablet+, `.frontdoor-shell__chrome` uses the **same grid columns** as `PageGrid` (`281px` start + fluid body, shared gutter). Brand sits in the start column with **`--spacing-75`** inline-start padding (matches `ShellSidePanelNav` item padding). Primary nav row spans **both columns** (`grid-column: 1 / -1`) so tabs are not squeezed into the 281px track; API Explorer follows the tab list with **`--spacing-150`** gap. Utility actions sit in the body column with **`justify-content: flex-end`**.
 
 The **start column** holds section navigation **below** the header band only. At desktop, main and end share the content row; the footer is inside the main column (`frontdoor-shell__content`).
 
@@ -255,7 +255,7 @@ The **start column** holds section navigation **below** the header band only. At
 
 **Fluid width (viewport &lt; 1440px):** Header band is full viewport; inner content grows with the centred shell up to page margins.
 
-**Locked width (viewport ≥ 1440px):** `.frontdoor-shell__chrome-inner` **`max-inline-size`** is `--fd-layout-grid-content-max-inline-size` (full grid inner width at 1440px: lock viewport minus desktop margins). At **≥ 1680px**, inner max width reverts to `--fd-layout-grid-max-inline-size` (Codex desktop cap, 1679px).
+**Locked width (viewport ≥ 1680px):** `--fd-layout-page-margin-inline-start` grows so the grid content block stays centred at the Codex desktop cap (`1679px`). Header and `PageGrid` share this token — no separate header `max-inline-size` lock at 1440px.
 
 **Main content alignment:** `.frontdoor-shell__main` uses **`padding-block: var(--spacing-200)`** only — no inline-start padding. Main column content aligns with the header utility row via the grid gutter between start and main columns.
 
@@ -267,7 +267,8 @@ The **start column** holds section navigation **below** the header band only. At
 |-------|----------------|---------|
 | `--fd-layout-start-panel-inline-size` | 281px (`calc(15.0625rem + 2.5rem)`) | Fixed start column width (Figma 241px + one 40px grid column) |
 | `--fd-layout-start-panel-background-color` | `#f3f3f3` | **Legacy / unused** — superseded by transparent panel + inline-end border; retained for possible revert |
-| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Codex page margins on `.fd-page-grid` |
+| `--fd-layout-page-margin-inline-start` | `--fd-layout-page-margin` / grows at ≥ 1680px | Shared inline-start inset: `.frontdoor-shell__chrome-inner`, `.fd-page-grid` |
+| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Inline-end inset: `.frontdoor-shell__chrome-inner`, `.frontdoor-shell__body-scroll` |
 | `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Gaps between grid columns |
 | `--fd-layout-grid-max-inline-size` | Codex `--max-width-breakpoint-desktop` (1679px) | Whole grid cap at ≥ 1680px |
 | `--fd-layout-chrome-lock-viewport-inline-size` | 1440px (90rem) | Header width lock reference (**not Codex**) |

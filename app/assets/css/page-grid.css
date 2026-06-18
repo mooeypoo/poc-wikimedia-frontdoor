@@ -19,6 +19,11 @@
  * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
  *
  * Page margins: --spacing-100 (mobile), --spacing-150 (tablet), --spacing-200 (desktop).
+ * Applied once at the viewport edge on `.frontdoor-shell__chrome-inner` (inline-start:
+ * `--fd-layout-page-margin-inline-start`, inline-end: `--fd-layout-page-margin`),
+ * `.fd-page-grid` (inline-start), and `.frontdoor-shell__body-scroll` (inline-end).
+ * Header brand/tabs share the start-panel grid column (tablet+); inner chrome and
+ * start-column panels must not repeat viewport insets.
  *
  * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
  * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
@@ -53,6 +58,7 @@
 
 	/* Mobile defaults */
 	--fd-layout-page-margin: var( --spacing-100 );
+	--fd-layout-page-margin-inline-start: var( --fd-layout-page-margin );
 	--fd-layout-grid-gutter: var( --spacing-100 );
 
 	/*
@@ -136,7 +142,7 @@
 .fd-page-grid {
 	inline-size: 100%;
 	margin-inline: 0;
-	padding-inline-start: var( --fd-layout-page-margin );
+	padding-inline-start: var( --fd-layout-page-margin-inline-start );
 	/* Body scrollport extends to the viewport inline-end; inset lives on inner content. */
 	padding-inline-end: 0;
 	box-sizing: border-box;
@@ -223,8 +229,8 @@
 
 /* Desktop wide (≥ 1680px): grow inline-start margin only — body track stays viewport-bleed inline-end */
 @media screen and ( min-width: 1680px ) {
-	.fd-page-grid {
-		padding-inline-start: max(
+	:root {
+		--fd-layout-page-margin-inline-start: max(
 			var( --fd-layout-page-margin ),
 			calc(
 				( 100vw - var( --fd-layout-grid-max-inline-size ) ) / 2

@@ -64,12 +64,14 @@ const activeTabName = computed( {
 
 <style scoped>
 .shell-primary-nav {
-	inline-size: 100%;
+	inline-size: auto;
+	max-inline-size: 100%;
 	min-inline-size: 0;
 }
 
 .shell-primary-nav__tabs {
-	inline-size: 100%;
+	inline-size: auto;
+	max-inline-size: 100%;
 }
 
 /* Navigation-only: page content lives in the main column, not tab panels. */
