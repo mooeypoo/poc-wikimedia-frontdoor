@@ -143,7 +143,7 @@ Option A is the lowest effort and cleanest separation.  Option B preserves the U
 
 The project controls panel contains:
 
-- Wiki instance combobox (selecting enwiki, eswiki, etc.)
+- **Wikimedia project** fieldset — project combobox (Wikipedia, Wikimedia Commons, Wikidata) and language combobox (English, Spanish, Hebrew, Farsi; disabled for Commons/Wikidata); resolves to wiki instance ids via `config/explorerProjectPicker.ts`
 - Opt-in checkboxes (beta/internal endpoints)
 
 Neither of these applies to the Enterprise API, which is a single global API with no per-wiki variation.  In enterprise mode, the project controls panel should be hidden entirely.

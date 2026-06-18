@@ -77,6 +77,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── sectionNavigation.js    # Content-page left-rail sections (keyed by main nav id)
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
+│   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
@@ -158,7 +159,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules, selection, Scalar switch state) via `/api/explorer-bootstrap` |
 | `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes; exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
-| `useWikiInstancePicker(instanceId)` | Wiki combobox menu items and display-name ↔ instance-id bridge for Codex controls |
+| `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route; pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
@@ -470,10 +471,31 @@ The `@scalar/nuxt` module supports only a single spec configured at build time. 
 
 The Vue component is mounted in `app/pages/explorer/[[view]].vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`). Optional path segment selects **enterprise mode** (`/explorer/enterprise`, `/explorer/enterprise-limited`, `/explorer/enterprise-custom`) — see **Explorer modes and start-column routing** below.
 
+### Project and language picker
+
+Community explorer bootstrap is keyed by a **wiki instance id** (`enwiki`, `eswiki`, …). The shell exposes two comboboxes (project + language) that resolve to that id — the page does not store project and language as separate bootstrap parameters.
+
+```
+User selects: Project (Wikipedia | Commons | Wikidata) + Language (en | es | he | fa)
+       ↓
+useExplorerProjectLanguagePicker(selectedWikiInstanceId)
+       ↓
+config/explorerProjectPicker.ts → resolveExplorerWikiInstanceId(projectId, languageCode)
+  ├── wikipedia + en|es|he|fa → enwiki | eswiki | hewiki | fawiki
+  ├── commons → commonswiki (language combobox disabled)
+  └── wikidata → wikidata (language combobox disabled)
+       ↓
+selectedWikiInstanceId updated → useExplorerBootstrap(instance) re-runs
+       ↓
+config/instances.ts → baseUrl, dir for shell direction and discovery fetch
+```
+
+Picker labels are banana-i18n interface strings (`explorer-project-*`, `explorer-project-language-*`). Combobox `selected` values match translated labels; menu items pass through `isolatePickerLabel()` for BiDi. Reverse sync: `parseExplorerWikiInstanceSelection(wikiInstanceId)` restores combobox state when instance id changes externally.
+
 ### Spec resolution flow
 
 ```
-User selects: wiki instance + language + module
+User selects: wiki instance (via project + language picker) + module (module rail)
        ↓
 useWikiModules(instance)        ← fetches /discovery, returns available modules
        ↓
@@ -573,7 +595,7 @@ Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (aft
 
 ### Opt-in module visibility
 
-Project controls expose **Beta modules and endpoints** and **Internal modules and endpoints** checkboxes (defaults: both off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
+Project controls expose **Wikimedia project** (project + language comboboxes), **Beta modules and endpoints**, and **Internal modules and endpoints** checkboxes (defaults: both opt-in flags off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
 
 ```
 includeBetaEndpoints / includeInternalEndpoints (explorer page refs)
@@ -696,13 +718,14 @@ All project-level configuration lives in `config/`. Files are documented with a 
 
 | File | Contains |
 |---|---|
-| `config/instances.js` | Wiki instance IDs, display name i18n keys, base URLs |
+| `config/instances.ts` | Wiki instance IDs, display names, base URLs, explicit `dir`, content language codes |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
 | `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the header link (not a tab) |
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
 | `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()` |
+| `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
@@ -825,18 +848,18 @@ https://www.wikidata.org/w/rest.php/wikibase/v1
 
 ### Instance registry
 
-Supported instances are defined in `config/instances.js`. The initial set for Experiment 1 covers six instances across different projects and LTR/RTL directions:
+Supported instances are defined in `config/instances.ts`. The community explorer picker exposes three **projects** (Wikipedia, Wikimedia Commons, Wikidata) and four **Wikipedia languages** (English, Spanish, Hebrew, Farsi), resolved to six wiki instance ids:
 
-| ID | Base URL | Direction | Discovery endpoint |
+| ID | Base URL | Direction | Picker path |
 |---|---|---|---|
-| `enwiki` | `https://en.wikipedia.org` | LTR | `https://en.wikipedia.org/w/rest.php/discovery` |
-| `arwiki` | `https://ar.wikipedia.org` | RTL | `https://ar.wikipedia.org/w/rest.php/discovery` |
-| `frwiki` | `https://fr.wikipedia.org` | LTR | `https://fr.wikipedia.org/w/rest.php/discovery` |
-| `hewiki` | `https://he.wikipedia.org` | RTL | `https://he.wikipedia.org/w/rest.php/discovery` |
-| `wikidata` | `https://www.wikidata.org` | LTR | `https://www.wikidata.org/w/rest.php/discovery` |
-| `mediawiki` | `https://www.mediawiki.org` | LTR | `https://www.mediawiki.org/w/rest.php/discovery` |
+| `enwiki` | `https://en.wikipedia.org` | LTR | Wikipedia + English |
+| `eswiki` | `https://es.wikipedia.org` | LTR | Wikipedia + Spanish |
+| `hewiki` | `https://he.wikipedia.org` | RTL | Wikipedia + Hebrew |
+| `fawiki` | `https://fa.wikipedia.org` | RTL | Wikipedia + Farsi |
+| `commonswiki` | `https://commons.wikimedia.org` | LTR | Wikimedia Commons |
+| `wikidata` | `https://www.wikidata.org` | LTR | Wikidata |
 
-Available modules and their spec URLs for each instance are read from these endpoints at runtime. `config/instances.js` contains only base URLs and metadata — no spec URLs.
+Available modules and their spec URLs for each instance are read from these endpoints at runtime. `config/instances.ts` contains only base URLs and metadata — no spec URLs. Picker labels and defaults live in `config/explorerProjectPicker.ts` and `i18n/*` (`explorer-project-*`, `explorer-project-language-*`).
 
 ### Spec URLs and discovery
 
@@ -872,6 +895,8 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
+| Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts` |
+| Explorer bootstrap + opt-in | `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
@@ -883,4 +908,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useDiscovery` fetches `/w/rest.php/discovery` per instance, `useWikiModules` exposes the module list, and the module picker populates from the live response. Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useDiscovery` fetches `/w/rest.php/discovery` per instance, `useWikiModules` exposes the module list, and the module rail populates from the live response. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.

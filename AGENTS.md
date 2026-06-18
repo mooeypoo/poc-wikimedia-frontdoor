@@ -116,6 +116,7 @@ If you find yourself writing a `fetch()` or `$fetch()` call inside a `<script se
 
 Values that are likely to change, are environment-dependent, or represent project-level decisions belong in `config/`. This includes:
 - Supported wiki instances and their base URLs
+- Explorer project + language picker options and wiki instance mapping (`config/explorerProjectPicker.ts`)
 - Language definitions with explicit `dir` declarations
 - Language fallback chains
 - OAuth client ID and endpoint URLs
@@ -171,7 +172,7 @@ If the same logic appears in more than one place, extract it. Repeated patterns 
 
 Composables live in `composables/` and are named with the `use` prefix describing what they provide:
 
-- `useSpecUrl(instance, language, module)` — resolves an OpenAPI spec URL
+- `useExplorerProjectLanguagePicker(instanceId)` — project + language combobox state; maps to wiki instance id via `config/explorerProjectPicker.ts`
 - `useWikiModules(instance)` — fetches and caches modules for a given instance
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
@@ -310,72 +311,32 @@ The `useDiscovery(instance)` composable fetches this endpoint, caches the result
 
 #### Instances and languages to test
 
-Use the following set for the picker. This covers: different projects, LTR and RTL languages, and different API surfaces.
+The community explorer uses a **project + language** picker (`ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker`) that resolves to wiki instance ids in `config/explorerProjectPicker.ts`. Instance metadata lives in `config/instances.ts`:
 
-```js
+```ts
 /**
- * config/instances.js
+ * config/instances.ts — wiki instances referenced by the picker mapping.
  *
- * Defines the wiki instances available in the Front Door explorer.
- *
- * Each entry declares the instance ID, display label i18n key, base URL,
- * and text direction. It does NOT contain spec URLs — those are fetched
- * at runtime from each instance's /w/rest.php/discovery endpoint by
- * useDiscovery(instance). No spec URL is ever hardcoded or interpolated here.
- *
- * The `dir` field must be declared explicitly — do not infer from
- * language code at runtime.
+ * Spec URLs are never stored here; they come from each instance's
+ * /w/rest.php/discovery endpoint at runtime.
  */
 export const WIKI_INSTANCES = [
-  {
-    id: 'enwiki',
-    label: 'English Wikipedia',
-    baseUrl: 'https://en.wikipedia.org',
-    dir: 'ltr',
-    language: 'en',
-  },
-  {
-    id: 'arwiki',
-    label: 'Arabic Wikipedia',
-    baseUrl: 'https://ar.wikipedia.org',
-    dir: 'rtl',
-    language: 'ar',
-  },
-  {
-    id: 'frwiki',
-    label: 'French Wikipedia',
-    baseUrl: 'https://fr.wikipedia.org',
-    dir: 'ltr',
-    language: 'fr',
-  },
-  {
-    id: 'hewiki',
-    label: 'Hebrew Wikipedia',
-    baseUrl: 'https://he.wikipedia.org',
-    dir: 'rtl',
-    language: 'he',
-  },
-  {
-    id: 'wikidata',
-    label: 'Wikidata',
-    baseUrl: 'https://www.wikidata.org',
-    dir: 'ltr',
-    language: 'en',
-  },
-  {
-    id: 'mediawiki',
-    label: 'MediaWiki.org',
-    baseUrl: 'https://www.mediawiki.org',
-    dir: 'ltr',
-    language: 'en',
-  },
+  { id: 'enwiki',  baseUrl: 'https://en.wikipedia.org',      dir: 'ltr', language: 'en' }, // Wikipedia + English
+  { id: 'eswiki',  baseUrl: 'https://es.wikipedia.org',      dir: 'ltr', language: 'es' }, // Wikipedia + Spanish
+  { id: 'hewiki',  baseUrl: 'https://he.wikipedia.org',      dir: 'rtl', language: 'he' }, // Wikipedia + Hebrew
+  { id: 'fawiki',  baseUrl: 'https://fa.wikipedia.org',      dir: 'rtl', language: 'fa' }, // Wikipedia + Farsi
+  { id: 'commonswiki', baseUrl: 'https://commons.wikimedia.org', dir: 'ltr', language: 'en' }, // Wikimedia Commons
+  { id: 'wikidata', baseUrl: 'https://www.wikidata.org',      dir: 'ltr', language: 'en' }, // Wikidata
 ]
 ```
 
+**Picker UI (banana-i18n):** Project — Wikipedia (default), Wikimedia Commons, Wikidata. Language — English (default), Spanish, Hebrew, Farsi; **disabled** when Commons or Wikidata is selected.
+
 This set is chosen deliberately:
-- **enwiki / frwiki / mediawiki**: LTR, different projects — tests that spec switching works across typical cases
-- **arwiki / hewiki**: RTL — tests that switching to an RTL-language instance does not corrupt the shell direction or break BiDi isolation
-- **wikidata**: Different API surface (Wikibase REST API, not MediaWiki Core REST API) — tests that Scalar handles structurally different specs cleanly
+- **enwiki / eswiki**: LTR Wikipedia in two content languages
+- **hewiki / fawiki**: RTL Wikipedia — tests that switching instance `dir` in `config/instances.ts` updates shell direction without breaking BiDi isolation
+- **commonswiki**: Different Wikimedia project (MediaWiki Core REST API on Commons)
+- **wikidata**: Different API surface (Wikibase REST API, not MediaWiki Core) — tests that Scalar handles structurally different specs cleanly
 
 ---
 
@@ -387,15 +348,15 @@ This set is chosen deliberately:
 - A `<ClientOnly>` wrapper mounting `ApiReference` with a reactive configuration object
 - `useDiscovery(instance)` composable — fetches `{baseUrl}/w/rest.php/discovery` for the selected instance and returns the list of available modules with their spec URLs as provided by the response
 - `useWikiModules(instance)` composable — wraps `useDiscovery`, extracts the module list, caches per instance
-- An instance picker populated from `config/instances.js` (six instances)
-- A module picker populated from the discovery response for the selected instance — lists all available modules, uses the spec URL exactly as returned by discovery
-- Scalar re-renders against the spec URL from discovery when either instance or module selection changes
+- Project + language pickers (`CdxCombobox` in a fieldset) populated from `config/explorerProjectPicker.ts`; selections resolve to wiki instance ids in `config/instances.ts` via `useExplorerProjectLanguagePicker`
+- A module rail populated from the discovery response for the selected instance — lists all available modules, uses the spec URL exactly as returned by discovery
+- Scalar re-renders against the spec URL from discovery when instance (project/language) or module selection changes
 - Verification that reactive config update (via `Object.assign` or equivalent) re-renders Scalar without full component teardown
-- Verification that switching between LTR and RTL instances correctly updates the shell `dir` attribute
+- Verification that switching to an RTL wiki instance (`hewiki`, `fawiki`) correctly sets `dir="rtl"` on the shell from `config/instances.ts`; switching back sets `dir="ltr"`
 - banana-i18n installed as a Nuxt plugin; all picker labels and UI strings go through banana
-- At least one Codex component used (e.g. `CdxSelect` for both pickers)
-- Basic RTL: `dir` attribute on `<html>` set reactively from the selected instance's `dir` in `config/instances.js`
-- Instance names and module names in pickers wrapped in `<bdi>`
+- Codex components for explorer controls (`CdxCombobox`, `CdxField`, `CdxCheckbox`, …)
+- Basic RTL: `dir` attribute on `<html>` set reactively from the selected instance's `dir` in `config/instances.ts`
+- Picker menu labels use BiDi isolation (`isolatePickerLabel()`); module names in the rail wrapped in `<bdi>`
 
 ### Out of scope for Experiment 1
 
@@ -411,10 +372,11 @@ This set is chosen deliberately:
 
 ### Success signals
 
-- All six instances load their spec in Scalar without errors
-- Switching between instances re-renders Scalar cleanly, within ~500ms, no Vue reactivity warnings
-- Switching to arwiki or hewiki correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
-- Instance display names in the picker are wrapped in `<bdi>`
+- All six wiki instances load their spec in Scalar without errors
+- Switching project, language, or instance re-renders Scalar cleanly, within ~500ms, no Vue reactivity warnings
+- Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
+- Language combobox is disabled when Wikimedia Commons or Wikidata is selected
+- Picker labels are BiDi-isolated; module names in the rail are wrapped in `<bdi>`
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report

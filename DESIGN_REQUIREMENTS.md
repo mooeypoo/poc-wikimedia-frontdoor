@@ -458,8 +458,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 Top to bottom:
 
-1. **Page header** — `h1` “API Explorer” + description (max **60ch** width on subtitle)
-2. **Project controls** — wiki combobox + opt-in checkboxes (hidden while instance bootstrapping)
+1. **Page header** — community mode `h1` (Wikimedia API modules) + description **`explorer-description`**: “Discover REST API modules and test requests against Wikimedia projects” (max **60ch** width on subtitle)
+2. **Project controls** — Wikimedia project fieldset (project + language comboboxes) + opt-in checkboxes (hidden while instance bootstrapping)
 3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
@@ -472,7 +472,7 @@ Top to bottom:
 - **Beta** (warning) and **version** (success) chips use shared class **`explorer-module-chip`** (text-only, icons hidden) — same styles as the rail via `explorer-codex-overrides.css`
 - **Wiki** project name remains a separate **subtle** InfoChip at the end of the row
 
-**Source:** `app/pages/explorer/index.vue`, `explorerModuleRailHeading.ts`.
+**Source:** `app/pages/explorer/[[view]].vue`, `explorerModuleRailHeading.ts`.
 
 ### Reference panel (wide ≥ 960px)
 
@@ -494,19 +494,41 @@ Top to bottom:
 
 ## Project controls block
 
-**Decision:** Horizontal flex row (wrap) with neutral subtle background, `--spacing-75` padding, rounded border:
+**Decision:** Horizontal flex row (wrap) with neutral subtle background, `--spacing-75` padding, rounded border. Community mode only (hidden in enterprise modes).
+
+### Wikimedia project fieldset
+
+**Decision:** `CdxField` **fieldset** titled **`explorer-wikimedia-project-title`** (“Wikimedia project”) via the `#label` slot — not a description/helper line.
 
 | Control | Pattern |
 |---------|---------|
-| Wiki project | `CdxCombobox` — menu values are **display names**; model stores **instance id** |
+| **Project** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**; labels from banana-i18n (`explorer-project-*`) |
+| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons or Wikidata |
+
+**Resolution:** Project + language map to a single wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()` (BiDi); the page model stores **instance id** only.
+
+**Spacing (Figma-aligned):**
+
+| Gap | Token | Value |
+|-----|-------|-------|
+| Fieldset title → first field row | `--spacing-75` | 12px |
+| Between field rows (wrap) | `--spacing-100` | 16px (`row-gap` on `.explorer-project-controls__project-fields` and `.explorer-project-controls`) |
+| Between side-by-side fields / fieldsets | `--spacing-150` | 24px (`column-gap`) |
+
+**Layout:** Wikimedia project fieldset flexes up to **40rem** max; nested project + language fields sit in a wrapping row inside the fieldset.
+
+### Opt-in fieldset
+
+| Control | Pattern |
+|---------|---------|
 | Opt-in | Fieldset with two `CdxCheckbox` options: **Beta modules and endpoints**, **Internal modules and endpoints** |
 | Opt-in help | Quiet info `CdxButton` + `CdxPopover` (teleported, titled **Opt-in modules and endpoints**, close button) beside the Opt-in legend |
 
 **Defaults:** Beta **off**, Internal **off**.
 
-**Layout:** Wiki field flexes up to **40rem** max; opt-in group aligns to start with **no** extra `margin-block-start` (overrides Codex field default).
+**Layout:** Opt-in group aligns to start with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`.
+**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`.
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
 
@@ -691,9 +713,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 | Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
-| Explorer page | `app/pages/explorer/index.vue` |
+| Explorer page | `app/pages/explorer/[[view]].vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
-| Project controls | `app/components/explorer/ExplorerProjectControls.vue` |
+| Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts` |
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |

@@ -2,12 +2,13 @@
 import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover } from '@wikimedia/codex'
 import { cdxIconInfo } from '@wikimedia/codex-icons'
 import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
-import { useWikiInstancePicker } from '../../composables/useWikiInstancePicker'
+import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
 
 /**
- * ExplorerProjectControls — wiki project combobox and opt-in filters for the explorer.
+ * ExplorerProjectControls — project + language comboboxes and opt-in filters.
  *
  * Presentational only; selection state is owned by the explorer page via `defineModel`.
+ * Project and language resolve to a single wiki instance id for bootstrap.
  */
 defineProps<{
 	isInstanceBootstrapping: boolean
@@ -26,10 +27,17 @@ const includeInternalEndpoints = defineModel<boolean>( 'includeInternalEndpoints
 } )
 
 const { $bananaI18n } = useNuxtApp()
-const { wikiInstanceMenuItems, wikiProjectComboboxSelected } = useWikiInstancePicker( selectedWikiInstanceId )
+const {
+	projectMenuItems,
+	languageMenuItems,
+	projectComboboxSelected,
+	languageComboboxSelected,
+	isLanguageSelectorDisabled
+} = useExplorerProjectLanguagePicker( selectedWikiInstanceId )
 
-const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
-const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
+const projectLabel = computed( () => $bananaI18n( 'explorer-project-label' ) )
+const languageLabel = computed( () => $bananaI18n( 'explorer-project-language-label' ) )
+const wikimediaProjectTitle = computed( () => $bananaI18n( 'explorer-wikimedia-project-title' ) )
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
 const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
 const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
@@ -61,22 +69,37 @@ function onOptInPopoverTriggerClick(): void {
 <template>
 	<section
 		class="explorer-project-controls"
-		aria-labelledby="explorer-project-controls-wiki-label"
 	>
-		<CdxField class="explorer-project-controls__wiki-field">
+		<CdxField
+			class="explorer-project-controls__project-fieldset"
+			:is-fieldset="true"
+		>
 			<template #label>
-				<span id="explorer-project-controls-wiki-label">
-					{{ wikiProjectLabel }}
-				</span>
+				{{ wikimediaProjectTitle }}
 			</template>
-			<template #description>
-				{{ wikiProjectDescription }}
-			</template>
-			<CdxCombobox
-				v-model:selected="wikiProjectComboboxSelected"
-				:menu-items="wikiInstanceMenuItems"
-				:disabled="isInstanceBootstrapping"
-			/>
+			<div class="explorer-project-controls__project-fields">
+				<CdxField class="explorer-project-controls__project-field">
+					<template #label>
+						{{ projectLabel }}
+					</template>
+					<CdxCombobox
+						v-model:selected="projectComboboxSelected"
+						:menu-items="projectMenuItems"
+						:disabled="isInstanceBootstrapping"
+					/>
+				</CdxField>
+
+				<CdxField class="explorer-project-controls__language-field">
+					<template #label>
+						{{ languageLabel }}
+					</template>
+					<CdxCombobox
+						v-model:selected="languageComboboxSelected"
+						:menu-items="languageMenuItems"
+						:disabled="isInstanceBootstrapping || isLanguageSelectorDisabled"
+					/>
+				</CdxField>
+			</div>
 		</CdxField>
 
 		<CdxField
@@ -145,7 +168,8 @@ function onOptInPopoverTriggerClick(): void {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
-	gap: var( --spacing-150 );
+	column-gap: var( --spacing-150 );
+	row-gap: var( --spacing-100 );
 	padding: var( --spacing-75 );
 	inline-size: 100%;
 	box-sizing: border-box;
@@ -154,14 +178,37 @@ function onOptInPopoverTriggerClick(): void {
 	min-inline-size: 0;
 }
 
-.explorer-project-controls__wiki-field {
-	flex: 0 1 40rem;
+.explorer-project-controls__project-fieldset {
+	flex: 1 1 40rem;
 	min-inline-size: 0;
 	max-inline-size: min( 40rem, 100% );
+	margin-block-start: 0;
 }
 
-.explorer-project-controls__wiki-field :deep( .cdx-combobox ),
-.explorer-project-controls__wiki-field :deep( .cdx-text-input ) {
+.explorer-project-controls__project-fieldset :deep( .cdx-field__label ) {
+	margin-block-end: 0;
+}
+
+.explorer-project-controls__project-fields {
+	display: flex;
+	flex-wrap: wrap;
+	row-gap: var( --spacing-100 );
+	column-gap: var( --spacing-150 );
+	min-inline-size: 0;
+	margin-block-start: var( --spacing-75 );
+}
+
+.explorer-project-controls__project-field,
+.explorer-project-controls__language-field {
+	flex: 1 1 12rem;
+	min-inline-size: 0;
+	margin-block-start: 0;
+}
+
+.explorer-project-controls__project-field :deep( .cdx-combobox ),
+.explorer-project-controls__project-field :deep( .cdx-text-input ),
+.explorer-project-controls__language-field :deep( .cdx-combobox ),
+.explorer-project-controls__language-field :deep( .cdx-text-input ) {
 	inline-size: 100%;
 	max-inline-size: 100%;
 	min-inline-size: 0;
