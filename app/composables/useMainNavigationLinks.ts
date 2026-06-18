@@ -55,6 +55,10 @@ function remoteSourceToNavLink(
  *
  * Remote sources with navEntry.target === 'primary' are inserted according to their
  * navPosition field. Phase 2 will support additional nav targets.
+ * @TODO: Support `navPosition` values of the form `before:<id>` for insertion before a reference item.
+ *        Requires refactoring to avoid index shifting issues when inserting multiple items. 
+ *        Consider a two-pass approach where items with positional references are processed
+ *        after all direct index insertions.
  *
  * @param items - Base MAIN_NAVIGATION_ITEMS
  * @param localeCode - Active interface locale

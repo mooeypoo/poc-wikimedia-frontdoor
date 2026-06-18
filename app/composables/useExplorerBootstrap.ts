@@ -61,7 +61,7 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  * @returns Reactive bootstrap state, selected module state, and selection actions.
  *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
-export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
+export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabled: Ref<boolean> = ref( true ) ) {
 	const modules = ref<ExplorerBootstrapModule[]>( [] )
 	const wikiDisplayName = ref( '' )
 	const selectedModuleName = ref( '' )
@@ -304,6 +304,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	}
 
 	onMounted( () => {
+		if ( !enabled.value ) {
+			return
+		}
+
 		const nuxtApp = useNuxtApp()
 
 		/**
@@ -351,6 +355,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 	} )
 
 	watch( selectedWikiInstanceId, ( newWikiInstanceId, previousWikiInstanceId ) => {
+		if ( !enabled.value ) {
+			return
+		}
+
 		if ( previousWikiInstanceId === undefined ) {
 			return
 		}
@@ -360,6 +368,12 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string> ) {
 		}
 
 		void bootstrapSelectedInstance( false )
+	} )
+
+	watch( enabled, ( isEnabled, wasEnabled ) => {
+		if ( isEnabled && !wasEnabled ) {
+			void bootstrapSelectedInstance( false )
+		}
 	} )
 
 	return {
