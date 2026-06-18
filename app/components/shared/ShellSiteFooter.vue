@@ -18,8 +18,8 @@ import {
  * Legal copy includes outbound links to Foundation policy pages and the CC BY-SA license
  * deed (`config/siteFooter.ts`).
  *
- * **Spacing:** `padding-block-start: --spacing-150` (24px), `padding-block-end: --spacing-300`
- * (48px) — 48px from legal copy to the page bottom per Figma.
+ * **Spacing:** `padding-block-start: --spacing-150` (24px), `padding-block-end: --spacing-200`
+ * (32px) — matches start section nav scroll-end inset for symmetry at the page bottom.
  */
 const { $bananaI18n } = useNuxtApp()
 
@@ -99,8 +99,7 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 	background-color: var( --background-color-base );
 	border-block-start: 1px solid var( --border-color-muted );
 	padding-block-start: var( --spacing-150 );
-	/* Figma Footer 393:4639 — 48px inset below legal copy to the page bottom. */
-	padding-block-end: var( --spacing-300 );
+	padding-block-end: var( --spacing-200 );
 	padding-inline: var( --spacing-200 );
 	font-family: var( --font-family-sans-stack );
 }

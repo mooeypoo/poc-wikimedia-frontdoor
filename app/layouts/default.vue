@@ -210,7 +210,7 @@ useHead( {
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
 				<div
-					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel"
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel shell-side-panel--start"
 					:aria-hidden="isNavigationCollapsed || undefined"
 					:inert="isNavigationCollapsed || undefined"
 				>
@@ -578,12 +578,17 @@ useHead( {
 
 .shell-side-panel {
 	padding-block-start: var( --spacing-150 );
-	padding-block-end: var( --spacing-100 );
 	/* Inline-start inset is `--fd-layout-page-margin` on `.fd-page-grid` — not duplicated here. */
 	padding-inline-end: var( --spacing-75 );
 	inline-size: 100%;
 	max-inline-size: 100%;
 	box-sizing: border-box;
+}
+
+.frontdoor-shell__side-panel--start,
+.shell-side-panel--start {
+	/* Symmetric 32px scroll-end inset with site footer (`ShellSiteFooter`). */
+	padding-block-end: var( --spacing-200 );
 }
 
 .frontdoor-shell--explorer .shell-side-panel {

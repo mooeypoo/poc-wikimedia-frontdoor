@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
-- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** (`--border-color-subtle`, hidden when collapsed); **281px** drawer panel / **0** grid track when nav collapsed; **viewport-driven collapse** + **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **48px** bottom inset; **independent column scroll** (start nav + main band) when content exceeds the viewport body
+- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** (`--border-color-subtle`, hidden when collapsed); **281px** drawer panel / **0** grid track when nav collapsed; **viewport-driven collapse** + **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (symmetric with start nav scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
 
 ---
 
@@ -80,7 +80,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 ### Start column section navigation
 
-**Decision:** Every page mounts the **start column panel** (`.shell-side-panel`). When section config defines links, the column shows a **flat** vertical section menu (no logo in the start column — brand lives in the header). When sections are **empty** (e.g. **Tools and bots**) or the route has no dedicated config, the panel still renders — only the `<nav>` is omitted.
+**Decision:** Every page mounts the **start column panel** (`.shell-side-panel.shell-side-panel--start` on the wrapper in `default.vue`). When section config defines links, the column shows a **flat** vertical section menu (no logo in the start column — brand lives in the header). When sections are **empty** (e.g. **Tools and bots**) or the route has no dedicated config, the panel still renders — only the `<nav>` is omitted.
 
 - **Section headings** (bold) and **page links** share one list — no nested sub-menus or extra indent for items under a heading.
 - **Horizontal dividers** (`--border-color-subtle`) separate section groups within the menu.
@@ -99,7 +99,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 | Tools and bots | `config/sectionNavigation.js` | **Empty** sections array — panel shown, no `<nav>` |
 | API Explorer | `config/explorerSideNav.js` | Two sections: API Explorer + Overview placeholders |
 
-**Rendering:** `usePageSectionNav()` → `.shell-side-panel` always in `app/layouts/default.vue`; `ShellSidePanelNav.vue` when sections are non-empty. Labels via banana-i18n only.
+**Rendering:** `usePageSectionNav()` → start panel wrapper always in `app/layouts/default.vue` (`frontdoor-shell__side-panel--start` + `shell-side-panel` + **`shell-side-panel--start`**); `ShellSidePanelNav.vue` when sections are non-empty. Labels via banana-i18n only.
 
 **Codex exceptions:**
 
@@ -173,7 +173,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Static site footer (Figma 393:4639) | **Implemented** | `ShellSiteFooter.vue`, `config/siteFooter.ts`, inside `frontdoor-shell__content` |
 | Footer legal copy (3 sentences) | **Implemented** | banana `footer-attribution-sentence-*` keys; one line per sentence |
 | Footer width (main column only) | **Implemented** | Footer sibling of `.frontdoor-shell__main` — matches central page content; not main + end |
-| Footer short-page bottom pin + 48px inset | **Implemented** | `.frontdoor-shell__body-scroll` scrollport; `.frontdoor-shell__content` flex column (`min-block-size: 100%`); main `flex: 1`; `padding-block-end: --spacing-300` on footer |
+| Footer short-page bottom pin + 32px inset | **Implemented** | `.frontdoor-shell__body-scroll` scrollport; `.frontdoor-shell__content` flex column (`min-block-size: 100%`); main `flex: 1`; `padding-block-end: --spacing-200` on footer (matches start nav) |
 | Start panel viewport height (tablet+) | **Implemented** | Grid row capped by `100dvh` shell; start panel fills track, scrolls when nav overflows |
 | Independent column scroll (start + body) | **Implemented** | Start nav scrolls alone; `.frontdoor-shell__body-scroll` spans main + end with inline-end scrollbar |
 | Header utility row collapse (256px search) | **Implemented** | `useHeaderUtilityCollapse` — `ResizeObserver`; search icon + compact language + `CdxMenuButton` |
@@ -182,7 +182,8 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide; Codex transition tokens |
 | Collapsed hamburger menu panel | **Deferred** | Button visible; click-to-open not wired |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
-| Start panel always mounted | **Implemented** | `default.vue` — `.shell-side-panel` on every route; `ShellSidePanelNav` when sections exist |
+| Start panel scroll-end symmetry | **Implemented** | `padding-block-end: --spacing-200` on start panel + footer; wrapper must include `shell-side-panel--start` class |
+| Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 
 **Responsive behaviour summary:**
 
@@ -226,7 +227,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Header / start nav aligned at inline-start | Brand: `--spacing-75` inset (removed when nav collapsed); nav row: flush to chrome inner edge | Section menu items keep `--spacing-75` padding inside start column |
 | Header utilities at inline-end | Body grid column + `justify-content: flex-end` | Search/settings/language/log in |
 | Start column below header | Section nav in `PageGrid` start slot only | Panel always mounted; viewport-height track on tablet+ |
-| Start panel scroll | `overflow-block: auto` on `.frontdoor-shell__side-panel--start` (tablet+); `overflow-y: auto` on `.fd-page-grid__start` (mobile) | `flex-shrink: 1` + `min-block-size: 0` on drawer panel; mobile clip via `overflow-inline: hidden` only |
+| Start panel scroll | `overflow-block: auto` on `.frontdoor-shell__side-panel--start` (tablet+); `overflow-y: auto` on `.fd-page-grid__start` (mobile) | `flex-shrink: 1` + `min-block-size: 0` on drawer panel; **`padding-block-end: --spacing-200`** on panel wrapper; mobile clip via `overflow-inline: hidden` only |
 | **Main column** | `.frontdoor-shell__body-scroll` | Page slot + footer; scrollbar at inline-end of main + end band |
 | **End column (empty)** | Same scrollport as main | Wheel over reserved end panel scrolls central content |
 | Start panel viewport height | Grid row capped by `100dvh` shell | Track fills visible body; does not grow the document |
@@ -236,7 +237,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Footer main column width | `ShellSiteFooter` inside `.frontdoor-shell__content` | Matches central page content; does not span end panel |
 | Footer brand + legal colours | `--color-subtle` on wordmark and legal lines; `--color-progressive` on links | Figma Footer **393:4639** |
 | Footer flush under main | Footer is last child in `.frontdoor-shell__content` flex column | Sits directly below page slot — no grid row between main and footer |
-| Footer 48px page-bottom inset | `padding-block-end: --spacing-300` on `.shell-site-footer` | Short pages: no scrollbar; `min-block-size: 100%` on content scrollport pins footer |
+| Footer 32px page-bottom inset | `padding-block-end: --spacing-200` on `.shell-site-footer` | Matches start section nav scroll-end; short pages: no scrollbar; `min-block-size: 100%` on content scrollport pins footer |
 | Footer width vs Figma | Main column only — not x=241 / width=1199 (main+end) | **Intentional deviation** from [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) |
 | Header utility row (Figma) | `.frontdoor-shell__header-top` + `ShellHeaderUtilityActions` | **24px** logo–search gap; search **256px** min triggers collapse; `CdxMenuButton` for overflow utilities |
 | Interface language icon on trigger only | `CdxSelect` `#label` slot + `:key="direction"` | Menu items text-only; `isolateLabel()` for BiDi; remount on LTR ↔ RTL |
@@ -326,13 +327,13 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 - Footer is the **last child** in `.frontdoor-shell__content` (`display: flex; flex-direction: column`) — sits **flush** under main content (no grid row gap).
 - **Short pages:** `.frontdoor-shell__body-scroll` is the scrollport; `.frontdoor-shell__content` uses **`min-block-size: 100%`**; `.frontdoor-shell__main` uses **`flex: 1 1 auto`** so the footer band’s outer edge aligns with the shell bottom when no scrollbar is needed.
 - **Long pages:** Footer follows content in normal document flow.
-- **No `margin-block-end`** on the footer — **48px** bottom spacing is **`padding-block-end: var(--spacing-300)`** inside `.shell-site-footer` only.
+- **No `margin-block-end`** on the footer — **32px** bottom spacing is **`padding-block-end: var(--spacing-200)`** inside `.shell-site-footer` only (symmetric with start panel wrapper **`.frontdoor-shell__side-panel--start` / `.shell-side-panel--start`** scroll-end inset).
 
 **Content (row 1):** Centred brand row — **14px** Wikimedia mark (`developer-portal-logo-mark.svg`) + single-line wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links.
 
 **Content (row 2):** Centred legal attribution — **three sentences** (one per line) with an inline **Creative Commons Attribution-ShareAlike** link on the middle line.
 
-**Visual:** `--background-color-base`, **`border-block-start`** with `--border-color-muted`, **`padding-block-start: var(--spacing-150)` (24px)**, **`padding-block-end: var(--spacing-300)` (48px)** — **48px from legal copy to the page bottom** per Figma, **`padding-inline: var(--spacing-200)` (32px)**. Policy and license links use `--color-progressive`; brand wordmark and legal body text use **`--color-subtle`**.
+**Visual:** `--background-color-base`, **`border-block-start`** with `--border-color-muted`, **`padding-block-start: var(--spacing-150)` (24px)**, **`padding-block-end: var(--spacing-200)` (32px)** — scroll-end symmetry with the start section nav panel, **`padding-inline: var(--spacing-200)` (32px)**. Policy and license links use `--color-progressive`; brand wordmark and legal body text use **`--color-subtle`**.
 
 **URLs:** External Foundation / CC links from `config/siteFooter.ts` — not constructed in components.
 
@@ -359,7 +360,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Start column chrome
 
-**Decision:** The start column (`.shell-side-panel`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-100`** block-end / **`--spacing-75`** inline-end. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome.
+**Decision:** The start column wrapper (`.frontdoor-shell__side-panel--start.shell-side-panel.shell-side-panel--start`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-200`** block-end (32px scroll-end inset, symmetric with site footer) / **`--spacing-75`** inline-end. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome. Both **`frontdoor-shell__side-panel--start`** and **`shell-side-panel--start`** must be on the same element — layout padding and `shell-start-nav-reveal.css` drawer transforms depend on the BEM `--start` class.
 
 **Height (tablet+):** The panel track fills the **visible shell body** below the chrome band. When section links exceed that height, **`.frontdoor-shell__side-panel--start`** scrolls with a **browser default** vertical scrollbar (`overflow-block: auto`, `overscroll-behavior: contain`). The panel **`flex-shrink`s on the block axis** (`flex-shrink: 1`, `min-block-size: 0`) inside the flex-column grid track; **281px width** is from `inline-size` tokens, not `flex-shrink: 0`.
 
@@ -582,6 +583,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Scroll-end symmetry (32px) | `padding-block-end: --spacing-200` on start panel + footer; `shell-side-panel--start` class on panel wrapper (required for padding + drawer CSS) |
 | *(uncommitted)* | Start nav scroll + drawer clip | `flex-shrink: 1` on `.frontdoor-shell__side-panel--start`; mobile `overflow-inline: hidden` (not blanket `overflow: hidden`) in `shell-start-nav-reveal.css` |
 | *(uncommitted)* | Shell chrome polish | Symmetric header inset; mark + Montserrat banana wordmark (header/footer); language select always shows active locale; header `CdxSelect` RTL chevron **open issue** documented |
 | *(uncommitted)* | Nav collapse + drawer reveal | `useShellNavigationCollapse`, `shell-start-nav-reveal.css`, collapsed border fix |
