@@ -8,7 +8,10 @@
  * Scrollbar styling uses a transparent track and thin thumb so the permanent gutter does not
  * stack beside the panel border (overlay-style appearance). WebKit scrollbar pseudos require
  * physical `width` — an exception to the logical-property rule for this API surface.
- * See ARCHITECTURE.md → Shell scroll regions.
+ *
+ * Scroll-end inset (32px, `--spacing-200`): each breakpoint scrollport uses a `::after`
+ * block spacer — not `padding-block-end` on a nested wrapper — so the inset is always
+ * inside the scrollable range after the last nav item. See ARCHITECTURE.md → Shell scroll regions.
  */
 
 /* Transparent track + thin thumb (Firefox). */
@@ -55,5 +58,30 @@
 	/* Mobile scroll lives on the grid track (page-grid.css); inner panel grows with content. */
 	.frontdoor-shell__side-panel--start {
 		overflow: visible;
+	}
+
+	/*
+	 * Scroll-end inset on the mobile scrollport (not the inner panel wrapper).
+	 * A ::after block guarantees 32px after the last nav item inside overflow:auto;
+	 * padding-block-end on a nested child does not always extend the scroll range.
+	 */
+	.frontdoor-shell__page-grid .fd-page-grid__start::after {
+		content: '';
+		display: block;
+		flex-shrink: 0;
+		block-size: var( --spacing-200 );
+	}
+}
+
+/*
+ * Tablet+ scroll-end inset on the panel scrollport (symmetric with site footer).
+ * ::after is a flex sibling after section nav so it scrolls into view at the list end.
+ */
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__side-panel--start::after {
+		content: '';
+		display: block;
+		flex-shrink: 0;
+		block-size: var( --spacing-200 );
 	}
 }

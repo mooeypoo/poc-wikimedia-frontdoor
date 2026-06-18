@@ -13,7 +13,9 @@ import type { ShellCollapsedNavMenuView } from '../../composables/useShellCollap
  * headings that duplicate the back label are omitted via `omitSectionTitleMatching`.
  * The primary view lists main navigation entries and the API Explorer link.
  * Panel inline-end border uses `--border-color-muted` (matches expanded start column).
- * Figma Off-wiki page templates node 25:1929.
+ * Scroll-end inset: `::after` spacer (`--spacing-200`, 32px) on the panel scrollport,
+ * symmetric with the in-shell start panel and site footer. Figma Off-wiki page templates
+ * node 25:1929.
  */
 defineProps<{
 	/** Accessible name for the dialog region. */
@@ -136,7 +138,7 @@ const emit = defineEmits<{
 	inline-size: var( --fd-layout-start-panel-inline-size );
 	max-inline-size: 100%;
 	block-size: 100%;
-	padding-block: var( --spacing-100 );
+	padding-block-start: var( --spacing-100 );
 	/*
 	 * Inline-start inset matches Figma spacing-200 (32px) at the viewport edge;
 	 * inline-end matches the start-column panel (`--spacing-75`).
@@ -149,14 +151,20 @@ const emit = defineEmits<{
 	border-inline-end: 1px solid var( --border-color-muted );
 }
 
+/*
+ * Scroll-end symmetry with in-shell start nav + site footer (32px).
+ * ::after spacer — not padding-block-end — so the inset scrolls into view after the last item.
+ */
+.shell-collapsed-nav-menu-overlay__panel::after {
+	content: '';
+	display: block;
+	flex-shrink: 0;
+	block-size: var( --spacing-200 );
+}
+
 .shell-collapsed-nav-menu-overlay__back-button {
 	align-self: flex-start;
 	max-inline-size: 100%;
-}
-
-.shell-collapsed-nav-menu-overlay__section-nav {
-	flex: 1 1 auto;
-	min-block-size: 0;
 }
 
 .shell-collapsed-nav-menu-overlay__primary-nav {

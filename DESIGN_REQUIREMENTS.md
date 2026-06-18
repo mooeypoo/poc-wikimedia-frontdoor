@@ -185,9 +185,9 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; start drawer on expand |
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide; Codex transition tokens |
-| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; scroll lock |
+| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
-| Start panel scroll-end symmetry | **Implemented** | `padding-block-end: --spacing-200` on start panel + footer; wrapper must include `shell-side-panel--start` class |
+| Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 | Explorer side nav mode links | **Implemented** | `usePageSectionNav` + `ShellSidePanelNav` + `explorerRoute.ts`; Overview items still placeholders |
 
@@ -233,7 +233,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Header / start nav aligned at inline-start | Brand: `--spacing-75` inset (removed when nav collapsed); nav row: flush to chrome inner edge | Section menu items keep `--spacing-75` padding inside start column |
 | Header utilities at inline-end | Body grid column + `justify-content: flex-end` | Search/settings/language/log in |
 | Start column below header | Section nav in `PageGrid` start slot only | Panel always mounted; viewport-height track on tablet+ |
-| Start panel scroll | `overflow-block: auto` on `.frontdoor-shell__side-panel--start` (tablet+); `overflow-y: auto` on `.fd-page-grid__start` (mobile) | `flex-shrink: 1` + `min-block-size: 0` on drawer panel; **`padding-block-end: --spacing-200`** on panel wrapper; mobile clip via `overflow-inline: hidden` only |
+| Start panel scroll | `overflow-block: auto` on `.frontdoor-shell__side-panel--start` (tablet+); `overflow-y: auto` on `.fd-page-grid__start` (mobile) | `flex-shrink: 1` + `min-block-size: 0` on drawer panel; **`::after` scroll-end spacer (`--spacing-200`)** on scrollport (`shell-start-nav-scroll.css`); mobile clip via `overflow-inline: hidden` only |
 | **Main column** | `.frontdoor-shell__body-scroll` | Page slot + footer; scrollbar at inline-end of main + end band |
 | **End column (empty)** | Same scrollport as main | Wheel over reserved end panel scrolls central content |
 | Start panel viewport height | Grid row capped by `100dvh` shell | Track fills visible body; does not grow the document |
@@ -282,10 +282,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Start nav scroll (drawer-compatible):** Tablet+ scrollport is **`.frontdoor-shell__side-panel--start`** — must **`flex-shrink: 1`** with **`min-block-size: 0`** so `overflow-block: auto` activates inside the flex-column grid track (`shell-start-nav-scroll.css`). Mobile scrollport is **`.fd-page-grid__start`** (`max-block-size: 40dvh`, `overflow-y: auto` from `page-grid.css`); inner panel **`overflow: visible`** so only one scrollbar appears. Drawer CSS uses **`overflow-inline: hidden`** only when expanded (not blanket `overflow: hidden`, which had broken vertical scroll).
 
-**Collapsed overlay (Figma [Off-wiki page templates 25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929)):** Hamburger toggles a full-viewport overlay (`ShellCollapsedNavMenuOverlay`, teleported to `<body>`, **`z-index: 20`** above header chrome). Mask: **`--background-color-backdrop-light`**. Start-side panel: **`--fd-layout-start-panel-inline-size` (281px)**, **`--background-color-base`**, **`border-inline-end: 1px solid var(--border-color-muted)`**, inline padding **`--spacing-200`** start / **`--spacing-75`** end, block padding **`--spacing-100`**.
+**Collapsed overlay (Figma [Off-wiki page templates 25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929)):** Hamburger toggles a full-viewport overlay (`ShellCollapsedNavMenuOverlay`, teleported to `<body>`, **`z-index: 20`** above header chrome). Mask: **`--background-color-backdrop-light`**. Start-side panel: **`--fd-layout-start-panel-inline-size` (281px)**, **`--background-color-base`**, **`border-inline-end: 1px solid var(--border-color-muted)`**, inline padding **`--spacing-200`** start / **`--spacing-75`** end, block padding **`--spacing-100`** start only; **32px scroll-end inset** via **`::after` spacer** on the panel scrollport (matches in-shell start nav + footer).
 
 | Overlay element | Token / behaviour |
 |-----------------|-------------------|
+| Panel scroll-end inset | **`::after` block** with **`block-size: var(--spacing-200)`** (32px) on `.shell-collapsed-nav-menu-overlay__panel` — scrolls into view after the last item |
 | Back control | Quiet small `CdxButton`; **`cdxIconPrevious`** (`flip-for-rtl`); visible text = active primary section label; `aria-label` from `shell-collapsed-nav-menu-back-button-label` |
 | Back control → first item gap | **`gap: var(--spacing-50)`** on overlay panel flex column |
 | Section list | Reuses **`ShellSidePanelNav`** (including explorer mode links via `navigateTo`); **`omitSectionTitleMatching`** hides a section heading when it equals the back label (avoids duplicating the primary section name) |
@@ -344,7 +345,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 - Footer is the **last child** in `.frontdoor-shell__content` (`display: flex; flex-direction: column`) — sits **flush** under main content (no grid row gap).
 - **Short pages:** `.frontdoor-shell__body-scroll` is the scrollport; `.frontdoor-shell__content` uses **`min-block-size: 100%`**; `.frontdoor-shell__main` uses **`flex: 1 1 auto`** so the footer band’s outer edge aligns with the shell bottom when no scrollbar is needed.
 - **Long pages:** Footer follows content in normal document flow.
-- **No `margin-block-end`** on the footer — **32px** bottom spacing is **`padding-block-end: var(--spacing-200)`** inside `.shell-site-footer` only (symmetric with start panel wrapper **`.frontdoor-shell__side-panel--start` / `.shell-side-panel--start`** scroll-end inset).
+- **No `margin-block-end`** on the footer — **32px** bottom spacing is **`padding-block-end: var(--spacing-200)`** inside `.shell-site-footer` only (symmetric with start nav / overlay **`::after` scroll-end spacers**).
 
 **Content (row 1):** Centred brand row — **14px** Wikimedia mark (`developer-portal-logo-mark.svg`) + single-line wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links.
 
@@ -377,7 +378,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Start column chrome
 
-**Decision:** The start column wrapper (`.frontdoor-shell__side-panel--start.shell-side-panel.shell-side-panel--start`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-200`** block-end (32px scroll-end inset, symmetric with site footer) / **`--spacing-75`** inline-end. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome. Both **`frontdoor-shell__side-panel--start`** and **`shell-side-panel--start`** must be on the same element — layout padding and `shell-start-nav-reveal.css` drawer transforms depend on the BEM `--start` class.
+**Decision:** The start column wrapper (`.frontdoor-shell__side-panel--start.shell-side-panel.shell-side-panel--start`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-75`** inline-end. **Scroll-end inset (32px)** is a **`::after` spacer** on the breakpoint scrollport (`shell-start-nav-scroll.css`) — tablet+ on **`.frontdoor-shell__side-panel--start`**, mobile on **`.fd-page-grid__start`** — not `padding-block-end` on the inner wrapper (nested flex scrollports do not always extend scroll range for inner padding). Symmetric with site footer and collapsed nav overlay. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome. Both **`frontdoor-shell__side-panel--start`** and **`shell-side-panel--start`** must be on the same element — `shell-start-nav-reveal.css` drawer transforms depend on the BEM `--start` class.
 
 **Height (tablet+):** The panel track fills the **visible shell body** below the chrome band. When section links exceed that height, **`.frontdoor-shell__side-panel--start`** scrolls with a **browser default** vertical scrollbar (`overflow-block: auto`, `overscroll-behavior: contain`). The panel **`flex-shrink`s on the block axis** (`flex-shrink: 1`, `min-block-size: 0`) inside the flex-column grid track; **281px width** is from `inline-size` tokens, not `flex-shrink: 0`.
 
@@ -602,9 +603,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 |--------|---------|-------------|
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |
-| *(uncommitted)* | Shell chrome border token | Header band, start column edge, section dividers, collapsed overlay — `--border-color-muted` |
-| *(uncommitted)* | Collapsed nav overlay | `useShellCollapsedNavMenu`, `ShellCollapsedNavMenuOverlay`, `shell-collapsed-nav-menu.css`; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` panel gap |
-| *(uncommitted)* | Scroll-end symmetry (32px) | `padding-block-end: --spacing-200` on start panel + footer; `shell-side-panel--start` class on panel wrapper (required for padding + drawer CSS) |
+| *(uncommitted)* | Scroll-end symmetry (32px) | `::after` spacer on start scrollport (tablet+ panel, mobile `.fd-page-grid__start`) + overlay panel; footer keeps `padding-block-end` |
 | *(uncommitted)* | Start nav scroll + drawer clip | `flex-shrink: 1` on `.frontdoor-shell__side-panel--start`; mobile `overflow-inline: hidden` (not blanket `overflow: hidden`) in `shell-start-nav-reveal.css` |
 | *(uncommitted)* | Shell chrome polish | Symmetric header inset; mark + Montserrat banana wordmark (header/footer); language select always shows active locale; header `CdxSelect` RTL chevron **open issue** documented |
 | *(uncommitted)* | Nav collapse + drawer reveal | `useShellNavigationCollapse`, `shell-start-nav-reveal.css`, collapsed border fix |

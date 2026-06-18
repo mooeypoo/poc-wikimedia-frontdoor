@@ -640,12 +640,10 @@ useHead( {
 	box-sizing: border-box;
 }
 
-.frontdoor-shell__side-panel--start,
-.shell-side-panel--start {
-	/* Symmetric 32px scroll-end inset with site footer (`ShellSiteFooter`). */
-	padding-block-end: var( --spacing-200 );
-}
-
+/*
+ * Scroll-end inset (--spacing-200) lives on each breakpoint scrollport via ::after
+ * in shell-start-nav-scroll.css — not padding-block-end here (nested flex scrollports).
+ */
 .frontdoor-shell--explorer .shell-side-panel {
 	gap: var( --spacing-50 );
 }
