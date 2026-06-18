@@ -307,7 +307,11 @@ useHead( {
 		inline-size: var( --fd-layout-start-panel-inline-size );
 		min-inline-size: var( --fd-layout-start-panel-inline-size );
 		max-inline-size: var( --fd-layout-start-panel-inline-size );
-		flex-shrink: 0;
+		/*
+		 * Block-axis shrink must stay enabled so this element becomes the scrollport
+		 * when section nav exceeds the viewport body. Width is fixed above — not via flex-shrink.
+		 */
+		flex-shrink: 1;
 		/*
 		 * Vertical scroll lives on the drawer panel; horizontal overflow is
 		 * clipped by `.fd-page-grid__start` during the open transition.

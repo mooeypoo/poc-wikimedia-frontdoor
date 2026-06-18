@@ -191,7 +191,11 @@ banana-i18n labels + single global active item
 
 **Rendering.** `app/layouts/default.vue` always mounts the start panel (`.shell-side-panel`); `SharedShellSidePanelNav` renders when `navigationSections` is non-empty and remains in the DOM when navigation is collapsed (`inert` + `aria-hidden` on the panel wrapper). The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly.
 
-**Panel height (tablet+).** The start column track is **viewport-height constrained** below the chrome band (grid row `minmax(0, 1fr)` inside a `100dvh` shell). When section nav content exceeds that height, **`.frontdoor-shell__side-panel--start`** scrolls with **`overflow-block: auto`** (browser default scrollbar). Horizontal overflow is **`overflow-inline: hidden`** so drawer animation does not spill labels into the main column. The main + end body band scrolls in **`.frontdoor-shell__body-scroll`** — see **Shell scroll regions** below.
+**Panel height (tablet+).** The start column track is **viewport-height constrained** below the chrome band (grid row `minmax(0, 1fr)` inside a `100dvh` shell). When section nav content exceeds that height, **`.frontdoor-shell__side-panel--start`** scrolls with **`overflow-block: auto`** (browser default scrollbar). Horizontal overflow is **`overflow-inline: hidden`** on the panel; the grid track (`.fd-page-grid__start`) clips during drawer motion with **`overflow: hidden`**.
+
+**Scrollport mechanics (tablet+).** `.fd-page-grid__start` is a **flex column** track; the drawer panel is **`flex: 1 1 auto`**, **`min-block-size: 0`**, **`flex-shrink: 1`**. Block-axis shrink must stay enabled so the panel height is bounded by the grid row — otherwise content grows past the viewport and is clipped by the track without a scrollbar. **281px inline size** is fixed via **`inline-size` / `min-inline-size` / `max-inline-size`** on the panel, not via `flex-shrink: 0` (which only affects the flex main axis = block size in a column flex). The main + end body band scrolls in **`.frontdoor-shell__body-scroll`** — see **Shell scroll regions** below.
+
+**Mobile scroll.** `.fd-page-grid__start` caps at **`max-block-size: 40dvh`** with **`overflow-y: auto`** (`page-grid.css`). `shell-start-nav-reveal.css` clips drawer motion with **`overflow-inline: hidden`** only (not `overflow: hidden` on the expanded track — that had suppressed vertical scroll). When **`.frontdoor-shell--nav-collapsed`**, the start track uses **`overflow: hidden`** plus **`max-block-size: 0`**.
 
 **Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` in `default.vue` when expanded. When **`.frontdoor-shell--nav-collapsed`**, **`border-inline-end-width: 0`** on the track (scoped rule in `default.vue` — a zero-width cell must not paint a 1px edge). Border width transitions on expand with the drawer (`--transition-duration-medium`). This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
@@ -225,6 +229,13 @@ When the primary nav row (quiet tabs + API Explorer link) does not fit, **`useSh
 3. **Border** width `0` → `1px` on the track.
 
 Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transition-timing-function-user` (`ease-out`). `prefers-reduced-motion: reduce` disables transitions. Collapse does **not** animate.
+
+**Drawer vs scroll (do not conflate).** Drawer animation requires a **clipping track** and fixed **281px** panel width, but must not disable the section-nav **scrollport**. Rules:
+
+| Viewport | Scroll container | Drawer clip |
+|----------|----------------|-------------|
+| **Tablet+** | `.frontdoor-shell__side-panel--start` (`overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`) | `.fd-page-grid__start` (`overflow: hidden`); panel `transform` slide |
+| **Mobile** | `.fd-page-grid__start` (`overflow-y: auto`, `max-block-size: 40dvh`) | `overflow-inline: hidden` when expanded; `overflow: hidden` when collapsed |
 
 **Deferred:** hamburger button opens a menu/drawer on click (Figma [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)) — collapse is viewport-driven only.
 
@@ -260,7 +271,7 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 | **Start column** | `.frontdoor-shell__side-panel--start` (tablet+) or `.fd-page-grid__start` (mobile stacked) | When section nav content exceeds visible body height |
 | **Main column** | `.frontdoor-shell__body-scroll` (viewport-bleed inline-end) | Scrollbar at **viewport inline-end**; main + end content width locked at desktop wide |
 
-**Mechanism:** Chrome band is **`flex-shrink: 0`**. Page grid is **`flex: 1; min-block-size: 0`**. Column tracks use **`min-block-size: 0; overflow: hidden`**; inner scrollports use **`overflow-y: auto`** and **`overscroll-behavior: contain`** (browser default scrollbar styling only — no custom scrollbar CSS). Sticky explorer panels and end-column nav max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus a chrome height estimate in `page-grid.css`).
+**Mechanism:** Chrome band is **`flex-shrink: 0`**. Page grid is **`flex: 1; min-block-size: 0`**. Column tracks use **`min-block-size: 0; overflow: hidden`** on the grid cell; inner scrollports use **`overflow-y: auto`** / **`overflow-block: auto`** and **`overscroll-behavior: contain`** (browser default scrollbar styling only — no custom scrollbar CSS). The start drawer panel must **`flex-shrink: 1`** inside the flex-column track so `overflow-block: auto` can form a scrollport (see **Responsive navigation collapse and start drawer**). Sticky explorer panels and end-column nav max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus a chrome height estimate in `page-grid.css`).
 
 **Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/main.css`.
 
@@ -395,7 +406,7 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Start column width | **281px** (Figma 241px + 40px grid column) — prototype deviation |
 | Section nav hover | Custom `:hover` progressive text on non-selected `CdxMenuItem` — Codex exception (see above) |
 | Site footer | `ShellSiteFooter` inside `frontdoor-shell__content`; **main column width only** (Figma deviation — does not span end panel); **48px** bottom inset (`padding-block-end: --spacing-300`); short-page pin via content flex column inside body scrollport |
-| Shell column scroll | `body { overflow: hidden }`; independent `overflow-y: auto` on start panel + `.frontdoor-shell__body-scroll` (Discord-style docs reference) |
+| Shell column scroll | `body { overflow: hidden }`; independent scroll on `.frontdoor-shell__side-panel--start` (tablet+) and `.fd-page-grid__start` (mobile) + `.frontdoor-shell__body-scroll`; drawer panel `flex-shrink: 1` (Discord-style docs reference) |
 | Primary nav tab scroll buttons | **Hidden** in `shell-primary-nav-overrides.css` — Codex overflow affordances flicker on first paint |
 | Primary nav tab label weight | **Normal** for all tabs — Codex exception; selected tab uses colour/underline only |
 | Footer brand lockup | 14px mark + translatable `brand-wordmark-*` (Montserrat) — not Figma horizontal footer logo asset yet |

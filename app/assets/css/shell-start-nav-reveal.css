@@ -9,6 +9,12 @@
  * https://doc.wikimedia.org/codex/latest/design-tokens/transition.html
  *
  * Collapse is instant; expand uses the drawer. `display: none` is not used.
+ *
+ * Scrollport preservation: drawer clip rules must not disable section-nav scroll.
+ * Tablet+ scroll lives on `.frontdoor-shell__side-panel--start` (see `default.vue`);
+ * mobile scroll lives on `.fd-page-grid__start` (`page-grid.css`). Use
+ * `overflow-inline: hidden` for horizontal clip — not blanket `overflow: hidden`
+ * on the expanded mobile track. See ARCHITECTURE.md → Responsive navigation collapse.
  */
 
 @media (prefers-reduced-motion: reduce) {
@@ -22,7 +28,8 @@
 /* --- Mobile: stack — clip + block-size drawer on expand --- */
 @media screen and ( max-width: 639px ) {
 	.fd-page-grid__start {
-		overflow: hidden;
+		/* Clip horizontal drawer motion only — preserve vertical scroll (page-grid.css). */
+		overflow-inline: hidden;
 		transition: none;
 	}
 
@@ -42,6 +49,7 @@
 		max-block-size: 0;
 		pointer-events: none;
 		border-inline-end-width: 0;
+		overflow: hidden;
 	}
 
 	.frontdoor-shell--nav-collapsed .shell-side-panel--start {
@@ -71,10 +79,11 @@
 
 	/*
 	 * Fixed-width drawer panel inside the clipping grid track. Track width is
-	 * controlled only by `grid-template-columns` (0 → 281px on expand).
+	 * controlled only by `grid-template-columns` (0 → 281px on expand). Block-axis
+	 * shrink stays enabled in `default.vue` so section nav can scroll.
 	 */
 	.frontdoor-shell .shell-side-panel--start {
-		flex-shrink: 0;
+		min-block-size: 0;
 		box-sizing: border-box;
 	}
 

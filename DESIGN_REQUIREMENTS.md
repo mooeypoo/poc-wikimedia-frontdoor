@@ -85,7 +85,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 - **Section headings** (bold) and **page links** share one list — no nested sub-menus or extra indent for items under a heading.
 - **Horizontal dividers** (`--border-color-subtle`) separate section groups within the menu.
 - **Panel edge:** **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` (`default.vue`) when expanded — **no** filled panel background. **`border-inline-end-width: 0`** when `.frontdoor-shell--nav-collapsed` (zero-width track must not paint a 1px edge). Supersedes the earlier `#F3F3F3` background exploration (`--fd-layout-start-panel-background-color` retained in `page-grid.css` but **unused**).
-- **Full-height panel (tablet+):** the start column track is **viewport-height constrained** below the chrome band; when section nav content is taller than that area, the start panel scrolls independently (`overflow-block: auto`; `overflow-inline: hidden` during drawer motion).
+- **Full-height panel (tablet+):** the start column track is **viewport-height constrained** below the chrome band; when section nav content is taller than that area, **`.frontdoor-shell__side-panel--start`** scrolls independently (`overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`; width fixed at 281px via `inline-size` — not `flex-shrink: 0`). The grid track clips drawer motion (`overflow: hidden` on `.fd-page-grid__start`).
 - **Fixed width** **281px** (`--fd-layout-start-panel-inline-size` = Figma **241px** + one Codex **40px** desktop grid column) for the **drawer panel** at tablet and above — **wider than Figma** side-panel spec. The **grid track** uses **`min-inline-size: 0`**; inline size is **0** (collapsed) or **281px** (expanded).
 - **Responsive collapse:** when primary tabs + API Explorer link do not fit, `useShellNavigationCollapse` collapses header tabs into hamburger + breadcrumbs and hides the start track (see **Shell chrome** → Primary nav + section menu collapse).
 - **Item hover:** non-selected menu item labels turn **`--color-progressive`** on hover (custom CSS — see **Codex exceptions** below).
@@ -226,7 +226,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Header / start nav aligned at inline-start | Brand: `--spacing-75` inset (removed when nav collapsed); nav row: flush to chrome inner edge | Section menu items keep `--spacing-75` padding inside start column |
 | Header utilities at inline-end | Body grid column + `justify-content: flex-end` | Search/settings/language/log in |
 | Start column below header | Section nav in `PageGrid` start slot only | Panel always mounted; viewport-height track on tablet+ |
-| Start panel scroll | `overflow-y: auto` on `.frontdoor-shell__side-panel--start` | Independent scroll when nav exceeds visible body; browser default scrollbar |
+| Start panel scroll | `overflow-block: auto` on `.frontdoor-shell__side-panel--start` (tablet+); `overflow-y: auto` on `.fd-page-grid__start` (mobile) | `flex-shrink: 1` + `min-block-size: 0` on drawer panel; mobile clip via `overflow-inline: hidden` only |
 | **Main column** | `.frontdoor-shell__body-scroll` | Page slot + footer; scrollbar at inline-end of main + end band |
 | **End column (empty)** | Same scrollport as main | Wheel over reserved end panel scrolls central content |
 | Start panel viewport height | Grid row capped by `100dvh` shell | Track fills visible body; does not grow the document |
@@ -272,6 +272,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 **Primary nav + section menu collapse (Figma [Off-wiki page templates 50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)):** `useShellNavigationCollapse` observes `.frontdoor-shell__primary-nav-row` and `.frontdoor-shell__primary-nav-expanded__content` with **`ResizeObserver`**. Collapse uses intrinsic-width + **hysteresis** (`scrollWidth + 24px` to collapse, `scrollWidth + 48px` to expand). When collapsed, **`ShellCollapsedNavigation`** replaces quiet tabs; **`page-grid.css`** sets **`grid-template-columns: 0 minmax(0, 1fr)`** and **`column-gap: 0`** so the body band fills the freed space. Start track **`border-inline-end-width: 0`**. Brand **`--spacing-75`** inline-start padding removed.
 
 **Start drawer (expand only):** **`shell-start-nav-reveal.css`** — the grid track grows from **0 → 281px** (+ gutter), **pushing** main content; the fixed-width **281px** panel slides in from inline-start inside a clipping track (`transform: translate3d(±100%, 0, 0)`; RTL mirrored). Codex **transition** tokens: **`--transition-duration-medium`** (250ms), **`--transition-timing-function-user`** (`ease-out`). Collapse is **instant**. Section nav stays mounted when collapsed (`inert`, `aria-hidden`). **`prefers-reduced-motion: reduce`** disables transitions.
+
+**Start nav scroll (drawer-compatible):** Tablet+ scrollport is **`.frontdoor-shell__side-panel--start`** — must **`flex-shrink: 1`** with **`min-block-size: 0`** so `overflow-block: auto` activates inside the flex-column grid track. Mobile scrollport is **`.fd-page-grid__start`** (`max-block-size: 40dvh`, `overflow-y: auto` from `page-grid.css`); drawer CSS uses **`overflow-inline: hidden`** only when expanded (not blanket `overflow: hidden`, which had broken vertical scroll).
 
 **Hamburger menu activation is deferred** — collapse is viewport-driven; the button does not open an overlay yet.
 
@@ -359,7 +361,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Decision:** The start column (`.shell-side-panel`) is **always present** on every page. Padding **`--spacing-150`** block-start / **`--spacing-100`** block-end / **`--spacing-75`** inline-end. **No** `padding-inline-start` — viewport-edge inset is `--fd-layout-page-margin` on `.fd-page-grid`, shared with header chrome.
 
-**Height (tablet+):** The panel track fills the **visible shell body** below the chrome band. When section links exceed that height, **`.frontdoor-shell__side-panel--start`** scrolls with a **browser default** vertical scrollbar (`overflow-y: auto`, `overscroll-behavior: contain`).
+**Height (tablet+):** The panel track fills the **visible shell body** below the chrome band. When section links exceed that height, **`.frontdoor-shell__side-panel--start`** scrolls with a **browser default** vertical scrollbar (`overflow-block: auto`, `overscroll-behavior: contain`). The panel **`flex-shrink`s on the block axis** (`flex-shrink: 1`, `min-block-size: 0`) inside the flex-column grid track; **281px width** is from `inline-size` tokens, not `flex-shrink: 0`.
 
 **Edge treatment (supersedes background fill):** The start column track is **transparent**. Separation from main content uses **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` in `app/layouts/default.vue` when expanded — a standard Codex border token, not a custom hex surface. Border hidden when collapsed (`border-inline-end-width: 0`).
 
@@ -390,7 +392,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Scroll chaining:** `overscroll-behavior: contain` on column scrollports so wheel/touch scroll does not propagate to the document.
 
-**Mobile (&lt; 640px):** Stacked interim layout — start nav capped at **`max-block-size: 40dvh`** with its own scroll when long; main column uses the remaining shell body as its scrollport.
+**Mobile (&lt; 640px):** Stacked interim layout — start nav capped at **`max-block-size: 40dvh`** with scroll on **`.fd-page-grid__start`** when long; drawer reveal clips horizontally with **`overflow-inline: hidden`** (expanded) or **`overflow: hidden`** (collapsed). Main column uses the remaining shell body as its scrollport.
 
 **Sticky panels:** Explorer reference shell and end-column module rail max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus `--fd-layout-shell-chrome-block-size-estimate`) until runtime chrome measurement replaces the estimate.
 
@@ -580,7 +582,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Nav collapse, drawer reveal, header logo, chrome padding | `useShellNavigationCollapse`, `shell-start-nav-reveal.css`, `dev-portal-logo.svg`, collapsed border fix |
+| *(uncommitted)* | Start nav scroll + drawer clip | `flex-shrink: 1` on `.frontdoor-shell__side-panel--start`; mobile `overflow-inline: hidden` (not blanket `overflow: hidden`) in `shell-start-nav-reveal.css` |
+| *(uncommitted)* | Shell chrome polish | Symmetric header inset; mark + Montserrat banana wordmark (header/footer); language select always shows active locale; header `CdxSelect` RTL chevron **open issue** documented |
+| *(uncommitted)* | Nav collapse + drawer reveal | `useShellNavigationCollapse`, `shell-start-nav-reveal.css`, collapsed border fix |
 | *(uncommitted)* | Primary nav quiet-tabs overrides | `shell-primary-nav-overrides.css` — hide tab scroll buttons; normal tab label weight |
 | `0e9f156` | Shell scroll regions + body-band layout | `PageGrid` **body** slot only; `.frontdoor-shell__body-scroll`; independent start/body scroll; footer short-page pin + **48px** inset; reverted `footer` grid slot |
 | `2f9fa60` | Static site footer | `ShellSiteFooter`, `config/siteFooter.ts`, banana `footer-*` keys; Figma **393:4639** |
