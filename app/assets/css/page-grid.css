@@ -7,8 +7,8 @@
  * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
  * `default.vue` (main column only — matches central page content, not main + end).
  *
- * Scroll: shell locks to `100dvh`; start nav scrolls independently (scrollport rules in
- * `shell-start-nav-scroll.css`); main + end share `.frontdoor-shell__body-scroll` with
+ * Scroll: shell locks to `100dvh`; start nav scrolls independently (scrollport rules +
+ * scroll-end `::after` spacers in `shell-start-nav-scroll.css`); main + end share `.frontdoor-shell__body-scroll` with
  * the scrollbar at the **viewport inline-end** (body track is full-bleed inline-end;
  * content stays aligned). See DESIGN_REQUIREMENTS.md.
  *

@@ -15,7 +15,8 @@
  * mobile scroll lives on `.fd-page-grid__start` (`page-grid.css`). Use
  * `overflow-inline: hidden` for horizontal clip — not blanket `overflow: hidden`
  * on the expanded mobile track. Panel wrapper must include `shell-side-panel--start`
- * (with `frontdoor-shell__side-panel--start`) for padding and drawer transforms.
+ * (with `frontdoor-shell__side-panel--start`) for block-start padding, scroll-end spacer
+ * targeting, and drawer transforms.
  * See ARCHITECTURE.md → Shell section navigation.
  */
 

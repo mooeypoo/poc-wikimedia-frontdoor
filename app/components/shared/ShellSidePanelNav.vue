@@ -10,6 +10,8 @@ import type { ResolvedSectionNavItem, ResolvedSectionNavSection } from '../../co
  * Horizontal dividers (`--border-color-muted`) separate section groups. The start
  * column scrollport uses an inline-end border on `.frontdoor-shell__side-panel--start`
  * (see `default.vue`, `shell-start-nav-scroll.css`, DESIGN_REQUIREMENTS.md).
+ * Scroll-end inset (32px, `--spacing-200`) is a `::after` spacer on the breakpoint
+ * scrollport — not padding on this component.
  *
  * **Codex exceptions:**
  * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only

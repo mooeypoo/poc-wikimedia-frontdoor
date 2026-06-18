@@ -140,6 +140,8 @@ Do not:
 
 **Documented exception:** WebKit `::-webkit-scrollbar` pseudos in `app/assets/css/shell-start-nav-scroll.css` use physical **`width`** — the API has no logical equivalent. See `ARCHITECTURE.md` → Shell scroll regions and `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
+**Scroll-end inset on nav scrollports:** Start section nav and the collapsed nav overlay reserve **32px** below the last item via a **`::after` block spacer** (`block-size: var(--spacing-200)`) on the **scrollport** element — not `padding-block-end` on a nested wrapper (nested flex + `overflow: auto` does not always extend scroll range). In-shell rules: `app/assets/css/shell-start-nav-scroll.css` (tablet+ **`.frontdoor-shell__side-panel--start`**, mobile **`.fd-page-grid__start`**). Overlay: `ShellCollapsedNavMenuOverlay.vue`. Site footer keeps **`padding-block-end`** on **`.shell-site-footer`**. See `ARCHITECTURE.md` → Shell section navigation (scroll-end inset).
+
 See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
 
 ### 9. Content components use Codex
@@ -241,7 +243,7 @@ Before marking any component complete, verify:
 - [ ] The component works correctly when the interface language is Arabic or Hebrew (RTL layout)
 - [ ] The component works correctly when the interface is LTR but the displayed wiki instance is an RTL-language wiki
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
-- [ ] Any new string key added to the UI has a corresponding entry in the banana message files
+- [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
 
 ---
 

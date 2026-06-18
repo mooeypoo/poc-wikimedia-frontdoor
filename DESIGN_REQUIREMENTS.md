@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
-- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** on the scrollport panel (`--border-color-muted`, hidden when collapsed); **281px** drawer panel / **0** grid track when nav collapsed; **single start-nav scrollport** + thin overlay-style thumb (`shell-start-nav-scroll.css`); **viewport-driven collapse** + **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (symmetric with start nav scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
+- **Shell chrome layout** (`design-chrome` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** on the scrollport panel (`--border-color-muted`, hidden when collapsed); **281px** drawer panel / **0** grid track when nav collapsed; **single start-nav scrollport** + thin overlay-style thumb + **`::after` scroll-end spacer** (`shell-start-nav-scroll.css`); **viewport-driven collapse** + **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (`padding-block-end`; symmetric with start nav / overlay scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
 
 ---
 
@@ -86,6 +86,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 - **Horizontal dividers** (`--border-color-muted`) separate section groups within the menu.
 - **Panel edge:** **`border-inline-end: 1px solid var(--border-color-muted)`** on **`.frontdoor-shell__side-panel--start`** (`default.vue`) when expanded — on the scrollport panel, not the grid track, so the border does not sit beside the scrollbar gutter. **`border-inline-end-width: 0`** when `.frontdoor-shell--nav-collapsed`. Supersedes the earlier `#F3F3F3` background exploration (`--fd-layout-start-panel-background-color` retained in `page-grid.css` but **unused**).
 - **Full-height panel (tablet+):** the start column track is **viewport-height constrained** below the chrome band; when section nav content is taller than that area, **`.frontdoor-shell__side-panel--start`** scrolls independently (`shell-start-nav-scroll.css`: `overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`; width fixed at 281px via `inline-size`). The grid track clips drawer motion (`overflow: hidden` on `.fd-page-grid__start`) and must not scroll alongside the panel.
+- **Scroll-end inset (32px):** **`::after` block spacer** (`block-size: --spacing-200`) on the breakpoint scrollport — tablet+ **`.frontdoor-shell__side-panel--start`**, mobile **`.fd-page-grid__start`** — in `shell-start-nav-scroll.css`. Not `padding-block-end` on the inner panel wrapper. Collapsed overlay panel uses the same pattern in **`ShellCollapsedNavMenuOverlay.vue`**. Symmetric with site footer (`padding-block-end` on `.shell-site-footer`).
 - **Start nav scrollbar:** **`shell-start-nav-scroll.css`** — one scrollport per breakpoint; transparent track + thin thumb only (no permanent gutter beside the panel border). WebKit scrollbar pseudos use physical `width` (API exception).
 - **Fixed width** **281px** (`--fd-layout-start-panel-inline-size` = Figma **241px** + one Codex **40px** desktop grid column) for the **drawer panel** at tablet and above — **wider than Figma** side-panel spec. The **grid track** uses **`min-inline-size: 0`**; inline size is **0** (collapsed) or **281px** (expanded).
 - **Responsive collapse:** when primary tabs + API Explorer link do not fit, `useShellNavigationCollapse` collapses header tabs into hamburger + breadcrumbs and hides the start track (see **Shell chrome** → Primary nav + section menu collapse).
@@ -109,6 +110,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 2. **Section nav hover colour** — custom `:hover` CSS sets **`--color-progressive`** on non-selected item labels. Codex `CdxMenuItem` hover normally changes **background only** (`--background-color-interactive-subtle--hover`), not unselected text colour. Because items are outside `CdxMenu`, the `highlighted` prop is never toggled (parent menu normally handles `@change`); shell styles must target **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items use Codex’s built-in progressive styling via `cdx-menu-item--selected`.
 3. **Explorer mode navigation** — `usePageSectionNav()` resolves `to` paths; `ShellSidePanelNav` invokes `navigateTo` on click. URL construction stays in `app/utils/explorerRoute.ts` — not in the component.
 4. **Start nav scrollbar (WebKit physical `width`)** — `shell-start-nav-scroll.css` uses physical **`width`** on `::-webkit-scrollbar` (API has no logical equivalent). **One scrollport per breakpoint**; transparent track + thin thumb. Border lives on the scrollport panel so it does not stack beside the scrollbar gutter.
+5. **Scroll-end inset (`::after` spacer)** — **32px** (`--spacing-200`) below the last nav item via a **`::after` block** on the scrollport — not `padding-block-end` on the inner panel wrapper. In-shell: `shell-start-nav-scroll.css`. Overlay: `ShellCollapsedNavMenuOverlay.vue`. Footer: `padding-block-end` on `.shell-site-footer`.
 
 **Status:** **Visual/IA prototype** on content routes — item links use `href="#"` with `@click.prevent`. Active state on content routes comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. **Explorer routes:** items with a `mode` in `config/explorerSideNav.js` resolve to real paths via `pathForExplorerMode()`; active state follows `explorerModeFromPath()` on the current route. Overview section items (no `mode`) remain placeholders.
 
@@ -351,7 +353,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Content (row 2):** Centred legal attribution — **three sentences** (one per line) with an inline **Creative Commons Attribution-ShareAlike** link on the middle line.
 
-**Visual:** `--background-color-base`, **`border-block-start`** with `--border-color-muted`, **`padding-block-start: var(--spacing-150)` (24px)**, **`padding-block-end: var(--spacing-200)` (32px)** — scroll-end symmetry with the start section nav panel, **`padding-inline: var(--spacing-200)` (32px)**. Policy and license links use `--color-progressive`; brand wordmark and legal body text use **`--color-subtle`**.
+**Visual:** `--background-color-base`, **`border-block-start`** with `--border-color-muted`, **`padding-block-start: var(--spacing-150)` (24px)**, **`padding-block-end: var(--spacing-200)` (32px)** — scroll-end symmetry with start nav / overlay **`::after` spacers**, **`padding-inline: var(--spacing-200)` (32px)**. Policy and license links use `--color-progressive`; brand wordmark and legal body text use **`--color-subtle`**.
 
 **URLs:** External Foundation / CC links from `config/siteFooter.ts` — not constructed in components.
 
@@ -403,11 +405,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 |------|------------|----------------|
 | **Document (`body`)** | — | `overflow: hidden` — shell owns vertical scroll |
 | **Shell** | `.frontdoor-shell` | `block-size: 100dvh`; `overflow: hidden` |
-| **Start column** | `.frontdoor-shell__side-panel--start` (tablet+) / `.fd-page-grid__start` (mobile) | `overflow-y: auto` when section nav exceeds visible body |
+| **Start column** | `.frontdoor-shell__side-panel--start` (tablet+) / `.fd-page-grid__start` (mobile) | `overflow-y: auto` when section nav exceeds visible body; **`::after` scroll-end spacer (`--spacing-200`)** on the scrollport (`shell-start-nav-scroll.css`) |
 | **Main + end body band** | `.frontdoor-shell__body-scroll` | `overflow-y: auto`; track extends to **viewport inline-end**; `body-columns` max-width at ≥ 1680px keeps content aligned; empty margin zone scrolls central content ([Discord docs](https://docs.discord.com/developers/bots/overview)) |
 | **Main content width** | `.frontdoor-shell__content` inside body sub-grid | Footer and page slot remain **main-track width only** — not full body band |
 
-**Scrollbar styling:** Body band (`.frontdoor-shell__body-scroll`) — browser default. **Start nav scrollport** — transparent track + thin thumb in **`shell-start-nav-scroll.css`** (overlay-style; WebKit physical `width` exception documented in file header).
+**Scrollbar styling:** Body band (`.frontdoor-shell__body-scroll`) — browser default. **Start nav scrollport** — transparent track + thin thumb + **`::after` scroll-end spacer** in **`shell-start-nav-scroll.css`** (overlay panel spacer in **`ShellCollapsedNavMenuOverlay.vue`**; WebKit physical `width` exception documented in file header).
 
 **Scroll chaining:** `overscroll-behavior: contain` on column scrollports so wheel/touch scroll does not propagate to the document.
 
@@ -415,7 +417,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Sticky panels:** Explorer reference shell and end-column module rail max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus `--fd-layout-shell-chrome-block-size-estimate`) until runtime chrome measurement replaces the estimate.
 
-**Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/main.css`, `app/assets/css/shell-end-panel-nav.css`, `app/pages/explorer/index.vue`.
+**Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css`, `app/assets/css/shell-end-panel-nav.css`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/pages/explorer/index.vue`.
 
 ---
 
