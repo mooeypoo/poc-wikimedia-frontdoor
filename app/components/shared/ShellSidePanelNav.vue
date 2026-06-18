@@ -7,8 +7,9 @@ import type { ResolvedSectionNavSection } from '../../composables/usePageSection
  * full-width header band (not beside the header).
  *
  * Section headings and page links share one flat list (no nested sub-menus).
- * Horizontal dividers separate section groups. The start column track uses an
- * inline-end border on `.fd-page-grid__start` (see `default.vue`, DESIGN_REQUIREMENTS.md).
+ * Horizontal dividers (`--border-color-muted`) separate section groups. The start
+ * column track uses an inline-end border on `.fd-page-grid__start` (see `default.vue`,
+ * DESIGN_REQUIREMENTS.md).
  *
  * **Codex exceptions:**
  * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only
@@ -92,7 +93,7 @@ defineProps<{
 
 .shell-side-panel-nav__divider {
 	border: none;
-	border-block-start: 1px solid var( --border-color-subtle );
+	border-block-start: 1px solid var( --border-color-muted );
 	margin: var( --spacing-50 ) 0;
 	inline-size: 100%;
 }

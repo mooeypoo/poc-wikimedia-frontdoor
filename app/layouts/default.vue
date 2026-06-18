@@ -321,11 +321,12 @@ useHead( {
 }
 
 /*
- * Start column edge: subtle inline-end border on the grid track (transparent panel).
- * See DESIGN_REQUIREMENTS.md → Start column chrome; ARCHITECTURE.md → Shell section navigation.
+ * Start column edge: muted inline-end border on the grid track (transparent panel).
+ * Section dividers in `ShellSidePanelNav` use the same token. See DESIGN_REQUIREMENTS.md
+ * → Start column chrome; ARCHITECTURE.md → Shell section navigation.
  */
 .frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-	border-inline-end: 1px solid var( --border-color-subtle );
+	border-inline-end: 1px solid var( --border-color-muted );
 	box-sizing: border-box;
 }
 
@@ -380,7 +381,8 @@ useHead( {
 /*
  * Full-viewport header band. Horizontal inset matches `PageGrid` via
  * `--fd-layout-page-margin-inline-start`; brand/tabs use the same column grid
- * as the start panel (tablet+). Figma Navigation 225:4548.
+ * as the start panel (tablet+). Bottom edge: `--border-color-muted` (same token
+ * as start-column borders and site footer). Figma Navigation 225:4548.
  */
 .frontdoor-shell__chrome-band {
 	position: relative;
@@ -389,7 +391,7 @@ useHead( {
 	inline-size: 100vw;
 	margin-inline-start: calc( 50% - 50vw );
 	background-color: var( --background-color-base );
-	border-block-end: 1px solid var( --border-color-subtle );
+	border-block-end: 1px solid var( --border-color-muted );
 }
 
 .frontdoor-shell__chrome-inner {

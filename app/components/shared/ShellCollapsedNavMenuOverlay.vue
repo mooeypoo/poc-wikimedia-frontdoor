@@ -12,6 +12,7 @@ import type { ShellCollapsedNavMenuView } from '../../composables/useShellCollap
  * primary section as a quiet back control (`cdxIconPrevious`, `flip-for-rtl`). Section
  * headings that duplicate the back label are omitted via `omitSectionTitleMatching`.
  * The primary view lists main navigation entries and the API Explorer link.
+ * Panel inline-end border uses `--border-color-muted` (matches expanded start column).
  * Figma Off-wiki page templates node 25:1929.
  */
 defineProps<{
@@ -145,7 +146,7 @@ const emit = defineEmits<{
 	overflow-block: auto;
 	overscroll-behavior: contain;
 	background-color: var( --background-color-base );
-	border-inline-end: 1px solid var( --border-color-subtle );
+	border-inline-end: 1px solid var( --border-color-muted );
 }
 
 .shell-collapsed-nav-menu-overlay__back-button {
