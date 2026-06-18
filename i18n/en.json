@@ -12,6 +12,8 @@
   "nav-contribute": "Contribute",
   "nav-get-help": "Get help",
   "nav-primary-label": "Site navigation",
+  "shell-collapsed-nav-label": "Collapsed site navigation",
+  "shell-collapsed-nav-menu-button-label": "Open site navigation menu",
   "nav-utility-label": "Utility navigation",
   "header-search-placeholder": "Search the developer portal",
   "header-search-button-label": "Search",

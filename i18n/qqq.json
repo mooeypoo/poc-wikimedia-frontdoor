@@ -12,6 +12,8 @@
   "nav-contribute": "Main navigation item for the contribute page.",
   "nav-get-help": "Main navigation item for the get help page.",
   "nav-primary-label": "Accessible name for the primary site navigation region in the left page grid column.",
+  "shell-collapsed-nav-label": "Accessible name for the collapsed header navigation region (hamburger and breadcrumbs).",
+  "shell-collapsed-nav-menu-button-label": "Accessible label for the collapsed header navigation menu button (opens primary and section menus; interaction deferred).",
   "nav-utility-label": "Accessible name for the utility navigation region in the right page grid column.",
   "header-search-placeholder": "Placeholder text for the header search field prototype.",
   "header-search-button-label": "Accessible label for the collapsed header search icon button.",

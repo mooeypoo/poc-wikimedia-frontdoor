@@ -12,6 +12,8 @@
   "nav-contribute": "תרומה",
   "nav-get-help": "עזרה",
   "nav-primary-label": "ניווט באתר",
+  "shell-collapsed-nav-label": "ניווט באתר מכווץ",
+  "shell-collapsed-nav-menu-button-label": "פתיחת תפריט הניווט באתר",
   "nav-utility-label": "ניווט שירות",
   "header-search-placeholder": "חיפוש בפורטל המפתחים",
   "header-search-button-label": "חיפוש",

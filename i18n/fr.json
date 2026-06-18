@@ -12,6 +12,8 @@
   "nav-contribute": "Contribuer",
   "nav-get-help": "Obtenir de l'aide",
   "nav-primary-label": "Navigation du site",
+  "shell-collapsed-nav-label": "Navigation du site reduite",
+  "shell-collapsed-nav-menu-button-label": "Ouvrir le menu de navigation du site",
   "nav-utility-label": "Navigation utilitaire",
   "header-search-placeholder": "Rechercher dans le portail des developpeurs",
   "header-search-button-label": "Rechercher",

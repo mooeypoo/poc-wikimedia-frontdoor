@@ -137,6 +137,15 @@
 		- var( --fd-layout-start-panel-inline-size )
 		- var( --fd-layout-grid-gutter )
 	);
+
+	/*
+	 * Desktop-wide cap when the start panel is collapsed — main band uses the freed
+	 * start-panel track and gutter (see `.frontdoor-shell--nav-collapsed`).
+	 */
+	--fd-layout-body-columns-collapsed-max-inline-size: calc(
+		var( --fd-layout-grid-max-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+	);
 }
 
 .fd-page-grid {
@@ -211,11 +220,30 @@
 	.fd-page-grid__start {
 		grid-column: 1;
 		grid-row: 1;
-		inline-size: var( --fd-layout-start-panel-inline-size );
-		min-inline-size: var( --fd-layout-start-panel-inline-size );
-		max-inline-size: var( --fd-layout-start-panel-inline-size );
+		/*
+		 * Clipping track for the start drawer — inline size comes from
+		 * `grid-template-columns`, not a fixed min on this cell.
+		 */
+		min-inline-size: 0;
+		max-inline-size: none;
 		min-block-size: 0;
 		overflow: hidden;
+	}
+}
+
+/*
+ * Start nav collapsed (`.frontdoor-shell--nav-collapsed` on shell): zero-width
+ * grid track; body fills the row. Drawer expand is in `shell-start-nav-reveal.css`.
+ */
+.frontdoor-shell--nav-collapsed .fd-page-grid__start {
+	border-inline-end-width: 0;
+	pointer-events: none;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell--nav-collapsed .fd-page-grid {
+		grid-template-columns: 0 minmax( 0, 1fr );
+		column-gap: 0;
 	}
 }
 

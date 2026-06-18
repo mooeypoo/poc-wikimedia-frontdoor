@@ -6,6 +6,8 @@ import { SUPPORTED_INTERFACE_LOCALES } from '../../config/interfaceLocales'
 import { useDirection } from '../composables/useDirection'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
+import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigationBreadcrumbs'
+import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -89,6 +91,22 @@ watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
 const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
+const collapsedNavigationRegionLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-label' ) )
+const collapsedNavigationMenuButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-button-label' ) )
+
+const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
+const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
+
+const { isNavigationCollapsed } = useShellNavigationCollapse(
+	primaryNavRowRef,
+	expandedNavContentRef
+)
+
+const {
+	primaryNavigationBreadcrumbLabel,
+	sectionNavigationBreadcrumbLabel,
+	hasSectionNavigationBreadcrumb
+} = useShellNavigationBreadcrumbs()
 
 /**
  * Navigates to the primary nav destination when a header tab is selected.
@@ -118,7 +136,8 @@ useHead( {
 	<div
 		class="frontdoor-shell"
 		:class="{
-			'frontdoor-shell--explorer': isExplorerRoute
+			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--nav-collapsed': isNavigationCollapsed
 		}"
 	>
 		<div class="frontdoor-shell__chrome-band">
@@ -137,26 +156,51 @@ useHead( {
 						</div>
 					</div>
 					<div class="frontdoor-shell__chrome-start frontdoor-shell__chrome-start--nav">
-						<div class="frontdoor-shell__primary-nav-row">
-							<SharedShellPrimaryNav
-								class="frontdoor-shell__primary-nav"
-								:aria-label="primaryNavigationLabel"
-								:navigation-links="mainNavigationLinks"
-								:active-navigation-id="activeNavigationId"
-								@navigation-select="handlePrimaryNavigationSelect"
-							/>
-							<NuxtLink
-								:to="API_EXPLORER_NAVIGATION_PATH"
-								class="frontdoor-shell__api-explorer-link"
-								:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
+						<div
+							ref="primaryNavRowRef"
+							class="frontdoor-shell__primary-nav-row"
+						>
+							<div
+								class="frontdoor-shell__primary-nav-expanded"
+								:class="{
+									'frontdoor-shell__primary-nav-expanded--measure-only': isNavigationCollapsed
+								}"
 							>
-								{{ apiExplorerLinkLabel }}
-								<CdxIcon
-									:icon="cdxIconArrowNext"
-									:flip-for-rtl="true"
-									class="frontdoor-shell__api-explorer-link-icon"
-								/>
-							</NuxtLink>
+								<div
+									ref="expandedNavContentRef"
+									class="frontdoor-shell__primary-nav-expanded__content"
+								>
+									<SharedShellPrimaryNav
+										class="frontdoor-shell__primary-nav"
+										:aria-label="primaryNavigationLabel"
+										:navigation-links="mainNavigationLinks"
+										:active-navigation-id="activeNavigationId"
+										@navigation-select="handlePrimaryNavigationSelect"
+									/>
+									<span class="frontdoor-shell__api-explorer-link-wrap">
+										<NuxtLink
+											:to="API_EXPLORER_NAVIGATION_PATH"
+											class="frontdoor-shell__api-explorer-link"
+											:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
+										>
+											{{ apiExplorerLinkLabel }}
+											<CdxIcon
+												:icon="cdxIconArrowNext"
+												:flip-for-rtl="true"
+												class="frontdoor-shell__api-explorer-link-icon"
+											/>
+										</NuxtLink>
+									</span>
+								</div>
+							</div>
+							<SharedShellCollapsedNavigation
+								v-if="isNavigationCollapsed"
+								:region-label="collapsedNavigationRegionLabel"
+								:menu-button-label="collapsedNavigationMenuButtonLabel"
+								:primary-navigation-label="primaryNavigationBreadcrumbLabel"
+								:section-navigation-label="sectionNavigationBreadcrumbLabel"
+								:has-section-navigation-breadcrumb="hasSectionNavigationBreadcrumb"
+							/>
 						</div>
 					</div>
 				</div>
@@ -167,6 +211,8 @@ useHead( {
 			<template #start>
 				<div
 					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel"
+					:aria-hidden="isNavigationCollapsed || undefined"
+					:inert="isNavigationCollapsed || undefined"
 				>
 					<SharedShellSidePanelNav
 						v-if="pageSectionNavigationSections.length > 0"
@@ -228,6 +274,11 @@ useHead( {
 	box-sizing: border-box;
 }
 
+/* Zero-width collapsed track must not paint a 1px edge (scoped rule beats page-grid.css). */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+	border-inline-end-width: 0;
+}
+
 @media screen and ( min-width: 640px ) {
 	.frontdoor-shell__page-grid {
 		flex: 1 1 auto;
@@ -241,6 +292,10 @@ useHead( {
 		align-self: stretch;
 	}
 
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
 	/*
 	 * Start column scrollport: section nav scrolls independently when taller than
 	 * the viewport body (Discord-style docs sidebar). Browser default scrollbar only.
@@ -248,7 +303,17 @@ useHead( {
 	.frontdoor-shell__side-panel--start {
 		flex: 1 1 auto;
 		min-block-size: 0;
-		overflow-y: auto;
+		/* Fixed drawer width — track clips during open; do not use 100% of the track. */
+		inline-size: var( --fd-layout-start-panel-inline-size );
+		min-inline-size: var( --fd-layout-start-panel-inline-size );
+		max-inline-size: var( --fd-layout-start-panel-inline-size );
+		flex-shrink: 0;
+		/*
+		 * Vertical scroll lives on the drawer panel; horizontal overflow is
+		 * clipped by `.fd-page-grid__start` during the open transition.
+		 */
+		overflow-block: auto;
+		overflow-inline: hidden;
 		overscroll-behavior: contain;
 	}
 }
@@ -298,8 +363,20 @@ useHead( {
 }
 
 .frontdoor-shell__chrome-start {
-	padding-inline-start: var( --spacing-75 );
 	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome-start--brand {
+	padding-inline-start: var( --spacing-75 );
+}
+
+/* Logo aligns with collapsed hamburger row — no extra inset on the start column track. */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__chrome-start--brand {
+	padding-inline-start: 0;
+}
+
+.frontdoor-shell__chrome-start--nav {
+	padding-inline-start: 0;
 }
 
 .frontdoor-shell__chrome-main {
@@ -392,6 +469,16 @@ useHead( {
 	 */
 	.frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-max-inline-size );
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	/* Collapsed start nav: body band grows into the former start-panel + gutter space. */
+	.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
 	}
 }
 
@@ -404,11 +491,32 @@ useHead( {
  * arrow icon (not a tab). Link sits immediately after the last tab with 24px gap.
  */
 .frontdoor-shell__primary-nav-row {
+	position: relative;
 	display: flex;
 	align-items: flex-end;
 	flex-wrap: nowrap;
-	gap: var( --spacing-150 );
 	min-inline-size: 0;
+}
+
+.frontdoor-shell__primary-nav-expanded {
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__primary-nav-expanded__content {
+	display: inline-flex;
+	align-items: flex-end;
+	flex-wrap: nowrap;
+	gap: var( --spacing-150 );
+	inline-size: max-content;
+	max-inline-size: none;
+}
+
+.frontdoor-shell__primary-nav-expanded--measure-only {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	visibility: hidden;
+	pointer-events: none;
 }
 
 .frontdoor-shell__primary-nav {
@@ -423,11 +531,15 @@ useHead( {
 	inline-size: auto;
 }
 
+.frontdoor-shell__api-explorer-link-wrap {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+
 .frontdoor-shell__api-explorer-link {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	flex: 0 0 auto;
 	padding-block-end: calc( var( --spacing-25 ) + var( --spacing-75 ) );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );

@@ -2,21 +2,16 @@
 import { useMainNavigationLinks } from '../../composables/useMainNavigationLinks'
 
 /**
- * Compact header brand lockup — Wikimedia mark (32px SVG) plus two-line wordmark.
+ * Header brand lockup — single SVG logo (`dev-portal-logo.svg`).
  *
  * Rendered in the shell header utility row per Figma Header node 284:11443.
- * The mark file is `public/images/developer-portal-logo-mark.svg` (SVG from design;
- * not raster-converted). Wordmark lines use banana-i18n interface strings.
- *
- * **Prototype:** Not final brand guidance. Figma specifies Montserrat; shell uses
- * Codex base typography tokens until brand fonts are integrated.
+ * Uses the bundled SVG lockup (mark + wordmark as paths) so typography does not
+ * depend on the user’s system fonts.
  */
 const { getStartedPath } = useMainNavigationLinks()
 const { $bananaI18n } = useNuxtApp()
 
 const brandLogoAccessibleLabel = computed( () => $bananaI18n( 'app-title' ) )
-const brandWordmarkTopLabel = computed( () => $bananaI18n( 'brand-wordmark-wikimedia' ) )
-const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-developer-portal' ) )
 </script>
 
 <template>
@@ -26,17 +21,13 @@ const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-de
 		:aria-label="brandLogoAccessibleLabel"
 	>
 		<img
-			class="shell-header-brand__mark"
-			src="/images/developer-portal-logo-mark.svg"
-			width="32"
+			class="shell-header-brand__logo"
+			src="/images/dev-portal-logo.svg"
+			width="214"
 			height="32"
 			alt=""
 			aria-hidden="true"
 		>
-		<span class="shell-header-brand__wordmark">
-			<span class="shell-header-brand__wordmark-top">{{ brandWordmarkTopLabel }}</span>
-			<span class="shell-header-brand__wordmark-bottom">{{ brandWordmarkBottomLabel }}</span>
-		</span>
 	</NuxtLink>
 </template>
 
@@ -44,39 +35,19 @@ const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-de
 .shell-header-brand {
 	display: inline-flex;
 	align-items: center;
-	gap: var( --spacing-25 );
 	flex: 0 0 auto;
 	min-inline-size: 0;
-	color: var( --color-base );
 	text-decoration: none;
 }
 
-.shell-header-brand__mark {
+/*
+ * Native asset 214×32; displayed at 32px block-size (Figma header mark height).
+ * Inline size scales from the SVG aspect ratio.
+ */
+.shell-header-brand__logo {
 	display: block;
-	inline-size: 2rem;
 	block-size: 2rem;
+	inline-size: auto;
 	flex-shrink: 0;
-}
-
-.shell-header-brand__wordmark {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	min-inline-size: 0;
-	white-space: nowrap;
-}
-
-.shell-header-brand__wordmark-top {
-	font-size: 0.875rem;
-	font-weight: var( --font-weight-bold );
-	line-height: 0.875rem;
-	letter-spacing: 0.02em;
-}
-
-.shell-header-brand__wordmark-bottom {
-	font-size: 1rem;
-	font-weight: 800;
-	line-height: 1rem;
-	letter-spacing: 0.01em;
 }
 </style>
