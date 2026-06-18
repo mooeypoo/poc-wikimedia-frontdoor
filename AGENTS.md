@@ -117,6 +117,7 @@ If you find yourself writing a `fetch()` or `$fetch()` call inside a `<script se
 Values that are likely to change, are environment-dependent, or represent project-level decisions belong in `config/`. This includes:
 - Supported wiki instances and their base URLs
 - Explorer project + language picker options and wiki instance mapping (`config/explorerProjectPicker.ts`)
+- Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
 - Language definitions with explicit `dir` declarations
 - Language fallback chains
 - OAuth client ID and endpoint URLs
@@ -173,6 +174,7 @@ If the same logic appears in more than one place, extract it. Repeated patterns 
 Composables live in `composables/` and are named with the `use` prefix describing what they provide:
 
 - `useExplorerProjectLanguagePicker(instanceId)` — project + language combobox state; maps to wiki instance id via `config/explorerProjectPicker.ts`
+- `useExplorerModuleSelect(visibleModules, …)` — REST API module select menu and selection bridge for project controls
 - `useWikiModules(instance)` — fetches and caches modules for a given instance
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
@@ -349,12 +351,13 @@ This set is chosen deliberately:
 - `useDiscovery(instance)` composable — fetches `{baseUrl}/w/rest.php/discovery` for the selected instance and returns the list of available modules with their spec URLs as provided by the response
 - `useWikiModules(instance)` composable — wraps `useDiscovery`, extracts the module list, caches per instance
 - Project + language pickers (`CdxCombobox` in a fieldset) populated from `config/explorerProjectPicker.ts`; selections resolve to wiki instance ids in `config/instances.ts` via `useExplorerProjectLanguagePicker`
+- REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in module-rail order (`resolveFirstExplorerRailModule`); menu options show beta/version metadata in MenuItem **`supportingText`**
 - A module rail populated from the discovery response for the selected instance — lists all available modules, uses the spec URL exactly as returned by discovery
-- Scalar re-renders against the spec URL from discovery when instance (project/language) or module selection changes
+- Scalar re-renders against the spec URL from discovery when instance (project/language), REST module select, or endpoint selection changes
 - Verification that reactive config update (via `Object.assign` or equivalent) re-renders Scalar without full component teardown
 - Verification that switching to an RTL wiki instance (`hewiki`, `fawiki`) correctly sets `dir="rtl"` on the shell from `config/instances.ts`; switching back sets `dir="ltr"`
 - banana-i18n installed as a Nuxt plugin; all picker labels and UI strings go through banana
-- Codex components for explorer controls (`CdxCombobox`, `CdxField`, `CdxCheckbox`, …)
+- Codex components for explorer controls (`CdxCombobox`, `CdxSelect`, `CdxField`, `CdxCheckbox`, …)
 - Basic RTL: `dir` attribute on `<html>` set reactively from the selected instance's `dir` in `config/instances.ts`
 - Picker menu labels use BiDi isolation (`isolatePickerLabel()`); module names in the rail wrapped in `<bdi>`
 
@@ -376,7 +379,8 @@ This set is chosen deliberately:
 - Switching project, language, or instance re-renders Scalar cleanly, within ~500ms, no Vue reactivity warnings
 - Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
 - Language combobox is disabled when Wikimedia Commons or Wikidata is selected
-- Picker labels are BiDi-isolated; module names in the rail are wrapped in `<bdi>`
+- REST API module select defaults to the first healthy module in module-rail order (discovery order after opt-in filter)
+- Picker menu labels use BiDi isolation (`isolatePickerLabel()`); module names in the rail are wrapped in `<bdi>`; REST API module select menu version strings use `isolatePickerLabel()` in supporting text
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report

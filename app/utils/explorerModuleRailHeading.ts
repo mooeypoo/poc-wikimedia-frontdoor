@@ -95,3 +95,32 @@ export function formatModuleRailHeadingAriaLabel(
 
 	return segments.join( ', ' )
 }
+
+/**
+ * Builds supporting text for REST API module select menu items.
+ *
+ * Mirrors beta and version chip metadata from the module rail using Codex
+ * MenuItem `supportingText` (subtle text after the label).
+ *
+ * @param railHeading - Parsed heading parts for the module.
+ * @param betaChipLabel - Localized label for the beta chip.
+ * @param versionChipLabel - Optional isolated version label for display.
+ * @returns Supporting text, or an empty string when no chips apply.
+ */
+export function formatExplorerModuleSelectSupportingText(
+	railHeading: Pick<ExplorerModuleRailHeading, 'showBetaChip' | 'versionChipLabel'>,
+	betaChipLabel: string,
+	versionChipLabel?: string
+): string {
+	const segments: string[] = []
+
+	if ( railHeading.showBetaChip ) {
+		segments.push( betaChipLabel )
+	}
+
+	if ( versionChipLabel ) {
+		segments.push( versionChipLabel )
+	}
+
+	return segments.join( ' · ' )
+}

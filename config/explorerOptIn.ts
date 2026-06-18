@@ -8,6 +8,12 @@ export const EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS = 'beta-endpoints'
 /** Opt-in checkbox value for internal REST endpoints and modules. */
 export const EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS = 'internal-endpoints'
 
+/** Default opt-in checkbox state when the community explorer loads. */
+export const DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS = {
+	includeBetaEndpoints: false,
+	includeInternalEndpoints: false
+} as const
+
 /**
  * Discovery module name prefixes that require the beta opt-in checkbox.
  *

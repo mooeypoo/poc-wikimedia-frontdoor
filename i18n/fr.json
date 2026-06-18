@@ -56,6 +56,8 @@
   "explorer-project-wikidata": "Wikidata",
   "explorer-project-wikipedia": "Wikipédia",
   "explorer-refresh-button": "Reessayer la decouverte",
+  "explorer-rest-api-module-description": "Choisissez le module de l’API REST que vous souhaitez tester sur le projet selectionne",
+  "explorer-rest-api-module-label": "Module de l’API REST",
   "explorer-scalar-switching": "Chargement du module selectionne dans la vue de reference...",
   "explorer-scalar-write-endpoint-warning": "Exécuter cette requête modifiera les données en direct sur le wiki actuel. Pour expérimenter en toute sécurité, choisissez d'exécuter vos appels contre $1.",
   "explorer-scalar-write-test-wiki-toggle-description": "Si désactivé, les modifications seront appliquées en production",

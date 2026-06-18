@@ -1,6 +1,8 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
+import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../config/explorerOptIn'
+import { resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
 
 export interface ExplorerModuleOperation {
 	id: string
@@ -267,7 +269,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 			modules.value = bootstrapResponse.modules
 			wikiDisplayName.value = bootstrapResponse.wikiDisplayName
 
-			const defaultModule = bootstrapResponse.modules.find( ( moduleItem ) => !moduleItem.hasSpecError )
+			const defaultModule = resolveFirstExplorerRailModule(
+				bootstrapResponse.modules,
+				DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS
+			)
 
 			if ( defaultModule ) {
 				selectModule( defaultModule.name, {

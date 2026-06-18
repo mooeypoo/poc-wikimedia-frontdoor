@@ -1,20 +1,32 @@
 <script setup lang="ts">
-import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover } from '@wikimedia/codex'
+import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover, CdxSelect } from '@wikimedia/codex'
 import { cdxIconInfo } from '@wikimedia/codex-icons'
+import type { ExplorerBootstrapModule } from '../../composables/useExplorerBootstrap'
+import { useExplorerModuleSelect } from '../../composables/useExplorerModuleSelect'
 import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
 import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
 
 /**
- * ExplorerProjectControls — project + language comboboxes and opt-in filters.
+ * ExplorerProjectControls — project, language, REST API module, and opt-in filters.
  *
  * Presentational only; selection state is owned by the explorer page via `defineModel`.
- * Project and language resolve to a single wiki instance id for bootstrap.
+ * Project and language resolve to a wiki instance id for bootstrap.
  */
-defineProps<{
+const props = defineProps<{
 	isInstanceBootstrapping: boolean
+	visibleModules: ExplorerBootstrapModule[]
+	hasSelectableModules: boolean
+	selectModule: (
+		moduleName: string,
+		options: { source: 'module-select' }
+	) => boolean
 }>()
 
 const selectedWikiInstanceId = defineModel<string>( 'selectedWikiInstanceId', {
+	required: true
+} )
+
+const selectedModuleName = defineModel<string>( 'selectedModuleName', {
 	required: true
 } )
 
@@ -35,9 +47,27 @@ const {
 	isLanguageSelectorDisabled
 } = useExplorerProjectLanguagePicker( selectedWikiInstanceId )
 
+const visibleModulesRef = toRef( props, 'visibleModules' )
+const isModuleSelectDisabledRef = computed( () => {
+	return props.isInstanceBootstrapping || !props.hasSelectableModules
+} )
+
+const {
+	moduleMenuItems,
+	selectedModuleValue,
+	isModuleSelectDisabled
+} = useExplorerModuleSelect(
+	visibleModulesRef,
+	selectedModuleName,
+	props.selectModule,
+	isModuleSelectDisabledRef
+)
+
 const projectLabel = computed( () => $bananaI18n( 'explorer-project-label' ) )
 const languageLabel = computed( () => $bananaI18n( 'explorer-project-language-label' ) )
 const wikimediaProjectTitle = computed( () => $bananaI18n( 'explorer-wikimedia-project-title' ) )
+const restApiModuleLabel = computed( () => $bananaI18n( 'explorer-rest-api-module-label' ) )
+const restApiModuleDescription = computed( () => $bananaI18n( 'explorer-rest-api-module-description' ) )
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
 const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
 const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
@@ -102,74 +132,89 @@ function onOptInPopoverTriggerClick(): void {
 			</div>
 		</CdxField>
 
-		<CdxField
-			class="explorer-project-controls__opt-in"
-			:is-fieldset="true"
-		>
-			<template #label>
-				<span class="explorer-project-controls__opt-in-label">
-					{{ optInLabel }}
-					<CdxButton
-						ref="optInPopoverTrigger"
-						class="explorer-project-controls__opt-in-info-trigger"
-						weight="quiet"
-						type="button"
-						:aria-label="optInPopoverTriggerLabel"
-						:aria-expanded="isOptInPopoverOpen"
-						@click="onOptInPopoverTriggerClick"
-					>
-						<CdxIcon :icon="cdxIconInfo" />
-					</CdxButton>
-					<CdxPopover
-						class="explorer-project-controls__opt-in-help-popover"
-						v-model:open="isOptInPopoverOpen"
-						:anchor="optInPopoverTrigger"
-						:title="optInPopoverTitle"
-						placement="bottom-start"
-						:use-close-button="true"
-					>
-						<div class="explorer-project-controls__opt-in-popover">
-							<p class="explorer-project-controls__opt-in-popover-intro">
-								{{ optInPopoverIntro }}
-							</p>
-							<ul class="explorer-project-controls__opt-in-popover-list">
-								<li>
-									<strong class="explorer-project-controls__opt-in-popover-term">
-										{{ optInPopoverBetaLabel }}
-									</strong>
-									{{ optInPopoverBetaBody }}
-								</li>
-								<li>
-									<strong class="explorer-project-controls__opt-in-popover-term">
-										{{ optInPopoverInternalLabel }}
-									</strong>
-									{{ optInPopoverInternalBody }}
-								</li>
-							</ul>
-						</div>
-					</CdxPopover>
-				</span>
-			</template>
-			<CdxCheckbox
-				v-for="optInOption in optInCheckboxOptions"
-				:key="optInOption.value"
-				v-model="selectedOptInValues"
-				:input-value="optInOption.value"
-				:disabled="isInstanceBootstrapping"
+		<div class="explorer-project-controls__module-row">
+			<CdxField class="explorer-project-controls__module-field">
+				<template #label>
+					{{ restApiModuleLabel }}
+				</template>
+				<template #description>
+					{{ restApiModuleDescription }}
+				</template>
+				<CdxSelect
+					v-model:selected="selectedModuleValue"
+					class="explorer-project-controls__module-select"
+					:menu-items="moduleMenuItems"
+					:disabled="isModuleSelectDisabled"
+				/>
+			</CdxField>
+
+			<CdxField
+				class="explorer-project-controls__opt-in"
+				:is-fieldset="true"
 			>
-				{{ optInOption.label }}
-			</CdxCheckbox>
-		</CdxField>
+				<template #label>
+					<span class="explorer-project-controls__opt-in-label">
+						{{ optInLabel }}
+						<CdxButton
+							ref="optInPopoverTrigger"
+							class="explorer-project-controls__opt-in-info-trigger"
+							weight="quiet"
+							type="button"
+							:aria-label="optInPopoverTriggerLabel"
+							:aria-expanded="isOptInPopoverOpen"
+							@click="onOptInPopoverTriggerClick"
+						>
+							<CdxIcon :icon="cdxIconInfo" />
+						</CdxButton>
+						<CdxPopover
+							class="explorer-project-controls__opt-in-help-popover"
+							v-model:open="isOptInPopoverOpen"
+							:anchor="optInPopoverTrigger"
+							:title="optInPopoverTitle"
+							placement="bottom-start"
+							:use-close-button="true"
+						>
+							<div class="explorer-project-controls__opt-in-popover">
+								<p class="explorer-project-controls__opt-in-popover-intro">
+									{{ optInPopoverIntro }}
+								</p>
+								<ul class="explorer-project-controls__opt-in-popover-list">
+									<li>
+										<strong class="explorer-project-controls__opt-in-popover-term">
+											{{ optInPopoverBetaLabel }}
+										</strong>
+										{{ optInPopoverBetaBody }}
+									</li>
+									<li>
+										<strong class="explorer-project-controls__opt-in-popover-term">
+											{{ optInPopoverInternalLabel }}
+										</strong>
+										{{ optInPopoverInternalBody }}
+									</li>
+								</ul>
+							</div>
+						</CdxPopover>
+					</span>
+				</template>
+				<CdxCheckbox
+					v-for="optInOption in optInCheckboxOptions"
+					:key="optInOption.value"
+					v-model="selectedOptInValues"
+					:input-value="optInOption.value"
+					:disabled="isInstanceBootstrapping"
+				>
+					{{ optInOption.label }}
+				</CdxCheckbox>
+			</CdxField>
+		</div>
 	</section>
 </template>
 
 <style scoped>
 .explorer-project-controls {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	column-gap: var( --spacing-150 );
-	row-gap: var( --spacing-100 );
+	flex-direction: column;
+	gap: var( --spacing-100 );
 	padding: var( --spacing-75 );
 	inline-size: 100%;
 	box-sizing: border-box;
@@ -179,7 +224,7 @@ function onOptInPopoverTriggerClick(): void {
 }
 
 .explorer-project-controls__project-fieldset {
-	flex: 1 1 40rem;
+	flex: 1 1 auto;
 	min-inline-size: 0;
 	max-inline-size: min( 40rem, 100% );
 	margin-block-start: 0;
@@ -214,10 +259,32 @@ function onOptInPopoverTriggerClick(): void {
 	min-inline-size: 0;
 }
 
+.explorer-project-controls__module-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var( --spacing-100 );
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+.explorer-project-controls__module-field {
+	flex: 1 1 12rem;
+	min-inline-size: 0;
+	max-inline-size: min( 40rem, 100% );
+	margin-block-start: 0;
+}
+
+.explorer-project-controls__module-field :deep( .cdx-select-vue ),
+.explorer-project-controls__module-select {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+
 .explorer-project-controls__opt-in {
 	flex: 0 1 auto;
 	min-inline-size: 0;
-	/* Codex fields default to margin-block-start: 16px; align with the wiki field row. */
 	margin-block-start: 0;
 }
 

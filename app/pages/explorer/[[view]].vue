@@ -279,8 +279,12 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			>
 				<ExplorerProjectControls
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
+					v-model:selected-module-name="selectedModuleName"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
 					v-model:include-internal-endpoints="includeInternalEndpoints"
+					:visible-modules="visibleModules"
+					:has-selectable-modules="hasVisibleSelectableModules"
+					:select-module="selectModule"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 				/>
 			</div>

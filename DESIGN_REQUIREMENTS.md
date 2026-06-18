@@ -459,7 +459,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 Top to bottom:
 
 1. **Page header** — community mode `h1` (Wikimedia API modules) + description **`explorer-description`**: “Discover REST API modules and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls** — Wikimedia project fieldset (project + language comboboxes) + opt-in checkboxes (hidden while instance bootstrapping)
+2. **Project controls** — Wikimedia project fieldset (project + language comboboxes), REST API module select + opt-in checkboxes (hidden while instance bootstrapping)
 3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
@@ -494,9 +494,9 @@ Top to bottom:
 
 ## Project controls block
 
-**Decision:** Horizontal flex row (wrap) with neutral subtle background, `--spacing-75` padding, rounded border. Community mode only (hidden in enterprise modes).
+**Decision:** Two-row column layout inside a neutral subtle background container (`--spacing-75` padding, rounded border). Community mode only (hidden in enterprise modes).
 
-### Wikimedia project fieldset
+### Wikimedia project fieldset (row 1)
 
 **Decision:** `CdxField` **fieldset** titled **`explorer-wikimedia-project-title`** (“Wikimedia project”) via the `#label` slot — not a description/helper line.
 
@@ -512,10 +512,24 @@ Top to bottom:
 | Gap | Token | Value |
 |-----|-------|-------|
 | Fieldset title → first field row | `--spacing-75` | 12px |
-| Between field rows (wrap) | `--spacing-100` | 16px (`row-gap` on `.explorer-project-controls__project-fields` and `.explorer-project-controls`) |
-| Between side-by-side fields / fieldsets | `--spacing-150` | 24px (`column-gap`) |
+| Between stacked control rows | `--spacing-100` | 16px (`gap` on `.explorer-project-controls`) |
+| Between side-by-side fields within a row | `--spacing-150` | 24px (`column-gap` on field rows) |
 
 **Layout:** Wikimedia project fieldset flexes up to **40rem** max; nested project + language fields sit in a wrapping row inside the fieldset.
+
+### REST API module select + opt-in (row 2)
+
+**Decision:** Second row: **`CdxSelect`** for the active REST module, with the **Opt-in** fieldset to its **inline-end** (`--spacing-100` / 16px gap).
+
+| Control | Pattern |
+|---------|---------|
+| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order** (same order as the module rail); labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names** |
+| **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata matching the module rail chips: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
+| **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
+
+**Default selection:** The first **healthy** module (no spec fetch error) in module-rail order after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta and internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
+
+**Module switching:** Changing the select calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes.
 
 ### Opt-in fieldset
 
@@ -526,9 +540,9 @@ Top to bottom:
 
 **Defaults:** Beta **off**, Internal **off**.
 
-**Layout:** Opt-in group aligns to start with **no** extra `margin-block-start` (overrides Codex field default).
+**Layout:** Opt-in group sits beside the REST API module select with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`.
+**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`.
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
 
@@ -538,7 +552,7 @@ Top to bottom:
 
 ### Purpose
 
-**Decision:** Browse discovered REST **modules** for the selected wiki; expand a module to list **endpoints**; click an endpoint to load/focus that operation in Scalar.
+**Decision:** Browse discovered REST **modules** for the selected wiki; expand a module to list **endpoints**; click an endpoint to load/focus that operation in Scalar. **Module selection for the Scalar reference panel** is driven by the **REST API module** `CdxSelect` in project controls (same discovery order and opt-in rules as the rail). The rail remains the endpoint browser; module headings still expand/collapse endpoint lists.
 
 ### Title
 
@@ -551,7 +565,7 @@ Top to bottom:
 - Accordion-style **button** headings (not native `<details>`)
 - **Multiple modules may be expanded** simultaneously
 - Expand/collapse icon: Codex **expand / collapse** icons at **80% of 14px** (~11.2px)
-- Module title parsing: strip `(Beta)` from title → **warning** “beta” chip; version → **success** chip with `v` prefix and **`-beta` stripped** from version strings (for example `v0.1.0` not `v0.1.0-beta`); chips use class **`explorer-module-chip`** (text-only, status icons hidden)
+- Module title parsing: strip `(Beta)` from title → **warning** “beta” chip; version → **success** chip with `v` prefix and **`-beta` stripped** from version strings (for example `v0.1.0` not `v0.1.0-beta`); chips use class **`explorer-module-chip`** (text-only, status icons hidden). The same beta/version metadata appears as Codex MenuItem **`supportingText`** in the REST API module select (see **Project controls block**)
 - First-load expansion of default module uses `overflow-anchor: none` on list so first heading stays visible
 
 ### Endpoint rows
@@ -715,7 +729,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
 | Explorer page | `app/pages/explorer/[[view]].vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
-| Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts` |
+| Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts` |
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |

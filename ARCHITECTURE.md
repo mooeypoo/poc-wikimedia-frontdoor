@@ -160,6 +160,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes; exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
+| `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `supportingText` for beta/version chip metadata; calls `selectModule` with `source: 'module-select'` |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route; pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
@@ -492,25 +493,45 @@ config/instances.ts → baseUrl, dir for shell direction and discovery fetch
 
 Picker labels are banana-i18n interface strings (`explorer-project-*`, `explorer-project-language-*`). Combobox `selected` values match translated labels; menu items pass through `isolatePickerLabel()` for BiDi. Reverse sync: `parseExplorerWikiInstanceSelection(wikiInstanceId)` restores combobox state when instance id changes externally.
 
+### REST API module select
+
+Community explorer **module selection** (which OpenAPI spec Scalar loads) is driven by a **`CdxSelect`** in project controls. Options come from **`visibleModules`** — bootstrap modules in discovery order after **`filterExplorerBootstrapModulesByOptIn()`** — matching the module rail list.
+
+```
+User selects: REST API module (CdxSelect in ExplorerProjectControls)
+       ↓
+useExplorerModuleSelect(visibleModules, selectedModuleName, selectModule, …)
+       ↓
+useExplorerBootstrap.selectModule(moduleName, { source: 'module-select' })
+       ↓
+visibleOpenApiSpecUrl → useScalarConfig → Scalar reload (when module name changes)
+```
+
+**Default module:** On bootstrap and when opt-in hides the current module, **`resolveFirstExplorerRailModule()`** (`app/utils/explorerModuleOptInFilter.ts`) picks the first module **without `hasSpecError`** in rail order, using **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** from `config/explorerOptIn.ts` on initial load. This keeps the select default, Scalar spec, and first rail entry aligned.
+
+Select menu labels use each module’s **`headingTitle`** (external string) via `isolatePickerLabel()`. Stored value is the discovery **module name** (for example `-`, `readinglists/v0`, `attribution/v0-beta`).
+
+**Menu item supporting text:** Each option may include Codex MenuItem **`supportingText`** — the same beta and version metadata as the module rail chips, formatted by **`formatExplorerModuleSelectSupportingText()`** in `app/utils/explorerModuleRailHeading.ts` (shared with `resolveExplorerModuleRailHeading()` / `formatModuleRailHeadingAriaLabel()`). Beta uses banana-i18n `explorer-module-beta-chip-label`; version uses isolated `versionChipLabel` (external). Omitted when neither applies.
+
+The end-column **module rail** still lists all visible modules for endpoint browsing; endpoint clicks also call `selectModule` (with optional operation focus).
+
 ### Spec resolution flow
 
 ```
-User selects: wiki instance (via project + language picker) + module (module rail)
+User selects: wiki instance (project + language picker) + REST module (select or endpoint click in rail)
        ↓
-useWikiModules(instance)        ← fetches /discovery, returns available modules
+useExplorerBootstrap → GET /api/explorer-bootstrap?wikiInstanceId=…
        ↓
-useSpecUrl(instance, language, module)
+Server: discovery → fetch each module OpenAPI spec → modules[] with specUrl, operations, headingTitle
        ↓
-  Is spec available in requested language?
-  ├── Yes → return spec URL directly
-  └── No  → walk languageFallbackChain from config/languages.js
-            ├── Fallback found → return fallback spec URL + set fallbackNotice flag
-            └── No fallback available → return null + set hasError flag
+useExplorerOptInFilteredModules → visibleModules, visibleOpenApiSpecUrl
        ↓
-useScalarConfig(specUrl)        ← builds reactive Scalar configuration object
+useScalarConfig(visibleOpenApiSpecUrl)   ← reactive Scalar configuration
        ↓
 <ApiReference :configuration="scalarConfig" />
 ```
+
+Per-module language-level spec fallback (`useSpecUrl` + `config/languages.js`) is reserved for a later phase; community explorer uses discovery spec URLs as returned for the selected instance.
 
 ### Reactive spec switching
 
@@ -595,7 +616,7 @@ Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (aft
 
 ### Opt-in module visibility
 
-Project controls expose **Wikimedia project** (project + language comboboxes), **Beta modules and endpoints**, and **Internal modules and endpoints** checkboxes (defaults: both opt-in flags off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
+Project controls expose **Wikimedia project** (project + language comboboxes), **REST API module** (`CdxSelect`), **Beta modules and endpoints**, and **Internal modules and endpoints** checkboxes (defaults: both opt-in flags off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
 
 ```
 includeBetaEndpoints / includeInternalEndpoints (explorer page refs)
@@ -606,12 +627,13 @@ filterExplorerBootstrapModulesByOptIn(modules, { includeBetaEndpoints, … })
        ↓
 isExplorerBetaOptInModule(name)?  ← config/explorerOptIn.ts (prefix `attribution/`)
        ↓
-visibleModules → ExplorerModuleRail; visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
+visibleModules → ExplorerModuleRail + REST API module select
+visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
 ```
 
-When the active module becomes hidden (for example Attribution API with beta off), the composable selects the first remaining healthy module through `useExplorerBootstrap.selectModule()`. Internal opt-in rules are reserved until internal module ids are defined in config.
+When the active module becomes hidden (for example Attribution API with beta off), **`resolveFirstExplorerRailModule()`** selects the first remaining healthy module in rail order through `useExplorerBootstrap.selectModule()`. Bootstrap initial selection uses the same helper with **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`**. Internal opt-in rules are reserved until internal module ids are defined in config.
 
-Module rail headings and the reference `h2` use `headingTitle`, beta chip, and version chip from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`).
+Module rail headings and the reference `h2` use `headingTitle`, beta chip, and version chip from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`). The REST API module select reuses the same parsed fields for MenuItem **`supportingText`** via `formatExplorerModuleSelectSupportingText()`.
 
 ### Scalar plugin layer
 
@@ -724,7 +746,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
-| `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()` |
+| `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
@@ -895,7 +917,8 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
-| Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts` |
+| Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts` |
+| Explorer module rail + select metadata | `app/utils/explorerModuleRailHeading.ts`, `app/components/explorer/ExplorerModuleRail.vue` |
 | Explorer bootstrap + opt-in | `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
@@ -908,4 +931,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useDiscovery` fetches `/w/rest.php/discovery` per instance, `useWikiModules` exposes the module list, and the module rail populates from the live response. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the module rail and REST API module select populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.

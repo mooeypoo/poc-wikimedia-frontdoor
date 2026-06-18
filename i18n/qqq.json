@@ -59,6 +59,8 @@
   "explorer-project-wikidata": "Project option in the API explorer project combobox: Wikidata.",
   "explorer-project-wikipedia": "Project option in the API explorer project combobox: Wikipedia.",
   "explorer-refresh-button": "Button to retry discovery after failure.",
+  "explorer-rest-api-module-description": "Help text for the REST API module select in the explorer project controls; refers to the wiki project chosen above.",
+  "explorer-rest-api-module-label": "Label for the REST API module select in the explorer project controls.",
   "explorer-scalar-switching": "Desktop-only overlay text while switching Scalar to a newly selected module.",
   "explorer-scalar-write-endpoint-warning": "Warning in the Scalar Test Request modal for write HTTP methods (POST, PUT, DELETE, PATCH). Shown when the test-wiki toggle is disabled. $1 is the test wiki hostname for the selected project (for example test.wikipedia.org).",
   "explorer-scalar-write-test-wiki-toggle-description": "Helper text below the test-wiki toggle in the Scalar Test Request modal. Explains that disabling the toggle sends write requests to production.",

@@ -59,6 +59,8 @@
   "explorer-project-wikidata": "Wikidata",
   "explorer-project-wikipedia": "Wikipedia",
   "explorer-refresh-button": "Retry discovery",
+  "explorer-rest-api-module-description": "Choose the REST API module that you’d like to test on the selected project",
+  "explorer-rest-api-module-label": "REST API module",
   "explorer-scalar-switching": "Loading selected module in reference view...",
   "explorer-scalar-write-endpoint-warning": "Executing this request will change live data on the current wiki. To experiment safely, select to run your calls against $1.",
   "explorer-scalar-write-test-wiki-toggle-description": "If disabled, changes will be applied to production",

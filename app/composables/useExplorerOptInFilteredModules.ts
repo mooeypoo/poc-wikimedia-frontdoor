@@ -1,7 +1,7 @@
 import { computed, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { ExplorerBootstrapModule } from './useExplorerBootstrap'
-import { filterExplorerBootstrapModulesByOptIn } from '../utils/explorerModuleOptInFilter'
+import { filterExplorerBootstrapModulesByOptIn, resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
 
 interface UseExplorerOptInFilteredModulesOptions {
 	modules: Ref<ExplorerBootstrapModule[]>
@@ -83,7 +83,10 @@ export function useExplorerOptInFilteredModules( options: UseExplorerOptInFilter
 			return
 		}
 
-		const fallbackModule = visibleModules.value.find( ( moduleItem ) => !moduleItem.hasSpecError )
+		const fallbackModule = resolveFirstExplorerRailModule(
+			visibleModules.value,
+			filterOptions.value
+		)
 
 		if ( fallbackModule ) {
 			options.selectModule( fallbackModule.name, { source: 'module-select' } )

@@ -27,3 +27,22 @@ export function filterExplorerBootstrapModulesByOptIn<T extends { name: string }
 		return true
 	} )
 }
+
+/**
+ * Resolves the first selectable module in explorer module-rail order.
+ *
+ * Applies the same opt-in filter and discovery ordering as {@link filterExplorerBootstrapModulesByOptIn},
+ * then returns the first module without a spec fetch error.
+ *
+ * @param modules - Ordered bootstrap modules from discovery.
+ * @param filterOptions - Opt-in checkbox values (defaults match initial explorer load).
+ * @returns First healthy module shown on the rail, or undefined when none qualify.
+ */
+export function resolveFirstExplorerRailModule<T extends { name: string; hasSpecError: boolean }>(
+	modules: T[],
+	filterOptions: ExplorerModuleOptInFilterOptions
+): T | undefined {
+	const railOrderedModules = filterExplorerBootstrapModulesByOptIn( modules, filterOptions )
+
+	return railOrderedModules.find( ( moduleItem ) => !moduleItem.hasSpecError )
+}
