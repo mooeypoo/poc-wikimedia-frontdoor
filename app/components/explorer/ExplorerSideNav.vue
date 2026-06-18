@@ -6,6 +6,10 @@ import type { ExplorerMode } from '../../composables/useEnterpriseExplorer'
 /**
  * ExplorerSideNav — left-hand section navigation for the API Explorer page.
  *
+ * @deprecated Superseded by `ShellSidePanelNav` + `usePageSectionNav()` in
+ * `app/layouts/default.vue`. Explorer routing and active state now live in
+ * `usePageSectionNav()`; this component is retained as a reference implementation.
+ *
  * Renders section links from config; items with enabled=false are hidden.
  * Items with a mode field render as NuxtLinks pointing at the URL that
  * encodes that mode (community → /explorer, enterprise modes → sub-routes,

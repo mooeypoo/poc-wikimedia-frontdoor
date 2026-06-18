@@ -137,7 +137,7 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		navEntry: {
 			target: 'primary',
 			messageKey: 'nav-remote-md',
-			navPosition: 'after:about'
+			navPosition: 'after:get-help'
 		}
 	}
 ]

@@ -3,6 +3,10 @@
  *
  * Static section structure for the API Explorer left-hand navigation menu.
  * Labels are resolved at runtime via banana-i18n using each entry's messageKey.
+ *
+ * Items with a `mode` field are wired to real routes by `usePageSectionNav()`
+ * (`pathForExplorerMode` in `app/utils/explorerRoute.ts`). Active state is derived
+ * from the current route — do not set `isActive` in this config.
  */
 
 /**

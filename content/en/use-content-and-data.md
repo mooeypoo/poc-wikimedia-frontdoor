@@ -1,6 +1,6 @@
 ---
-title: Learn
-description: Step-by-step tutorials and reference guides for working with the Wikimedia REST API.
+title: Use content and data
+description: Step-by-step tutorials and reference guides for working with Wikimedia content and data.
 prev:
   text: 'Home'
   link: '/'
@@ -9,7 +9,7 @@ next:
   link: '/explorer'
 ---
 
-# Learn
+# Use content and data
 
 This page is a **feature demonstration** for all required markdown rendering capabilities.
 Each section exercises one feature. Inline notes explain the implementation status.
@@ -56,7 +56,7 @@ links are left unchanged.
 
 - [Wikimedia REST API documentation](https://api.wikimedia.org/wiki/Documentation) — external
 - [MDN: Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) — external
-- [Learn](/learn) — internal (no icon expected)
+- [Use content and data](/use-content-and-data) — internal (no icon expected)
 - [API Explorer](/explorer) — internal (no icon expected)
 
 ---

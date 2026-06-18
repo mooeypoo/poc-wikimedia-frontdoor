@@ -7,9 +7,8 @@ import type { ExplorerMode } from './useEnterpriseExplorer'
  *
  * The URL is the single source of truth — community lives at `/explorer`,
  * Enterprise modes live at `/explorer/enterprise` and
- * `/explorer/enterprise-limited`. Side-nav navigation is driven by NuxtLink
- * (see `ExplorerSideNav.vue`), so consumers only need to read this mode
- * to react to the active route.
+ * Side-nav navigation is driven by `ShellSidePanelNav` + `usePageSectionNav()`;
+ * consumers read this mode to react to the active route.
  *
  * @returns The reactive explorer mode.
  */

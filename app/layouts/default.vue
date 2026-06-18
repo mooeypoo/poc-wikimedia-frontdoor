@@ -1,84 +1,41 @@
 <script setup lang="ts">
-import {
-	CdxButton,
-	CdxIcon,
-	CdxSearchInput,
-	CdxSelect
-} from '@wikimedia/codex'
-import { cdxIconConfigure, cdxIconLanguage, cdxIconSearch } from '@wikimedia/codex-icons'
+import { CdxIcon } from '@wikimedia/codex'
+import { cdxIconArrowNext } from '@wikimedia/codex-icons'
+import { API_EXPLORER_NAVIGATION_PATH } from '../../config/mainNavigation'
+import { SUPPORTED_INTERFACE_LOCALES } from '../../config/interfaceLocales'
 import { useDirection } from '../composables/useDirection'
-import { useMainNavigationLinks } from '../composables/useMainNavigationLinks'
-import { useContentSearch } from '../composables/useContentSearch'
-import { useExplorerMode } from '../composables/useExplorerMode'
+import { usePageSectionNav } from '../composables/usePageSectionNav'
+import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
+import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigationBreadcrumbs'
+import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
+import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMenu'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
  * Default layout — the Front Door application shell.
  *
- * Sets the <html> dir attribute and provides the shared header, main
- * content slot, and footer inside the site-wide 24-column grid. The site
- * brand lives in the left column; the header holds search and utility
- * controls with primary navigation directly below.
+ * Sets the <html> dir attribute and provides a full-viewport-width header band
+ * plus the two-panel page grid below. The shell locks to the viewport; the start
+ * column and main content band each scroll independently when content overflows.
+ * The start column panel is always mounted (empty when a route has no section links).
+ *
+ * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
  */
 
 const { direction } = useDirection()
-const { explorerMode } = useExplorerMode()
 const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
 const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
-const { mainNavigationLinks, getStartedPath } = useMainNavigationLinks()
-
-interface PickerMenuItem {
-	label: string
-	value: string
-}
-
-const supportedInterfaceLocales = [ 'en', 'es', 'fr', 'he', 'fa' ] as const
-const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
-
-const searchQuery = ref( '' )
-const isSearchPanelOpen = ref( false )
-
+const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
-	localeResults,
-	fallbackResults,
-	allLocaleResultGroups,
-	isAllLocalesMode,
-	activateAllLocalesSearch,
-	hasQuery
-} = useContentSearch( searchQuery, $interfaceLocale )
+	navigationLabel: pageSectionNavigationLabel,
+	navigationSections: pageSectionNavigationSections
+} = usePageSectionNav()
 
-watch( hasQuery, ( newHasQuery ) => {
-	if ( newHasQuery ) {
-		isSearchPanelOpen.value = true
-	}
-} )
-
-function handleSearchFocusIn(): void {
-	if ( hasQuery.value ) {
-		isSearchPanelOpen.value = true
-	}
-}
-
-function handleSearchAreaFocusOut( event: FocusEvent ): void {
-	const container = event.currentTarget as HTMLElement
-	if ( !container.contains( event.relatedTarget as Node ) ) {
-		isSearchPanelOpen.value = false
-	}
-}
-
-function handleResultSelect( _resultId: string ): void {
-	searchQuery.value = ''
-	isSearchPanelOpen.value = false
-}
-
-// <option>-like rendering targets cannot include HTML tags, so FSI/PDI
-// markers isolate labels and keep mixed-direction names stable.
-function isolateLabel( label: string ): string {
-	return `\u2068${ label }\u2069`
-}
+const supportedInterfaceLocales = SUPPORTED_INTERFACE_LOCALES
+const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
 
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
@@ -132,23 +89,74 @@ watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
 	}
 }, { immediate: true } )
 
-const languageMenuItems = computed<PickerMenuItem[]>( () => {
-	return supportedInterfaceLocales.map( ( localeCode ) => ( {
-		value: localeCode,
-		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) ),
-		icon: cdxIconLanguage
-	} ) )
-} )
-
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
-const footerLabel = computed( () => $bananaI18n( 'footer-title' ) )
-const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
-const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
-const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
-const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
-const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
-const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
+const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
+const collapsedNavigationRegionLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-label' ) )
+const collapsedNavigationMenuButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-button-label' ) )
+const collapsedNavMenuOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-overlay-label' ) )
+const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-back-button-label' ) )
+
+const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
+const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
+
+const { isNavigationCollapsed } = useShellNavigationCollapse(
+	primaryNavRowRef,
+	expandedNavContentRef
+)
+
+const hasSectionNavigation = computed( () => pageSectionNavigationSections.value.length > 0 )
+
+const {
+	isCollapsedNavMenuOpen,
+	collapsedNavMenuView,
+	closeCollapsedNavMenu,
+	toggleCollapsedNavMenu,
+	showCollapsedNavMenuPrimaryView
+} = useShellCollapsedNavMenu( {
+	isNavigationCollapsed,
+	hasSectionNavigation
+} )
+
+const {
+	primaryNavigationBreadcrumbLabel,
+	sectionNavigationBreadcrumbLabel,
+	hasSectionNavigationBreadcrumb
+} = useShellNavigationBreadcrumbs()
+
+/**
+ * Navigates to the primary nav destination when a header tab is selected.
+ *
+ * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
+ */
+function handlePrimaryNavigationSelect( navigationId: string ): void {
+	const navigationLink = mainNavigationLinks.value.find(
+		( link ) => link.id === navigationId
+	)
+
+	if ( navigationLink ) {
+		navigateTo( navigationLink.to )
+	}
+}
+
+/**
+ * Navigates from the collapsed overlay primary list and closes the overlay.
+ *
+ * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
+ */
+function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): void {
+	handlePrimaryNavigationSelect( navigationId )
+	closeCollapsedNavMenu()
+}
+
+/**
+ * Navigates to the API Explorer from the collapsed overlay and closes it.
+ */
+function handleCollapsedNavMenuApiExplorerSelect(): void {
+	navigateTo( API_EXPLORER_NAVIGATION_PATH )
+	closeCollapsedNavMenu()
+}
+
 useHead( {
 	htmlAttrs: {
 		dir: direction,
@@ -161,133 +169,138 @@ useHead( {
 <template>
 	<div
 		class="frontdoor-shell"
-		:class="{ 'frontdoor-shell--explorer': isExplorerRoute }"
+		:class="{
+			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--nav-collapsed': isNavigationCollapsed
+		}"
 	>
+		<div class="frontdoor-shell__chrome-band">
+			<div class="frontdoor-shell__chrome-inner">
+				<div class="frontdoor-shell__chrome">
+					<div class="frontdoor-shell__chrome-utility-band">
+						<div class="frontdoor-shell__chrome-start frontdoor-shell__chrome-start--brand">
+							<header class="frontdoor-shell__header">
+								<SharedShellHeaderBrand />
+							</header>
+						</div>
+						<div class="frontdoor-shell__chrome-main">
+							<SharedShellHeaderUtilityActions
+								v-model:selected-interface-locale="selectedInterfaceLocale"
+							/>
+						</div>
+					</div>
+					<div class="frontdoor-shell__chrome-start frontdoor-shell__chrome-start--nav">
+						<div
+							ref="primaryNavRowRef"
+							class="frontdoor-shell__primary-nav-row"
+						>
+							<div
+								class="frontdoor-shell__primary-nav-expanded"
+								:class="{
+									'frontdoor-shell__primary-nav-expanded--measure-only': isNavigationCollapsed
+								}"
+							>
+								<div
+									ref="expandedNavContentRef"
+									class="frontdoor-shell__primary-nav-expanded__content"
+								>
+									<SharedShellPrimaryNav
+										class="frontdoor-shell__primary-nav"
+										:aria-label="primaryNavigationLabel"
+										:navigation-links="mainNavigationLinks"
+										:active-navigation-id="activeNavigationId"
+										@navigation-select="handlePrimaryNavigationSelect"
+									/>
+									<span class="frontdoor-shell__api-explorer-link-wrap">
+										<NuxtLink
+											:to="API_EXPLORER_NAVIGATION_PATH"
+											class="frontdoor-shell__api-explorer-link"
+											:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
+										>
+											{{ apiExplorerLinkLabel }}
+											<CdxIcon
+												:icon="cdxIconArrowNext"
+												:flip-for-rtl="true"
+												class="frontdoor-shell__api-explorer-link-icon"
+											/>
+										</NuxtLink>
+									</span>
+								</div>
+							</div>
+							<SharedShellCollapsedNavigation
+								v-if="isNavigationCollapsed"
+								:region-label="collapsedNavigationRegionLabel"
+								:menu-button-label="collapsedNavigationMenuButtonLabel"
+								:primary-navigation-label="primaryNavigationBreadcrumbLabel"
+								:section-navigation-label="sectionNavigationBreadcrumbLabel"
+								:has-section-navigation-breadcrumb="hasSectionNavigationBreadcrumb"
+								:is-menu-open="isCollapsedNavMenuOpen"
+								@menu-toggle="toggleCollapsedNavMenu"
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<SharedShellCollapsedNavMenuOverlay
+			v-if="isNavigationCollapsed && isCollapsedNavMenuOpen"
+			:overlay-label="collapsedNavMenuOverlayLabel"
+			:back-button-label="collapsedNavMenuBackButtonLabel"
+			:primary-navigation-label="primaryNavigationBreadcrumbLabel"
+			:primary-navigation-list-label="primaryNavigationLabel"
+			:api-explorer-link-label="apiExplorerLinkLabel"
+			:menu-view="collapsedNavMenuView"
+			:main-navigation-links="mainNavigationLinks"
+			:active-navigation-id="activeNavigationId"
+			:is-explorer-route="isExplorerRoute"
+			:section-navigation-label="pageSectionNavigationLabel"
+			:section-navigation-sections="pageSectionNavigationSections"
+			@close="closeCollapsedNavMenu"
+			@back="showCollapsedNavMenuPrimaryView"
+			@primary-navigation-select="handleCollapsedNavMenuPrimaryNavigationSelect"
+			@api-explorer-select="handleCollapsedNavMenuApiExplorerSelect"
+		/>
+
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>
-				<div class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start frontdoor-shell__side-nav">
-					<div class="frontdoor-shell__brand-area">
-						<NuxtLink
-							:to="getStartedPath"
-							class="frontdoor-shell__brand"
-						>
-							{{ applicationTitle }}
-						</NuxtLink>
-					</div>
-					<ExplorerSideNav
-					v-if="isExplorerRoute"
-					:active-mode="explorerMode"
-				/>
-				</div>
-			</template>
-
-			<template #end>
 				<div
-					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
-					:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+					class="frontdoor-shell__side-panel frontdoor-shell__side-panel--start shell-side-panel shell-side-panel--start"
+					:aria-hidden="isNavigationCollapsed || undefined"
+					:inert="isNavigationCollapsed || undefined"
 				>
-					<div
-						v-if="isExplorerRoute"
-						id="explorer-end-panel"
-						class="frontdoor-shell__explorer-end"
+					<SharedShellSidePanelNav
+						v-if="pageSectionNavigationSections.length > 0"
+						:aria-label="pageSectionNavigationLabel"
+						:sections="pageSectionNavigationSections"
 					/>
 				</div>
 			</template>
 
-			<div class="frontdoor-shell__content">
-				<div class="frontdoor-shell__chrome">
-					<header class="frontdoor-shell__header">
-						<div class="frontdoor-shell__header-inner">
+			<div class="frontdoor-shell__body-scroll">
+				<div class="frontdoor-shell__body-columns">
+					<div class="frontdoor-shell__content">
+						<main class="frontdoor-shell__main">
 							<div
-								class="frontdoor-shell__search-wrap"
-								@focusout="handleSearchAreaFocusOut"
+								:key="route.path"
+								class="frontdoor-shell__page-slot"
 							>
-								<CdxSearchInput
-									v-model="searchQuery"
-									class="frontdoor-shell__search"
-									dir="auto"
-									:use-button="false"
-									:placeholder="searchPlaceholderLabel"
-									@focusin="handleSearchFocusIn"
-								/>
-								<div
-									v-if="isSearchPanelOpen && hasQuery"
-									class="frontdoor-shell__search-panel"
-									@mousedown.prevent
-								>
-									<SharedSearchResults
-										:locale-results="localeResults"
-										:fallback-results="fallbackResults"
-										:all-locale-result-groups="allLocaleResultGroups"
-										:is-all-locales-mode="isAllLocalesMode"
-										:active-locale="$interfaceLocale"
-										:search-query="searchQuery"
-										@result-select="handleResultSelect"
-										@activate-all-locales="activateAllLocalesSearch"
-									/>
-								</div>
+								<slot />
 							</div>
-							<div class="frontdoor-shell__utilities">
-								<CdxButton
-									class="frontdoor-shell__search-toggle"
-									:aria-label="searchButtonLabel"
-									disabled
-								>
-									<CdxIcon :icon="cdxIconSearch" />
-								</CdxButton>
-								<CdxButton
-									class="frontdoor-shell__settings-button"
-									:aria-label="settingsButtonLabel"
-									disabled
-								>
-									<CdxIcon :icon="cdxIconConfigure" />
-								</CdxButton>
-								<CdxSelect
-									v-model:selected="selectedInterfaceLocale"
-									class="frontdoor-shell__language-select"
-									:menu-items="languageMenuItems"
-									:default-icon="cdxIconLanguage"
-									:default-label="interfaceLanguagePlaceholder"
-									:aria-label="interfaceLanguageLabel"
-								/>
-							</div>
-							<a
-								href="#"
-								class="frontdoor-shell__login-link"
-								@click.prevent
-							>
-								{{ loginLinkLabel }}
-							</a>
-						</div>
-					</header>
-					<nav
-						class="frontdoor-shell__main-nav"
-						:aria-label="primaryNavigationLabel"
-					>
-						<NuxtLink
-							v-for="navigationLink in mainNavigationLinks"
-							:key="navigationLink.id"
-							:to="navigationLink.to"
-						>
-							{{ navigationLink.label }}
-						</NuxtLink>
-					</nav>
-				</div>
-
-				<main class="frontdoor-shell__main">
-					<div
-						:key="route.path"
-						class="frontdoor-shell__page-slot"
-					>
-						<slot />
+						</main>
+						<SharedShellSiteFooter />
 					</div>
-				</main>
-
-				<footer class="frontdoor-shell__footer">
-					<p class="frontdoor-shell__footer-text">
-						{{ footerLabel }}
-					</p>
-				</footer>
+					<div
+						class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
+						:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+					>
+						<div
+							v-if="isExplorerRoute"
+							id="explorer-end-panel"
+							class="frontdoor-shell__explorer-end"
+						/>
+					</div>
+				</div>
 			</div>
 		</SharedPageGrid>
 	</div>
@@ -295,175 +308,357 @@ useHead( {
 
 <style scoped>
 .frontdoor-shell {
-	min-block-size: 100vh;
+	display: flex;
+	flex-direction: column;
+	block-size: 100vh;
+	block-size: 100dvh;
+	overflow: hidden;
 }
 
 .frontdoor-shell__page-grid {
-	min-block-size: 100vh;
+	flex: 1 1 auto;
+	min-block-size: 0;
+}
+
+/*
+ * Start column edge: muted inline-end border on the scrollport panel (not the grid track).
+ * Keeps the border and scrollbar on one element so a permanent track gutter does not
+ * stack beside the panel edge. See shell-start-nav-scroll.css; DESIGN_REQUIREMENTS.md.
+ */
+.frontdoor-shell__side-panel--start {
+	border-inline-end: 1px solid var( --border-color-muted );
+	box-sizing: border-box;
+}
+
+/* Zero-width collapsed track must not paint a 1px edge. */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__side-panel--start {
+	border-inline-end-width: 0;
+}
+
+.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+	box-sizing: border-box;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__page-grid {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		align-items: stretch;
+	}
+
+.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__side-panel--start {
+		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+		display: flex;
+		flex-direction: column;
+		align-self: stretch;
+	}
+
+	/*
+	 * Start column scrollport: section nav scrolls independently when taller than
+	 * the viewport body (Discord-style docs sidebar). Overflow + scrollbar styling
+	 * live in shell-start-nav-scroll.css (single scrollport per breakpoint).
+	 */
+	.frontdoor-shell__side-panel--start {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		/* Fixed drawer width — track clips during open; do not use 100% of the track. */
+		inline-size: var( --fd-layout-start-panel-inline-size );
+		min-inline-size: var( --fd-layout-start-panel-inline-size );
+		max-inline-size: var( --fd-layout-start-panel-inline-size );
+		/*
+		 * Block-axis shrink must stay enabled so this element becomes the scrollport
+		 * when section nav exceeds the viewport body. Width is fixed above — not via flex-shrink.
+		 */
+		flex-shrink: 1;
+	}
+}
+
+/*
+ * Full-viewport header band. Horizontal inset matches `PageGrid` via
+ * `--fd-layout-page-margin-inline-start`; brand/tabs use the same column grid
+ * as the start panel (tablet+). Bottom edge: `--border-color-muted` (same token
+ * as start-column borders and site footer). Figma Navigation 225:4548.
+ */
+.frontdoor-shell__chrome-band {
+	position: relative;
+	z-index: 10;
+	flex: 0 0 auto;
+	inline-size: 100vw;
+	margin-inline-start: calc( 50% - 50vw );
+	background-color: var( --background-color-base );
+	border-block-end: 1px solid var( --border-color-muted );
+}
+
+.frontdoor-shell__chrome-inner {
+	box-sizing: border-box;
+	inline-size: 100%;
+	margin-inline: 0;
+	/*
+	 * Symmetric viewport insets — utilities align with the brand column inset.
+	 * (Body band below still bleeds inline-end via `.frontdoor-shell__body-scroll`.)
+	 */
+	padding-inline-start: var( --fd-layout-page-margin-inline-start );
+	padding-inline-end: var( --fd-layout-page-margin-inline-start );
+}
+
+.frontdoor-shell__chrome {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-150 );
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: 0;
+	min-inline-size: 0;
+}
+
+/*
+ * Row 1 (mobile): brand and utility actions on one flex row. Tablet+: `display: contents`
+ * so brand and utilities land in the same grid columns as start panel / body band.
+ */
+.frontdoor-shell__chrome-utility-band {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var( --spacing-150 );
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome-start {
+	min-inline-size: 0;
+}
+
+.frontdoor-shell__chrome-start--brand {
+	padding-inline-start: var( --spacing-75 );
+}
+
+/* Logo aligns with collapsed hamburger row — no extra inset on the start column track. */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__chrome-start--brand {
+	padding-inline-start: 0;
+}
+
+.frontdoor-shell__chrome-start--nav {
+	padding-inline-start: 0;
+}
+
+.frontdoor-shell__chrome-main {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: flex-end;
+	min-inline-size: 0;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell__chrome {
+		display: grid;
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+		grid-template-rows: auto auto;
+	}
+
+	.frontdoor-shell__chrome-utility-band {
+		display: contents;
+	}
+
+	.frontdoor-shell__chrome-start--brand {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.frontdoor-shell__chrome-main {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.frontdoor-shell__chrome-start--nav {
+		/* Full header width — tabs need more than the start column track (281px). */
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
 }
 
 .frontdoor-shell__content {
 	display: flex;
 	flex-direction: column;
-	min-block-size: 100vh;
-	min-inline-size: 0;
-}
-
-.frontdoor-shell__chrome {
-	position: relative;
-	z-index: 10;
-	background-color: var( --background-color-base );
-}
-
-.frontdoor-shell__header {
-	block-size: 4rem;
-	min-block-size: 4rem;
-	max-block-size: 4rem;
-}
-
-.frontdoor-shell__header-inner {
-	container-type: inline-size;
-	container-name: frontdoor-header;
-	display: flex;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: var( --spacing-100 );
-	block-size: 100%;
-	min-inline-size: 0;
-}
-
-.frontdoor-shell__search-wrap {
-	position: relative;
-	flex: 1 1 0;
-	min-inline-size: 0;
-	max-inline-size: 36rem;
-	display: flex;
-	align-items: center;
-}
-
-.frontdoor-shell__search {
 	flex: 1 1 auto;
 	min-inline-size: 0;
-	inline-size: 100%;
+	min-block-size: 0;
+	/* Footer pin on short pages — scroll lives on `.frontdoor-shell__body-scroll`. */
+	min-block-size: 100%;
 }
 
-/* Codex sets min-width: 256px on .cdx-text-input; override so the field can shrink
-   and the container query can switch to the icon-only control instead of wrapping. */
-.frontdoor-shell__search:deep( .cdx-text-input ) {
-	min-inline-size: 0;
-	inline-size: 100%;
-}
-
-.frontdoor-shell__search-panel {
-	position: absolute;
-	inset-block-start: 100%;
-	inset-inline-start: 0;
-	inset-inline-end: 0;
-	z-index: 20;
-	background-color: var( --background-color-base );
-	border: 1px solid var( --border-color-base );
-	border-radius: var( --border-radius-base );
-	box-shadow: var( --box-shadow-drop-medium );
-	max-block-size: min( 24rem, 80dvh );
+/*
+ * Main + end body scrollport: extends to the viewport inline-end; scrollbar sits on
+ * the browser edge (Discord-style). Content inset keeps readable margins on narrow viewports.
+ */
+.frontdoor-shell__body-scroll {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	min-block-size: 100%;
 	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding-inline-end: var( --fd-layout-page-margin );
 }
 
-.frontdoor-shell__search-toggle {
-	display: none;
-	flex-shrink: 0;
-}
-
-.frontdoor-shell__utilities {
-	display: flex;
-	align-items: center;
-	gap: var( --spacing-100 ); /* 16px between search, settings, and language controls */
-	flex-shrink: 0;
-	margin-inline-start: auto;
-}
-
-/* Collapse when the header cannot fit the search field (Codex minimum 256px). */
-@container frontdoor-header ( max-width: var( --max-width-breakpoint-mobile ) ) {
-	.frontdoor-shell__search-wrap {
-		display: none;
-	}
-
-	.frontdoor-shell__search-toggle {
-		display: inline-flex;
-	}
-}
-
-.frontdoor-shell__language-select {
-	inline-size: min( 12rem, 100% );
-	flex-shrink: 0;
-}
-
-.frontdoor-shell__login-link {
-	flex-shrink: 0;
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-	white-space: nowrap;
-}
-
-.frontdoor-shell__side-nav {
-	display: flex;
-	flex-direction: column;
-	padding-inline: var( --spacing-100 );
+.frontdoor-shell__body-columns {
+	display: grid;
+	grid-template-columns: minmax( 0, 1fr );
+	align-items: start;
 	min-block-size: 100%;
 	min-inline-size: 0;
 }
 
-/* Align the side nav first row with .frontdoor-shell__main-nav (no extra gap below the brand). */
-.frontdoor-shell--explorer .frontdoor-shell__side-nav {
-	gap: 0;
+.frontdoor-shell__side-panel--end {
+	display: none;
 }
 
-.frontdoor-shell__main-nav {
+@media screen and ( min-width: 1120px ) {
+	.frontdoor-shell__body-columns {
+		grid-template-columns: minmax( 0, 4fr ) minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+	}
+
+	.frontdoor-shell__side-panel--end {
+		display: flex;
+	}
+}
+
+@media screen and ( min-width: 1680px ) {
+	/*
+	 * Lock main:end content width at desktop wide; the scrollport still extends to
+	 * the viewport inline-end so the gutter/margin zone scrolls central content too.
+	 */
+	.frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-body-columns-max-inline-size );
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	/* Collapsed start nav: body band grows into the former start-panel + gutter space. */
+	.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
+	}
+}
+
+.frontdoor-shell__header {
+	min-inline-size: 0;
+}
+
+/*
+ * Figma Header/MainNav row: quiet tabs plus a separate API Explorer link with
+ * arrow icon (not a tab). Link sits immediately after the last tab with 24px gap.
+ */
+.frontdoor-shell__primary-nav-row {
+	position: relative;
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var( --spacing-100 ); /* 16px between nav items */
-	padding-block: var( --spacing-100 );
+	align-items: flex-end;
+	flex-wrap: nowrap;
+	min-inline-size: 0;
 }
 
-.frontdoor-shell__main-nav a {
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
+.frontdoor-shell__primary-nav-expanded {
+	min-inline-size: 0;
 }
 
-.frontdoor-shell__brand-area {
-	block-size: 4rem;
-	min-block-size: 4rem;
-	max-block-size: 4rem;
-	display: flex;
-	align-items: center;
+.frontdoor-shell__primary-nav-expanded__content {
+	display: inline-flex;
+	align-items: flex-end;
+	flex-wrap: nowrap;
+	gap: var( --spacing-150 );
+	inline-size: max-content;
+	max-inline-size: none;
 }
 
-.frontdoor-shell__brand {
-	font-size: var( --font-size-large );
-	font-weight: var( --font-weight-bold );
+.frontdoor-shell__primary-nav-expanded--measure-only {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.frontdoor-shell__primary-nav {
+	flex: 0 0 auto;
+	min-inline-size: 0;
+	inline-size: auto;
+	max-inline-size: 100%;
+}
+
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav ),
+.frontdoor-shell__primary-nav:deep( .shell-primary-nav__tabs ) {
+	inline-size: auto;
+}
+
+.frontdoor-shell__api-explorer-link-wrap {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+
+.frontdoor-shell__api-explorer-link {
 	display: inline-flex;
 	align-items: center;
-	line-height: var( --line-height-xx-small );
-	max-block-size: 100%;
-	overflow: hidden;
+	gap: var( --spacing-25 );
+	padding-block-end: calc( var( --spacing-25 ) + var( --spacing-75 ) );
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	white-space: nowrap;
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.frontdoor-shell__api-explorer-link:hover {
+	text-decoration: underline;
+}
+
+.frontdoor-shell__api-explorer-link--active {
+	font-weight: var( --font-weight-bold );
+}
+
+.frontdoor-shell__api-explorer-link-icon {
+	color: var( --color-progressive );
+}
+
+.frontdoor-shell__side-nav,
+.shell-side-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.shell-side-panel {
+	padding-block-start: var( --spacing-150 );
+	/* Inline-start inset is `--fd-layout-page-margin` on `.fd-page-grid` — not duplicated here. */
+	padding-inline-end: var( --spacing-75 );
+	inline-size: 100%;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+/*
+ * Scroll-end inset (--spacing-200) lives on each breakpoint scrollport via ::after
+ * in shell-start-nav-scroll.css — not padding-block-end here (nested flex scrollports).
+ */
+.frontdoor-shell--explorer .shell-side-panel {
+	gap: var( --spacing-50 );
 }
 
 .frontdoor-shell__main {
-	flex: 1;
+	flex: 1 1 auto;
 	min-inline-size: 0;
 	padding-block: var( --spacing-200 );
 }
 
-.frontdoor-shell__footer {
-	margin-block-start: auto;
-	padding-block: var( --spacing-100 );
-	background-color: var( --background-color-neutral-subtle );
-	font-size: var( --font-size-small );
-}
-
-.frontdoor-shell__footer-text {
-	margin: 0;
-	text-align: center;
+.frontdoor-shell__page-grid :deep( .fd-page-grid__body ) {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 0;
+	overflow: hidden;
 }
 
 /*
@@ -487,28 +682,22 @@ useHead( {
 	}
 
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		border-inline-end: 1px solid var( --border-color-subtle );
 		align-self: stretch;
+		min-block-size: 0;
 	}
 
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ),
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		min-block-size: 100%;
-	}
-
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__end ) {
-		align-self: stretch;
-		min-inline-size: 0;
+	.frontdoor-shell__page-grid :deep( .fd-page-grid__body ) {
+		min-block-size: 0;
 	}
 
 	.frontdoor-shell__side-panel {
-		min-block-size: 100%;
 		min-inline-size: 0;
 	}
 
 	.frontdoor-shell__side-panel--end:not( .frontdoor-shell__side-panel--active ) {
-		/* Reserved 4-column panel for future page-level navigation. */
+		/* Reserved end column — empty area still participates in body scroll hit target. */
 		background-color: var( --background-color-base );
+		min-block-size: 100%;
 	}
 
 	.frontdoor-shell--explorer .frontdoor-shell__explorer-end {
@@ -517,12 +706,6 @@ useHead( {
 		align-items: stretch;
 		align-self: start;
 		min-inline-size: 0;
-	}
-}
-
-@media screen and ( min-width: 640px ) and ( max-width: 1119px ) {
-	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		border-inline-end: 1px solid var( --border-color-subtle );
 	}
 }
 </style>
