@@ -337,8 +337,12 @@ useHead( {
 	box-sizing: border-box;
 	inline-size: 100%;
 	margin-inline: 0;
+	/*
+	 * Symmetric viewport insets — utilities align with the brand column inset.
+	 * (Body band below still bleeds inline-end via `.frontdoor-shell__body-scroll`.)
+	 */
 	padding-inline-start: var( --fd-layout-page-margin-inline-start );
-	padding-inline-end: var( --fd-layout-page-margin );
+	padding-inline-end: var( --fd-layout-page-margin-inline-start );
 }
 
 .frontdoor-shell__chrome {

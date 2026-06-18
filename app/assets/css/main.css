@@ -15,11 +15,14 @@
 @import './page-grid.css';
 @import './shell-end-panel-nav.css';
 @import './shell-start-nav-reveal.css';
+@import './shell-primary-nav-overrides.css';
 @import './explorer-codex-overrides.css';
 
 :root {
 	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
 	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
+	/* Figma brand wordmark — Montserrat loaded via nuxt.config.ts (config/brandTypography.ts). */
+	--font-family-brand-wordmark: 'Montserrat', sans-serif;
 }
 
 html,

@@ -68,11 +68,21 @@ const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-lab
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
-const interfaceLanguagePlaceholder = computed( () => $bananaI18n( 'interface-language-placeholder' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
 const selectedLanguageCodeLabel = computed( () => {
 	return selectedInterfaceLocale.value.toUpperCase()
+} )
+
+/**
+ * Resolved label for the active interface locale — never falls back to the select placeholder.
+ *
+ * @returns Isolated display label for `selectedInterfaceLocale`.
+ */
+const selectedLanguageDisplayLabel = computed( () => {
+	return isolateLabel(
+		$bananaI18n( `interface-language-${ selectedInterfaceLocale.value }` )
+	)
 } )
 
 const languageMenuItems = computed<PickerMenuItem[]>( () => {
@@ -189,10 +199,10 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 				'shell-header-utility-actions__language-select--compact': isUtilityCollapsed
 			}"
 			:menu-items="languageMenuItems"
-			:default-label="interfaceLanguagePlaceholder"
+			:default-label="selectedLanguageDisplayLabel"
 			:aria-label="interfaceLanguageLabel"
 		>
-			<template #label="{ selectedMenuItem, defaultLabel }">
+			<template #label>
 				<span
 					class="shell-header-utility-actions__language-select-label"
 					:class="{
@@ -210,7 +220,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 						v-else
 						class="shell-header-utility-actions__language-select-text"
 					>
-						{{ selectedMenuItem?.label ?? defaultLabel }}
+						{{ selectedLanguageDisplayLabel }}
 					</span>
 				</span>
 			</template>

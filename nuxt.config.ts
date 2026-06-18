@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
+import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
@@ -12,6 +13,15 @@ export default defineNuxtConfig( {
 		'@pinia/nuxt',
 		'@nuxtjs/i18n'
 	],
+	app: {
+		head: {
+			link: [
+				{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+				{ rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
+				{ rel: 'stylesheet', href: BRAND_WORDMARK_FONT_STYLESHEET_URL }
+			]
+		}
+	},
 	devtools: { enabled: true },
 	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
 	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.

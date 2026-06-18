@@ -1,7 +1,7 @@
 {
   "app-title": "פורטל המפתחים של ויקימדיה",
   "brand-wordmark-wikimedia": "WIKIMEDIA",
-  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
+  "brand-wordmark-developer-portal": "פורטל המפתחים",
   "nav-get-started": "תחילת העבודה",
   "nav-use-content-and-data": "Use content and data",
   "nav-tools-and-bots": "Tools and bots",
@@ -28,7 +28,6 @@
   "interface-language-he": "עברית",
   "interface-language-fa": "פרסית",
   "footer-aria-label": "כותרת תחתונה של האתר",
-  "footer-brand-wordmark": "WIKIMEDIA DEVELOPER PORTAL",
   "footer-privacy-policy": "מדיניות פרטיות",
   "footer-terms-of-use": "תנאי שימוש",
   "footer-policy-nav-label": "קישורי מדיניות בכותרת התחתונה",

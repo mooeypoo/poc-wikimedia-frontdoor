@@ -12,20 +12,21 @@ import {
  * matches the main column width (same as central page content). Tablet and desktop:
  * does not extend into the end panel or under the start navigation column.
  *
- * Brand lockup uses the 14px Wikimedia mark and a single-line banana wordmark (not the
- * Figma horizontal 227×14px footer logo asset yet). Legal copy includes outbound links
- * to Foundation policy pages and the CC BY-SA license deed (`config/siteFooter.ts`).
+ * Brand lockup uses the 14px Wikimedia mark and a single-line banana wordmark built from
+ * `brand-wordmark-wikimedia` + `brand-wordmark-developer-portal` (same translatable keys as
+ * the header) in Montserrat. Not the Figma horizontal 227×14px footer logo asset yet.
+ * Legal copy includes outbound links to Foundation policy pages and the CC BY-SA license
+ * deed (`config/siteFooter.ts`).
  *
  * **Spacing:** `padding-block-start: --spacing-150` (24px), `padding-block-end: --spacing-300`
  * (48px) — 48px from legal copy to the page bottom per Figma.
- *
- * **Codex exceptions:** Figma specifies Montserrat for the footer wordmark; the shell uses
- * Codex base typography tokens until brand fonts are integrated (same as header).
  */
 const { $bananaI18n } = useNuxtApp()
 
 const footerAccessibleLabel = computed( () => $bananaI18n( 'footer-aria-label' ) )
-const footerBrandWordmarkLabel = computed( () => $bananaI18n( 'footer-brand-wordmark' ) )
+const footerBrandAccessibleLabel = computed( () => $bananaI18n( 'app-title' ) )
+const brandWordmarkTopLabel = computed( () => $bananaI18n( 'brand-wordmark-wikimedia' ) )
+const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-developer-portal' ) )
 const privacyPolicyLabel = computed( () => $bananaI18n( 'footer-privacy-policy' ) )
 const termsOfUseLabel = computed( () => $bananaI18n( 'footer-terms-of-use' ) )
 const attributionCreatedBySentence = computed( () => $bananaI18n( 'footer-attribution-sentence-created-by' ) )
@@ -43,7 +44,10 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 	>
 		<div class="shell-site-footer__inner">
 			<div class="shell-site-footer__brand-row">
-				<div class="shell-site-footer__brand">
+				<div
+					class="shell-site-footer__brand"
+					:aria-label="footerBrandAccessibleLabel"
+				>
 					<img
 						class="shell-site-footer__mark"
 						src="/images/developer-portal-logo-mark.svg"
@@ -52,7 +56,13 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 						alt=""
 						aria-hidden="true"
 					>
-					<span class="shell-site-footer__wordmark">{{ footerBrandWordmarkLabel }}</span>
+					<span
+						class="shell-site-footer__wordmark"
+						aria-hidden="true"
+					>
+						<span class="shell-site-footer__wordmark-part">{{ brandWordmarkTopLabel }}</span>
+						<span class="shell-site-footer__wordmark-part">{{ brandWordmarkBottomLabel }}</span>
+					</span>
 				</div>
 				<nav
 					class="shell-site-footer__policy-nav"
@@ -128,10 +138,18 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 }
 
 .shell-site-footer__wordmark {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25em;
+	font-family: var( --font-family-brand-wordmark );
 	font-size: var( --font-size-small );
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-xx-small );
 	letter-spacing: 0.02em;
+}
+
+.shell-site-footer__wordmark-part {
 	white-space: nowrap;
 }
 

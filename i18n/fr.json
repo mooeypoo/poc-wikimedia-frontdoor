@@ -1,7 +1,7 @@
 {
   "app-title": "Portail des développeurs Wikimedia",
   "brand-wordmark-wikimedia": "WIKIMEDIA",
-  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
+  "brand-wordmark-developer-portal": "PORTAIL DES DÉVELOPPEURS",
   "nav-get-started": "Commencer",
   "nav-use-content-and-data": "Use content and data",
   "nav-tools-and-bots": "Tools and bots",
@@ -28,7 +28,6 @@
   "interface-language-he": "Hebreu",
   "interface-language-fa": "Persan",
   "footer-aria-label": "Pied de page du site",
-  "footer-brand-wordmark": "WIKIMEDIA DEVELOPER PORTAL",
   "footer-privacy-policy": "Politique de confidentialité",
   "footer-terms-of-use": "Conditions d'utilisation",
   "footer-policy-nav-label": "Liens de politique du pied de page",

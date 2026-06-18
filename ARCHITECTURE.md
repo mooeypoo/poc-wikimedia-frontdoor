@@ -55,7 +55,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
 │   │       ├── PageGrid.vue            # Shell responsive grid wrapper
-│   │       ├── ShellHeaderBrand.vue    # Header brand (`dev-portal-logo.svg` lockup)
+│   │       ├── ShellHeaderBrand.vue    # Header brand (32px mark + Montserrat banana wordmark)
 │   │       ├── ShellSidePanelNav.vue   # Start-column section menu (when sections exist)
 │   │       └── ShellPrimaryNav.vue     # Header primary nav quiet tabs
 │   ├── composables/            # All shared logic; see Composables section below
@@ -268,7 +268,7 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 
 ### Header chrome placement
 
-The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-shell__chrome-band`: `inline-size: 100vw`, centred breakout via `margin-inline-start: calc(50% - 50vw)`). Inner content (`.frontdoor-shell__chrome-inner`) uses the **same inline-start inset** as `.fd-page-grid` via `--fd-layout-page-margin-inline-start` (full width — not independently centred with a narrower `max-inline-size`).
+The header lives **outside** `PageGrid` in a **full-bleed band** (`.frontdoor-shell__chrome-band`: `inline-size: 100vw`, centred breakout via `margin-inline-start: calc(50% - 50vw)`). Inner content (`.frontdoor-shell__chrome-inner`) uses **symmetric** `--fd-layout-page-margin-inline-start` on both inline edges (matches `PageGrid` inline-start inset; body band below still bleeds inline-end via `.frontdoor-shell__body-scroll`).
 
 **Inline-start alignment (Figma [Navigation 225:4548](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)):** At tablet+, `.frontdoor-shell__chrome` uses the **same grid columns** as `PageGrid` (`281px` start + fluid body, shared gutter). Brand sits in the start column with **`--spacing-75`** inline-start padding when expanded; padding is **removed** when `.frontdoor-shell--nav-collapsed` so the logo aligns with the collapsed hamburger row. Primary nav / collapsed breadcrumbs span **both columns** (`grid-column: 1 / -1`) **without** that inset. Utility actions sit in the body column with **`justify-content: flex-end`**. Start-column collapse and drawer expand — see **Responsive navigation collapse and start drawer** above.
 
@@ -292,8 +292,8 @@ The **start column** holds section navigation **below** the header band only. At
 |-------|----------------|---------|
 | `--fd-layout-start-panel-inline-size` | 281px (`calc(15.0625rem + 2.5rem)`) | Fixed start column width (Figma 241px + one 40px grid column) |
 | `--fd-layout-start-panel-background-color` | `#f3f3f3` | **Legacy / unused** — superseded by transparent panel + inline-end border; retained for possible revert |
-| `--fd-layout-page-margin-inline-start` | `--fd-layout-page-margin` / grows at ≥ 1680px | Shared inline-start inset: `.frontdoor-shell__chrome-inner`, `.fd-page-grid` |
-| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Inline-end inset: `.frontdoor-shell__chrome-inner`, `.frontdoor-shell__body-scroll` |
+| `--fd-layout-page-margin-inline-start` | `--fd-layout-page-margin` / grows at ≥ 1680px | Shared inset: `.frontdoor-shell__chrome-inner` (both edges), `.fd-page-grid` (inline-start) |
+| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Inline-end inset: `.frontdoor-shell__body-scroll` only |
 | `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Gaps between grid columns |
 | `--fd-layout-grid-max-inline-size` | Codex `--max-width-breakpoint-desktop` (1679px) | Whole grid cap at ≥ 1680px |
 | `--fd-layout-chrome-lock-viewport-inline-size` | 1440px (90rem) | Header width lock reference (**not Codex**) |
@@ -315,7 +315,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | Component | Role | Config / composable |
 |-----------|------|---------------------|
 | `ShellHeaderUtilityActions.vue` | Utility row (search, settings, language, log in; responsive collapse) | `useShellHeaderUtilityMenu`, `useContentSearch`, `config/headerChrome.ts` |
-| `ShellHeaderBrand.vue` | Header brand (`dev-portal-logo.svg` lockup, 32px height); links to Get started | `useMainNavigationLinks()` |
+| `ShellHeaderBrand.vue` | Header brand (32px mark + two-line banana wordmark in Montserrat); links to Get started | `useMainNavigationLinks()`, `config/brandTypography.ts` |
 | `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` |
 | `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
 | `ShellCollapsedNavigation.vue` | Collapsed header nav (hamburger + breadcrumbs) | `useShellNavigationBreadcrumbs()` |
@@ -329,11 +329,11 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge per Figma. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — Codex shows them on overflow and they **flicker on first paint** before intersection observers settle; shell chrome will use a separate responsive approach. **Tab label weight:** all labels **`--font-weight-normal`** — Codex sets **700** on every quiet-tab label by default; selected state uses colour/underline only.
 3. **Start column edge** — **`border-inline-end`** with `--border-color-subtle` on `.fd-page-grid__start` when expanded; **`border-inline-end-width: 0`** when collapsed. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
-5. **`ShellHeaderBrand`** — single **`dev-portal-logo.svg`** lockup (32px height, paths not live text) so typography does not follow user system fonts; `aria-label` from banana `app-title` only.
+5. **`ShellHeaderBrand` wordmark** — **Montserrat** via `--font-family-brand-wordmark` (Google Fonts, `config/brandTypography.ts`); banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (translatable). Mark: `developer-portal-logo-mark.svg`.
 6. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**.
-7. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`).
-8. **`ShellSiteFooter` wordmark typography** — Figma Footer **393:4639** specifies **Montserrat**; shell uses Codex **`--font-family-sans-stack`** until brand fonts ship. Header brand uses **`dev-portal-logo.svg`** (outlined paths, not live text).
-9. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px `developer-portal-logo-mark.svg` + banana `footer-brand-wordmark`** until the footer logo asset ships.
+7. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). **`default-label`** and the `#label` slot both bind the active locale name from banana-i18n (`interface-language-{code}`) — never the placeholder string. Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`). **RTL expand chevron:** known open issue when dual Codex stylesheets are active — see **RTL and BiDi** below; do not override Codex select internals.
+8. **`ShellSiteFooter` wordmark** — **Montserrat** via `--font-family-brand-wordmark`; banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (shared with header, single horizontal line).
+9. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px `developer-portal-logo-mark.svg` + translatable wordmark parts** until the footer logo asset ships.
 
 ### Interface locale picker (shell)
 
@@ -343,7 +343,7 @@ The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n
 
 | Surface | Icon | Label |
 |---------|------|-------|
-| Closed select (trigger) | Yes — `cdxIconLanguage` via `#label` slot | Selected language name or placeholder |
+| Closed select (trigger) | Yes — `cdxIconLanguage` via `#label` slot | Active locale name from banana-i18n (`interface-language-{code}`); never the placeholder string |
 | Dropdown menu items | No | Language name only |
 
 **BiDi:** Labels are passed through `isolateLabel()` so mixed-direction language names remain stable inside Codex menu rendering without HTML `<bdi>` wrappers.
@@ -370,7 +370,7 @@ Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__co
 
 **Figma deviation (width):** Figma [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) places the footer at **x=241**, **width=1199** (main + end). Implementation keeps the footer **main-column width only** — it does not span the end panel.
 
-**Codex exceptions:** (1) Figma specifies **Montserrat** for the footer wordmark; shell uses **`--font-family-sans-stack`** until brand fonts ship (same as `ShellHeaderBrand`). (2) Footer brand is **14px mark SVG + banana wordmark**, not the Figma **227×14px** horizontal lockup asset (not yet in `public/images/`).
+**Codex exceptions:** Footer brand uses **Montserrat** via `--font-family-brand-wordmark` (same as header). Footer lockup is **14px mark SVG + composed banana wordmark**, not the Figma **227×14px** horizontal lockup asset (not yet in `public/images/`).
 
 **Supersedes:** In-main-column `footer-title` band with `--background-color-neutral-subtle`; interim `PageGrid` **`footer`** slot spanning main + end (reverted); interim full-width footer bleed under the start column (reverted). Current placement: footer inside `.frontdoor-shell__content` only.
 
@@ -398,18 +398,19 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Shell column scroll | `body { overflow: hidden }`; independent `overflow-y: auto` on start panel + `.frontdoor-shell__body-scroll` (Discord-style docs reference) |
 | Primary nav tab scroll buttons | **Hidden** in `shell-primary-nav-overrides.css` — Codex overflow affordances flicker on first paint |
 | Primary nav tab label weight | **Normal** for all tabs — Codex exception; selected tab uses colour/underline only |
-| Footer brand lockup | 14px mark SVG + banana wordmark — not Figma horizontal footer logo asset yet |
+| Footer brand lockup | 14px mark + translatable `brand-wordmark-*` (Montserrat) — not Figma horizontal footer logo asset yet |
 | Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
 | Settings button | **Disabled** prototype |
 | Log in link | **Non-functional** (`@click.prevent`) |
-| Brand logo SVG | **`dev-portal-logo.svg`** — single SVG lockup in header (32px height); avoids system-font wordmark drift |
+| Brand logo SVG | **32px `developer-portal-logo-mark.svg` + banana wordmark** (Montserrat); not single-path lockup |
 | Primary nav + start column collapse | **Implemented** — `useShellNavigationCollapse`; hamburger + breadcrumbs; start drawer on expand (`shell-start-nav-reveal.css`) |
 | Collapsed hamburger menu panel | **Deferred** — button visible; click interaction not wired |
 | Header container-query search collapse | **Implemented** | `ShellHeaderUtilityActions` — 256px search min; `CdxMenuButton` for settings/language/log in |
 | Collapsed search button activation | **Deferred** | Icon visible; overlay/expansion behaviour not defined |
 | Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
 | Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
+| Header language `CdxSelect` expand chevron (RTL) | **Open** — dual LTR + RTL Codex sheets hide `.cdx-select-vue__indicator`; see **RTL and BiDi** → known open issue |
 
 Functional in prototype: interface language `CdxSelect`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing.
 
@@ -565,6 +566,8 @@ The `<html>` element's `dir` attribute is set reactively in `app/layouts/default
 
 **Disclaimer:** This relies on Codex’s global RTL mirror sheet (physical property overrides), not per-component `dir`. It is a **prototype workaround** for runtime locale switching. Third-party quiet-tabs borders are suppressed in `app/assets/css/shell-primary-nav-overrides.css`, re-imported when RTL is enabled so rules load after `codex.style-rtl.css`.
 
+**Known open issue — header `CdxSelect` expand chevron in RTL:** With `codex.style.css` always loaded and `codex.style-rtl.css` toggled on for RTL interface locales, both stylesheets apply at once. Codex mirror sheets are intended to **replace** the LTR bundle, not stack on it. For `.cdx-select-vue__indicator`, the LTR sheet sets `right: 12px` and the RTL sheet sets `left: 12px` without clearing the other edge, which hides the mandatory expand chevron in the header language select. The header also constrains the control to **8–11rem** while Codex’s default select `min-width` is **256px**, and the closed trigger uses a custom `#label` slot with an in-flow globe icon (not Codex’s `--has-start-icon` / `defaultIcon` path). **Do not add per-component overrides on Codex select internals** — attempted fixes were reverted. Revisit via one of: `codex.style-bidi.css` (single `[dir]`-aware bundle), disabling the LTR base sheet when RTL is active, adopting Codex’s documented icon-on-trigger pattern, relaxing header width, or an upstream Codex fix.
+
 **Language select remount:** Header `CdxSelect` uses `:key="direction"` so the closed control re-renders when direction changes.
 
 ### BiDi isolation rule
@@ -636,6 +639,8 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
 | `config/explorerOptIn.ts` | Codex checkbox values for beta/internal endpoint filters |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
+| `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
+| `config/siteFooter.ts` | Footer policy and license link URLs |
 
 Environment-specific values use Nuxt `runtimeConfig`:
 - `runtimeConfig.public.*` — values safe to expose to the client (OAuth client ID, API base URLs)

@@ -1,35 +1,41 @@
 /**
  * shell-primary-nav-overrides.css — Codex quiet-tabs overrides for shell chrome.
  *
- * `.frontdoor-shell__chrome` owns the single header bottom edge (Figma). Codex quiet
+ * `.frontdoor-shell__chrome-band` owns the single header bottom edge (Figma). Codex quiet
  * tabs set physical `border-bottom` on `.cdx-tabs__header`. That rule is re-applied
  * when `codex.style-rtl.css` loads dynamically — import this file after RTL load
  * (see `app/plugins/codex-rtl-styles.client.ts`) as well as from `main.css`.
  */
 
-.shell-primary-nav .cdx-tabs__header {
+.shell-primary-nav .cdx-tabs__header,
+.shell-primary-nav .cdx-tabs__list {
 	margin-inline: 0;
+	border: none !important;
 	border-block-end: none !important;
 	/* Codex third-party override — physical property required to beat codex.style*.css */
 	border-bottom: none !important;
 }
 
 /*
- * Hide Codex horizontal tab scroll buttons (prev/next scroller affordances).
- * CdxTabs shows them when the tab list overflows; on first paint they can flicker
- * before layout/intersection observers settle. Shell chrome will use a separate
- * responsive approach — scroll buttons are not wanted here.
+ * Hide Codex horizontal tab scroll buttons under all circumstances (prev/next scroller
+ * affordances). CdxTabs shows them when the tab list overflows; on first paint they can
+ * flicker before layout/intersection observers settle.
  */
 .shell-primary-nav .cdx-tabs__prev-scroller,
 .shell-primary-nav .cdx-tabs__next-scroller {
 	display: none !important;
+	visibility: hidden !important;
+	inline-size: 0 !important;
+	block-size: 0 !important;
+	overflow: hidden !important;
+	pointer-events: none !important;
 }
 
 /*
- * Tab label weight: Codex sets font-weight: 700 on all quiet-tab labels.
+ * Tab label weight: Codex sets font-weight: 700 on quiet-tab labels.
  * Shell chrome uses normal weight for every tab; selection is shown via colour
  * and progressive underline (Codex default selected styles).
  */
 .shell-primary-nav .cdx-tabs__list__item {
-	font-weight: var( --font-weight-normal );
+	font-weight: var( --font-weight-normal ) !important;
 }

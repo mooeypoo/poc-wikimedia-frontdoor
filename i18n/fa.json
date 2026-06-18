@@ -1,7 +1,7 @@
 {
   "app-title": "API REST ویکی‌مدیا",
   "brand-wordmark-wikimedia": "WIKIMEDIA",
-  "brand-wordmark-developer-portal": "DEVELOPER PORTAL",
+  "brand-wordmark-developer-portal": "درگاه توسعه‌دهندگان",
   "nav-get-started": "شروع کنید",
   "nav-use-content-and-data": "Use content and data",
   "nav-tools-and-bots": "Tools and bots",
@@ -27,7 +27,6 @@
   "header-utility-menu-label": "گزینه‌های بیشتر سربرگ",
   "header-login-label": "ورود",
   "footer-aria-label": "پاورقی سایت",
-  "footer-brand-wordmark": "WIKIMEDIA DEVELOPER PORTAL",
   "footer-privacy-policy": "سیاست حفظ حریم خصوصی",
   "footer-terms-of-use": "شرایط استفاده",
   "footer-policy-nav-label": "پیوندهای سیاست در پاورقی",

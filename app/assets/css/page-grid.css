@@ -19,9 +19,9 @@
  * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
  *
  * Page margins: --spacing-100 (mobile), --spacing-150 (tablet), --spacing-200 (desktop).
- * Applied once at the viewport edge on `.frontdoor-shell__chrome-inner` (inline-start:
- * `--fd-layout-page-margin-inline-start`, inline-end: `--fd-layout-page-margin`),
- * `.fd-page-grid` (inline-start), and `.frontdoor-shell__body-scroll` (inline-end).
+ * Applied at the viewport edge on `.frontdoor-shell__chrome-inner` (symmetric
+ * `--fd-layout-page-margin-inline-start` on both inline edges), `.fd-page-grid`
+ * (inline-start), and `.frontdoor-shell__body-scroll` (inline-end: `--fd-layout-page-margin`).
  * Header brand/tabs share the start-panel grid column (tablet+); inner chrome and
  * start-column panels must not repeat viewport insets.
  *

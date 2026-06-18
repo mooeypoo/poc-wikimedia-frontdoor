@@ -1,7 +1,7 @@
 {
   "app-title": "Application header brand text.",
   "brand-wordmark-wikimedia": "Top line of the compact header wordmark (WIKIMEDIA).",
-  "brand-wordmark-developer-portal": "Bottom line of the compact header wordmark (DEVELOPER PORTAL).",
+  "brand-wordmark-developer-portal": "Second line of the compact header wordmark (Developer Portal). Translate; keep similar visual weight to English.",
   "nav-get-started": "Main navigation item for the get started (home) page.",
   "nav-use-content-and-data": "Main navigation item for the use content and data page.",
   "nav-tools-and-bots": "Main navigation item for the tools and bots page.",
@@ -28,7 +28,6 @@
   "interface-language-he": "Option label for Hebrew in the interface language selector.",
   "interface-language-fa": "Option label for Persian in the interface language selector.",
   "footer-aria-label": "Accessible name for the site footer region.",
-  "footer-brand-wordmark": "Single-line footer brand wordmark (WIKIMEDIA DEVELOPER PORTAL).",
   "footer-privacy-policy": "Footer link label for the Wikimedia Foundation privacy policy.",
   "footer-terms-of-use": "Footer link label for the Wikimedia Foundation terms of use.",
   "footer-policy-nav-label": "Accessible name for the footer policy links group.",
