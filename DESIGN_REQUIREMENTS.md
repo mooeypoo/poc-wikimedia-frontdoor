@@ -26,7 +26,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 
 - The site is not yet fully responsive
 - Search, settings, and login controls are present but **disabled** or non-functional
-- API Explorer page's **left side nav** links use `href="#"` and do not route anywhere
+- API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
@@ -106,9 +106,9 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 1. **`CdxMenuItem` standalone** — used **outside** `CdxMenu`. Approved for this static shell list; do not reuse for floating menus without review.
 2. **Section nav hover colour** — custom `:hover` CSS sets **`--color-progressive`** on non-selected item labels. Codex `CdxMenuItem` hover normally changes **background only** (`--background-color-interactive-subtle--hover`), not unselected text colour. Because items are outside `CdxMenu`, the `highlighted` prop is never toggled (parent menu normally handles `@change`); shell styles must target **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items use Codex’s built-in progressive styling via `cdx-menu-item--selected`.
 
-**Status:** **Visual/IA prototype only.** All item links use `href="#"` with `@click.prevent`. Active state comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts` (content routes) or `isActive` in `explorerSideNav.js` (explorer). Wiring to real content routes is future work.
+**Status:** **Visual/IA prototype** on content routes — item links use `href="#"` with `@click.prevent`. Active state on content routes comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. **Explorer routes:** items with a `mode` in `config/explorerSideNav.js` resolve to real paths via `pathForExplorerMode()`; active state follows `explorerModeFromPath()` on the current route. Overview section items (no `mode`) remain placeholders.
 
-**Superseded:** `ExplorerSideNav.vue` is no longer mounted; explorer uses the shared side panel component.
+**Superseded:** `ExplorerSideNav.vue` is no longer mounted; explorer mode routing lives in `usePageSectionNav()` + `ShellSidePanelNav`.
 
 **Design reference:** [Unified Developer Front Door — Navigation (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)
 
@@ -594,6 +594,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Shell chrome border token | Header band, start column edge, section dividers, collapsed overlay panel — `--border-color-muted` (aligned with site footer) |
 | *(uncommitted)* | Collapsed nav overlay | `useShellCollapsedNavMenu`, `ShellCollapsedNavMenuOverlay`, `shell-collapsed-nav-menu.css`; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` panel gap |
 | *(uncommitted)* | Scroll-end symmetry (32px) | `padding-block-end: --spacing-200` on start panel + footer; `shell-side-panel--start` class on panel wrapper (required for padding + drawer CSS) |
@@ -626,7 +627,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 ## Open questions / future design work
 
-1. **Wire section navigation** to real content routes (replace `href="#"` placeholders and prototype active map).
+1. **Wire content section navigation** to real content routes (replace `href="#"` placeholders and prototype active map on non-explorer pages).
 2. **Search overlay** — wire collapsed utility search icon to open search UI.
 3. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
@@ -665,7 +666,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer page | `app/pages/explorer/index.vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue` |
-| Explorer side nav (legacy) | `app/components/explorer/ExplorerSideNav.vue` — superseded by `ShellSidePanelNav` |
+| Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
+| Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |

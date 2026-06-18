@@ -162,7 +162,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
 | `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs |
-| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`). Prototype active states only |
+| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Explorer items with `mode` resolve `to` via `pathForExplorerMode()` and `isActive` via `explorerModeFromPath()`; `enabled: false` items are omitted. Content routes use prototype active map only. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
 | `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
@@ -206,7 +206,7 @@ banana-i18n labels + single global active item
 
 **Codex exception — section nav hover colour.** Non-selected menu items use custom CSS (`:hover`) to set label text to **`--color-progressive`**. Codex `CdxMenuItem` hover normally only changes **background** (`--background-color-interactive-subtle--hover`); it does not turn unselected item text progressive. Additionally, when used outside `CdxMenu`, the `highlighted` prop is never toggled (the parent menu normally handles `@change` events), so shell styles must use **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items keep Codex’s built-in `--color-progressive` via `cdx-menu-item--selected`. Implemented in `ShellSidePanelNav.vue`.
 
-**Superseded component.** `app/components/explorer/ExplorerSideNav.vue` is retained but **not mounted** by the layout; explorer sections are rendered through the shared `ShellSidePanelNav` path above.
+**Superseded component.** `app/components/explorer/ExplorerSideNav.vue` is retained as a reference but **not mounted**; explorer sections are rendered through **`ShellSidePanelNav`** with routes and active state resolved in **`usePageSectionNav()`** (`pathForExplorerMode`, `explorerModeFromPath`, `enabled` filtering).
 
 **Primary navigation.** `ShellPrimaryNav` uses Codex quiet tabs for route switching. Tab panels are hidden (`display: none` on `.cdx-tabs__content`) because page content lives in the main column — navigation-only usage, documented in `DESIGN_REQUIREMENTS.md`.
 
@@ -414,7 +414,7 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Primary nav tab scroll buttons | **Hidden** in `shell-primary-nav-overrides.css` — Codex overflow affordances flicker on first paint |
 | Primary nav tab label weight | **Normal** for all tabs — Codex exception; selected tab uses colour/underline only |
 | Footer brand lockup | 14px mark + translatable `brand-wordmark-*` (Montserrat) — not Figma horizontal footer logo asset yet |
-| Section nav links | `href="#"` with `@click.prevent`; active state from prototype map in `usePageSectionNav.ts` |
+| Section nav links | Content routes: `href="#"` placeholders; active state from prototype map. Explorer mode items: real routes via `pathForExplorerMode()` in `usePageSectionNav.ts` |
 | Search icon button (narrow header) | **Disabled** prototype |
 | Settings button | **Disabled** prototype |
 | Log in link | **Non-functional** (`@click.prevent`) |

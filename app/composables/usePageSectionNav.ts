@@ -1,12 +1,18 @@
 import { EXPLORER_SIDE_NAV_SECTIONS } from '../../config/explorerSideNav'
 import { SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID } from '../../config/sectionNavigation'
+import type { ExplorerMode } from './useEnterpriseExplorer'
 import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
-import { isExplorerRoutePath } from '../utils/explorerRoute'
+import { explorerModeFromPath, isExplorerRoutePath, pathForExplorerMode } from '../utils/explorerRoute'
 
 export interface ResolvedSectionNavItem {
 	id: string
 	label: string
 	isActive: boolean
+	/**
+	 * In-app route when navigation is wired (explorer mode items); `null` keeps a
+	 * non-navigating placeholder link for prototype content sections.
+	 */
+	to: string | null
 }
 
 export interface ResolvedSectionNavSection {
@@ -15,23 +21,30 @@ export interface ResolvedSectionNavSection {
 	items: ResolvedSectionNavItem[]
 }
 
+interface ContentSectionNavItem {
+	id: string
+	messageKey: string
+	isActive?: boolean
+}
+
+interface ExplorerSectionNavItem extends ContentSectionNavItem {
+	mode?: ExplorerMode
+	enabled?: boolean
+}
+
 interface SectionNavigationSource {
 	ariaLabelMessageKey: string
 	sections: Array<{
 		id: string
 		titleMessageKey: string
-		items: Array<{
-			id: string
-			messageKey: string
-			isActive?: boolean
-		}>
+		items: Array<ContentSectionNavItem | ExplorerSectionNavItem>
 	}>
 }
 
 /**
  * Prototype active item per content path.
- * Only one item may be selected across the entire side panel.
- * Explorer active state comes from `config/explorerSideNav.js` (`isActive` on one item).
+ * Only one item may be selected across the entire side panel on content routes.
+ * Explorer active state is derived from the current route path (see `explorerModeFromPath`).
  */
 const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string, itemId: string } | null> = {
 	'/': { sectionId: 'get-started', itemId: 'introduction' },
@@ -46,8 +59,10 @@ const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string,
  * Resolves left-hand section navigation for the current route.
  *
  * Returns explorer or content section menus from config, with banana-i18n
- * labels and prototype active states for landing pages. Exactly one item
- * may be selected across the entire menu.
+ * labels. On content routes, active state uses a prototype map; on explorer
+ * routes, items with a `mode` resolve to real paths via `pathForExplorerMode`
+ * and active state follows `explorerModeFromPath`. Exactly one item may be
+ * selected across the entire menu.
  *
  * @returns {{
  *   navigationLabel: import('vue').ComputedRef<string>,
@@ -90,8 +105,10 @@ export function usePageSectionNav() {
 
 	const navigationSections = computed<ResolvedSectionNavSection[]>( () => {
 		const source = navigationSource.value
+		const onExplorerRoute = isExplorerRoutePath( route.path )
+		const activeExplorerMode = onExplorerRoute ? explorerModeFromPath( route.path ) : null
 
-		const contentPath = isExplorerRoutePath( route.path )
+		const contentPath = onExplorerRoute
 			? null
 			: stripContentLocalePrefix( route.path )
 
@@ -99,34 +116,59 @@ export function usePageSectionNav() {
 			? PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH[ contentPath ] ?? null
 			: null
 
-		// Explorer config may flag one item; content routes use the prototype map above.
-		const configActiveItem = source.sections.reduce<{ sectionId: string, itemId: string } | null>(
-			( found, section ) => {
-				if ( found ) {
-					return found
-				}
+		const configActiveItem = onExplorerRoute
+			? null
+			: source.sections.reduce<{ sectionId: string, itemId: string } | null>(
+				( found, section ) => {
+					if ( found ) {
+						return found
+					}
 
-				const activeItem = section.items.find( ( item ) => item.isActive )
+					const activeItem = section.items.find( ( item ) => item.isActive )
 
-				return activeItem
-					? { sectionId: section.id, itemId: activeItem.id }
-					: null
-			},
-			null
-		)
+					return activeItem
+						? { sectionId: section.id, itemId: activeItem.id }
+						: null
+				},
+				null
+			)
 
-		const activeItemRef = prototypeActiveItem ?? configActiveItem
+		const activeContentItem = prototypeActiveItem ?? configActiveItem
 
 		return source.sections.map( ( section ) => ( {
 			id: section.id,
 			title: $bananaI18n( section.titleMessageKey ),
-			items: section.items.map( ( item ) => ( {
-				id: item.id,
-				label: $bananaI18n( item.messageKey ),
-				isActive: activeItemRef !== null
-					&& activeItemRef.sectionId === section.id
-					&& activeItemRef.itemId === item.id
-			} ) )
+			items: section.items
+				.filter( ( item ) => {
+					if ( !onExplorerRoute ) {
+						return true
+					}
+
+					const explorerItem = item as ExplorerSectionNavItem
+					return explorerItem.enabled !== false
+				} )
+				.map( ( item ) => {
+					if ( onExplorerRoute ) {
+						const explorerItem = item as ExplorerSectionNavItem
+						const mode = explorerItem.mode
+
+						return {
+							id: item.id,
+							label: $bananaI18n( item.messageKey ),
+							to: mode !== undefined ? pathForExplorerMode( mode ) : null,
+							isActive: mode !== undefined && mode === activeExplorerMode
+						}
+					}
+
+					return {
+						id: item.id,
+						label: $bananaI18n( item.messageKey ),
+						to: null,
+						isActive: activeContentItem !== null
+							&& activeContentItem.sectionId === section.id
+							&& activeContentItem.itemId === item.id
+					}
+				} )
 		} ) )
 	} )
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CdxMenuItem } from '@wikimedia/codex'
-import type { ResolvedSectionNavSection } from '../../composables/usePageSectionNav'
+import type { ResolvedSectionNavItem, ResolvedSectionNavSection } from '../../composables/usePageSectionNav'
 
 /**
  * ShellSidePanelNav — section navigation in the start column, directly below the
@@ -17,8 +17,8 @@ import type { ResolvedSectionNavSection } from '../../composables/usePageSection
  * - Non-selected items: custom `:hover` CSS sets `--color-progressive` text. Codex hover
  *   normally changes background only; `highlighted` is never toggled without a parent `CdxMenu`.
  *
- * **Prototype:** item links are `href="#"` placeholders; active state is supplied
- * by the parent via `usePageSectionNav()` — not by Vue Router.
+ * **Routing:** Explorer items with a resolved `to` path navigate via `navigateTo`.
+ * Content-section items without `to` remain `href="#"` placeholders (prototype).
  */
 defineProps<{
 	/** Accessible name for the navigation region. */
@@ -31,6 +31,22 @@ defineProps<{
 	 */
 	omitSectionTitleMatching?: string
 }>()
+
+/**
+ * Navigates to a resolved section item when it has a route target.
+ *
+ * @param pointerEvent - Click event from the menu item.
+ * @param item - Resolved navigation item from `usePageSectionNav()`.
+ */
+function onSectionNavItemClick( pointerEvent: PointerEvent, item: ResolvedSectionNavItem ): void {
+	if ( item.to === null ) {
+		pointerEvent.preventDefault()
+		return
+	}
+
+	pointerEvent.preventDefault()
+	navigateTo( item.to )
+}
 </script>
 
 <template>
@@ -55,9 +71,9 @@ defineProps<{
 				class="shell-side-panel-nav__menu-item"
 				:value="item.id"
 				:label="item.label"
-				url="#"
+				:url="item.to ?? '#'"
 				:selected="item.isActive"
-				@click.prevent
+				@click="onSectionNavItemClick( $event, item )"
 			/>
 			<hr
 				v-if="sectionIndex < sections.length - 1"
