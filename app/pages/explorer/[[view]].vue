@@ -11,8 +11,12 @@ import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalar
 import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
+import ExplorerEnterpriseCustom from '../../components/explorer/ExplorerEnterpriseCustom.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
+import { useExplorerMode } from '../../composables/useExplorerMode'
+import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
+import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
 
 definePageMeta( {
 	i18n: false,
@@ -25,6 +29,21 @@ const { $bananaI18n } = useNuxtApp()
 /** Whether this page is still the active route (disables teleports on exit). */
 const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { selectedWikiInstanceId } = useDirection()
+const { explorerMode } = useExplorerMode()
+const isCommunityMode = computed( () => explorerMode.value === 'community' )
+const isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )
+/** True for Scalar-bearing Enterprise modes (full / limited), false for community and custom. */
+const isScalarEnterpriseMode = computed(
+	() => explorerMode.value === 'enterprise-full' || explorerMode.value === 'enterprise-limited'
+)
+
+const enterpriseMode = computed( () =>
+	isScalarEnterpriseMode.value
+		? explorerMode.value as 'enterprise-full' | 'enterprise-limited'
+		: 'enterprise-full' as const
+)
+const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides } =
+	useEnterpriseExplorer( enterpriseMode )
 const {
 	modules,
 	failedModules,
@@ -43,7 +62,7 @@ const {
 	selectModule,
 	markScalarReady,
 	clearPendingOperationTarget
-} = useExplorerBootstrap( selectedWikiInstanceId )
+} = useExplorerBootstrap( selectedWikiInstanceId, isCommunityMode )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 
@@ -98,14 +117,43 @@ onMounted( () => {
 	refreshEndPanelNavAlign()
 } )
 
-const { scalarConfiguration } = useScalarConfig( openApiSpecUrl, {
-	onLoaded: () => {
-		markScalarReady()
-		requestAnimationFrame( () => {
-			focusPendingOperationInScalar()
-		} )
-	}
-} )
+/** Whether Scalar has finished loading its spec for the current mode. */
+const isScalarReady = ref( false )
+
+/**
+ * Shared onLoaded handler. Marks Scalar ready for the loading overlay,
+ * lets the community switch state settle, and resumes any pending focus.
+ *
+ * @returns Nothing.
+ */
+function onScalarLoaded(): void {
+	isScalarReady.value = true
+	markScalarReady()
+	requestAnimationFrame( () => {
+		focusPendingOperationInScalar()
+	} )
+}
+
+// Per-mode Scalar configurations — keeping them separate avoids mutating a
+// shared reactive object across modes, which previously produced a
+// "Document not found in configList" warning from Scalar during transitions.
+const { scalarConfiguration: communityScalarConfiguration } = useScalarConfig(
+	openApiSpecUrl,
+	{ onLoaded: onScalarLoaded }
+)
+
+const enterpriseScalarConfiguration = computed( () => ( {
+	...SCALAR_DEFAULT_CONFIGURATION,
+	...enterpriseScalarOverrides.value,
+	spec: { url: enterpriseSpecUrl.value },
+	onLoaded: onScalarLoaded
+} ) )
+
+const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
+	isCommunityMode.value
+		? communityScalarConfiguration as unknown as Record<string, unknown>
+		: enterpriseScalarConfiguration.value
+)
 
 useScalarWriteRequestTestWiki( scalarConfiguration )
 useScalarWriteRequestAddressBarSync( scalarInterface, selectedWikiInstanceId )
@@ -122,12 +170,36 @@ const scalarReferenceKey = computed( () => {
 		route.fullPath,
 		selectedWikiInstanceId.value,
 		selectedModuleName.value,
+		explorerMode.value,
 		openApiSpecUrl.value ?? ''
 	].join( ':' )
 } )
 
-const explorerTitle = computed( () => $bananaI18n( 'explorer-title' ) )
-const explorerDescription = computed( () => $bananaI18n( 'explorer-description' ) )
+// Re-arm the loading overlay whenever the Scalar instance is about to remount
+// (mode change, module switch, or wiki instance change). onScalarLoaded clears it.
+watch( scalarReferenceKey, () => {
+	isScalarReady.value = false
+} )
+
+// Title matches the side-nav label for the active mode (same wording,
+// already translated in every locale).
+const explorerTitle = computed( () => {
+	switch ( explorerMode.value ) {
+		case 'enterprise-full':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis' )
+		case 'enterprise-limited':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis-limited' )
+		case 'enterprise-custom':
+			return $bananaI18n( 'explorer-side-nav-enterprise-apis-custom' )
+		case 'community':
+		default:
+			return $bananaI18n( 'explorer-side-nav-wikimedia-api-modules' )
+	}
+} )
+
+const explorerDescription = computed( () =>
+	isCommunityMode.value ? $bananaI18n( 'explorer-description' ) : ''
+)
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
@@ -182,11 +254,11 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<h1>
 					{{ explorerTitle }}
 				</h1>
-				<p>{{ explorerDescription }}</p>
+				<p v-if="explorerDescription">{{ explorerDescription }}</p>
 			</header>
 
 			<div
-				v-if="!isInstanceBootstrapping"
+				v-if="!isInstanceBootstrapping && isCommunityMode"
 				ref="projectControlsRef"
 				class="explorer-page__project-controls-anchor frontdoor-page-nav-align-anchor"
 			>
@@ -199,7 +271,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			</div>
 		</div>
 
-		<ClientOnly>
+		<ClientOnly v-if="isCommunityMode">
 			<Teleport
 				to="#explorer-end-panel"
 				:disabled="!isActiveExplorerRoute"
@@ -220,7 +292,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		</ClientOnly>
 
 		<section
-			v-if="isInstanceBootstrapping"
+			v-if="isCommunityMode && isInstanceBootstrapping"
 			class="explorer-page__bootstrap-loading"
 		>
 			<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
@@ -230,7 +302,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 		<template v-else>
 			<CdxMessage
-				v-if="hasInstanceBootstrapError"
+				v-if="isCommunityMode && hasInstanceBootstrapError"
 				type="error"
 			>
 				{{ bootstrapErrorLabel }} <bdi>{{ instanceBootstrapErrorMessage }}</bdi>
@@ -239,7 +311,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			<template v-else>
 				<section class="explorer-page__reference-panel">
 					<header
-						v-if="selectedModule"
+						v-if="isCommunityMode && selectedModule"
 						ref="referenceHeaderRef"
 						class="explorer-page__reference-header"
 					>
@@ -261,11 +333,23 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					</header>
 
 					<CdxMessage
-						v-if="!openApiSpecUrl"
+						v-if="isCommunityMode && !openApiSpecUrl"
 						type="warning"
 					>
 						{{ missingSpecLabel }}
 					</CdxMessage>
+
+					<ClientOnly v-else-if="isCustomEnterpriseMode">
+						<ExplorerEnterpriseCustom />
+						<template #fallback>
+							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
+								<div class="explorer-page__scalar-loading">
+									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<p>{{ explorerInterfaceLoadingLabel }}</p>
+								</div>
+							</div>
+						</template>
+					</ClientOnly>
 
 					<ClientOnly v-else>
 						<div
@@ -273,15 +357,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 							class="explorer-page__scalar-shell"
 						>
 							<div
-								v-if="isScalarSwitching"
-								class="explorer-page__scalar-switching-mask"
+								v-if="!isScalarReady || isScalarSwitching"
+								class="explorer-page__scalar-loading-overlay"
 							>
 								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-								<p>{{ scalarSwitchingLabel }}</p>
+								<p>{{ isScalarSwitching ? scalarSwitchingLabel : explorerInterfaceLoadingLabel }}</p>
 							</div>
 							<ExplorerScalarReference
 								:key="scalarReferenceKey"
-								:configuration="scalarConfiguration"
+								:configuration="activeScalarConfiguration"
 								@interface-ready="onScalarInterfaceReady"
 							/>
 						</div>
@@ -444,15 +528,29 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	animation: explorer-loading-spin 0.9s linear infinite;
 }
 
-.explorer-page__scalar-switching-mask {
-	display: none;
+.explorer-page__scalar-loading-overlay {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	gap: var( --spacing-100 );
+	background-color: color-mix( in srgb, var( --background-color-base ) 92%, transparent );
+	backdrop-filter: blur( 2px );
+	z-index: 2;
+	text-align: center;
+}
+
+.explorer-page__scalar-loading-overlay p {
+	margin: 0;
 }
 
 @media screen and ( min-width: 960px ) {
 	.explorer-page__reference-panel {
 		position: sticky;
 		inset-block-start: var( --spacing-150 );
-		block-size: calc( 100vh - ( var( --spacing-150 ) * 2 ) );
+		block-size: calc(
+			var( --fd-layout-shell-body-block-size-estimate ) - ( var( --spacing-150 ) * 2 )
+		);
 		grid-template-rows: auto minmax( 0, 1fr );
 		overflow: hidden;
 	}
@@ -462,21 +560,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		min-block-size: 0;
 		overflow: auto;
 		overscroll-behavior: contain;
-	}
-
-	.explorer-page__scalar-switching-mask {
-		position: absolute;
-		inset: 0;
-		display: grid;
-		place-items: center;
-		gap: var( --spacing-100 );
-		background-color: color-mix( in srgb, var( --background-color-base ) 78%, transparent );
-		backdrop-filter: blur( 2px );
-		z-index: 2;
-	}
-
-	.explorer-page__scalar-switching-mask p {
-		margin: 0;
 	}
 }
 

@@ -14,11 +14,23 @@
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
 @import './page-grid.css';
 @import './shell-end-panel-nav.css';
+@import './shell-start-nav-reveal.css';
+@import './shell-start-nav-scroll.css';
+@import './shell-collapsed-nav-menu.css';
+@import './shell-primary-nav-overrides.css';
 @import './explorer-codex-overrides.css';
 
 :root {
 	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
 	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
+	/* Figma brand wordmark — Montserrat loaded via nuxt.config.ts (config/brandTypography.ts). */
+	--font-family-brand-wordmark: 'Montserrat', sans-serif;
+}
+
+html,
+body,
+#__nuxt {
+	block-size: 100%;
 }
 
 html,
@@ -30,6 +42,14 @@ body {
 	font-family: var( --font-family-sans-stack );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-medium );
+}
+
+/*
+ * Shell scroll regions: the default layout locks to the viewport; column scroll
+ * happens inside `.frontdoor-shell` — not on `body`. See DESIGN_REQUIREMENTS.md.
+ */
+body {
+	overflow: hidden;
 }
 
 *,
@@ -53,7 +73,6 @@ body {
 .frontdoor-shell :where(
 	.frontdoor-description,
 	.frontdoor-help-text,
-	.frontdoor-shell__footer,
 	.explorer-page__header > p,
 	.explorer-page__reference-header > p,
 	.explorer-page__bootstrap-loading > p,
@@ -68,26 +87,10 @@ body {
 /* Shell chrome navigation (Home / About / API Explorer) has no font rule in the
  * layout; re-assert the Codex sans stack so links do not pick up generic sans-serif
  * (often computed as Arial on Windows). */
-.frontdoor-shell__main-nav,
-.frontdoor-shell__main-nav :where( a ),
-.frontdoor-shell__side-nav,
-.frontdoor-shell__side-nav :where( a ) {
+.shell-side-panel,
+.shell-side-panel-nav,
+.shell-primary-nav {
 	font-family: var( --font-family-sans-stack );
-}
-
-/* Navigation menus: base text, not progressive links. */
-.frontdoor-shell__main-nav :where( a ) {
-	color: var( --color-base );
-	text-decoration: none;
-}
-
-.frontdoor-shell__main-nav :where( a:hover ) {
-	text-decoration: underline;
-}
-
-.frontdoor-shell__main-nav :where( a.router-link-active ) {
-	color: var( --color-emphasized );
-	font-weight: var( --font-weight-bold );
 }
 
 .frontdoor-shell__brand {

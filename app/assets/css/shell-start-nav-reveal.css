@@ -1,0 +1,100 @@
+/**
+ * shell-start-nav-reveal.css — Drawer-style start section nav reveal.
+ *
+ * The grid track is a clipping viewport whose inline size grows from 0 → 281px,
+ * pushing the body column. The fixed-width inner panel slides in from inline-start
+ * with the same timing so nav labels never paint over main content.
+ *
+ * Codex transition tokens (UI motion, not decorative animation):
+ * https://doc.wikimedia.org/codex/latest/design-tokens/transition.html
+ *
+ * Collapse is instant; expand uses the drawer. `display: none` is not used.
+ *
+ * Scrollport preservation: drawer clip rules must not disable section-nav scroll.
+ * Tablet+ scroll lives on `.frontdoor-shell__side-panel--start` (`shell-start-nav-scroll.css`);
+ * mobile scroll lives on `.fd-page-grid__start` (`page-grid.css`). Use
+ * `overflow-inline: hidden` for horizontal clip — not blanket `overflow: hidden`
+ * on the expanded mobile track. Panel wrapper must include `shell-side-panel--start`
+ * (with `frontdoor-shell__side-panel--start`) for block-start padding, scroll-end spacer
+ * targeting, and drawer transforms.
+ * See ARCHITECTURE.md → Shell section navigation.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid,
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start,
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+		transition: none;
+	}
+}
+
+/* --- Mobile: stack — clip + block-size drawer on expand --- */
+@media screen and ( max-width: 639px ) {
+	.fd-page-grid__start {
+		/* Clip horizontal drawer motion only — preserve vertical scroll (page-grid.css). */
+		overflow-inline: hidden;
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid__start {
+		transition: max-block-size var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	.shell-side-panel--start {
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start {
+		transition: transform var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	.frontdoor-shell--nav-collapsed .fd-page-grid__start {
+		max-block-size: 0;
+		pointer-events: none;
+		border-inline-end-width: 0;
+		overflow: hidden;
+	}
+
+	.frontdoor-shell--nav-collapsed .shell-side-panel--start {
+		transform: translate3d( 0, -100%, 0 );
+	}
+}
+
+/* --- Tablet+: inline drawer — grid track pushes body, panel slides in --- */
+@media screen and ( min-width: 640px ) {
+	.fd-page-grid {
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid {
+		transition:
+			grid-template-columns var( --transition-duration-medium ) var( --transition-timing-function-user ),
+			column-gap var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	.shell-side-panel--start {
+		transition: none;
+	}
+
+	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start {
+		transition: transform var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
+	/*
+	 * Fixed-width drawer panel inside the clipping grid track. Track width is
+	 * controlled only by `grid-template-columns` (0 → 281px on expand). Block-axis
+	 * shrink stays enabled in `default.vue` so section nav can scroll.
+	 */
+	.frontdoor-shell .shell-side-panel--start {
+		min-block-size: 0;
+		box-sizing: border-box;
+	}
+
+	.frontdoor-shell--nav-collapsed .shell-side-panel--start {
+		transform: translate3d( -100%, 0, 0 );
+	}
+
+	[dir='rtl'] .frontdoor-shell--nav-collapsed .shell-side-panel--start {
+		transform: translate3d( 100%, 0, 0 );
+	}
+}

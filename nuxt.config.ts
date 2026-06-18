@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfigPluginsResolvePlugin'
+import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
+import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
 
 const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -16,6 +18,15 @@ export default defineNuxtConfig( {
 		'@pinia/nuxt',
 		'@nuxtjs/i18n'
 	],
+	app: {
+		head: {
+			link: [
+				{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+				{ rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
+				{ rel: 'stylesheet', href: BRAND_WORDMARK_FONT_STYLESHEET_URL }
+			]
+		}
+	},
 	devtools: { enabled: true },
 	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
 	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
@@ -76,7 +87,8 @@ export default defineNuxtConfig( {
 
 	routeRules: {
 		'/explorer': { ssr: false },
-		'/explorer/**': { ssr: false }
+		'/explorer/**': { ssr: false },
+		...buildLegacyContentRedirectRouteRules()
 	},
 
 	vite: {
