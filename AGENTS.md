@@ -12,7 +12,8 @@ Use the right document for the kind of work you are doing:
 |----------|-------------|
 | **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow |
 | **[`ARCHITECTURE.md`](ARCHITECTURE.md)** | System structure, data flow, composables, route boundaries, discovery, technical constraints |
-| **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | **UI/UX:** Codex layout system (2-panel desktop grid, breakpoints, margins), shell chrome, site navigation IA, API Explorer layout (side nav, project controls, module rail), typography, loading/empty states, prototype vs final behaviour |
+| **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | UI/UX: Codex layout system, shell chrome, site navigation IA, API Explorer layout, typography, loading/empty states |
+| **[`.agents/skills/`](.agents/skills/)** | Codex agent skills (components, tokens, icons, usage, design principles, bidirectionality, layout, content) — summaries of the [Codex style guide](https://doc.wikimedia.org/codex/latest/style-guide/overview.html); subordinate to this file and `DESIGN_REQUIREMENTS.md` |
 
 **Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
 

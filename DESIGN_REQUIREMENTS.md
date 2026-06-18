@@ -6,7 +6,7 @@ This document records **UI/UX design decisions** introduced during the **design 
 - **`AGENTS.md`** — non-negotiable implementation rules (i18n, BiDi, Codex, layer separation)
 - **`docs/TECH_DECISIONS.md`** — settled product/tech choices (stack, discovery, instances)
 
-Use this file when implementing or reviewing visual behaviour, layout, navigation, and explorer interaction patterns. Where this document conflicts with **`AGENTS.md`**, **`AGENTS.md` wins**.
+Use this file when implementing or reviewing visual styles, grids, layout areas, responsive behaviours, navigation, and interaction patterns. Where this document conflicts with **`AGENTS.md`**, **`AGENTS.md` wins**.
 
 ---
 
@@ -25,6 +25,10 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 **Explicitly prototype / not final:**
 
 - The site is not yet fully responsive
+- The site needs to be reviewed and improved for compliance with best internationalization practices.
+- The site needs to be tested for compliance with an AA level of accessibility. It should be fully actionable via screen reader technology.
+- Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
+- Default Nuxt elements such as skeletons need to be replaced by Codex components
 - Search, settings, and login controls are present but **disabled** or non-functional
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
@@ -117,7 +121,6 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 **Superseded:** `ExplorerSideNav.vue` is no longer mounted; explorer mode routing lives in `usePageSectionNav()` + `ShellSidePanelNav`.
 
 **Design reference:** [Unified Developer Front Door — Navigation (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548)
-
 ---
 
 ## Layout system
@@ -425,7 +428,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Design tokens
 
-**Decision:** All first-party UI uses **Codex Wikimedia UI theme tokens** (`@wikimedia/codex-design-tokens/theme-wikimedia-ui.css`) and Codex component styles.
+**Decision:** All first-party UI should use **Codex Wikimedia UI theme tokens** (`@wikimedia/codex-design-tokens/theme-wikimedia-ui.css`) and Codex component styles.
 
 **Exploratory / legacy values:** `--fd-layout-start-panel-background-color` (`#F3F3F3`) was explored for a filled start panel but is **superseded** by transparent panel + `--border-color-muted` edge. The token is retained unused in `page-grid.css` for possible revert. Do not reuse the hex elsewhere without design review.
 
@@ -650,6 +653,12 @@ Mapping of notable commits to design areas (newest first among design-only work)
 13. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. `codex.style-bidi.css`, disabling LTR base when RTL is active) before production. **Blocks:** header language `CdxSelect` expand chevron in RTL (see `ARCHITECTURE.md` → RTL and BiDi).
 14. **Header language select RTL chevron** — resolve without per-component Codex CSS overrides; options include bidi stylesheet, Codex-native trigger icon pattern, or relaxed header width.
 15. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
+16. **Settings and login** — Prototype the user's dashboard and token management flows.
+17. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
+18. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
+19. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
+20. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
+21. **Codex styling review** — Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
 
 ---
 
