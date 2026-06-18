@@ -7,9 +7,10 @@
  * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
  * `default.vue` (main column only — matches central page content, not main + end).
  *
- * Scroll: shell locks to `100dvh`; start nav scrolls independently; main + end share
- * `.frontdoor-shell__body-scroll` with the scrollbar at the **viewport inline-end**
- * (body track is full-bleed inline-end; content stays aligned). See DESIGN_REQUIREMENTS.md.
+ * Scroll: shell locks to `100dvh`; start nav scrolls independently (scrollport rules in
+ * `shell-start-nav-scroll.css`); main + end share `.frontdoor-shell__body-scroll` with
+ * the scrollbar at the **viewport inline-end** (body track is full-bleed inline-end;
+ * content stays aligned). See DESIGN_REQUIREMENTS.md.
  *
  * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
  * future commit). The start column width is locked until collapse-into-header work.
@@ -69,7 +70,8 @@
 
 	/*
 	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
-	 * border-inline-end on .fd-page-grid__start. Retained unused for possible revert.
+	 * border-inline-end on .frontdoor-shell__side-panel--start (default.vue).
+	 * Retained unused for possible revert.
 	 */
 	--fd-layout-start-panel-background-color: #f3f3f3;
 

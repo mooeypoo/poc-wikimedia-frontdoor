@@ -1,0 +1,59 @@
+/**
+ * shell-start-nav-scroll.css — Start navigation scrollport behaviour.
+ *
+ * One scroll container per breakpoint:
+ * - Tablet+ (≥ 640px): `.frontdoor-shell__side-panel--start` scrolls; `.fd-page-grid__start` clips only.
+ * - Mobile (< 640px): `.fd-page-grid__start` scrolls; inner panel must not nest a second scrollport.
+ *
+ * Scrollbar styling uses a transparent track and thin thumb so the permanent gutter does not
+ * stack beside the panel border (overlay-style appearance). WebKit scrollbar pseudos require
+ * physical `width` — an exception to the logical-property rule for this API surface.
+ * See ARCHITECTURE.md → Shell scroll regions.
+ */
+
+/* Transparent track + thin thumb (Firefox). */
+.frontdoor-shell__side-panel--start,
+.fd-page-grid__start {
+	scrollbar-width: thin;
+	scrollbar-color: var( --color-placeholder ) transparent;
+}
+
+/* WebKit: physical width required by pseudo-element API. */
+.frontdoor-shell__side-panel--start::-webkit-scrollbar,
+.fd-page-grid__start::-webkit-scrollbar {
+	width: 6px;
+}
+
+.frontdoor-shell__side-panel--start::-webkit-scrollbar-track,
+.fd-page-grid__start::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.frontdoor-shell__side-panel--start::-webkit-scrollbar-thumb,
+.fd-page-grid__start::-webkit-scrollbar-thumb {
+	background-color: var( --color-placeholder );
+	border-radius: 999px;
+}
+
+@media screen and ( min-width: 640px ) {
+	/*
+	 * Track clips drawer motion only — never scrolls alongside the panel.
+	 * Reassert after shell-start-nav-reveal.css (mobile overflow-inline rules).
+	 */
+	.frontdoor-shell__page-grid .fd-page-grid__start {
+		overflow: hidden;
+	}
+
+	.frontdoor-shell__side-panel--start {
+		overflow-block: auto;
+		overflow-inline: hidden;
+		overscroll-behavior: contain;
+	}
+}
+
+@media screen and ( max-width: 639px ) {
+	/* Mobile scroll lives on the grid track (page-grid.css); inner panel grows with content. */
+	.frontdoor-shell__side-panel--start {
+		overflow: visible;
+	}
+}

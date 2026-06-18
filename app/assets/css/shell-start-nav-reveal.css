@@ -11,7 +11,7 @@
  * Collapse is instant; expand uses the drawer. `display: none` is not used.
  *
  * Scrollport preservation: drawer clip rules must not disable section-nav scroll.
- * Tablet+ scroll lives on `.frontdoor-shell__side-panel--start` (see `default.vue`);
+ * Tablet+ scroll lives on `.frontdoor-shell__side-panel--start` (`shell-start-nav-scroll.css`);
  * mobile scroll lives on `.fd-page-grid__start` (`page-grid.css`). Use
  * `overflow-inline: hidden` for horizontal clip — not blanket `overflow: hidden`
  * on the expanded mobile track. Panel wrapper must include `shell-side-panel--start`

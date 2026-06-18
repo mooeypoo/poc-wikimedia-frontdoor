@@ -15,6 +15,7 @@
 @import './page-grid.css';
 @import './shell-end-panel-nav.css';
 @import './shell-start-nav-reveal.css';
+@import './shell-start-nav-scroll.css';
 @import './shell-collapsed-nav-menu.css';
 @import './shell-primary-nav-overrides.css';
 @import './explorer-codex-overrides.css';

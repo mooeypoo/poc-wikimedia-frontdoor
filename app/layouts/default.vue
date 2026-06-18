@@ -321,18 +321,22 @@ useHead( {
 }
 
 /*
- * Start column edge: muted inline-end border on the grid track (transparent panel).
- * Section dividers in `ShellSidePanelNav` use the same token. See DESIGN_REQUIREMENTS.md
- * → Start column chrome; ARCHITECTURE.md → Shell section navigation.
+ * Start column edge: muted inline-end border on the scrollport panel (not the grid track).
+ * Keeps the border and scrollbar on one element so a permanent track gutter does not
+ * stack beside the panel edge. See shell-start-nav-scroll.css; DESIGN_REQUIREMENTS.md.
  */
-.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+.frontdoor-shell__side-panel--start {
 	border-inline-end: 1px solid var( --border-color-muted );
 	box-sizing: border-box;
 }
 
-/* Zero-width collapsed track must not paint a 1px edge (scoped rule beats page-grid.css). */
-.frontdoor-shell--nav-collapsed .frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+/* Zero-width collapsed track must not paint a 1px edge. */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__side-panel--start {
 	border-inline-end-width: 0;
+}
+
+.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
+	box-sizing: border-box;
 }
 
 @media screen and ( min-width: 640px ) {
@@ -342,19 +346,20 @@ useHead( {
 		align-items: stretch;
 	}
 
+.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__side-panel--start {
+		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
+	}
+
 	.frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
 		display: flex;
 		flex-direction: column;
 		align-self: stretch;
 	}
 
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__page-grid :deep( .fd-page-grid__start ) {
-		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
-	}
-
 	/*
 	 * Start column scrollport: section nav scrolls independently when taller than
-	 * the viewport body (Discord-style docs sidebar). Browser default scrollbar only.
+	 * the viewport body (Discord-style docs sidebar). Overflow + scrollbar styling
+	 * live in shell-start-nav-scroll.css (single scrollport per breakpoint).
 	 */
 	.frontdoor-shell__side-panel--start {
 		flex: 1 1 auto;
@@ -368,13 +373,6 @@ useHead( {
 		 * when section nav exceeds the viewport body. Width is fixed above — not via flex-shrink.
 		 */
 		flex-shrink: 1;
-		/*
-		 * Vertical scroll lives on the drawer panel; horizontal overflow is
-		 * clipped by `.fd-page-grid__start` during the open transition.
-		 */
-		overflow-block: auto;
-		overflow-inline: hidden;
-		overscroll-behavior: contain;
 	}
 }
 

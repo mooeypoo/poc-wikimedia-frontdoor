@@ -8,8 +8,8 @@ import type { ResolvedSectionNavItem, ResolvedSectionNavSection } from '../../co
  *
  * Section headings and page links share one flat list (no nested sub-menus).
  * Horizontal dividers (`--border-color-muted`) separate section groups. The start
- * column track uses an inline-end border on `.fd-page-grid__start` (see `default.vue`,
- * DESIGN_REQUIREMENTS.md).
+ * column scrollport uses an inline-end border on `.frontdoor-shell__side-panel--start`
+ * (see `default.vue`, `shell-start-nav-scroll.css`, DESIGN_REQUIREMENTS.md).
  *
  * **Codex exceptions:**
  * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only

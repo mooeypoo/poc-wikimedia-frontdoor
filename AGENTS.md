@@ -14,7 +14,7 @@ Use the right document for the kind of work you are doing:
 | **[`ARCHITECTURE.md`](ARCHITECTURE.md)** | System structure, data flow, composables, route boundaries, discovery, technical constraints |
 | **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | **UI/UX:** Codex layout system (2-panel desktop grid, breakpoints, margins), shell chrome, site navigation IA, API Explorer layout (side nav, project controls, module rail), typography, loading/empty states, prototype vs final behaviour |
 
-**Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
+**Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
 
 **Precedence:** If **`DESIGN_REQUIREMENTS.md`** conflicts with this file, **`AGENTS.md` wins**. For technical behaviour (SSR, discovery, composable boundaries), prefer **`ARCHITECTURE.md`**. For visual and interaction behaviour, prefer **`DESIGN_REQUIREMENTS.md`**.
 
@@ -137,6 +137,8 @@ Do not:
 - Ship a separate `*.rtl.css` and swap stylesheets at runtime
 - Write physical properties in first-party CSS and rely on a build-time flipper — use logical properties
 - Assume the Scalar explorer should mirror all chrome direction changes; keep explorer direction decisions explicit and content-driven
+
+**Documented exception:** WebKit `::-webkit-scrollbar` pseudos in `app/assets/css/shell-start-nav-scroll.css` use physical **`width`** — the API has no logical equivalent. See `ARCHITECTURE.md` → Shell scroll regions and `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
 
