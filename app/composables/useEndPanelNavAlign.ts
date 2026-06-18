@@ -6,23 +6,26 @@ import { getMinWidthMediaQuery } from '../utils/codexBreakpointMediaQuery'
 export interface EndPanelNavAlignStyle {
 	'--frontdoor-end-panel-nav-flow-offset': string
 	'--frontdoor-end-panel-nav-sticky-inset': string
+	'--frontdoor-end-panel-nav-max-block-size'?: string
 }
 
 /**
- * Aligns end-column page navigation with a main-column anchor (e.g. explorer project controls).
+ * Aligns end-column page navigation with a main-column anchor (e.g. explorer Scalar shell).
  *
- * Sets two offsets: a document-flow margin so the nav starts beside the anchor, and a sticky
- * inset that tracks the anchor (and optionally clamps to a scroll region such as Scalar).
+ * Sets document-flow and sticky offsets so the nav aligns with the anchor top edge, and
+ * optionally caps block size from a height-match element (`--frontdoor-end-panel-nav-max-block-size`).
  *
  * @param alignAnchorElement - Main-column element to align with (top edge).
  * @param endPanelElement - Mount node in the grid end column (e.g. `#explorer-end-panel`).
  * @param scrollClampElement - Optional element whose top edge caps the sticky inset while scrolling.
+ * @param heightMatchElement - Optional element whose block size sets `--frontdoor-end-panel-nav-max-block-size`.
  * @returns Reactive inline styles and a manual refresh hook.
  */
 export function useEndPanelNavAlign(
 	alignAnchorElement: Ref<HTMLElement | null>,
 	endPanelElement: Ref<HTMLElement | null>,
-	scrollClampElement?: Ref<HTMLElement | null>
+	scrollClampElement?: Ref<HTMLElement | null>,
+	heightMatchElement?: Ref<HTMLElement | null>
 ): {
 	endPanelNavStyle: ComputedRef<EndPanelNavAlignStyle | undefined>
 	refreshEndPanelNavAlign: () => void
@@ -30,6 +33,7 @@ export function useEndPanelNavAlign(
 	const flowOffsetPx = ref( 0 )
 	const stickyInsetPx = ref( 0 )
 	const defaultStickyInsetPx = ref( 0 )
+	const matchBlockSizePx = ref( 0 )
 
 	let animationFrameId = 0
 	let mediaQueryList: MediaQueryList | null = null
@@ -86,6 +90,22 @@ export function useEndPanelNavAlign(
 	}
 
 	/**
+	 * Measures block size from the optional height-match element (e.g. Scalar shell).
+	 *
+	 * @returns Nothing.
+	 */
+	function measureMatchBlockSize(): void {
+		const heightMatch = heightMatchElement?.value
+
+		if ( !heightMatch ) {
+			matchBlockSizePx.value = 0
+			return
+		}
+
+		matchBlockSizePx.value = heightMatch.getBoundingClientRect().height
+	}
+
+	/**
 	 * Recomputes sticky inset from cached anchor position and optional scroll clamp.
 	 *
 	 * @returns Nothing.
@@ -94,10 +114,12 @@ export function useEndPanelNavAlign(
 		if ( !isDesktopEndPanelLayout() ) {
 			stickyInsetPx.value = 0
 			flowOffsetPx.value = 0
+			matchBlockSizePx.value = 0
 			return
 		}
 
 		measureFlowOffset()
+		measureMatchBlockSize()
 
 		if ( defaultStickyInsetPx.value <= 0 ) {
 			measureDefaultStickyInset()
@@ -138,14 +160,20 @@ export function useEndPanelNavAlign(
 			return undefined
 		}
 
-		if ( flowOffsetPx.value <= 0 && stickyInsetPx.value <= 0 ) {
+		if ( flowOffsetPx.value <= 0 && stickyInsetPx.value <= 0 && matchBlockSizePx.value <= 0 ) {
 			return undefined
 		}
 
-		return {
+		const style: EndPanelNavAlignStyle = {
 			'--frontdoor-end-panel-nav-flow-offset': `${ flowOffsetPx.value }px`,
 			'--frontdoor-end-panel-nav-sticky-inset': `${ stickyInsetPx.value }px`
 		}
+
+		if ( matchBlockSizePx.value > 0 ) {
+			style[ '--frontdoor-end-panel-nav-max-block-size' ] = `${ matchBlockSizePx.value }px`
+		}
+
+		return style
 	} )
 
 	/**
@@ -187,6 +215,7 @@ export function useEndPanelNavAlign(
 		observeElement( alignAnchorElement.value )
 		observeElement( endPanelElement.value )
 		observeElement( scrollClampElement?.value ?? null )
+		observeElement( heightMatchElement?.value ?? null )
 
 		requestAnimationFrame( () => {
 			measureFlowOffset()
@@ -218,6 +247,12 @@ export function useEndPanelNavAlign(
 	} )
 
 	watch( () => scrollClampElement?.value ?? null, ( nextElement, previousElement ) => {
+		unobserveElement( previousElement )
+		observeElement( nextElement )
+		refreshEndPanelNavAlign()
+	} )
+
+	watch( () => heightMatchElement?.value ?? null, ( nextElement, previousElement ) => {
 		unobserveElement( previousElement )
 		observeElement( nextElement )
 		refreshEndPanelNavAlign()

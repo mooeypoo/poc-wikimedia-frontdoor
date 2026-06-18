@@ -523,11 +523,11 @@ Top to bottom:
 
 | Control | Pattern |
 |---------|---------|
-| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order** (same order as the module rail); labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names** |
-| **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata matching the module rail chips: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
+| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names** |
+| **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
 | **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
 
-**Default selection:** The first **healthy** module (no spec fetch error) in module-rail order after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta and internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
+**Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta and internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
 
 **Module switching:** Changing the select calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes.
 
@@ -552,42 +552,42 @@ Top to bottom:
 
 ### Purpose
 
-**Decision:** Browse discovered REST **modules** for the selected wiki; expand a module to list **endpoints**; click an endpoint to load/focus that operation in Scalar. **Module selection for the Scalar reference panel** is driven by the **REST API module** `CdxSelect` in project controls (same discovery order and opt-in rules as the rail). The rail remains the endpoint browser; module headings still expand/collapse endpoint lists.
+**Decision:** List **endpoints** for the REST API module selected in project controls; click an endpoint to load/focus that operation in Scalar. Module selection for the Scalar reference panel and the rail is driven by the **REST API module** `CdxSelect` (same discovery order and opt-in rules).
 
 ### Title
 
-**Decision:** Heading pattern: `Browse {wiki display name} API modules` with wiki name in `<bdi>` (split banana strings `explorer-browse-api-modules-before` / `-after`).
+**Decision:** The rail heading is the selected module’s **`headingTitle`** in `<bdi>` (same parsed title as the reference panel `h2`, without beta/version chips in the rail header).
 
-### Module headings
+### Endpoint list
 
-**Decision:**
-
-- Accordion-style **button** headings (not native `<details>`)
-- **Multiple modules may be expanded** simultaneously
-- Expand/collapse icon: Codex **expand / collapse** icons at **80% of 14px** (~11.2px)
-- Module title parsing: strip `(Beta)` from title → **warning** “beta” chip; version → **success** chip with `v` prefix and **`-beta` stripped** from version strings (for example `v0.1.0` not `v0.1.0-beta`); chips use class **`explorer-module-chip`** (text-only, status icons hidden). The same beta/version metadata appears as Codex MenuItem **`supportingText`** in the REST API module select (see **Project controls block**)
-- First-load expansion of default module uses `overflow-anchor: none` on list so first heading stays visible
+**Decision:** Endpoints for the selected module are always shown (no accordion, no multi-module list). The rail grows to fit its content; on wide viewports **`max-block-size`** matches **`.explorer-page__scalar-shell`** (via `useEndPanelNavAlign`). When endpoints exceed that height, the endpoint list scrolls inside the rail while the module heading stays visible.
 
 ### Endpoint rows
 
-**Decision:** Each endpoint is a button with:
+**Decision:** Each endpoint is a **`CdxMenuItem`** outside a floating `CdxMenu` — same approved shell pattern as **`ShellSidePanelNav`**. The default slot renders method + path; `:label` supplies the accessible name. Row styling:
 
 | Part | Style |
 |------|--------|
-| HTTP method | Monospace, uppercase, bold; **method colour**: GET progressive, POST success, DELETE destructive, PUT/PATCH warning; `dir="ltr"` |
-| Path | Monospace, small, wraps anywhere; in `<bdi>` |
+| HTTP method | Monospace, uppercase, bold; **method colour**: GET progressive, POST success, DELETE destructive, PUT/PATCH warning; `dir="ltr"`; **`white-space: nowrap`** |
+| Path | Monospace, small; in `<bdi>`; **inline after method** on the same line; wraps only when the row runs out of space |
 
-**Interaction:** Click selects module (if needed) and triggers **Scalar operation focus** (scroll + navigation id resolution).
+**Layout:** Method and path use **inline flow** (not flex-wrap rows) so the path always begins after the method tag.
 
-**Source:** `dafafc3` (endpoint navigation), `334a51a` (multiple expansion), `ExplorerModuleRail.vue`, `useExplorerScalarFocus.ts`.
+**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module.
+
+**Hover:** Codex menu-item background on hover; label text turns **`--color-progressive`** (same as **`ShellSidePanelNav`** — no underline).
+
+**Scroll:** When the endpoint list exceeds the Scalar shell height cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls with a **thin visible scrollbar** (transparent track; same tokens as start nav — WebKit **`width: 6px`** exception documented in `ARCHITECTURE.md` → End column module rail).
+
+**Source:** `dafafc3` (endpoint navigation), `ExplorerModuleRail.vue`, `ShellSidePanelNav.vue`, `useExplorerScalarFocus.ts`.
 
 ### Rail positioning
 
-**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with main-column page controls uses `useEndPanelNavAlign` (anchor: `.frontdoor-page-nav-align-anchor` on project controls) setting `--frontdoor-end-panel-nav-flow-offset` and `--frontdoor-end-panel-nav-sticky-inset`. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
+**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
-**Decision (narrow):** Rail is static (not sticky), full width in stack.
+**Decision (narrow):** Rail is static (not sticky), full width in stack; endpoint list scrolls with the page.
 
-**Surface:** `--background-color-neutral-subtle`, rounded corners, internal scroll with `max-block-size` tied to viewport.
+**Surface:** `--background-color-neutral-subtle`, rounded corners; internal endpoint scroll on wide viewports when content exceeds the Scalar shell height cap.
 
 ---
 
@@ -598,9 +598,9 @@ Top to bottom:
 | Instance bootstrap | Full-page overlay inside explorer (absolute, not fixed over header): spinner, “Loading wiki API modules”, wiki name in `<bdi>`; gradient background matching Scalar loading |
 | Scalar client mount | `ClientOnly` fallback with same spinner pattern |
 | Module switch | On wide viewports only: semi-transparent mask over Scalar shell with “Loading selected module…” |
-| No selectable modules | Warning `CdxMessage` in rail |
-| Per-module spec error | Inline “Not available” + aggregated failed module list at rail bottom |
-| Empty endpoint list | Subtle empty copy under expanded module |
+| No selectable modules | Handled in project controls / bootstrap (rail hidden until `visibleSelectedModule` exists) |
+| Per-module spec error | Inline “Not available” copy in the module rail scrollport |
+| Empty endpoint list | Subtle empty copy in the module rail scrollport |
 | Bootstrap error | Error `CdxMessage` in main column |
 
 **Spinner:** 2.5rem circle, progressive-colour top border, 0.9s rotation.
@@ -733,5 +733,5 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
-| End-panel nav align | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
+| End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |

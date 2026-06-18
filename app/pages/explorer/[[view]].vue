@@ -50,8 +50,6 @@ const {
 	failedModules,
 	wikiDisplayName,
 	selectedModuleName,
-	expandedModuleNames,
-	setModuleExpanded,
 	pendingOperationTarget,
 	isInstanceBootstrapping,
 	isExplorerModuleRailVisible,
@@ -68,7 +66,6 @@ const includeInternalEndpoints = ref( false )
 
 const {
 	visibleModules,
-	visibleFailedModules,
 	hasVisibleSelectableModules,
 	visibleSelectedModule,
 	visibleOpenApiSpecUrl
@@ -91,7 +88,6 @@ watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 
 const referenceHeaderRef = ref<HTMLElement | null>( null )
 const referenceModuleLabelRef = ref<HTMLElement | null>( null )
-const projectControlsRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
@@ -121,8 +117,9 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 }
 
 const { endPanelNavStyle, refreshEndPanelNavAlign } = useEndPanelNavAlign(
-	projectControlsRef,
+	scalarShellRef,
 	explorerEndPanelElement,
+	scalarShellRef,
 	scalarShellRef
 )
 
@@ -223,7 +220,7 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-watch( [ isExplorerModuleRailVisible, selectedModuleName, visibleOpenApiSpecUrl, wikiDisplayName ], () => {
+watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady ], () => {
 	nextTick( () => {
 		refreshEndPanelNavAlign()
 	} )
@@ -242,10 +239,6 @@ watch( pendingOperationTarget, ( nextPendingOperationTarget ) => {
 		focusPendingOperationInScalar()
 	} )
 } )
-
-function onModuleExpandToggle( moduleName: string, isOpen: boolean ): void {
-	setModuleExpanded( moduleName, isOpen )
-}
 
 function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation ): void {
 	void selectModule( moduleName, {
@@ -274,8 +267,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 			<div
 				v-if="!isInstanceBootstrapping && isCommunityMode"
-				ref="projectControlsRef"
-				class="explorer-page__project-controls-anchor frontdoor-page-nav-align-anchor"
+				class="explorer-page__project-controls-anchor"
 			>
 				<ExplorerProjectControls
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
@@ -296,16 +288,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				:disabled="!isActiveExplorerRoute"
 			>
 				<ExplorerModuleRail
-					v-if="isExplorerModuleRailVisible"
+					v-if="isExplorerModuleRailVisible && visibleSelectedModule"
 					:style="endPanelNavStyle"
-					:modules="visibleModules"
-					:failed-modules="visibleFailedModules"
-					:has-selectable-modules="hasVisibleSelectableModules"
-					:selected-module-name="selectedModuleName"
-					:expanded-module-names="expandedModuleNames"
-					:wiki-display-name="wikiDisplayName"
+					:selected-module="visibleSelectedModule"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
-					@module-expand-toggle="onModuleExpandToggle"
 					@endpoint-click="onEndpointClick"
 				/>
 			</Teleport>

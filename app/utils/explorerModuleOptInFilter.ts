@@ -13,7 +13,7 @@ export interface ExplorerModuleOptInFilterOptions {
  *
  * @param modules - Full module list from explorer bootstrap.
  * @param filterOptions - Current opt-in checkbox values.
- * @returns Modules that may be shown in the rail and reference panel.
+ * @returns Modules that may be shown in the REST API module select and reference panel.
  */
 export function filterExplorerBootstrapModulesByOptIn<T extends { name: string }>(
 	modules: T[],
@@ -29,14 +29,14 @@ export function filterExplorerBootstrapModulesByOptIn<T extends { name: string }
 }
 
 /**
- * Resolves the first selectable module in explorer module-rail order.
+ * Resolves the first selectable module in discovery order after opt-in filtering.
  *
  * Applies the same opt-in filter and discovery ordering as {@link filterExplorerBootstrapModulesByOptIn},
  * then returns the first module without a spec fetch error.
  *
  * @param modules - Ordered bootstrap modules from discovery.
  * @param filterOptions - Opt-in checkbox values (defaults match initial explorer load).
- * @returns First healthy module shown on the rail, or undefined when none qualify.
+ * @returns First healthy module for the REST API module select and rail, or undefined when none qualify.
  */
 export function resolveFirstExplorerRailModule<T extends { name: string; hasSpecError: boolean }>(
 	modules: T[],

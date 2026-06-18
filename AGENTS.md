@@ -351,8 +351,8 @@ This set is chosen deliberately:
 - `useDiscovery(instance)` composable — fetches `{baseUrl}/w/rest.php/discovery` for the selected instance and returns the list of available modules with their spec URLs as provided by the response
 - `useWikiModules(instance)` composable — wraps `useDiscovery`, extracts the module list, caches per instance
 - Project + language pickers (`CdxCombobox` in a fieldset) populated from `config/explorerProjectPicker.ts`; selections resolve to wiki instance ids in `config/instances.ts` via `useExplorerProjectLanguagePicker`
-- REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in module-rail order (`resolveFirstExplorerRailModule`); menu options show beta/version metadata in MenuItem **`supportingText`**
-- A module rail populated from the discovery response for the selected instance — lists all available modules, uses the spec URL exactly as returned by discovery
+- REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in discovery order (`resolveFirstExplorerRailModule`); menu options show beta/version metadata in MenuItem **`supportingText`**
+- End-column **module rail** (`ExplorerModuleRail`) lists endpoints for the **selected REST API module** only; endpoint rows use **`CdxMenuItem`** (same shell pattern as `ShellSidePanelNav`); rail top aligns with **`.explorer-page__scalar-shell`** via `useEndPanelNavAlign`; content-sized height with **max-block-size** capped to the Scalar shell
 - Scalar re-renders against the spec URL from discovery when instance (project/language), REST module select, or endpoint selection changes
 - Verification that reactive config update (via `Object.assign` or equivalent) re-renders Scalar without full component teardown
 - Verification that switching to an RTL wiki instance (`hewiki`, `fawiki`) correctly sets `dir="rtl"` on the shell from `config/instances.ts`; switching back sets `dir="ltr"`
@@ -379,8 +379,8 @@ This set is chosen deliberately:
 - Switching project, language, or instance re-renders Scalar cleanly, within ~500ms, no Vue reactivity warnings
 - Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
 - Language combobox is disabled when Wikimedia Commons or Wikidata is selected
-- REST API module select defaults to the first healthy module in module-rail order (discovery order after opt-in filter)
-- Picker menu labels use BiDi isolation (`isolatePickerLabel()`); module names in the rail are wrapped in `<bdi>`; REST API module select menu version strings use `isolatePickerLabel()` in supporting text
+- REST API module select defaults to the first healthy module in discovery order (after opt-in filter)
+- Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels use BiDi isolation (`isolatePickerLabel()`); REST API module select menu version strings use `isolatePickerLabel()` in supporting text
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report

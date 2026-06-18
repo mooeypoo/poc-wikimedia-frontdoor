@@ -169,7 +169,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Explorer items with `mode` resolve `to` via `pathForExplorerMode()` and `isActive` via `explorerModeFromPath()`; `enabled: false` items are omitted. Content routes use prototype active map only. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-limited`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer(mode)` | Spec URL and Scalar overrides for Scalar-bearing enterprise modes (`enterprise-full`, `enterprise-limited`) |
-| `useEndPanelNavAlign(...)` | Aligns end-column page navigation with a main-column anchor (explorer project controls; reusable for future section menus) |
+| `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 
@@ -210,7 +210,7 @@ banana-i18n labels + resolved to + single global active item
 
 **Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-muted)`** on **`.frontdoor-shell__side-panel--start`** in `default.vue` when expanded — on the **scrollport panel**, not the grid track, so the border does not stack beside the scrollbar gutter. Section group dividers in **`ShellSidePanelNav`** use the same token. When **`.frontdoor-shell--nav-collapsed`**, **`border-inline-end-width: 0`** on the panel (scoped rule in `default.vue`). Border width transitions on expand with the drawer (`--transition-duration-medium`). This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
-**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown) and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown), for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**, and for **`ExplorerModuleRail`** endpoint rows. Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. See `DESIGN_REQUIREMENTS.md` → Start column section navigation and Module rail.
 
 **Codex exception — section nav hover colour.** Non-selected menu items use custom CSS (`:hover`) to set label text to **`--color-progressive`**. Codex `CdxMenuItem` hover normally only changes **background** (`--background-color-interactive-subtle--hover`); it does not turn unselected item text progressive. Additionally, when used outside `CdxMenu`, the `highlighted` prop is never toggled (the parent menu normally handles `@change` events), so shell styles must use **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items keep Codex’s built-in `--color-progressive` via `cdx-menu-item--selected`. Implemented in `ShellSidePanelNav.vue`.
 
@@ -252,7 +252,55 @@ Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transiti
 
 **Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
-## Shell layout and chrome
+---
+
+## End column module rail (API Explorer)
+
+On desktop, the grid **end column** (`#explorer-end-panel` in `app/layouts/default.vue`) hosts the community **module rail** when instance bootstrap succeeds. Enterprise modes hide the rail and leave the end column reserved-empty.
+
+**Data and selection.**
+
+```
+REST API module select (CdxSelect) → selectedModuleName
+       ↓
+useExplorerOptInFilteredModules → visibleSelectedModule
+       ↓
+ExplorerModuleRail (teleported from app/pages/explorer/[[view]].vue)
+       ↓
+@endpoint-click → selectModule(moduleName, { source: 'endpoint-item', operationTarget })
+```
+
+The rail lists **endpoints for `visibleSelectedModule` only** — not every discovered module. Module selection for Scalar is driven by the REST API module select; the rail is an endpoint browser for the active module. Spec URLs are never constructed in the rail; bootstrap already resolved them from discovery.
+
+**Component boundary.** `ExplorerModuleRail.vue` is presentational: it receives `selectedModule` and emits `endpoint-click`. The explorer page owns bootstrap state, opt-in filtering, and `useExplorerScalarFocus`. Endpoint labels and accessible names come from `app/utils/explorerEndpointLabels.ts`.
+
+**Rendering.**
+
+- Heading: selected module **`headingTitle`** in `<bdi>` (no beta/version chips in the rail header).
+- Endpoint rows: **`CdxMenuItem`** outside `CdxMenu` — same Codex shell exception as **`ShellSidePanelNav`**. Default slot renders HTTP method (`dir="ltr"`, method colours) + path (`<bdi>`); `:label` supplies the accessible name. Non-selected hover uses **`--color-progressive`** text (no underline).
+- Method + path layout: inline flow — method `white-space: nowrap`; path follows on the same line and wraps only when needed.
+
+**Layout and scroll (wide viewports, ≥ 1120px).**
+
+```
+useEndPanelNavAlign(
+  scalarShellRef,           // align anchor (top edge)
+  explorerEndPanelElement,  // #explorer-end-panel mount
+  scalarShellRef,           // sticky inset scroll clamp
+  scalarShellRef            // height cap → --frontdoor-end-panel-nav-max-block-size
+)
+```
+
+- Classes: **`frontdoor-end-panel-nav`** + **`explorer-module-rail`** (`app/assets/css/shell-end-panel-nav.css`).
+- Rail **block size follows content**; **`max-block-size`** is capped to **`.explorer-page__scalar-shell`** measured height.
+- When endpoints exceed the cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls internally; the module heading stays visible.
+- Scrollbar: thin thumb + transparent track (Firefox `scrollbar-width` / `scrollbar-color`; WebKit pseudo-elements — physical **`width: 6px`** exception, documented alongside start nav in **Shell scroll regions**).
+
+**Narrow viewports (< 1120px).** Rail is static (not sticky); endpoint list scrolls with the page.
+
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Module rail. Operation focus flow: **Module rail → Scalar operation focus** below.
+
+---
 
 The default layout (`app/layouts/default.vue`) mounts the application shell inside `PageGrid` (`app/components/shared/PageGrid.vue`). Layout tokens and breakpoint rules live in `app/assets/css/page-grid.css`. Visual and interaction decisions are recorded in `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
@@ -351,7 +399,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 
 ### Codex exceptions (shell chrome)
 
-1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. **Additional override:** non-selected items use custom `:hover` CSS for `--color-progressive` text (see **Shell section navigation** — hover colour). Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. **Navigation:** explorer mode items navigate via **`navigateTo(item.to)`** where `to` is resolved in **`usePageSectionNav()`** — the component does not construct URLs.
+1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list, for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**, and for **`ExplorerModuleRail`** endpoint rows (default slot for method + path; `:label` for accessible name). **Additional override:** non-selected items use custom `:hover` CSS for `--color-progressive` text (see **Shell section navigation** — hover colour; module rail uses the same progressive hover on method + path). Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. **Navigation:** explorer mode items navigate via **`navigateTo(item.to)`** where `to` is resolved in **`usePageSectionNav()`** — the component does not construct URLs.
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge (`border-block-end: 1px solid var(--border-color-muted)`) per Figma. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — Codex shows them on overflow and they **flicker on first paint** before intersection observers settle; shell chrome will use a separate responsive approach. **Tab label weight:** all labels **`--font-weight-normal`** — Codex sets **700** on every quiet-tab label by default; selected state uses colour/underline only.
 3. **Start column edge** — **`border-inline-end`** with `--border-color-muted` on **`.frontdoor-shell__side-panel--start`** when expanded (scrollport panel, not grid track); section dividers in **`ShellSidePanelNav`** use the same token; **`border-inline-end-width: 0`** when collapsed. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
@@ -495,7 +543,7 @@ Picker labels are banana-i18n interface strings (`explorer-project-*`, `explorer
 
 ### REST API module select
 
-Community explorer **module selection** (which OpenAPI spec Scalar loads) is driven by a **`CdxSelect`** in project controls. Options come from **`visibleModules`** — bootstrap modules in discovery order after **`filterExplorerBootstrapModulesByOptIn()`** — matching the module rail list.
+Community explorer **module selection** (which OpenAPI spec Scalar loads) is driven by a **`CdxSelect`** in project controls. Options come from **`visibleModules`** — bootstrap modules in discovery order after **`filterExplorerBootstrapModulesByOptIn()`**.
 
 ```
 User selects: REST API module (CdxSelect in ExplorerProjectControls)
@@ -507,13 +555,13 @@ useExplorerBootstrap.selectModule(moduleName, { source: 'module-select' })
 visibleOpenApiSpecUrl → useScalarConfig → Scalar reload (when module name changes)
 ```
 
-**Default module:** On bootstrap and when opt-in hides the current module, **`resolveFirstExplorerRailModule()`** (`app/utils/explorerModuleOptInFilter.ts`) picks the first module **without `hasSpecError`** in rail order, using **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** from `config/explorerOptIn.ts` on initial load. This keeps the select default, Scalar spec, and first rail entry aligned.
+**Default module:** On bootstrap and when opt-in hides the current module, **`resolveFirstExplorerRailModule()`** (`app/utils/explorerModuleOptInFilter.ts`) picks the first module **without `hasSpecError`** in discovery order, using **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** from `config/explorerOptIn.ts` on initial load. This keeps the select default and Scalar spec aligned.
 
 Select menu labels use each module’s **`headingTitle`** (external string) via `isolatePickerLabel()`. Stored value is the discovery **module name** (for example `-`, `readinglists/v0`, `attribution/v0-beta`).
 
-**Menu item supporting text:** Each option may include Codex MenuItem **`supportingText`** — the same beta and version metadata as the module rail chips, formatted by **`formatExplorerModuleSelectSupportingText()`** in `app/utils/explorerModuleRailHeading.ts` (shared with `resolveExplorerModuleRailHeading()` / `formatModuleRailHeadingAriaLabel()`). Beta uses banana-i18n `explorer-module-beta-chip-label`; version uses isolated `versionChipLabel` (external). Omitted when neither applies.
+**Menu item supporting text:** Each option may include Codex MenuItem **`supportingText`** — beta and version metadata formatted by **`formatExplorerModuleSelectSupportingText()`** in `app/utils/explorerModuleRailHeading.ts`. Beta uses banana-i18n `explorer-module-beta-chip-label`; version uses isolated `versionChipLabel` (external). Omitted when neither applies.
 
-The end-column **module rail** still lists all visible modules for endpoint browsing; endpoint clicks also call `selectModule` (with optional operation focus).
+The end-column **module rail** lists endpoints for **`visibleSelectedModule`** only; endpoint clicks call `selectModule` with optional operation focus.
 
 ### Spec resolution flow
 
@@ -586,7 +634,7 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow: auto)
 
 **Same-module clicks.** Selecting another endpoint in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged), so focus can run immediately without waiting for a spec swap.
 
-**UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
+**UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
 
 ### Explorer modes and start-column routing
 
@@ -627,13 +675,14 @@ filterExplorerBootstrapModulesByOptIn(modules, { includeBetaEndpoints, … })
        ↓
 isExplorerBetaOptInModule(name)?  ← config/explorerOptIn.ts (prefix `attribution/`)
        ↓
-visibleModules → ExplorerModuleRail + REST API module select
+visibleModules → REST API module select
+visibleSelectedModule → ExplorerModuleRail (endpoint list)
 visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
 ```
 
 When the active module becomes hidden (for example Attribution API with beta off), **`resolveFirstExplorerRailModule()`** selects the first remaining healthy module in rail order through `useExplorerBootstrap.selectModule()`. Bootstrap initial selection uses the same helper with **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`**. Internal opt-in rules are reserved until internal module ids are defined in config.
 
-Module rail headings and the reference `h2` use `headingTitle`, beta chip, and version chip from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`). The REST API module select reuses the same parsed fields for MenuItem **`supportingText`** via `formatExplorerModuleSelectSupportingText()`.
+The reference panel `h2` and module rail heading use `headingTitle` from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); beta and version chips appear on the reference panel and as REST API module select **`supportingText`** via `formatExplorerModuleSelectSupportingText()`. Version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`).
 
 ### Scalar plugin layer
 
@@ -912,13 +961,13 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Start column (always mounted) | `app/layouts/default.vue` (`.frontdoor-shell__side-panel--start.shell-side-panel.shell-side-panel--start`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
 | Start column edge + width | `app/layouts/default.vue` (scrollport border), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
-| Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css` (scrollport + scroll-end `::after` spacers), `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css` |
+| Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css` (scrollport + scroll-end `::after` spacers), `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-end-panel-nav.css` (module rail scrollport), `app/assets/css/main.css` |
 | Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
 | Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts` |
-| Explorer module rail + select metadata | `app/utils/explorerModuleRailHeading.ts`, `app/components/explorer/ExplorerModuleRail.vue` |
+| Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Explorer bootstrap + opt-in | `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
@@ -931,4 +980,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the module rail and REST API module select populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
