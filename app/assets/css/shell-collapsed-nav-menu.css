@@ -1,0 +1,9 @@
+/**
+ * shell-collapsed-nav-menu.css — Collapsed header navigation overlay helpers.
+ *
+ * Toggled on `<html>` by `useShellCollapsedNavMenu` while `ShellCollapsedNavMenuOverlay`
+ * is open. Overlay panel styles live in `ShellCollapsedNavMenuOverlay.vue`.
+ */
+html.shell-collapsed-nav-menu-open {
+	overflow: hidden;
+}

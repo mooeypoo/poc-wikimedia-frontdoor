@@ -99,7 +99,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 | Tools and bots | `config/sectionNavigation.js` | **Empty** sections array — panel shown, no `<nav>` |
 | API Explorer | `config/explorerSideNav.js` | Two sections: API Explorer + Overview placeholders |
 
-**Rendering:** `usePageSectionNav()` → start panel wrapper always in `app/layouts/default.vue` (`frontdoor-shell__side-panel--start` + `shell-side-panel` + **`shell-side-panel--start`**); `ShellSidePanelNav.vue` when sections are non-empty. Labels via banana-i18n only.
+**Rendering:** `usePageSectionNav()` → start panel wrapper always in `app/layouts/default.vue` (`frontdoor-shell__side-panel--start` + `shell-side-panel` + **`shell-side-panel--start`**); `ShellSidePanelNav.vue` when sections are non-empty. Labels via banana-i18n only. In the **collapsed nav overlay**, the same component is reused with optional **`omitSectionTitleMatching`** so a section heading equal to the back-control label is not shown twice (see **Shell chrome** → Collapsed overlay).
 
 **Codex exceptions:**
 
@@ -180,7 +180,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; start drawer on expand |
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide; Codex transition tokens |
-| Collapsed hamburger menu panel | **Deferred** | Button visible; click-to-open not wired |
+| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; scroll lock |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel scroll-end symmetry | **Implemented** | `padding-block-end: --spacing-200` on start panel + footer; wrapper must include `shell-side-panel--start` class |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
@@ -276,7 +276,18 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Start nav scroll (drawer-compatible):** Tablet+ scrollport is **`.frontdoor-shell__side-panel--start`** — must **`flex-shrink: 1`** with **`min-block-size: 0`** so `overflow-block: auto` activates inside the flex-column grid track. Mobile scrollport is **`.fd-page-grid__start`** (`max-block-size: 40dvh`, `overflow-y: auto` from `page-grid.css`); drawer CSS uses **`overflow-inline: hidden`** only when expanded (not blanket `overflow: hidden`, which had broken vertical scroll).
 
-**Hamburger menu activation is deferred** — collapse is viewport-driven; the button does not open an overlay yet.
+**Collapsed overlay (Figma [Off-wiki page templates 25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929)):** Hamburger toggles a full-viewport overlay (`ShellCollapsedNavMenuOverlay`, teleported to `<body>`, **`z-index: 20`** above header chrome). Mask: **`--background-color-backdrop-light`**. Start-side panel: **`--fd-layout-start-panel-inline-size` (281px)**, **`--background-color-base`**, **`border-inline-end: var(--border-color-subtle)`**, inline padding **`--spacing-200`** start / **`--spacing-75`** end, block padding **`--spacing-100`**.
+
+| Overlay element | Token / behaviour |
+|-----------------|-------------------|
+| Back control | Quiet small `CdxButton`; **`cdxIconPrevious`** (`flip-for-rtl`); visible text = active primary section label; `aria-label` from `shell-collapsed-nav-menu-back-button-label` |
+| Back control → first item gap | **`gap: var(--spacing-50)`** on overlay panel flex column |
+| Section list | Reuses **`ShellSidePanelNav`**; **`omitSectionTitleMatching`** hides a section heading when it equals the back label (avoids duplicating the primary section name) |
+| Primary list | Flat **`CdxMenuItem`** rows (main tabs + API Explorer); selection navigates and closes overlay |
+| Dismiss | Backdrop click, **Escape**, route change, or nav expand |
+| Scroll lock | `html.shell-collapsed-nav-menu-open { overflow: hidden }` in **`shell-collapsed-nav-menu.css`** |
+
+**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
 **Utility row alignment:** Utility controls are grouped at the **inline-end** in `ShellHeaderUtilityActions`.
 
@@ -302,9 +313,9 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()`. Explorer routes leave **no tab selected** (`activeNavigationId` empty).
 
-**Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), and collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731). Collapsed nav menu panel interaction remains deferred.
+**Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
-**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`.
+**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `config/shellNavigation.ts`.
 
 ### Primary navigation row (superseded)
 
@@ -373,7 +384,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | **Legacy token** | `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel |
 | **Width** | **281px** — `calc(15.0625rem + var(--fd-layout-desktop-wide-column-width))` (Figma **241px** + one **40px** grid column); **wider than Figma** side-panel spec |
 
-**Disclaimer:** The **281px** drawer width and **border-not-background** treatment are **prototype styling choices** from chrome exploration (May 2026). Confirm with design before treating either as final relative to [Unified Developer Front Door — Navigation (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548). Viewport-driven collapse is **implemented**; hamburger **click-to-open** is **deferred**.
+**Disclaimer:** The **281px** drawer width and **border-not-background** treatment are **prototype styling choices** from chrome exploration (May 2026). Confirm with design before treating either as final relative to [Unified Developer Front Door — Navigation (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=225-4548). Viewport-driven collapse and hamburger overlay are **implemented**.
 
 **Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/components/shared/ShellSidePanelNav.vue`, `app/assets/css/main.css` (shell side-panel font stack).
 
@@ -583,6 +594,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Collapsed nav overlay | `useShellCollapsedNavMenu`, `ShellCollapsedNavMenuOverlay`, `shell-collapsed-nav-menu.css`; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` panel gap |
 | *(uncommitted)* | Scroll-end symmetry (32px) | `padding-block-end: --spacing-200` on start panel + footer; `shell-side-panel--start` class on panel wrapper (required for padding + drawer CSS) |
 | *(uncommitted)* | Start nav scroll + drawer clip | `flex-shrink: 1` on `.frontdoor-shell__side-panel--start`; mobile `overflow-inline: hidden` (not blanket `overflow: hidden`) in `shell-start-nav-reveal.css` |
 | *(uncommitted)* | Shell chrome polish | Symmetric header inset; mark + Montserrat banana wordmark (header/footer); language select always shows active locale; header `CdxSelect` RTL chevron **open issue** documented |
@@ -614,7 +626,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 ## Open questions / future design work
 
 1. **Wire section navigation** to real content routes (replace `href="#"` placeholders and prototype active map).
-2. **Hamburger menu panel** — wire `ShellCollapsedNavigation` menu button to open section nav (overlay or push drawer on demand).
+2. **Search overlay** — wire collapsed utility search icon to open search UI.
 3. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
 5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
@@ -639,7 +651,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `config/remoteContentSources.ts` |
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css` |
-| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css` |
+| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Start column chrome | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/components/shared/ShellSidePanelNav.vue`, `app/composables/usePageSectionNav.ts` |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts` |

@@ -11,7 +11,8 @@ import type { ResolvedSectionNavSection } from '../../composables/usePageSection
  * inline-end border on `.fd-page-grid__start` (see `default.vue`, DESIGN_REQUIREMENTS.md).
  *
  * **Codex exceptions:**
- * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only.
+ * - `CdxMenuItem` outside a floating `CdxMenu` — approved for this static shell list only
+ *   (and for the collapsed overlay primary list in `ShellCollapsedNavMenuOverlay`).
  * - Non-selected items: custom `:hover` CSS sets `--color-progressive` text. Codex hover
  *   normally changes background only; `highlighted` is never toggled without a parent `CdxMenu`.
  *
@@ -23,6 +24,11 @@ defineProps<{
 	ariaLabel: string
 	/** Resolved sections with translated labels. */
 	sections: ResolvedSectionNavSection[]
+	/**
+	 * When set, section headings equal to this label are omitted (e.g. collapsed
+	 * nav overlay back control already shows the primary section name).
+	 */
+	omitSectionTitleMatching?: string
 }>()
 </script>
 
@@ -35,7 +41,10 @@ defineProps<{
 			v-for="( section, sectionIndex ) in sections"
 			:key="section.id"
 		>
-			<p class="shell-side-panel-nav__section-title">
+			<p
+				v-if="section.title !== omitSectionTitleMatching"
+				class="shell-side-panel-nav__section-title"
+			>
 				{{ section.title }}
 			</p>
 			<CdxMenuItem

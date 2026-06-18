@@ -8,6 +8,7 @@ import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
 import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigationBreadcrumbs'
 import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
+import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMenu'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -93,6 +94,8 @@ const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' 
 const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
 const collapsedNavigationRegionLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-label' ) )
 const collapsedNavigationMenuButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-button-label' ) )
+const collapsedNavMenuOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-overlay-label' ) )
+const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-back-button-label' ) )
 
 const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
 const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
@@ -101,6 +104,19 @@ const { isNavigationCollapsed } = useShellNavigationCollapse(
 	primaryNavRowRef,
 	expandedNavContentRef
 )
+
+const hasSectionNavigation = computed( () => pageSectionNavigationSections.value.length > 0 )
+
+const {
+	isCollapsedNavMenuOpen,
+	collapsedNavMenuView,
+	closeCollapsedNavMenu,
+	toggleCollapsedNavMenu,
+	showCollapsedNavMenuPrimaryView
+} = useShellCollapsedNavMenu( {
+	isNavigationCollapsed,
+	hasSectionNavigation
+} )
 
 const {
 	primaryNavigationBreadcrumbLabel,
@@ -121,6 +137,24 @@ function handlePrimaryNavigationSelect( navigationId: string ): void {
 	if ( navigationLink ) {
 		navigateTo( navigationLink.to )
 	}
+}
+
+/**
+ * Navigates from the collapsed overlay primary list and closes the overlay.
+ *
+ * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
+ */
+function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): void {
+	handlePrimaryNavigationSelect( navigationId )
+	closeCollapsedNavMenu()
+}
+
+/**
+ * Navigates to the API Explorer from the collapsed overlay and closes it.
+ */
+function handleCollapsedNavMenuApiExplorerSelect(): void {
+	navigateTo( API_EXPLORER_NAVIGATION_PATH )
+	closeCollapsedNavMenu()
 }
 
 useHead( {
@@ -200,12 +234,33 @@ useHead( {
 								:primary-navigation-label="primaryNavigationBreadcrumbLabel"
 								:section-navigation-label="sectionNavigationBreadcrumbLabel"
 								:has-section-navigation-breadcrumb="hasSectionNavigationBreadcrumb"
+								:is-menu-open="isCollapsedNavMenuOpen"
+								@menu-toggle="toggleCollapsedNavMenu"
 							/>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<SharedShellCollapsedNavMenuOverlay
+			v-if="isNavigationCollapsed && isCollapsedNavMenuOpen"
+			:overlay-label="collapsedNavMenuOverlayLabel"
+			:back-button-label="collapsedNavMenuBackButtonLabel"
+			:primary-navigation-label="primaryNavigationBreadcrumbLabel"
+			:primary-navigation-list-label="primaryNavigationLabel"
+			:api-explorer-link-label="apiExplorerLinkLabel"
+			:menu-view="collapsedNavMenuView"
+			:main-navigation-links="mainNavigationLinks"
+			:active-navigation-id="activeNavigationId"
+			:is-explorer-route="isExplorerRoute"
+			:section-navigation-label="pageSectionNavigationLabel"
+			:section-navigation-sections="pageSectionNavigationSections"
+			@close="closeCollapsedNavMenu"
+			@back="showCollapsedNavMenuPrimaryView"
+			@primary-navigation-select="handleCollapsedNavMenuPrimaryNavigationSelect"
+			@api-explorer-select="handleCollapsedNavMenuApiExplorerSelect"
+		/>
 
 		<SharedPageGrid class="frontdoor-shell__page-grid">
 			<template #start>

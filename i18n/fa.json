@@ -14,6 +14,8 @@
   "nav-primary-label": "ناوبری سایت",
   "shell-collapsed-nav-label": "ناوبری جمع‌شده سایت",
   "shell-collapsed-nav-menu-button-label": "باز کردن منوی ناوبری سایت",
+  "shell-collapsed-nav-menu-overlay-label": "منوی ناوبری سایت",
+  "shell-collapsed-nav-menu-back-button-label": "بازگشت به ناوبری سایت",
   "interface-language-label": "زبان رابط کاربری",
   "interface-language-placeholder": "زبان را انتخاب کنید",
   "interface-language-en": "انگلیسی",

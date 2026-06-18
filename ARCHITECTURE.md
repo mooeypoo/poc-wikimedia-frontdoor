@@ -160,6 +160,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; explicit `/explorer` path |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route; pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
+| `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs |
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`). Prototype active states only |
 | `useExplorerScalarFocus(...)` | Resolves Scalar nav ids and scrolls/focuses a module-rail endpoint after spec load (see Module rail → Scalar operation focus) |
@@ -201,7 +202,7 @@ banana-i18n labels + single global active item
 
 **Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-subtle)`** on `.fd-page-grid__start` in `default.vue` when expanded. When **`.frontdoor-shell--nav-collapsed`**, **`border-inline-end-width: 0`** on the track (scoped rule in `default.vue` — a zero-width cell must not paint a 1px edge). Border width transitions on expand with the drawer (`--transition-duration-medium`). This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
-**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown). See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown) and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 **Codex exception — section nav hover colour.** Non-selected menu items use custom CSS (`:hover`) to set label text to **`--color-progressive`**. Codex `CdxMenuItem` hover normally only changes **background** (`--background-color-interactive-subtle--hover`); it does not turn unselected item text progressive. Additionally, when used outside `CdxMenu`, the `highlighted` prop is never toggled (the parent menu normally handles `@change` events), so shell styles must use **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items keep Codex’s built-in `--color-progressive` via `cdx-menu-item--selected`. Implemented in `ShellSidePanelNav.vue`.
 
@@ -239,9 +240,9 @@ Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transiti
 | **Tablet+** | `.frontdoor-shell__side-panel--start` (`overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`) | `.fd-page-grid__start` (`overflow: hidden`); panel `transform` slide |
 | **Mobile** | `.fd-page-grid__start` (`overflow-y: auto`, `max-block-size: 40dvh`) | `overflow-inline: hidden` when expanded; `overflow: hidden` when collapsed |
 
-**Deferred:** hamburger button opens a menu/drawer on click (Figma [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)) — collapse is viewport-driven only.
+**Collapsed overlay (click).** When collapsed, the hamburger toggles **`ShellCollapsedNavMenuOverlay`** (`useShellCollapsedNavMenu`) — teleported to `<body>`, **`z-index: 20`** (above `.frontdoor-shell__chrome-band` at **10**). Full-viewport **`--background-color-backdrop-light`** mask; start-side panel at **`--fd-layout-start-panel-inline-size` (281px)** with **`border-inline-end`** (`--border-color-subtle`). **Section view (default when sections exist):** quiet small back `CdxButton` with **`cdxIconPrevious`** (`flip-for-rtl`) showing the active primary section label; **`gap: var(--spacing-50)`** between back control and first menu item; **`ShellSidePanelNav`** reuses start-column links with **`omitSectionTitleMatching`** so the primary section heading is not duplicated. **Primary view:** flat `CdxMenuItem` list (main tabs + API Explorer) — same **Codex exception** as `ShellSidePanelNav`. Selection calls `navigateTo()` from `default.vue` then closes the overlay. **Dismiss:** backdrop click, Escape, route change, or nav expand. Document scroll lock: `html.shell-collapsed-nav-menu-open` in `shell-collapsed-nav-menu.css`. Figma [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
-**Source:** `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`, `app/layouts/default.vue`.
+**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
 ## Shell layout and chrome
 
@@ -329,16 +330,17 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 |-----------|------|---------------------|
 | `ShellHeaderUtilityActions.vue` | Utility row (search, settings, language, log in; responsive collapse) | `useShellHeaderUtilityMenu`, `useContentSearch`, `config/headerChrome.ts` |
 | `ShellHeaderBrand.vue` | Header brand (32px mark + two-line banana wordmark in Montserrat); links to Get started | `useMainNavigationLinks()`, `config/brandTypography.ts` |
-| `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` |
+| `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()`; optional `omitSectionTitleMatching` in collapsed overlay |
 | `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
-| `ShellCollapsedNavigation.vue` | Collapsed header nav (hamburger + breadcrumbs) | `useShellNavigationBreadcrumbs()` |
+| `ShellCollapsedNavigation.vue` | Collapsed header nav (hamburger + breadcrumbs) | `useShellNavigationBreadcrumbs()`; emits menu toggle; `aria-expanded` when overlay open |
+| `ShellCollapsedNavMenuOverlay.vue` | Full-screen collapsed nav overlay (section + primary views) | Props + events from `default.vue`; `ShellSidePanelNav`; `useShellCollapsedNavMenu` state |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
 
 **API Explorer header link.** Not a tab. `default.vue` renders a `NuxtLink` to `API_EXPLORER_NAVIGATION_PATH` (`/explorer` from `config/mainNavigation.ts`) **immediately after** the quiet tab list in `.frontdoor-shell__primary-nav-row`. Tabs use **`flex: 0 1 auto`** (intrinsic width) so the link follows the last tab, not the inline-end of the row. **`gap: var(--spacing-150)` (24px)** between the last tab and the link. Uses `cdxIconArrowNext` (`--color-progressive` on the icon). Active state when `isExplorerRoutePath()`; no primary tab is selected on explorer routes (`getMainNavigationIdFromPath` returns `null`).
 
 ### Codex exceptions (shell chrome)
 
-1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list. **Additional override:** non-selected items use custom `:hover` CSS for `--color-progressive` text (see **Shell section navigation** — hover colour).
+1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. **Additional override:** non-selected items use custom `:hover` CSS for `--color-progressive` text (see **Shell section navigation** — hover colour). Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label.
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (re-imported after dynamic `codex.style-rtl.css` load) — `.frontdoor-shell__chrome-band` owns the single header edge per Figma. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — Codex shows them on overflow and they **flicker on first paint** before intersection observers settle; shell chrome will use a separate responsive approach. **Tab label weight:** all labels **`--font-weight-normal`** — Codex sets **700** on every quiet-tab label by default; selected state uses colour/underline only.
 3. **Start column edge** — **`border-inline-end`** with `--border-color-subtle` on `.fd-page-grid__start` when expanded; **`border-inline-end-width: 0`** when collapsed. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
@@ -418,7 +420,7 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Log in link | **Non-functional** (`@click.prevent`) |
 | Brand logo SVG | **32px `developer-portal-logo-mark.svg` + banana wordmark** (Montserrat); not single-path lockup |
 | Primary nav + start column collapse | **Implemented** — `useShellNavigationCollapse`; hamburger + breadcrumbs; start drawer on expand (`shell-start-nav-reveal.css`) |
-| Collapsed hamburger menu panel | **Deferred** — button visible; click interaction not wired |
+| Collapsed hamburger menu overlay | **Implemented** — `useShellCollapsedNavMenu`; `ShellCollapsedNavMenuOverlay`; backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `shell-collapsed-nav-menu.css` scroll lock |
 | Header container-query search collapse | **Implemented** | `ShellHeaderUtilityActions` — 256px search min; `CdxMenuButton` for settings/language/log in |
 | Collapsed search button activation | **Deferred** | Icon visible; overlay/expansion behaviour not defined |
 | Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
@@ -816,12 +818,13 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Start column edge + width | `app/layouts/default.vue` (border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css` |
-| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css` |
+| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
+| Interface strings (collapsed nav overlay) | `i18n/*` (`shell-collapsed-nav-menu-*`, `shell-collapsed-nav-label`) |
 
 ---
 

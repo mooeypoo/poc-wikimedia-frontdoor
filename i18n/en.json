@@ -14,6 +14,8 @@
   "nav-primary-label": "Site navigation",
   "shell-collapsed-nav-label": "Collapsed site navigation",
   "shell-collapsed-nav-menu-button-label": "Open site navigation menu",
+  "shell-collapsed-nav-menu-overlay-label": "Site navigation menu",
+  "shell-collapsed-nav-menu-back-button-label": "Back to site navigation",
   "nav-utility-label": "Utility navigation",
   "header-search-placeholder": "Search the developer portal",
   "header-search-button-label": "Search",

@@ -14,6 +14,8 @@
   "nav-primary-label": "ניווט באתר",
   "shell-collapsed-nav-label": "ניווט באתר מכווץ",
   "shell-collapsed-nav-menu-button-label": "פתיחת תפריט הניווט באתר",
+  "shell-collapsed-nav-menu-overlay-label": "תפריט ניווט באתר",
+  "shell-collapsed-nav-menu-back-button-label": "חזרה לניווט באתר",
   "nav-utility-label": "ניווט שירות",
   "header-search-placeholder": "חיפוש בפורטל המפתחים",
   "header-search-button-label": "חיפוש",

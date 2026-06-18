@@ -6,8 +6,8 @@ import { cdxIconMenu, cdxIconNext } from '@wikimedia/codex-icons'
  * Collapsed shell navigation — hamburger control plus primary / section breadcrumbs.
  *
  * Shown when `useShellNavigationCollapse` collapses the quiet tabs and start-column
- * section menu. Menu activation is deferred to a follow-up task (Figma Off-wiki
- * page templates node 50:2731).
+ * section menu. The menu button toggles `ShellCollapsedNavMenuOverlay` (Figma Off-wiki
+ * page templates nodes 50:2731, 25:1929).
  */
 defineProps<{
 	/** Accessible name for the collapsed navigation region. */
@@ -20,6 +20,13 @@ defineProps<{
 	sectionNavigationLabel: string
 	/** When false, only the primary breadcrumb is shown. */
 	hasSectionNavigationBreadcrumb: boolean
+	/** When true, the collapsed navigation overlay is open (menu button pressed state). */
+	isMenuOpen: boolean
+}>()
+
+const emit = defineEmits<{
+	/** Emitted when the user activates the menu button. */
+	'menu-toggle': []
 }>()
 </script>
 
@@ -28,12 +35,12 @@ defineProps<{
 		class="shell-collapsed-navigation"
 		:aria-label="regionLabel"
 	>
-		<!-- Menu panel interaction deferred — prototype control only. -->
 		<CdxButton
 			class="shell-collapsed-navigation__menu-button"
 			weight="quiet"
 			:aria-label="menuButtonLabel"
-			@click.prevent
+			:aria-expanded="isMenuOpen"
+			@click="emit( 'menu-toggle' )"
 		>
 			<CdxIcon :icon="cdxIconMenu" />
 		</CdxButton>
