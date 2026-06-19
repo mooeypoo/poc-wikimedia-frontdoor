@@ -6,6 +6,7 @@ import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOptInFilteredModules'
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
+import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
 import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
@@ -116,7 +117,9 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 	}
 }
 
-const { endPanelNavStyle, refreshEndPanelNavAlign } = useEndPanelNavAlign(
+const { layoutMode, moduleRailTeleportTarget } = useExplorerModuleRailPlacement()
+
+const { refreshEndPanelNavAlign, scheduleLayoutSettledRefresh } = useEndPanelNavAlign(
 	scalarShellRef,
 	explorerEndPanelElement,
 	scalarShellRef,
@@ -220,8 +223,15 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady ], () => {
-	nextTick( () => {
+watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady, layoutMode ], ( [ , , , nextLayoutMode ] ) => {
+	void nextTick( () => {
+		if ( nextLayoutMode === 'end-column' ) {
+			void nextTick( () => {
+				scheduleLayoutSettledRefresh()
+			} )
+			return
+		}
+
 		refreshEndPanelNavAlign()
 	} )
 } )
@@ -267,7 +277,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 			<div
 				v-if="!isInstanceBootstrapping && isCommunityMode"
-				class="explorer-page__project-controls-anchor"
+				class="explorer-page__project-controls-stack"
 			>
 				<ExplorerProjectControls
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
@@ -279,19 +289,24 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					:select-module="selectModule"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 				/>
+				<div
+					id="explorer-module-rail-anchor"
+					class="explorer-page__module-rail-anchor"
+				/>
 			</div>
 		</div>
 
 		<ClientOnly v-if="isCommunityMode">
 			<Teleport
-				to="#explorer-end-panel"
+				:to="moduleRailTeleportTarget"
 				:disabled="!isActiveExplorerRoute"
 			>
 				<ExplorerModuleRail
 					v-if="isExplorerModuleRailVisible && visibleSelectedModule"
-					:style="endPanelNavStyle"
+					:key="layoutMode"
 					:selected-module="visibleSelectedModule"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
+					:layout-mode="layoutMode"
 					@endpoint-click="onEndpointClick"
 				/>
 			</Teleport>
@@ -433,6 +448,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__header p {
 	margin: 0;
 	max-inline-size: 60ch;
+}
+
+.explorer-page__project-controls-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-100 );
+	min-inline-size: 0;
+}
+
+.explorer-page__module-rail-anchor {
+	min-inline-size: 0;
 }
 
 .explorer-page__bootstrap-loading {

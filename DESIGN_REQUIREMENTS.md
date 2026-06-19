@@ -211,7 +211,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 
 **Decision:** On `/explorer`, the **end** column hosts a teleported **module rail** (`#explorer-end-panel`). The **main** column holds project controls and the Scalar reference panel.
 
-**Below desktop (&lt; 1120px):** Side panels use the interim layout above; module rail and full 2-panel placement are **desktop-only** until side-panel responsive behaviour is implemented.
+**Below desktop (&lt; 1120px):** End column hidden. Module rail teleports **inline** below project controls (`#explorer-module-rail-anchor`) with **`--spacing-100` (16px)** gap; collapsible endpoint panel per Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968). When expanded, block size follows content for **seven or fewer** endpoints; more than seven cap the endpoint scrollport to seven visible rows with internal scroll (`useExplorerModuleRailInlineEndpointScrollCap`, `config/explorerModuleRail.ts`). Reference panel and Scalar follow below.
 
 **Wide (≥ 960px on explorer page):** Reference panel and Scalar shell use sticky, viewport-height scrolling as documented in **API Explorer page layout** below.
 
@@ -565,7 +565,11 @@ Top to bottom:
 
 ### Endpoint list
 
-**Decision:** Endpoints for the selected module are always shown (no accordion, no multi-module list). The rail grows to fit its content; on wide viewports **`max-block-size`** matches **`.explorer-page__scalar-shell`** (via `useEndPanelNavAlign`). When endpoints exceed that height, the endpoint list scrolls inside the rail while the module heading stays visible.
+**Decision:** Endpoints for the selected module are always shown on **desktop end-column** layout. On **inline** layout (&lt; 1120px), the endpoint list is **collapsed by default** and toggled via a quiet icon `CdxButton` (`cdxIconExpand` / `cdxIconCollapse`); module changes reset to collapsed.
+
+On wide viewports the rail grows to fit its content; **`max-block-size`** matches **`.explorer-page__scalar-shell`** (via `useEndPanelNavAlign`). When endpoints exceed that height, the endpoint list scrolls inside the rail while the module heading stays visible.
+
+On **inline** layout when the endpoint panel is expanded: **seven or fewer** endpoints — panel block size follows content; **more than seven** — **`useExplorerModuleRailInlineEndpointScrollCap`** caps **`.explorer-module-rail__endpoint-scrollport`** to seven visible rows (measured from the first seven `CdxMenuItem` rows); additional endpoints scroll inside the scrollport. Cap constant: **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** in **`config/explorerModuleRail.ts`**.
 
 ### Endpoint rows
 
@@ -582,17 +586,17 @@ Top to bottom:
 
 **Hover:** Codex menu-item background on hover; label text turns **`--color-progressive`** (same as **`ShellSidePanelNav`** — no underline).
 
-**Scroll:** When the endpoint list exceeds the Scalar shell height cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls with a **thin visible scrollbar** (transparent track; same tokens as start nav — WebKit **`width: 6px`** exception documented in `ARCHITECTURE.md` → End column module rail).
+**Scroll:** When the endpoint list exceeds its layout cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls with a **thin visible scrollbar** (transparent track; same tokens as start nav — WebKit **`width: 6px`** exception documented in `ARCHITECTURE.md` → End column module rail). **Wide (≥ 1120px):** cap matches Scalar shell height via `useEndPanelNavAlign`. **Inline (&lt; 1120px, expanded):** cap is seven visible endpoint rows when count exceeds **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** (`config/explorerModuleRail.ts`).
 
-**Source:** `dafafc3` (endpoint navigation), `ExplorerModuleRail.vue`, `ShellSidePanelNav.vue`, `useExplorerScalarFocus.ts`.
+**Source:** `dafafc3` (endpoint navigation), `ExplorerModuleRail.vue`, `ShellSidePanelNav.vue`, `useExplorerScalarFocus.ts`, `useExplorerModuleRailInlineEndpointScrollCap.ts`, `config/explorerModuleRail.ts`.
 
 ### Rail positioning
 
+**Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). **`--spacing-100` (16px)** gap from project controls. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
+
 **Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
-**Decision (narrow):** Rail is static (not sticky), full width in stack; endpoint list scrolls with the page.
-
-**Surface:** `--background-color-neutral-subtle`, rounded corners; internal endpoint scroll on wide viewports when content exceeds the Scalar shell height cap.
+**Surface:** `--background-color-neutral-subtle`, rounded corners; internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
 ---
 
@@ -696,7 +700,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
 5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
 6. **Apply opt-in filters** to module/endpoint lists and Scalar display.
-7. **Mobile explorer** — dedicated small-screen module rail placement (currently stacked; start nav capped at **40dvh** with scroll when long).
+7. **Mobile explorer** — inline collapsible module rail below project controls is **implemented** (&lt; 1120px); remaining mobile polish (reference panel sticky, Scalar height) may still evolve.
 8. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
 9. **Editorial content** for Use content and data, Community, Contribute, Get help.
 10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.

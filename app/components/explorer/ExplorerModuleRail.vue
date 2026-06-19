@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { CdxMenuItem } from '@wikimedia/codex'
+import { CdxButton, CdxIcon, CdxMenuItem } from '@wikimedia/codex'
+import { cdxIconCollapse, cdxIconExpand } from '@wikimedia/codex-icons'
+import type { ExplorerModuleRailLayoutMode } from '../../composables/useExplorerModuleRailPlacement'
 import type { ExplorerBootstrapModule, ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
+import { useExplorerModuleRailInlineEndpointScrollCap } from '../../composables/useExplorerModuleRailInlineEndpointScrollCap'
 import {
 	formatEndpointAccessibleLabel,
 	resolveEndpointPathLabel
 } from '../../utils/explorerEndpointLabels'
 
 /**
- * ExplorerModuleRail — right-hand endpoint navigation for the selected REST API module.
+ * ExplorerModuleRail — endpoint navigation for the selected REST API module.
  *
- * Lists endpoints for the module chosen in project controls. Presentational only;
- * the explorer page owns state and passes handlers for user interactions.
+ * Desktop end column: always expanded with a large module heading.
+ * Inline (below project controls): collapsible panel per Figma mobile API Explorer (477:4968);
+ * expanded lists with more than seven endpoints cap the scrollport via
+ * `useExplorerModuleRailInlineEndpointScrollCap` (`config/explorerModuleRail.ts`).
  *
  * **Codex exception:** `CdxMenuItem` outside a floating `CdxMenu` — same approved pattern as
  * `ShellSidePanelNav` (static shell list). Endpoint rows use the default slot for method +
@@ -19,6 +24,7 @@ import {
 const props = defineProps<{
 	selectedModule: ExplorerBootstrapModule
 	isInstanceBootstrapping: boolean
+	layoutMode: ExplorerModuleRailLayoutMode
 }>()
 
 const emit = defineEmits<{
@@ -27,10 +33,66 @@ const emit = defineEmits<{
 
 const { $bananaI18n } = useNuxtApp()
 
+const isInlineLayout = computed( () => props.layoutMode === 'inline' )
+const isEndpointListExpanded = ref( false )
+const endpointScrollportElement = ref<HTMLElement | null>( null )
+const endpointListElement = ref<HTMLElement | null>( null )
+
+const endpointCount = computed( () => props.selectedModule.operations.length )
+
+const { isInlineEndpointScrollCapped } = useExplorerModuleRailInlineEndpointScrollCap(
+	endpointScrollportElement,
+	endpointListElement,
+	isInlineLayout,
+	isEndpointListExpanded,
+	endpointCount
+)
+
 const endpointsNavigationLabel = computed( () => $bananaI18n( 'explorer-endpoints-label' ) )
 const endpointsEmptyLabel = computed( () => $bananaI18n( 'explorer-endpoints-empty' ) )
 const moduleUnavailableLabel = computed( () => $bananaI18n( 'explorer-module-unavailable' ) )
 const endpointFallbackLabel = computed( () => $bananaI18n( 'explorer-endpoint-fallback' ) )
+const expandEndpointsLabel = computed( () => $bananaI18n( 'explorer-module-rail-expand-endpoints-label' ) )
+const collapseEndpointsLabel = computed( () => $bananaI18n( 'explorer-module-rail-collapse-endpoints-label' ) )
+
+const endpointListElementId = computed( () => {
+	return `explorer-module-rail-endpoints-${ props.selectedModule.name.replace( /[^\w-]+/g, '-' ) }`
+} )
+
+const toggleEndpointsLabel = computed( () => {
+	return isEndpointListExpanded.value ? collapseEndpointsLabel.value : expandEndpointsLabel.value
+} )
+
+const toggleEndpointsIcon = computed( () => {
+	return isEndpointListExpanded.value ? cdxIconCollapse : cdxIconExpand
+} )
+
+const shouldShowEndpointList = computed( () => {
+	if ( !isInlineLayout.value ) {
+		return true
+	}
+
+	return isEndpointListExpanded.value
+} )
+
+watch( () => props.selectedModule.name, () => {
+	isEndpointListExpanded.value = false
+} )
+
+watch( isInlineLayout, ( nextIsInlineLayout ) => {
+	if ( nextIsInlineLayout ) {
+		isEndpointListExpanded.value = false
+	}
+} )
+
+/**
+ * Toggles endpoint list visibility in the inline collapsible layout.
+ *
+ * @returns Nothing.
+ */
+function onToggleEndpointListClick(): void {
+	isEndpointListExpanded.value = !isEndpointListExpanded.value
+}
 
 /**
  * Handles activation of an endpoint menu item.
@@ -46,15 +108,45 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 <template>
 	<aside
 		class="explorer-module-rail frontdoor-end-panel-nav"
+		:class="{
+			'explorer-module-rail--end-column': !isInlineLayout,
+			'explorer-module-rail--inline': isInlineLayout
+		}"
 		:aria-busy="isInstanceBootstrapping"
 	>
-		<header class="explorer-module-rail__header">
-			<h2 class="explorer-module-rail__title">
+		<header
+			class="explorer-module-rail__header"
+			:class="{ 'explorer-module-rail__header--inline': isInlineLayout }"
+		>
+			<h2
+				class="explorer-module-rail__title"
+				:class="{ 'explorer-module-rail__title--inline': isInlineLayout }"
+			>
 				<bdi>{{ selectedModule.headingTitle }}</bdi>
 			</h2>
+			<CdxButton
+				v-if="isInlineLayout"
+				class="explorer-module-rail__toggle"
+				weight="quiet"
+				type="button"
+				:aria-label="toggleEndpointsLabel"
+				:aria-expanded="isEndpointListExpanded"
+				:aria-controls="endpointListElementId"
+				@click="onToggleEndpointListClick"
+			>
+				<CdxIcon :icon="toggleEndpointsIcon" />
+			</CdxButton>
 		</header>
 
-		<div class="explorer-module-rail__endpoint-scrollport">
+		<div
+			v-show="shouldShowEndpointList"
+			:id="endpointListElementId"
+			ref="endpointScrollportElement"
+			class="explorer-module-rail__endpoint-scrollport"
+			:class="{
+				'explorer-module-rail__endpoint-scrollport--inline-capped': isInlineEndpointScrollCapped
+			}"
+		>
 			<p
 				v-if="selectedModule.hasSpecError"
 				class="explorer-module-rail__module-unavailable"
@@ -71,6 +163,7 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 
 			<nav
 				v-else
+				ref="endpointListElement"
 				class="explorer-module-rail__endpoint-list"
 				:aria-label="endpointsNavigationLabel"
 			>
@@ -115,12 +208,32 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	font-family: var( --font-family-sans-stack );
 }
 
+.explorer-module-rail--inline {
+	inline-size: 100%;
+	padding-inline: var( --spacing-50 );
+	padding-block: var( --spacing-75 );
+	gap: var( --spacing-75 );
+}
+
 .explorer-module-rail__header {
 	flex-shrink: 0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var( --spacing-50 );
 	min-inline-size: 0;
 	padding-block-start: var( --spacing-75 );
 	padding-block-end: var( --spacing-50 );
 	padding-inline: var( --spacing-75 );
+}
+
+.explorer-module-rail__header--inline {
+	align-items: center;
+	padding: var( --spacing-75 );
+}
+
+.explorer-module-rail--inline .explorer-module-rail__header--inline {
+	padding: 0;
 }
 
 .explorer-module-rail__title {
@@ -129,6 +242,16 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	font-weight: var( --font-weight-bold );
 	line-height: var( --line-height-large );
 	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.explorer-module-rail__title--inline {
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+}
+
+.explorer-module-rail__toggle {
+	flex-shrink: 0;
 }
 
 .explorer-module-rail__endpoint-scrollport {
@@ -139,11 +262,24 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	padding-block-end: var( --spacing-75 );
 }
 
+.explorer-module-rail--inline .explorer-module-rail__endpoint-scrollport {
+	padding-block-end: 0;
+}
+
+.explorer-module-rail__endpoint-scrollport--inline-capped {
+	max-block-size: var( --explorer-module-rail-inline-endpoint-scroll-max-block-size );
+}
+
 .explorer-module-rail__module-unavailable,
 .explorer-module-rail__module-empty-state {
 	margin: 0;
 	padding-inline: var( --spacing-75 );
 	font-size: var( --font-size-small );
+}
+
+.explorer-module-rail--inline .explorer-module-rail__module-unavailable,
+.explorer-module-rail--inline .explorer-module-rail__module-empty-state {
+	padding-inline: 0;
 }
 
 .explorer-module-rail__endpoint-list {
@@ -164,6 +300,12 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	margin-inline-start: 0;
 	padding-inline-start: var( --spacing-75 );
 	padding-inline-end: var( --spacing-75 );
+}
+
+.explorer-module-rail--inline .explorer-module-rail__endpoint-list :deep( .explorer-module-rail__menu-item.cdx-menu-item ),
+.explorer-module-rail--inline .explorer-module-rail__endpoint-list :deep( .cdx-menu-item ) {
+	padding-inline-start: 0;
+	padding-inline-end: 0;
 }
 
 .explorer-module-rail__endpoint-label {
@@ -219,11 +361,11 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 }
 
 @media screen and ( max-width: 1119px ) {
-	.explorer-module-rail {
+	.explorer-module-rail--end-column {
 		overflow: visible;
 	}
 
-	.explorer-module-rail__endpoint-scrollport {
+	.explorer-module-rail--end-column .explorer-module-rail__endpoint-scrollport {
 		overflow-y: visible;
 	}
 }

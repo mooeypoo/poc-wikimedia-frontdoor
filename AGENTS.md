@@ -119,6 +119,7 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Explorer project + language picker options and wiki instance mapping (`config/explorerProjectPicker.ts`)
 - Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
 - REST API module select description fallbacks when OpenAPI omits `info.description` (`config/explorerModuleDescriptions.ts`)
+- Inline collapsible module rail visible endpoint row cap (`config/explorerModuleRail.ts`)
 - Language definitions with explicit `dir` declarations
 - Language fallback chains
 - OAuth client ID and endpoint URLs
@@ -182,6 +183,8 @@ Composables live in `composables/` and are named with the `use` prefix describin
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
 - `useDiscovery(instance)` — fetches and parses the /discovery endpoint
+- `useExplorerModuleRailPlacement()` — module rail Teleport target and layout mode (end column vs inline)
+- `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` — inline rail endpoint scrollport cap (`config/explorerModuleRail.ts`)
 
 ### Documentation
 
@@ -356,7 +359,7 @@ This set is chosen deliberately:
 - `useWikiModules(instance)` composable — wraps `useDiscovery`, extracts the module list, caches per instance
 - Project + language pickers (`CdxCombobox` in a fieldset) populated from `config/explorerProjectPicker.ts`; selections resolve to wiki instance ids in `config/instances.ts` via `useExplorerProjectLanguagePicker`
 - REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in discovery order (`resolveFirstExplorerRailModule`); menu options include **`description`** (OpenAPI `info.description` at bootstrap, with config fallbacks), beta/version metadata in MenuItem **`supportingText`**, **`default-label`**, and Codex **`menu-config`** (`boldLabel`, `hideDescriptionOverflow: false` for wrapping). Explorer picker menus must use native Codex MenuItem interaction states — do not override hover / highlighted / selected CSS on `.explorer-page`
-- End-column **module rail** (`ExplorerModuleRail`) lists endpoints for the **selected REST API module** only; endpoint rows use **`CdxMenuItem`** (same shell pattern as `ShellSidePanelNav`); rail top aligns with **`.explorer-page__scalar-shell`** via `useEndPanelNavAlign`; content-sized height with **max-block-size** capped to the Scalar shell
+- End-column **module rail** (`ExplorerModuleRail`) lists endpoints for the **selected REST API module** only; endpoint rows use **`CdxMenuItem`** (same shell pattern as `ShellSidePanelNav`); rail top aligns with **`.explorer-page__scalar-shell`** via `useEndPanelNavAlign` on desktop (≥ 1120px); below 1120px the rail teleports inline below project controls (`useExplorerModuleRailPlacement`) with **`--spacing-100`** gap and a collapsible endpoint panel; when expanded with more than **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** (7) endpoints, **`useExplorerModuleRailInlineEndpointScrollCap`** caps the scrollport to seven visible rows with internal scroll
 - Scalar re-renders against the spec URL from discovery when instance (project/language), REST module select, or endpoint selection changes
 - Verification that reactive config update (via `Object.assign` or equivalent) re-renders Scalar without full component teardown
 - Verification that switching to an RTL wiki instance (`hewiki`, `fawiki`) correctly sets `dir="rtl"` on the shell from `config/instances.ts`; switching back sets `dir="ltr"`
@@ -384,7 +387,7 @@ This set is chosen deliberately:
 - Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
 - Language combobox is disabled when Wikimedia Commons or Wikidata is selected
 - REST API module select defaults to the first healthy module in discovery order (after opt-in filter)
-- Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels and module descriptions use BiDi isolation (`isolatePickerLabel()`); REST API module select uses native Codex menu hover, keyboard highlight, and selected styling (no custom `.cdx-menu-item` state overrides on the explorer page)
+- Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels and module descriptions use BiDi isolation (`isolatePickerLabel()`); REST API module select uses native Codex menu hover, keyboard highlight, and selected styling (no custom `.cdx-menu-item` state overrides on the explorer page); inline collapsible rail shows at most seven endpoint rows before the endpoint scrollport scrolls internally
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report
