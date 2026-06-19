@@ -52,6 +52,7 @@ const {
 	wikiDisplayName,
 	selectedModuleName,
 	pendingOperationTarget,
+	selectedEndpointOperationId,
 	isInstanceBootstrapping,
 	isExplorerModuleRailVisible,
 	hasInstanceBootstrapError,
@@ -305,6 +306,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					v-if="isExplorerModuleRailVisible && visibleSelectedModule"
 					:key="layoutMode"
 					:selected-module="visibleSelectedModule"
+					:selected-endpoint-operation-id="selectedEndpointOperationId"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 					:layout-mode="layoutMode"
 					@endpoint-click="onEndpointClick"

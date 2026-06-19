@@ -519,7 +519,7 @@ Top to bottom:
 
 ### REST API module select + opt-in (row 2)
 
-**Decision:** Second row: **`CdxSelect`** for the active REST module, with the **Opt-in** fieldset to its **inline-end** (`--spacing-100` / 16px gap).
+**Decision:** Second row: **`CdxSelect`** for the active REST module, with the **Opt-in** fieldset to its **inline-end** (`column-gap: var(--spacing-150)` / 24px between side-by-side fields; `row-gap: var(--spacing-100)` when wrapped).
 
 | Control | Pattern |
 |---------|---------|
@@ -547,7 +547,7 @@ Top to bottom:
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
 
-**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap. Add curated fallbacks in `config/explorerModuleDescriptions.ts` when a module spec omits a description (currently `readinglists/v0` only).
+**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
 **Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented exceptions.
 
@@ -561,7 +561,18 @@ Top to bottom:
 
 ### Title
 
-**Decision:** The rail heading is the selected module’s **`headingTitle`** in `<bdi>` (same parsed title as the reference panel `h2`, without beta/version chips in the rail header).
+**Decision:** The rail heading is the selected module’s **`headingTitle`** in `<bdi>` (same parsed title as the reference panel `h2`, without beta/version chips in the rail header). Typography: **`--font-size-medium`**, bold.
+
+### Surfaces (project controls + module rail)
+
+**Decision:** Both **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share exploratory surface tokens:
+
+| Token | Value | CSS variable |
+|-------|-------|--------------|
+| Background | `#F3F3F3` | `--fd-explorer-controls-surface-background-color` |
+| Border radius | **4px** | `--fd-explorer-controls-surface-border-radius` |
+
+Source of truth for the hex/radius values: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Distinct from **`--background-color-neutral-subtle`** and Codex **`--border-radius-base` (2px)** — exploratory values under Codex review for explorer control surfaces only.
 
 ### Endpoint list
 
@@ -582,9 +593,11 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Layout:** Method and path use **inline flow** (not flex-wrap rows) so the path always begins after the method tag.
 
-**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module.
+**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module. The focused endpoint row uses **`CdxMenuItem` `:selected`**; the path label uses **`--color-progressive`**. Selected rows **do not** use Codex’s progressive-subtle background fill — path colour only.
 
-**Hover:** Codex menu-item background on hover; label text turns **`--color-progressive`** (same as **`ShellSidePanelNav`** — no underline).
+**Hover:** Codex menu-item background on hover. **Path** text turns **`--color-progressive`** on hover (same as **`ShellSidePanelNav`** — no underline). **HTTP method** tags **keep their semantic colour** on hover and when selected (GET progressive, POST success, DELETE destructive, PUT/PATCH warning) — do not blanket-apply progressive to the method span.
+
+**Scrolled divider:** When **`.explorer-module-rail__endpoint-scrollport`** is scrolled (`scrollTop > 0`), a sticky **`.explorer-module-rail__scroll-divider`** renders at the top of the scrollport viewport (`border-block-start: 1px solid var(--border-color-subtle)`). **End-column** layout insets the line with **`margin-inline: var(--spacing-75)`**; **inline** layout relies on the rail’s **`padding-inline: var(--spacing-50)`** (`margin-inline: 0` on the divider).
 
 **Scroll:** When the endpoint list exceeds its layout cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls with a **thin visible scrollbar** (transparent track; same tokens as start nav — WebKit **`width: 6px`** exception documented in `ARCHITECTURE.md` → End column module rail). **Wide (≥ 1120px):** cap matches Scalar shell height via `useEndPanelNavAlign`. **Inline (&lt; 1120px, expanded):** cap is seven visible endpoint rows when count exceeds **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** (`config/explorerModuleRail.ts`).
 
@@ -596,7 +609,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
-**Surface:** `--background-color-neutral-subtle`, rounded corners; internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
+**Surface:** **`--fd-explorer-controls-surface-background-color`** (`#F3F3F3`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
 ---
 

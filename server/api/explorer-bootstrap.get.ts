@@ -176,7 +176,8 @@ export default defineEventHandler( async ( event ) => {
 			}
 
 			const moduleDescription = normalizeOpenApiModuleDescription(
-				parsedOpenApiDocument.info?.description
+				parsedOpenApiDocument.info?.description,
+				moduleItem.name
 			)
 
 			if ( moduleDescription ) {

@@ -3,6 +3,7 @@ import type { Ref } from 'vue'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../config/explorerOptIn'
 import { resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
+import { resolveEndpointOperationId } from '../utils/explorerEndpointLabels'
 
 export interface ExplorerModuleOperation {
 	id: string
@@ -78,6 +79,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 	const scalarSwitchState = ref<'idle' | 'switching'>( 'idle' )
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
+	const selectedEndpointOperationId = ref<string | null>( null )
 	const { logEvent } = useExplorerDiagnostics()
 
 	let requestGeneration = 0
@@ -205,6 +207,12 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 
 		if ( options.operationTarget ) {
 			pendingOperationTarget.value = options.operationTarget
+			selectedEndpointOperationId.value = resolveEndpointOperationId(
+				modules.value.find( ( moduleItem ) => moduleItem.name === moduleName ),
+				options.operationTarget
+			)
+		} else {
+			selectedEndpointOperationId.value = null
 		}
 
 		// Only block on Scalar reload when the spec URL changes (new module).
@@ -248,6 +256,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		selectedModuleName.value = ''
 		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
+		selectedEndpointOperationId.value = null
 		scalarSwitchState.value = 'idle'
 
 		logEvent( 'bootstrap.start', {
@@ -398,6 +407,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		selectedModule,
 		openApiSpecUrl,
 		pendingOperationTarget,
+		selectedEndpointOperationId,
 		isInstanceBootstrapping,
 		isExplorerModuleRailVisible,
 		hasInstanceBootstrapError,

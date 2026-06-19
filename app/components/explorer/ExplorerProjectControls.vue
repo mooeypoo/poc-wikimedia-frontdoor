@@ -222,8 +222,8 @@ function onOptInPopoverTriggerClick(): void {
 	padding: var( --spacing-75 );
 	inline-size: 100%;
 	box-sizing: border-box;
-	border-radius: var( --border-radius-base );
-	background-color: var( --background-color-neutral-subtle );
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --fd-explorer-controls-surface-background-color );
 	min-inline-size: 0;
 }
 
@@ -267,7 +267,8 @@ function onOptInPopoverTriggerClick(): void {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
-	gap: var( --spacing-100 );
+	row-gap: var( --spacing-100 );
+	column-gap: var( --spacing-150 );
 	min-inline-size: 0;
 	inline-size: 100%;
 }

@@ -31,3 +31,19 @@ test( 'normalizeOpenApiModuleDescription does not truncate long text', () => {
 	assert.equal( normalized, longDescription )
 	assert.doesNotMatch( normalized, /…$/ )
 } )
+
+test( 'normalizeOpenApiModuleDescription strips Site API access boilerplate suffix', () => {
+	const siteApiDescription = [
+		'Provides information about Wikimedia project sites, including sitemaps.',
+		'To prevent abusive scraping and ensure fair use of infrastructure, access to endpoints in this API is restricted to specific user groups.',
+		'For more information about who can access this API, see [CDN/Backend_api/Sitemap_access](https://wikitech.wikimedia.org/wiki/CDN/Backend_api/Sitemap_access)',
+		'or contact [mailto:bot-traffic@wikimedia.org bot-traffic@wikimedia.org].'
+	].join( ' ' )
+
+	const normalized = normalizeOpenApiModuleDescription( siteApiDescription, 'site/v1' )
+
+	assert.equal(
+		normalized,
+		'Provides information about Wikimedia project sites, including sitemaps. To prevent abusive scraping and ensure fair use of infrastructure, access to endpoints in this API is restricted to specific user groups.'
+	)
+} )

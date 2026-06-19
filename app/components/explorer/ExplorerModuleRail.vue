@@ -23,6 +23,8 @@ import {
  */
 const props = defineProps<{
 	selectedModule: ExplorerBootstrapModule
+	/** Bootstrap operation id for the endpoint row currently focused in Scalar. */
+	selectedEndpointOperationId: string | null
 	isInstanceBootstrapping: boolean
 	layoutMode: ExplorerModuleRailLayoutMode
 }>()
@@ -37,6 +39,7 @@ const isInlineLayout = computed( () => props.layoutMode === 'inline' )
 const isEndpointListExpanded = ref( false )
 const endpointScrollportElement = ref<HTMLElement | null>( null )
 const endpointListElement = ref<HTMLElement | null>( null )
+const isEndpointListScrolled = ref( false )
 
 const endpointCount = computed( () => props.selectedModule.operations.length )
 
@@ -76,13 +79,35 @@ const shouldShowEndpointList = computed( () => {
 } )
 
 watch( () => props.selectedModule.name, () => {
+	isEndpointListScrolled.value = false
+
+	if ( endpointScrollportElement.value ) {
+		endpointScrollportElement.value.scrollTop = 0
+	}
+
 	isEndpointListExpanded.value = false
 } )
 
 watch( isInlineLayout, ( nextIsInlineLayout ) => {
 	if ( nextIsInlineLayout ) {
 		isEndpointListExpanded.value = false
+		isEndpointListScrolled.value = false
 	}
+} )
+
+watch( isEndpointListExpanded, ( isExpanded ) => {
+	if ( !isExpanded ) {
+		isEndpointListScrolled.value = false
+		return
+	}
+
+	void nextTick( () => {
+		if ( !endpointScrollportElement.value ) {
+			return
+		}
+
+		isEndpointListScrolled.value = endpointScrollportElement.value.scrollTop > 0
+	} )
 } )
 
 /**
@@ -102,6 +127,22 @@ function onToggleEndpointListClick(): void {
  */
 function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): void {
 	emit( 'endpoint-click', props.selectedModule.name, moduleOperation )
+}
+
+/**
+ * Tracks endpoint scrollport offset so the scrollport can show a top border when scrolled.
+ *
+ * @param scrollEvent - Scroll event from `.explorer-module-rail__endpoint-scrollport`.
+ * @returns Nothing.
+ */
+function onEndpointScrollportScroll( scrollEvent: Event ): void {
+	const scrollTarget = scrollEvent.target
+
+	if ( !( scrollTarget instanceof HTMLElement ) ) {
+		return
+	}
+
+	isEndpointListScrolled.value = scrollTarget.scrollTop > 0
 }
 </script>
 
@@ -146,7 +187,14 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 			:class="{
 				'explorer-module-rail__endpoint-scrollport--inline-capped': isInlineEndpointScrollCapped
 			}"
+			@scroll="onEndpointScrollportScroll"
 		>
+			<div
+				v-if="isEndpointListScrolled"
+				class="explorer-module-rail__scroll-divider"
+				aria-hidden="true"
+			/>
+
 			<p
 				v-if="selectedModule.hasSpecError"
 				class="explorer-module-rail__module-unavailable"
@@ -174,6 +222,7 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 					class="explorer-module-rail__menu-item"
 					:value="moduleOperation.id"
 					:label="formatEndpointAccessibleLabel( moduleOperation, endpointFallbackLabel )"
+					:selected="moduleOperation.id === selectedEndpointOperationId"
 					@click.prevent="onEndpointMenuItemClick( moduleOperation )"
 				>
 					<span class="explorer-module-rail__endpoint-label">
@@ -203,8 +252,8 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	min-block-size: 0;
 	overflow: hidden;
 	padding-inline: 0;
-	border-radius: var( --border-radius-base );
-	background-color: var( --background-color-neutral-subtle );
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --fd-explorer-controls-surface-background-color );
 	font-family: var( --font-family-sans-stack );
 }
 
@@ -238,9 +287,9 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 
 .explorer-module-rail__title {
 	margin: 0;
-	font-size: var( --font-size-large );
+	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-bold );
-	line-height: var( --line-height-large );
+	line-height: var( --line-height-small );
 	inline-size: 100%;
 	min-inline-size: 0;
 }
@@ -260,6 +309,25 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	padding-block-end: var( --spacing-75 );
+}
+
+/*
+ * Sticky divider at the top of the scrollport viewport when the list is scrolled.
+ * Real element (not ::before) so the line stays fixed while endpoint rows scroll beneath it.
+ */
+.explorer-module-rail__scroll-divider {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 1;
+	flex-shrink: 0;
+	block-size: 0;
+	margin-inline: var( --spacing-75 );
+	border-block-start: 1px solid var( --border-color-subtle );
+	pointer-events: none;
+}
+
+.explorer-module-rail--inline .explorer-module-rail__scroll-divider {
+	margin-inline: 0;
 }
 
 .explorer-module-rail--inline .explorer-module-rail__endpoint-scrollport {
@@ -300,6 +368,12 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	margin-inline-start: 0;
 	padding-inline-start: var( --spacing-75 );
 	padding-inline-end: var( --spacing-75 );
+}
+
+/* Selected rows: progressive path colour only — no Codex progressive-subtle fill. */
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected ),
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected.cdx-menu-item--enabled:hover ) {
+	background-color: transparent;
 }
 
 .explorer-module-rail--inline .explorer-module-rail__endpoint-list :deep( .explorer-module-rail__menu-item.cdx-menu-item ),
@@ -352,12 +426,47 @@ function onEndpointMenuItemClick( moduleOperation: ExplorerModuleOperation ): vo
 	overflow-wrap: anywhere;
 }
 
-/* CdxMenuItem outside CdxMenu: match ShellSidePanelNav progressive hover (no underline). */
-.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover ),
-.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .cdx-menu-item__content ),
-.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method ),
+/* CdxMenuItem outside CdxMenu: path turns progressive on hover; HTTP methods keep semantic colours. */
 .explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-path ) {
 	color: var( --color-progressive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-path ) {
+	color: var( --color-progressive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-method[data-method='get'] ) {
+	color: var( --color-progressive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-method[data-method='post'] ) {
+	color: var( --color-success );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-method[data-method='delete'] ) {
+	color: var( --color-destructive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-method[data-method='put'] ),
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-method[data-method='patch'] ) {
+	color: var( --color-warning );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method[data-method='get'] ) {
+	color: var( --color-progressive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method[data-method='post'] ) {
+	color: var( --color-success );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method[data-method='delete'] ) {
+	color: var( --color-destructive );
+}
+
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method[data-method='put'] ),
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-method[data-method='patch'] ) {
+	color: var( --color-warning );
 }
 
 @media screen and ( max-width: 1119px ) {
