@@ -30,6 +30,7 @@
   "explorer-loading-interface": "Cargando la interfaz del explorador...",
   "explorer-loading-modules": "Cargando modulos...",
   "explorer-module-beta-chip-label": "beta",
+  "explorer-module-description-readinglists-v0": "Almacena y recupera listas privadas de paginas, por ejemplo para marcadores o una lista de lectura pendiente.",
   "explorer-module-label": "Modulo REST",
   "explorer-module-placeholder": "Selecciona un modulo",
   "explorer-module-rail-description": "Explora cada modulo descubierto y expandelo para inspeccionar sus endpoints antes de cargarlo en la vista de referencia.",

@@ -22,6 +22,7 @@ export interface ExplorerBootstrapModule {
 	versionChipLabel?: string
 	showBetaChip: boolean
 	specUrl: string
+	moduleDescription?: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
 	specErrorMessage?: string

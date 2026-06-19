@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
 import { getWikiInstanceById } from '../../config/instances'
 import { resolveExplorerModuleRailHeading } from '../../app/utils/explorerModuleRailHeading'
+import { normalizeOpenApiModuleDescription } from '../../app/utils/explorerModuleDescription'
 
 const EXPLORER_BOOTSTRAP_USER_AGENT =
 	'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
@@ -16,6 +17,9 @@ interface OpenApiOperationObject {
 }
 
 interface OpenApiDocument {
+	info?: {
+		description?: string
+	}
 	paths?: Record<string, Record<string, OpenApiOperationObject>>
 }
 
@@ -59,6 +63,7 @@ interface ExplorerBootstrapModule {
 	versionChipLabel?: string
 	showBetaChip: boolean
 	specUrl: string
+	moduleDescription?: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
 	specErrorMessage?: string
@@ -168,6 +173,14 @@ export default defineEventHandler( async ( event ) => {
 
 			if ( moduleItem.version ) {
 				modulePayload.version = moduleItem.version
+			}
+
+			const moduleDescription = normalizeOpenApiModuleDescription(
+				parsedOpenApiDocument.info?.description
+			)
+
+			if ( moduleDescription ) {
+				modulePayload.moduleDescription = moduleDescription
 			}
 
 			return modulePayload
@@ -319,7 +332,7 @@ function normalizeDiscoveryModules(
  *
  * @param rawModuleName - Module id or object key from discovery.
  * @param specUrl - Absolute OpenAPI spec URL for the module.
- * @returns Non-empty module name used for selection and accordion state.
+ * @returns Non-empty module name used for selection and module rail state.
  */
 function resolveDiscoveryModuleName( rawModuleName: string, specUrl: string ): string {
 	if ( typeof rawModuleName === 'string' && rawModuleName.trim() !== '' ) {

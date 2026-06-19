@@ -54,6 +54,8 @@ const isModuleSelectDisabledRef = computed( () => {
 
 const {
 	moduleMenuItems,
+	moduleSelectMenuConfig,
+	moduleSelectDefaultLabel,
 	selectedModuleValue,
 	isModuleSelectDisabled
 } = useExplorerModuleSelect(
@@ -144,6 +146,8 @@ function onOptInPopoverTriggerClick(): void {
 					v-model:selected="selectedModuleValue"
 					class="explorer-project-controls__module-select"
 					:menu-items="moduleMenuItems"
+					:menu-config="moduleSelectMenuConfig"
+					:default-label="moduleSelectDefaultLabel"
 					:disabled="isModuleSelectDisabled"
 				/>
 			</CdxField>

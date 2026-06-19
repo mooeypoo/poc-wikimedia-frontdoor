@@ -30,6 +30,7 @@
   "explorer-loading-interface": "ממשק הסייר נטען...",
   "explorer-loading-modules": "טוען מודולים...",
   "explorer-module-beta-chip-label": "בטא",
+  "explorer-module-description-readinglists-v0": "אחסון ושליפה של רשימות פרטיות של דפים, למשל לסימניות או לרשימת \"לקרוא מאוחר יותר\".",
   "explorer-module-label": "מודול REST",
   "explorer-module-placeholder": "בחרו מודול",
   "explorer-module-rail-description": "עיינו בכל מודול שהתגלה, ואז הרחיבו אותו כדי לבדוק את נקודות הקצה לפני טעינתו בתצוגת הייחוס.",

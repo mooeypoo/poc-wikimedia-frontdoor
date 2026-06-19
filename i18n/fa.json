@@ -28,6 +28,7 @@
   "explorer-loading-interface": "در حال بارگذاری رابط کاوشگر...",
   "explorer-loading-modules": "در حال بارگذاری ماژول‌ها...",
   "explorer-module-beta-chip-label": "بتا",
+  "explorer-module-description-readinglists-v0": "فهرست‌های خصوصی صفحات را ذخیره و بازیابی می‌کند؛ مثلاً برای نشانک یا «بعداً بخوان».",
   "explorer-module-label": "ماژول REST",
   "explorer-module-placeholder": "یک ماژول انتخاب کنید",
   "explorer-module-rail-description": "هر ماژول کشف‌شده را مرور کنید، سپس آن را باز کنید تا پیش از بارگذاری در نمای مرجع، نقطه‌های پایانی را بررسی کنید.",

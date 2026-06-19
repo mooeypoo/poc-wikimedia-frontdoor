@@ -118,6 +118,7 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Supported wiki instances and their base URLs
 - Explorer project + language picker options and wiki instance mapping (`config/explorerProjectPicker.ts`)
 - Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
+- REST API module select description fallbacks when OpenAPI omits `info.description` (`config/explorerModuleDescriptions.ts`)
 - Language definitions with explicit `dir` declarations
 - Language fallback chains
 - OAuth client ID and endpoint URLs
@@ -144,6 +145,8 @@ Do not:
 **Documented exception:** WebKit `::-webkit-scrollbar` pseudos in `app/assets/css/shell-start-nav-scroll.css` use physical **`width`** — the API has no logical equivalent. See `ARCHITECTURE.md` → Shell scroll regions and `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 **Scroll-end inset on nav scrollports:** Start section nav and the collapsed nav overlay reserve **32px** below the last item via a **`::after` block spacer** (`block-size: var(--spacing-200)`) on the **scrollport** element — not `padding-block-end` on a nested wrapper (nested flex + `overflow: auto` does not always extend scroll range). In-shell rules: `app/assets/css/shell-start-nav-scroll.css` (tablet+ **`.frontdoor-shell__side-panel--start`**, mobile **`.fd-page-grid__start`**). Overlay: `ShellCollapsedNavMenuOverlay.vue`. Site footer keeps **`padding-block-end`** on **`.shell-site-footer`**. See `ARCHITECTURE.md` → Shell section navigation (scroll-end inset).
+
+**Explorer picker menus (`CdxSelect` / `CdxCombobox`):** Under `.explorer-page`, `app/assets/css/main.css` may only raise floating-menu **z-index** and reset list markers. **Do not** override Codex `CdxMenuItem` hover, keyboard **`highlighted`**, or **`selected`** styles — those menus use Codex’s internal `CdxMenu`. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented shell exceptions. See `DESIGN_REQUIREMENTS.md` → REST API module select + opt-in (Codex interaction).
 
 See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
 
@@ -174,7 +177,7 @@ If the same logic appears in more than one place, extract it. Repeated patterns 
 Composables live in `composables/` and are named with the `use` prefix describing what they provide:
 
 - `useExplorerProjectLanguagePicker(instanceId)` — project + language combobox state; maps to wiki instance id via `config/explorerProjectPicker.ts`
-- `useExplorerModuleSelect(visibleModules, …)` — REST API module select menu and selection bridge for project controls
+- `useExplorerModuleSelect(visibleModules, …)` — REST API module `CdxSelect` menu items (`label`, `supportingText`, `description`), `menu-config`, `default-label`, and selection bridge for project controls
 - `useWikiModules(instance)` — fetches and caches modules for a given instance
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
@@ -248,6 +251,7 @@ Before marking any component complete, verify:
 - [ ] The component works correctly when the interface is LTR but the displayed wiki instance is an RTL-language wiki
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
 - [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
+- [ ] Explorer **`CdxSelect`** / **`CdxCombobox`** floating menus use native Codex MenuItem interaction states — no custom hover / highlighted / selected CSS on `.explorer-page` (`main.css` z-index + list-style only)
 
 ---
 
@@ -351,7 +355,7 @@ This set is chosen deliberately:
 - `useDiscovery(instance)` composable — fetches `{baseUrl}/w/rest.php/discovery` for the selected instance and returns the list of available modules with their spec URLs as provided by the response
 - `useWikiModules(instance)` composable — wraps `useDiscovery`, extracts the module list, caches per instance
 - Project + language pickers (`CdxCombobox` in a fieldset) populated from `config/explorerProjectPicker.ts`; selections resolve to wiki instance ids in `config/instances.ts` via `useExplorerProjectLanguagePicker`
-- REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in discovery order (`resolveFirstExplorerRailModule`); menu options show beta/version metadata in MenuItem **`supportingText`**
+- REST API module select (`CdxSelect`) populated from opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default module is the first healthy entry in discovery order (`resolveFirstExplorerRailModule`); menu options include **`description`** (OpenAPI `info.description` at bootstrap, with config fallbacks), beta/version metadata in MenuItem **`supportingText`**, **`default-label`**, and Codex **`menu-config`** (`boldLabel`, `hideDescriptionOverflow: false` for wrapping). Explorer picker menus must use native Codex MenuItem interaction states — do not override hover / highlighted / selected CSS on `.explorer-page`
 - End-column **module rail** (`ExplorerModuleRail`) lists endpoints for the **selected REST API module** only; endpoint rows use **`CdxMenuItem`** (same shell pattern as `ShellSidePanelNav`); rail top aligns with **`.explorer-page__scalar-shell`** via `useEndPanelNavAlign`; content-sized height with **max-block-size** capped to the Scalar shell
 - Scalar re-renders against the spec URL from discovery when instance (project/language), REST module select, or endpoint selection changes
 - Verification that reactive config update (via `Object.assign` or equivalent) re-renders Scalar without full component teardown
@@ -380,7 +384,7 @@ This set is chosen deliberately:
 - Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
 - Language combobox is disabled when Wikimedia Commons or Wikidata is selected
 - REST API module select defaults to the first healthy module in discovery order (after opt-in filter)
-- Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels use BiDi isolation (`isolatePickerLabel()`); REST API module select menu version strings use `isolatePickerLabel()` in supporting text
+- Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels and module descriptions use BiDi isolation (`isolatePickerLabel()`); REST API module select uses native Codex menu hover, keyboard highlight, and selected styling (no custom `.cdx-menu-item` state overrides on the explorer page)
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report

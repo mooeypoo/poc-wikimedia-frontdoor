@@ -448,7 +448,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Decision:** Scalar spec panel sits in a bordered shell (`--border-color-subtle`, `--border-radius-base`) with **inline padding** `--spacing-150` on the shell; inner Scalar layout padding is not globally overridden in the current phase.
 
-**Source:** `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css`.
+**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css`.
 
 ---
 
@@ -523,8 +523,9 @@ Top to bottom:
 
 | Control | Pattern |
 |---------|---------|
-| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names** |
+| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
 | **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
+| **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
 
 **Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta and internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
@@ -542,9 +543,13 @@ Top to bottom:
 
 **Layout:** Opt-in group sits beside the REST API module select with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`.
+**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only).
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
+
+**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap. Add curated fallbacks in `config/explorerModuleDescriptions.ts` when a module spec omits a description (currently `readinglists/v0` only).
+
+**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented exceptions.
 
 ---
 
@@ -729,9 +734,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
 | Explorer page | `app/pages/explorer/[[view]].vue` |
 | Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
-| Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts` |
+| Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts` |
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
-| Scalar + Codex visuals | `app/assets/css/main.css`, `app/assets/css/explorer-codex-overrides.css` |
+| Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` |

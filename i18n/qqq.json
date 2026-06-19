@@ -33,6 +33,7 @@
   "explorer-loading-interface": "Shown while the Scalar explorer bundle is loading after the page chrome has rendered.",
   "explorer-loading-modules": "Shown while discovery modules are loading.",
   "explorer-module-beta-chip-label": "Label on the warning InfoChip when a REST module title includes a beta marker.",
+  "explorer-module-description-readinglists-v0": "One-line REST API module description for ReadingLists when the OpenAPI spec omits info.description. Paraphrased from Extension:ReadingLists on mediawiki.org.",
   "explorer-module-label": "Label for the module selector.",
   "explorer-module-placeholder": "Placeholder text for module selector with no selected value.",
   "explorer-module-rail-description": "Legacy help text for the former multi-module rail accordion (unused in current single-module endpoint rail).",

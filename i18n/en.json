@@ -33,6 +33,7 @@
   "explorer-loading-interface": "Loading explorer interface...",
   "explorer-loading-modules": "Loading modules...",
   "explorer-module-beta-chip-label": "beta",
+  "explorer-module-description-readinglists-v0": "Store and retrieve private lists of pages, for example for a bookmark or read-it-later feature.",
   "explorer-module-label": "REST module",
   "explorer-module-placeholder": "Select a module",
   "explorer-module-rail-description": "Browse each discovered module, then expand it to inspect the endpoints before loading it into the reference view.",

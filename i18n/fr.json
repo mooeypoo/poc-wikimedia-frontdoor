@@ -30,6 +30,7 @@
   "explorer-loading-interface": "Chargement de l'interface de l'explorateur...",
   "explorer-loading-modules": "Chargement des modules...",
   "explorer-module-beta-chip-label": "bêta",
+  "explorer-module-description-readinglists-v0": "Stocke et récupère des listes privées de pages, par exemple pour des signets ou une liste « à lire plus tard ».",
   "explorer-module-label": "Module REST",
   "explorer-module-placeholder": "Selectionnez un module",
   "explorer-module-rail-description": "Parcourez chaque module detecte puis ouvrez-le pour inspecter ses points d'acces avant de le charger dans la vue de reference.",
