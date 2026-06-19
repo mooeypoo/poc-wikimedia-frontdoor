@@ -1,4 +1,5 @@
 import { createApp, onBeforeUnmount, watch, type App, type Ref } from 'vue'
+import { getWikiInstanceById } from '../../config/instances'
 import { getTestWikiUrlForWikiInstance } from '../../config/wikiInstanceTestWikis'
 import {
 	SCALAR_CLIENT_WRITE_ENDPOINT_WARNINGS_ENABLED,
@@ -11,8 +12,14 @@ import {
 	resetScalarWriteRequestTestWikiPreference,
 	scheduleScalarWriteRequestAddressBarSync
 } from '../utils/explorerScalarWriteRequestContext'
+import { activeExplorerWikiInstanceId } from '../utils/explorerWikiInstanceContext'
 import { createScalarWriteEndpointWarningElement } from '../utils/createScalarWriteEndpointWarningElement'
 import { findOpenScalarClientModal } from '../utils/findOpenScalarClientModal'
+import {
+	ensureScalarClientModalAddressBarWarningPlacement,
+	resolveScalarClientModalAddressBarWarningPlacement,
+	syncScalarClientModalAddressBarWarningInlineAlignment
+} from '../utils/resolveScalarClientModalAddressBarWarningPlacement'
 import { isWriteHttpMethod } from '../utils/isWriteHttpMethod'
 import { resolveHttpMethodFromModalElement } from '../utils/scalarClientModalHttpMethod'
 import { resolveInterfaceMessage } from '../utils/resolveInterfaceMessage'
@@ -53,9 +60,11 @@ function mountWriteWarning(
 	let application: App<Element> | null = null
 
 	if ( SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE ) {
+		const productionWikiDisplayName = getWikiInstanceById( activeExplorerWikiInstanceId.value )?.displayName ?? ''
+
 		mountElement = createScalarWriteEndpointWarningElement(
 			slotKey,
-			resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [ testWikiUrl ] )
+			resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [ productionWikiDisplayName, testWikiUrl ] )
 		)
 	} else {
 		mountElement = document.createElement( 'div' )
@@ -83,10 +92,10 @@ function mountWriteWarning(
 }
 
 /**
- * Injects Codex-styled write-endpoint warnings into the Scalar Test Request modal.
+ * Injects Codex-styled write-endpoint controls into the Scalar Test Request modal.
  *
  * Scalar's modal is a separate Vue app; DOM injection mounts {@link ScalarClientWriteEndpointWarning}
- * (`CdxMessage`) in a small Vue root per slot. Plain HTML probe mode is available via config.
+ * (`CdxCheckbox` + `CdxMessage`) in a small Vue root per slot. Plain HTML probe mode is available via config.
  *
  * @param scalarInterface - Scalar handles from {@link ExplorerScalarReference} (event bus for method).
  * @param selectedWikiInstanceId - Reactive wiki instance id for test-wiki copy in warnings.
@@ -103,6 +112,53 @@ export function useScalarClientWriteEndpointWarnings(
 	let modalScanRetryAttempts = 0
 	let trackedHttpMethod = ''
 	let boundEventBus: ScalarWorkspaceEventBus | null = null
+	let addressBarAlignResizeListener: (() => void) | null = null
+
+	/**
+	 * Keeps address-bar write controls aligned with the endpoint URL field after layout changes.
+	 *
+	 * @param modalDialog - Scalar modal root element.
+	 * @returns Nothing.
+	 */
+	function syncAddressBarWarningInlineAlignment( modalDialog: Element ): void {
+		const existingMount = modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="address-bar"]` )
+
+		if ( !( existingMount instanceof HTMLElement ) ) {
+			return
+		}
+
+		syncScalarClientModalAddressBarWarningInlineAlignment( modalDialog, existingMount )
+	}
+
+	/**
+	 * Subscribes to viewport resizes while the modal is open so alignment stays in sync.
+	 *
+	 * @param modalDialog - Scalar modal root element.
+	 * @returns Nothing.
+	 */
+	function startAddressBarAlignResizeListener( modalDialog: Element ): void {
+		stopAddressBarAlignResizeListener()
+
+		const onResize = (): void => {
+			syncAddressBarWarningInlineAlignment( modalDialog )
+		}
+
+		window.addEventListener( 'resize', onResize, { passive: true } )
+		addressBarAlignResizeListener = () => {
+			window.removeEventListener( 'resize', onResize )
+			addressBarAlignResizeListener = null
+		}
+	}
+
+	/**
+	 * Removes the viewport resize listener used for address-bar alignment.
+	 *
+	 * @returns Nothing.
+	 */
+	function stopAddressBarAlignResizeListener(): void {
+		addressBarAlignResizeListener?.()
+		addressBarAlignResizeListener = null
+	}
 
 	/**
 	 * Starts scan retries when the explorer Test Request control is clicked.
@@ -182,6 +238,56 @@ export function useScalarClientWriteEndpointWarnings(
 	}
 
 	/**
+	 * Mounts or repositions the address-bar write-request controls below the endpoint URL bar.
+	 *
+	 * @param modalDialog - Scalar modal root element.
+	 * @param httpMethod - HTTP method for the active operation.
+	 * @param testWikiUrl - Test wiki hostname label for the selected instance.
+	 * @returns Nothing.
+	 */
+	function injectAddressBarWarning(
+		modalDialog: Element,
+		httpMethod: string,
+		testWikiUrl: string
+	): void {
+		const existingMount = modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="address-bar"]` )
+
+		if ( existingMount instanceof HTMLElement ) {
+			ensureScalarClientModalAddressBarWarningPlacement( modalDialog, existingMount )
+			requestAnimationFrame( () => {
+				requestAnimationFrame( () => {
+					syncScalarClientModalAddressBarWarningInlineAlignment( modalDialog, existingMount )
+				} )
+			} )
+			return
+		}
+
+		const placement = resolveScalarClientModalAddressBarWarningPlacement( modalDialog )
+
+		if ( !placement ) {
+			return
+		}
+
+		const mountedWarning = mountWriteWarning(
+			placement.parentElement,
+			placement.insertBefore,
+			'address-bar',
+			httpMethod,
+			testWikiUrl
+		)
+		mountedWarnings.push( mountedWarning )
+
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				syncScalarClientModalAddressBarWarningInlineAlignment(
+					modalDialog,
+					mountedWarning.mountElement
+				)
+			} )
+		} )
+	}
+
+	/**
 	 * Mounts write warnings for the open modal at each supported placement.
 	 *
 	 * @param modalDialog - Scalar modal root element.
@@ -190,15 +296,7 @@ export function useScalarClientWriteEndpointWarnings(
 	 */
 	function injectWarningsIntoModal( modalDialog: Element, httpMethod: string ): void {
 		const testWikiUrl = getTestWikiUrlForWikiInstance( selectedWikiInstanceId.value )
-		const topContainer = modalDialog.querySelector( '.t-app__top-container' ) ?? modalDialog
-		injectWarningAtSlot(
-			modalDialog,
-			topContainer,
-			null,
-			'address-bar',
-			httpMethod,
-			testWikiUrl
-		)
+		injectAddressBarWarning( modalDialog, httpMethod, testWikiUrl )
 
 		const requestSection = modalDialog.querySelector( '.request-section-content' )
 		const codeExample = requestSection?.querySelector( '.request-section-content-code-example' )
@@ -251,6 +349,7 @@ export function useScalarClientWriteEndpointWarnings(
 		const modalDialog = findOpenScalarClientModal()
 
 		if ( !modalDialog ) {
+			stopAddressBarAlignResizeListener()
 			teardownWarnings()
 			return
 		}
@@ -259,11 +358,14 @@ export function useScalarClientWriteEndpointWarnings(
 
 		// Probe mode: show banners for every method to verify slot injection.
 		if ( !SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE && !isWriteHttpMethod( httpMethod ) ) {
+			stopAddressBarAlignResizeListener()
 			teardownWarnings()
 			return
 		}
 
 		injectWarningsIntoModal( modalDialog, httpMethod )
+		startAddressBarAlignResizeListener( modalDialog )
+		syncAddressBarWarningInlineAlignment( modalDialog )
 		scheduleScalarWriteRequestAddressBarSync.value?.()
 	}
 
@@ -348,6 +450,7 @@ export function useScalarClientWriteEndpointWarnings(
 	 */
 	function onModalClose(): void {
 		stopModalScanRetries()
+		stopAddressBarAlignResizeListener()
 		teardownWarnings()
 		trackedHttpMethod = ''
 	}
@@ -435,6 +538,7 @@ export function useScalarClientWriteEndpointWarnings(
 		}
 
 		stopModalScanRetries()
+		stopAddressBarAlignResizeListener()
 
 		document.removeEventListener( 'click', onTestRequestButtonClick, true )
 

@@ -13,9 +13,26 @@
 	margin-inline: var( --spacing-100 );
 }
 
-.scalar-client .t-app__top-container > .scalar-client-write-endpoint-warning-mount {
+.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount {
+	/* Scalar sets order-last (9999) on the address bar below lg; beat it so controls stay under the URL. */
+	order: 10000;
+	flex-basis: 100%;
+	box-sizing: border-box;
 	margin-block-start: var( --spacing-100 );
+	margin-inline: 0;
+	padding-inline-start: var( --fd-scalar-address-bar-inline-align-offset, 0 );
 	inline-size: 100%;
+}
+
+.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount .scalar-client-write-endpoint-controls--address-bar {
+	margin: 0;
+}
+
+@media ( min-width: 1024px ) {
+	.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount {
+		order: unset;
+		flex-basis: 100%;
+	}
 }
 
 /**
@@ -87,6 +104,37 @@
 }
 
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
+	content: ' ' !important;
+	display: block !important;
+	box-sizing: border-box !important;
+	position: relative !important;
+	inset: auto !important;
+	margin: 0 !important;
+	inline-size: 0.25rem !important;
+	block-size: calc( 100% - 6px ) !important;
+	max-block-size: calc( 100% - 6px ) !important;
+	border-block-start-width: 0 !important;
+	border-inline-start-width: 0 !important;
+	border-inline-end-width: 2px !important;
+	border-inline-end-style: solid !important;
+	border-block-end-width: 2px !important;
+	border-block-end-style: solid !important;
+	border-inline-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	border-block-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	transform: rotate( 45deg ) !important;
+}
+
+/*
+ * Test Request modal write-request checkbox (teleported Scalar client).
+ * Same Scalar preflight checkmark fix as explorer-project-controls above.
+ */
+.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
 	content: ' ' !important;
 	display: block !important;
 	box-sizing: border-box !important;

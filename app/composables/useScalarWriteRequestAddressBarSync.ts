@@ -45,7 +45,7 @@ function emitScalarClientServerUrlUpdate(
 }
 
 /**
- * Keeps the Scalar address bar server URL aligned with the write-request test-wiki toggle.
+ * Keeps the Scalar address bar server URL aligned with the write-request test-wiki checkbox.
  *
  * @param scalarInterface - Scalar handles from {@link ExplorerScalarReference}.
  * @param selectedWikiInstanceId - Reactive wiki instance id for URL rewriting.
@@ -74,7 +74,7 @@ export function useScalarWriteRequestAddressBarSync(
 	}
 
 	/**
-	 * Rewrites the open modal's server URL to match the test-wiki toggle state.
+	 * Rewrites the open modal's server URL to match the test-wiki checkbox state.
 	 *
 	 * @returns Nothing.
 	 */

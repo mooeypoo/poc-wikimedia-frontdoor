@@ -58,3 +58,32 @@ export function splitMessageAtFirstPositionalParameter( messageTemplate: string 
 		afterParameter: messageTemplate.slice( parameterIndex + 2 )
 	}
 }
+
+/**
+ * Splits a message template at `$1` and `$2` for BiDi-safe rendering of two external values.
+ *
+ * @param messageTemplate - Raw message containing `$1` and `$2`.
+ * @returns Text before `$1`, between `$1` and `$2`, and after `$2`.
+ */
+export function splitMessageAtTwoPositionalParameters( messageTemplate: string ): {
+	beforeFirstParameter: string
+	betweenParameters: string
+	afterSecondParameter: string
+} {
+	const firstParameterIndex = messageTemplate.indexOf( '$1' )
+	const secondParameterIndex = messageTemplate.indexOf( '$2' )
+
+	if ( firstParameterIndex === -1 || secondParameterIndex === -1 ) {
+		return {
+			beforeFirstParameter: messageTemplate,
+			betweenParameters: '',
+			afterSecondParameter: ''
+		}
+	}
+
+	return {
+		beforeFirstParameter: messageTemplate.slice( 0, firstParameterIndex ),
+		betweenParameters: messageTemplate.slice( firstParameterIndex + 2, secondParameterIndex ),
+		afterSecondParameter: messageTemplate.slice( secondParameterIndex + 2 )
+	}
+}

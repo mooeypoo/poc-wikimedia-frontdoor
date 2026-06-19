@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { CdxMessage, CdxToggleSwitch } from '@wikimedia/codex'
+import { CdxCheckbox, CdxMessage } from '@wikimedia/codex'
 import { computed, onMounted, ref, watch } from 'vue'
+import { getWikiInstanceById } from '../../../../config/instances'
 import {
 	getTestWikiUrlForWikiInstance,
 	hasTestWikiForWikiInstance
@@ -8,7 +9,7 @@ import {
 import { activeExplorerWikiInstanceId } from '../../../utils/explorerWikiInstanceContext'
 import { isTestWikiEnabledForWriteRequests } from '../../../utils/explorerScalarWriteRequestContext'
 import { findOpenScalarClientModal } from '../../../utils/findOpenScalarClientModal'
-import { getInterfaceMessageTemplate, splitMessageAtFirstPositionalParameter } from '../../../utils/getInterfaceMessageTemplate'
+import { getInterfaceMessageTemplate, splitMessageAtFirstPositionalParameter, splitMessageAtTwoPositionalParameters } from '../../../utils/getInterfaceMessageTemplate'
 import { isWriteHttpMethod } from '../../../utils/isWriteHttpMethod'
 import { resolveHttpMethodFromModalElement } from '../../../utils/scalarClientModalHttpMethod'
 
@@ -29,6 +30,10 @@ const props = defineProps<{
 
 const resolvedHttpMethod = ref( props.httpMethod ?? props.operation?.method ?? '' )
 
+const resolvedProductionWikiDisplayName = computed( () => {
+	return getWikiInstanceById( activeExplorerWikiInstanceId.value )?.displayName ?? ''
+} )
+
 const resolvedTestWikiUrl = computed( () => {
 	return props.testWikiUrl
 		?? getTestWikiUrlForWikiInstance( activeExplorerWikiInstanceId.value )
@@ -38,27 +43,27 @@ const hasMappedTestWiki = computed( () => {
 	return hasTestWikiForWikiInstance( activeExplorerWikiInstanceId.value )
 } )
 
-const toggleLabelSegments = computed( () => {
+const checkboxLabelSegments = computed( () => {
 	const messageTemplate = getInterfaceMessageTemplate( 'explorer-scalar-write-test-wiki-toggle-label' )
 
 	return splitMessageAtFirstPositionalParameter( messageTemplate )
 } )
 
-const toggleDescription = computed( () => {
+const checkboxDescription = computed( () => {
 	return getInterfaceMessageTemplate( 'explorer-scalar-write-test-wiki-toggle-description' )
 } )
 
 const warningMessageSegments = computed( () => {
 	const messageTemplate = getInterfaceMessageTemplate( 'explorer-scalar-write-endpoint-warning' )
 
-	return splitMessageAtFirstPositionalParameter( messageTemplate )
+	return splitMessageAtTwoPositionalParameters( messageTemplate )
 } )
 
 const shouldShowWriteControls = computed( () => {
 	return isWriteHttpMethod( resolvedHttpMethod.value ) && hasMappedTestWiki.value
 } )
 
-const shouldShowTestWikiToggle = computed( () => {
+const shouldShowTestWikiCheckbox = computed( () => {
 	return shouldShowWriteControls.value && props.slotKey === 'address-bar'
 } )
 
@@ -96,32 +101,30 @@ onMounted( () => {
 		<div
 			v-if="shouldShowWriteControls"
 			class="scalar-client-write-endpoint-controls"
+			:class="{ 'scalar-client-write-endpoint-controls--address-bar': slotKey === 'address-bar' }"
 			:data-front-door-scalar-write-warning="slotKey"
 		>
-			<div
-				v-if="shouldShowTestWikiToggle"
-				class="scalar-client-write-endpoint-controls__toggle-row"
+			<CdxCheckbox
+				v-if="shouldShowTestWikiCheckbox"
+				v-model="isTestWikiEnabledForWriteRequests"
+				class="scalar-client-write-endpoint-controls__checkbox"
 			>
-				<div class="scalar-client-write-endpoint-controls__toggle-header">
-					<p class="scalar-client-write-endpoint-controls__toggle-label">
-						{{ toggleLabelSegments.beforeParameter }}<strong><bdi dir="ltr">{{ resolvedTestWikiUrl }}</bdi></strong>{{ toggleLabelSegments.afterParameter }}
-					</p>
-					<CdxToggleSwitch
-						v-model="isTestWikiEnabledForWriteRequests"
-						class="scalar-client-write-endpoint-controls__toggle-switch"
-					/>
-				</div>
-				<p class="scalar-client-write-endpoint-controls__toggle-description">
-					{{ toggleDescription }}
-				</p>
-			</div>
+				<span class="scalar-client-write-endpoint-controls__checkbox-copy">
+					<span class="scalar-client-write-endpoint-controls__checkbox-label">
+						{{ checkboxLabelSegments.beforeParameter }}<span class="scalar-client-write-endpoint-controls__checkbox-hostname"><bdi dir="ltr">{{ resolvedTestWikiUrl }}</bdi></span>{{ checkboxLabelSegments.afterParameter }}
+					</span>
+					<span class="scalar-client-write-endpoint-controls__checkbox-description">
+						{{ checkboxDescription }}
+					</span>
+				</span>
+			</CdxCheckbox>
 
 			<div
 				v-if="shouldShowProductionWarning"
 				class="scalar-client-write-endpoint-warning"
 			>
 				<CdxMessage type="warning">
-					{{ warningMessageSegments.beforeParameter }}<bdi dir="ltr">{{ resolvedTestWikiUrl }}</bdi>{{ warningMessageSegments.afterParameter }}
+					{{ warningMessageSegments.beforeFirstParameter }}<bdi>{{ resolvedProductionWikiDisplayName }}</bdi>{{ warningMessageSegments.betweenParameters }}<span class="scalar-client-write-endpoint-controls__warning-hostname"><bdi dir="ltr">{{ resolvedTestWikiUrl }}</bdi></span>{{ warningMessageSegments.afterSecondParameter }}
 				</CdxMessage>
 			</div>
 		</div>
@@ -130,45 +133,47 @@ onMounted( () => {
 
 <style scoped>
 .scalar-client-write-endpoint-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-100 );
 	margin-block: var( --spacing-100 );
 	margin-inline: var( --spacing-100 );
 }
 
-.scalar-client-write-endpoint-controls__toggle-row {
-	display: grid;
-	gap: var( --spacing-25 );
-}
-
-.scalar-client-write-endpoint-controls__toggle-header {
-	display: flex;
-	align-items: center;
-	gap: var( --spacing-50 );
-	min-inline-size: 0;
-}
-
-.scalar-client-write-endpoint-controls__toggle-label,
-.scalar-client-write-endpoint-controls__toggle-description {
+.scalar-client-write-endpoint-controls--address-bar {
 	margin: 0;
 }
 
-.scalar-client-write-endpoint-controls__toggle-label {
-	color: var( --color-base );
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
+.scalar-client-write-endpoint-controls__checkbox {
+	align-items: start;
 	min-inline-size: 0;
 }
 
-.scalar-client-write-endpoint-controls__toggle-description {
-	color: var( --color-subtle );
-	font-size: var( --font-size-small );
+.scalar-client-write-endpoint-controls__checkbox-copy {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-25 );
+	min-inline-size: 0;
+}
+
+.scalar-client-write-endpoint-controls__checkbox-label,
+.scalar-client-write-endpoint-controls__checkbox-description {
+	display: block;
 	line-height: var( --line-height-small );
 }
 
-.scalar-client-write-endpoint-controls__toggle-switch {
-	flex: 0 0 auto;
+.scalar-client-write-endpoint-controls__checkbox-label {
+	color: var( --color-base );
+	font-size: var( --font-size-medium );
 }
 
-.scalar-client-write-endpoint-warning {
-	margin-block-start: var( --spacing-100 );
+.scalar-client-write-endpoint-controls__checkbox-hostname,
+.scalar-client-write-endpoint-controls__warning-hostname {
+	font-family: var( --font-family-monospace-stack );
+}
+
+.scalar-client-write-endpoint-controls__checkbox-description {
+	color: var( --color-subtle );
+	font-size: var( --font-size-medium );
 }
 </style>

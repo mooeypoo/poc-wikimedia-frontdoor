@@ -78,6 +78,10 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
+│   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
+│   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
+│   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
+│   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
@@ -174,6 +178,9 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | On inline layout when the endpoint panel is expanded and endpoint count exceeds `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (`config/explorerModuleRail.ts`), measures the first N row block size and sets `--explorer-module-rail-inline-endpoint-scroll-max-block-size` on the scrollport |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
+| `useScalarClientWriteEndpointWarnings(scalarInterface, selectedWikiInstanceId)` | Injects write-request **`CdxCheckbox`** and production **`CdxMessage`** into the Scalar Test Request modal (DOM mount after `.scalar-address-bar` + `ClientPlugin` slots); resets preference on modal open |
+| `useScalarWriteRequestTestWiki(scalarConfiguration)` | Registers Scalar `onBeforeRequest` to rewrite write HTTP methods to the mapped test wiki when the modal checkbox is checked (`config/wikiInstanceTestWikis.ts`) |
+| `useScalarWriteRequestAddressBarSync(scalarInterface, selectedWikiInstanceId)` | Debounced sync of the modal address bar server URL with checkbox state via Scalar `server:update:server` events |
 
 ---
 
@@ -705,6 +712,30 @@ Two mechanisms:
 - **`views`**: inject a Vue component at `content.end` (after the Models section). Use for: token display panel, instance/language context notice, fallback language notice.
 - **`extensions`**: inject a Vue component tied to an `x-*` vendor extension field in the spec. Use for: per-endpoint or per-operation metadata. Requires the spec to contain the `x-*` field — only possible if the spec is under our control or can be augmented at fetch time.
 
+**Write-request test wiki (Test Request modal).** For write HTTP methods (`POST`, `PUT`, `PATCH`, `DELETE` — `config/scalarWriteHttpMethods.ts`) on wiki instances with a mapped test wiki (`config/wikiInstanceTestWikis.ts`), the explorer injects a **`CdxCheckbox`** and optional production **`CdxMessage`** into Scalar’s Test Request modal. This is **not** a Scalar `ClientPlugin` alone — the address-bar slot uses **DOM injection** because Scalar’s modal header (`.t-app__top-container`) is flex-wrapped and the checkbox must sit immediately below the address bar.
+
+```
+Write endpoint opened in Test Request modal
+    ↓
+useScalarClientWriteEndpointWarnings
+    ├── resetScalarWriteRequestTestWikiPreference() (checkbox default: checked)
+    ├── injectAddressBarWarning() → mount after .scalar-address-bar
+    │       └── ScalarClientWriteEndpointWarning.vue (slotKey: address-bar)
+    └── ClientPlugin slots for request/response views (same component, other slotKeys)
+    ↓
+isTestWikiEnabledForWriteRequests (shared ref in explorerScalarWriteRequestContext.ts)
+    ├── useScalarWriteRequestTestWiki → onBeforeRequest URL rewrite when checked
+    └── useScalarWriteRequestAddressBarSync → address bar server URL via eventBus
+```
+
+**Placement and layout.** `resolveScalarClientModalAddressBarWarningPlacement.ts` inserts the mount node as the **next sibling** after `.scalar-address-bar`. `syncScalarClientModalAddressBarWarningInlineAlignment()` measures the URL field’s inline-start offset and sets `--fd-scalar-address-bar-inline-align-offset` so checkbox and warning align with the address bar input. **`app/assets/css/explorer-codex-overrides.css`** sets `order: 10000` on `.scalar-address-bar + .scalar-client-write-endpoint-warning-mount` below Scalar’s `lg` breakpoint where the address bar uses `order-last` (9999) — without this, flex order can place controls above the URL row on narrow viewports. At `lg+`, `order` resets but the mount remains full-width on its own row.
+
+**Copy and BiDi.** Interface strings use banana-i18n (`explorer-scalar-write-test-wiki-toggle-*`, `explorer-scalar-write-endpoint-warning`). The warning message splits on `$1` (production wiki display name) and `$2` (test wiki hostname) via `splitMessageAtTwoPositionalParameters()` in `getInterfaceMessageTemplate.ts` so each segment can be wrapped in `<bdi>`; hostnames use `dir="ltr"` and monospace styling.
+
+**Codex checkbox checkmark.** Scalar’s Tailwind preflight can break Codex checkbox pseudo-elements inside the teleported modal. `explorer-codex-overrides.css` re-asserts checkmark layout for `.scalar-client-write-endpoint-controls` (same pattern as `.explorer-project-controls`).
+
+**Plain HTML probe.** `SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE` in `config/scalarClientWriteWarnings.ts` swaps the Vue mount for a plain HTML banner when debugging slot injection without Codex.
+
 ---
 
 ## OAuth session
@@ -983,6 +1014,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `app/assets/css/main.css` (explorer picker menu stacking only) |
 | Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/composables/useExplorerModuleRailPlacement.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
+| Write-request test wiki (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/composables/useScalarWriteRequestTestWiki.ts`, `app/composables/useScalarWriteRequestAddressBarSync.ts`, `app/utils/explorerScalarWriteRequestContext.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/applyTestWikiToggleToServerUrl.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css` |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
@@ -994,4 +1026,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Write-request Test Request modals include the test-wiki **`CdxCheckbox`**, production warning, and URL rewrite path documented under **Scalar plugin layer → Write-request test wiki**. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.

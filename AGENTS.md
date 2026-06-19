@@ -120,6 +120,8 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
 - REST API module select description fallbacks when OpenAPI omits `info.description` (`config/explorerModuleDescriptions.ts`)
 - Inline collapsible module rail visible endpoint row cap (`config/explorerModuleRail.ts`)
+- Test wiki base URL mapping for write-request experimentation (`config/wikiInstanceTestWikis.ts`)
+- Write HTTP methods and Scalar Test Request modal warning flags (`config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`)
 - Language definitions with explicit `dir` declarations
 - Language fallback chains
 - OAuth client ID and endpoint URLs
@@ -185,6 +187,9 @@ Composables live in `composables/` and are named with the `use` prefix describin
 - `useDiscovery(instance)` — fetches and parses the /discovery endpoint
 - `useExplorerModuleRailPlacement()` — module rail Teleport target and layout mode (end column vs inline)
 - `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` — inline rail endpoint scrollport cap (`config/explorerModuleRail.ts`)
+- `useScalarClientWriteEndpointWarnings(scalarInterface, selectedWikiInstanceId)` — injects write-request checkbox and production warning into the Scalar Test Request modal
+- `useScalarWriteRequestTestWiki(scalarConfiguration)` — rewrites outbound write requests to the mapped test wiki when the modal checkbox is checked
+- `useScalarWriteRequestAddressBarSync(scalarInterface, selectedWikiInstanceId)` — keeps the modal address bar server URL aligned with the test-wiki checkbox
 
 ### Documentation
 
@@ -255,6 +260,7 @@ Before marking any component complete, verify:
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
 - [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
 - [ ] Explorer **`CdxSelect`** / **`CdxCombobox`** floating menus use native Codex MenuItem interaction states — no custom hover / highlighted / selected CSS on `.explorer-page` (`main.css` z-index + list-style only)
+- [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
 
 ---
 
@@ -367,6 +373,7 @@ This set is chosen deliberately:
 - Codex components for explorer controls (`CdxCombobox`, `CdxSelect`, `CdxField`, `CdxCheckbox`, …)
 - Basic RTL: `dir` attribute on `<html>` set reactively from the selected instance's `dir` in `config/instances.ts`
 - Picker menu labels use BiDi isolation (`isolatePickerLabel()`); module names in the rail wrapped in `<bdi>`
+- **Write-request test wiki (Test Request modal):** for write HTTP methods on instances with a mapped test wiki (`config/wikiInstanceTestWikis.ts`), a **`CdxCheckbox`** below the modal address bar routes requests to the test wiki when checked (default checked); unchecking shows a **`CdxMessage`** production warning and sends write requests to the production wiki. Implemented via DOM injection + Scalar `ClientPlugin` slots — see `ARCHITECTURE.md` → Write-request test wiki
 
 ### Out of scope for Experiment 1
 
@@ -388,6 +395,7 @@ This set is chosen deliberately:
 - Language combobox is disabled when Wikimedia Commons or Wikidata is selected
 - REST API module select defaults to the first healthy module in discovery order (after opt-in filter)
 - Module rail heading and endpoint paths use `<bdi>`; HTTP method tags use `dir="ltr"`; picker menu labels and module descriptions use BiDi isolation (`isolatePickerLabel()`); REST API module select uses native Codex menu hover, keyboard highlight, and selected styling (no custom `.cdx-menu-item` state overrides on the explorer page); inline collapsible rail shows at most seven endpoint rows before the endpoint scrollport scrolls internally
+- Write-request Test Request modal: **`CdxCheckbox`** appears below the address bar for POST/PUT/PATCH/DELETE when a test wiki is mapped; unchecked state shows production warning naming the active wiki instance and test wiki hostname; checked state rewrites requests and the address bar URL to the test wiki
 - If `Object.assign` is required as a workaround for Scalar reactivity, it is documented with an inline comment
 
 ### Failure signals to report

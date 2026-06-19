@@ -13,7 +13,7 @@ interface ScalarConfigurationShape {
 }
 
 /**
- * Rewrites Scalar write requests to the mapped test wiki when the modal toggle is enabled.
+ * Rewrites Scalar write requests to the mapped test wiki when the modal checkbox is checked.
  *
  * @param payload - Scalar before-request hook payload.
  * @returns Updated payload when the request URL changes; otherwise undefined.
@@ -44,7 +44,7 @@ async function onScalarWriteRequestBeforeRequest(
 }
 
 /**
- * Registers Scalar `onBeforeRequest` so write calls honor the test-wiki toggle.
+ * Registers Scalar `onBeforeRequest` so write calls honor the test-wiki checkbox.
  *
  * @param scalarConfiguration - Reactive Scalar configuration from {@link useScalarConfig}.
  * @returns Nothing.

@@ -10,7 +10,7 @@ export const isTestWikiEnabledForWriteRequests = ref( true )
 /**
  * Production server URL captured when a write-request modal opens.
  *
- * Used to restore the address bar when the test-wiki toggle is disabled.
+ * Used to restore the address bar when the test-wiki checkbox is unchecked.
  */
 export const cachedProductionServerUrlForWriteRequest = ref<string | null>( null )
 

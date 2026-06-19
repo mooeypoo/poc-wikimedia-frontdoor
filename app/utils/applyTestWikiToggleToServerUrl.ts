@@ -2,12 +2,12 @@ import { rewriteProductionRequestUrlToTestWiki } from './rewriteProductionReques
 import { rewriteTestRequestUrlToProduction } from './rewriteTestRequestUrlToProduction'
 
 /**
- * Applies the write-request test-wiki toggle to a Scalar server URL.
+ * Applies the write-request test-wiki checkbox state to a Scalar server URL.
  *
  * @param serverUrl - Production server URL from the open API client modal.
  * @param wikiInstanceId - Active explorer wiki instance id.
- * @param useTestWiki - Whether the test-wiki toggle is enabled.
- * @returns Server URL for the current toggle state.
+ * @param useTestWiki - Whether the test-wiki checkbox is checked.
+ * @returns Server URL for the current checkbox state.
  */
 export function applyTestWikiToggleToServerUrl(
 	serverUrl: string,
