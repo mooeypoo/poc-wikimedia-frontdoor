@@ -276,11 +276,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<p v-if="explorerDescription">{{ explorerDescription }}</p>
 			</header>
 
+			<!--
+				Teleport anchor stays mounted in community mode (controls alone gate on bootstrap).
+				Vue Teleport requires #explorer-module-rail-anchor in the DOM before the rail mounts.
+				See ARCHITECTURE.md → End column module rail → Teleport mounting.
+			-->
 			<div
-				v-if="!isInstanceBootstrapping && isCommunityMode"
+				v-if="isCommunityMode"
 				class="explorer-page__project-controls-stack"
 			>
 				<ExplorerProjectControls
+					v-if="!isInstanceBootstrapping"
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
 					v-model:selected-module-name="selectedModuleName"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
@@ -544,12 +550,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__scalar-shell {
 	/* Contain Scalar `position: fixed` UI so it cannot cover the shell header. */
+	position: relative;
 	transform: translateZ( 0 );
 	min-inline-size: 0;
 	min-block-size: 24rem;
 	border: 1px solid var( --border-color-subtle );
 	border-radius: var( --border-radius-base );
-	overflow: hidden;
+	/*
+	 * Clip horizontal bleed after resize; vertical scroll is enabled from 960px below.
+	 * overflow-inline: clip keeps the inline-end border visible (border sits outside padding).
+	 */
+	overflow-inline: clip;
+	overflow-block: hidden;
 	background-color: var( --background-color-base );
 	padding-inline: var( --spacing-150 );
 	padding-block: 0;
@@ -615,7 +627,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	.explorer-page__scalar-shell {
 		block-size: 100%;
 		min-block-size: 0;
-		overflow: auto;
+		overflow-block: auto;
+		overflow-inline: clip;
 		overscroll-behavior: contain;
 	}
 }

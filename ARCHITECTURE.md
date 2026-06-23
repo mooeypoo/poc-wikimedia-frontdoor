@@ -317,6 +317,8 @@ useEndPanelNavAlign(
 - **> 7 endpoints:** `useExplorerModuleRailInlineEndpointScrollCap` measures the block size spanning the first seven **`CdxMenuItem`** rows and sets **`--explorer-module-rail-inline-endpoint-scroll-max-block-size`** on **`.explorer-module-rail__endpoint-scrollport`** (class **`explorer-module-rail__endpoint-scrollport--inline-capped`**). Additional endpoints scroll inside the scrollport with the same thin scrollbar as the wide layout.
 - Row cap constant: **`config/explorerModuleRail.ts`**. Remeasures on expand/collapse, module change, resize, and endpoint-list `ResizeObserver` updates.
 
+**Teleport mounting.** Inline layout targets **`#explorer-module-rail-anchor`** in `app/pages/explorer/[[view]].vue`. Vue `<Teleport>` resolves its target when the rail first mounts; if the anchor is absent, the rail is not rendered and Vue logs a target warning. The anchor therefore stays in the DOM whenever **`isCommunityMode`** is true; only **`ExplorerProjectControls`** is gated on **`!isInstanceBootstrapping`**. Resizing across the 1120px breakpoint remounts the rail via **`:key="layoutMode"`** and masks the issue on desktop → tablet transitions; a missing anchor on first paint at tablet widths was the original failure mode.
+
 **UI reference.** `DESIGN_REQUIREMENTS.md` → Module rail. Operation focus flow: **Module rail → Scalar operation focus** below.
 
 ---
@@ -648,12 +650,12 @@ resolveScalarOperationNavigationId()  ← app/utils/scalarOperationNavigation.ts
        ↓
 scalarInterface.eventBus.emit('scroll-to:nav-item', { id })
        ↓
-scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow: auto)
+scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: auto; overflow-inline: clip from 960px)
 ```
 
 **Resolution strategy.** Scalar assigns each operation a navigation id (typically `{document}/tag/{tag}/{METHOD}{path}` or `{document}/{METHOD}{path}`). `scalarOperationNavigation.ts` mirrors that id generation (GitHub slugger for segments) and searches, in order: the workspace navigation tree exposed by `ApiReference`, sidebar items, then the DOM under the Scalar shell. Candidates are tried until an element with a matching `id` exists.
 
-**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling the **Scalar shell container** (not only `document`) so sticky layout and `overscroll-behavior: contain` behave correctly.
+**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling the **Scalar shell container** (not only `document`) so sticky layout, **`overflow-block: auto`**, and `overscroll-behavior: contain` behave correctly.
 
 **Triggers.** Focus runs when:
 
@@ -664,6 +666,21 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow: auto)
 **Same-module clicks.** Selecting another endpoint in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged), so focus can run immediately without waiting for a spec swap.
 
 **UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
+
+### Scalar shell overflow and resize
+
+**`.explorer-page__scalar-shell`** (`app/pages/explorer/[[view]].vue`):
+
+| Breakpoint | Block axis | Inline axis |
+|------------|------------|-------------|
+| **&lt; 960px** | `overflow-block: hidden` | `overflow-inline: clip` |
+| **≥ 960px** (sticky reference panel) | `overflow-block: auto` | `overflow-inline: clip` |
+
+**Rationale.** Scalar introduction rows and sample **`pre`** blocks use Tailwind **`w-fit`** / **`nowrap`** and can exceed the shell width after a viewport resize (especially desktop main + end columns). Horizontal bleed previously painted over the shell **`border`** on the inline-end edge. **`overflow-inline: clip`** contains that bleed while preserving a normal **`border`** on all four sides (an inset **`box-shadow`** frame was rejected — it is clipped on the block axis when the shell scrolls). Vertical scrolling stays on the block axis only.
+
+**Codex overrides** (`app/assets/css/explorer-codex-overrides.css`): **`.scalar-app`** uses **`min-inline-size: 0`** and **`max-inline-size: 100%`**; introduction **`.introduction-card-item`** rows and sample **`pre` / `pre code`** cap width with **`overflow-inline: auto`** so wide curl snippets scroll inside the sample instead of widening the shell scrollport.
+
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
 
 ### Explorer modes and start-column routing
 
@@ -1022,7 +1039,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
 | Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `config/explorerSurfaces.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `app/assets/css/main.css` (explorer picker menu stacking only), `app/assets/css/page-grid.css` (`--fd-explorer-controls-surface-*`) |
-| Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/composables/useExplorerModuleRailPlacement.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `config/explorerSurfaces.ts`, `tests/explorerModuleDescription.test.mjs` |
+| Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/composables/useExplorerModuleRailPlacement.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `config/explorerSurfaces.ts`, `app/pages/explorer/[[view]].vue` (`#explorer-module-rail-anchor`), `tests/explorerModuleDescription.test.mjs` |
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
 | Write-request test wiki (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/composables/useScalarWriteRequestTestWiki.ts`, `app/composables/useScalarWriteRequestAddressBarSync.ts`, `app/utils/explorerScalarWriteRequestContext.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/applyTestWikiToggleToServerUrl.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css` |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |

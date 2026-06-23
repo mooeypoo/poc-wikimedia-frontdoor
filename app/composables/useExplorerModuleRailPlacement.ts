@@ -13,6 +13,11 @@ const EXPLORER_INLINE_RAIL_ANCHOR_TARGET = '#explorer-module-rail-anchor'
  * At desktop (≥ 1120px) the rail teleports to the grid end column; below that it
  * teleports inline below project controls in the main column.
  *
+ * The inline anchor (`#explorer-module-rail-anchor`) must exist in the DOM before
+ * `ExplorerModuleRail` mounts — it is always rendered in community mode while
+ * `ExplorerProjectControls` alone waits for bootstrap. See `ARCHITECTURE.md` →
+ * End column module rail → Teleport mounting.
+ *
  * @returns Desktop end-column flag, layout mode, and Teleport target selector.
  */
 export function useExplorerModuleRailPlacement(): {

@@ -448,7 +448,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Decision:** Scalar spec panel sits in a bordered shell (`--border-color-subtle`, `--border-radius-base`) with **inline padding** `--spacing-150` on the shell; inner Scalar layout padding is not globally overridden in the current phase.
 
-**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css`.
+**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark fixes, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
 
 ---
 
@@ -459,7 +459,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 Top to bottom:
 
 1. **Page header** — community mode `h1` (Wikimedia API modules) + description **`explorer-description`**: “Discover REST API modules and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls** — Wikimedia project fieldset (project + language comboboxes), REST API module select + opt-in checkboxes (hidden while instance bootstrapping)
+2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, REST API module select, opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout)
 3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
@@ -480,7 +480,7 @@ Top to bottom:
 
 - Panel is **sticky** with `inset-block-start: --spacing-150`
 - Panel height: `calc(100vh - 2 * --spacing-150)`
-- Scalar shell fills remaining grid row (`minmax(0, 1fr)`), **scrollable** with `overscroll-behavior: contain`
+- Scalar shell fills remaining grid row (`minmax(0, 1fr)`), **block-scrollable** (`overflow-block: auto`) with `overscroll-behavior: contain`
 
 **Rationale:** Keeps spec in view while module rail scrolls independently in the end column.
 
@@ -488,7 +488,13 @@ Top to bottom:
 
 **Decision:** `transform: translateZ(0)` on `.explorer-page__scalar-shell` to contain Scalar `position: fixed` UI so it does not cover the global header.
 
+**Border:** `1px solid var(--border-color-subtle)` on all sides with `--border-radius-base`. Do not replace with an inset `box-shadow` frame — it disappears on the block axis when the shell scrolls at ≥ 960px.
+
+**Overflow (resize):** **`overflow-inline: clip`** on the shell at all explorer breakpoints; **`overflow-block: hidden`** below 960px and **`overflow-block: auto`** from 960px (sticky reference panel). After a viewport resize, Scalar introduction cards and sample **`pre`** rows can exceed the shell width; inline clip keeps the frame border visible on the inline-end edge. Sample blocks are width-capped in **`explorer-codex-overrides.css`** (`pre`, `pre code`, `.introduction-card-item`) with internal **`overflow-inline: auto`**.
+
 **Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
+
+**Source:** `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
 
 ---
 
@@ -605,7 +611,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ### Rail positioning
 
-**Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). **`--spacing-100` (16px)** gap from project controls. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
+**Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). The anchor is **always mounted** in community mode; only project controls wait for bootstrap so Teleport can resolve the target on first paint at tablet widths. **`--spacing-100` (16px)** gap from project controls. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
 
 **Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
@@ -675,6 +681,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |
 | *(uncommitted)* | Scroll-end symmetry (32px) | `::after` spacer on start scrollport (tablet+ panel, mobile `.fd-page-grid__start`) + overlay panel; footer keeps `padding-block-end` |
@@ -756,4 +763,4 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
-| Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` |
+| Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark, link tokens, introduction `pre` width caps) |

@@ -170,6 +170,35 @@
 	--scalar-link-color: var( --color-progressive );
 	--scalar-link-color-hover: var( --color-progressive--hover );
 	--scalar-link-color-visited: var( --color-visited );
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+/*
+ * Scalar sample <pre> blocks use w-fit + nowrap and can exceed the shell after resize,
+ * clipping bordered cards and painting over the shell border on the inline-end edge.
+ * Cap width and scroll inside the sample instead of widening the shell scrollport.
+ */
+.explorer-page .scalar-app :where( pre ) {
+	display: block;
+	max-inline-size: 100%;
+	overflow-inline: auto;
+	box-sizing: border-box;
+}
+
+.explorer-page .scalar-app :where( pre code ) {
+	display: block;
+	max-inline-size: 100%;
+	overflow-inline: auto;
+	white-space: pre;
+	box-sizing: border-box;
+}
+
+/* Introduction Server / Client Libraries rows share a fixed inline size from Scalar. */
+.explorer-page .scalar-app :where( .introduction-card-item ) {
+	box-sizing: border-box;
+	max-inline-size: 100%;
 }
 
 /* Mirror Scalar’s display-p3 @supports block so accent/link tokens stay progressive. */
