@@ -4,8 +4,14 @@ import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
+import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOptInFilteredModules'
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
+import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
+import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
+import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
+import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import ExplorerEnterpriseCustom from '../../components/explorer/ExplorerEnterpriseCustom.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
@@ -43,15 +49,12 @@ const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides }
 const {
 	modules,
 	failedModules,
-	hasSelectableModules,
 	wikiDisplayName,
 	selectedModuleName,
-	expandedModuleNames,
-	setModuleExpanded,
-	selectedModule,
-	openApiSpecUrl,
 	pendingOperationTarget,
+	selectedEndpointOperationId,
 	isInstanceBootstrapping,
+	isExplorerModuleRailVisible,
 	hasInstanceBootstrapError,
 	instanceBootstrapErrorMessage,
 	isScalarSwitching,
@@ -60,14 +63,34 @@ const {
 	clearPendingOperationTarget
 } = useExplorerBootstrap( selectedWikiInstanceId, isCommunityMode )
 
+const includeBetaEndpoints = ref( false )
+const includeInternalEndpoints = ref( false )
+
+const {
+	visibleModules,
+	hasVisibleSelectableModules,
+	visibleSelectedModule,
+	visibleOpenApiSpecUrl
+} = useExplorerOptInFilteredModules( {
+	modules,
+	failedModules,
+	includeBetaEndpoints,
+	includeInternalEndpoints,
+	selectedModuleName,
+	selectModule
+} )
+
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
+
+useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
+
+watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
+	setActiveExplorerWikiInstanceId( wikiInstanceId )
+}, { immediate: true } )
+
 const referenceHeaderRef = ref<HTMLElement | null>( null )
 const referenceModuleLabelRef = ref<HTMLElement | null>( null )
-const projectControlsRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
-const includeBetaEndpoints = ref( false )
-const includeInternalEndpoints = ref( true )
-
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(
@@ -95,9 +118,12 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 	}
 }
 
-const { endPanelNavStyle, refreshEndPanelNavAlign } = useEndPanelNavAlign(
-	projectControlsRef,
+const { layoutMode, moduleRailTeleportTarget } = useExplorerModuleRailPlacement()
+
+const { refreshEndPanelNavAlign, scheduleLayoutSettledRefresh } = useEndPanelNavAlign(
+	scalarShellRef,
 	explorerEndPanelElement,
+	scalarShellRef,
 	scalarShellRef
 )
 
@@ -127,7 +153,7 @@ function onScalarLoaded(): void {
 // shared reactive object across modes, which previously produced a
 // "Document not found in configList" warning from Scalar during transitions.
 const { scalarConfiguration: communityScalarConfiguration } = useScalarConfig(
-	openApiSpecUrl,
+	visibleOpenApiSpecUrl,
 	{ onLoaded: onScalarLoaded }
 )
 
@@ -144,6 +170,9 @@ const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
 		: enterpriseScalarConfiguration.value
 )
 
+useScalarWriteRequestTestWiki( communityScalarConfiguration )
+useScalarWriteRequestAddressBarSync( scalarInterface, selectedWikiInstanceId )
+
 /**
  * Forces ApiReference remount when the spec context changes.
  *
@@ -157,7 +186,7 @@ const scalarReferenceKey = computed( () => {
 		selectedWikiInstanceId.value,
 		selectedModuleName.value,
 		explorerMode.value,
-		openApiSpecUrl.value ?? ''
+		( isCommunityMode.value ? visibleOpenApiSpecUrl.value : enterpriseSpecUrl.value ) ?? ''
 	].join( ':' )
 } )
 
@@ -187,6 +216,7 @@ const explorerDescription = computed( () =>
 	isCommunityMode.value ? $bananaI18n( 'explorer-description' ) : ''
 )
 const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
+const betaChipLabel = computed( () => $bananaI18n( 'explorer-module-beta-chip-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
@@ -194,8 +224,15 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-watch( [ isInstanceBootstrapping, selectedModuleName, openApiSpecUrl, wikiDisplayName ], () => {
-	nextTick( () => {
+watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady, layoutMode ], ( [ , , , nextLayoutMode ] ) => {
+	void nextTick( () => {
+		if ( nextLayoutMode === 'end-column' ) {
+			void nextTick( () => {
+				scheduleLayoutSettledRefresh()
+			} )
+			return
+		}
+
 		refreshEndPanelNavAlign()
 	} )
 } )
@@ -213,10 +250,6 @@ watch( pendingOperationTarget, ( nextPendingOperationTarget ) => {
 		focusPendingOperationInScalar()
 	} )
 } )
-
-function onModuleExpandToggle( moduleName: string, isOpen: boolean ): void {
-	setModuleExpanded( moduleName, isOpen )
-}
 
 function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation ): void {
 	void selectModule( moduleName, {
@@ -243,35 +276,45 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<p v-if="explorerDescription">{{ explorerDescription }}</p>
 			</header>
 
+			<!--
+				Teleport anchor stays mounted in community mode (controls alone gate on bootstrap).
+				Vue Teleport requires #explorer-module-rail-anchor in the DOM before the rail mounts.
+				See ARCHITECTURE.md → End column module rail → Teleport mounting.
+			-->
 			<div
-				v-if="!isInstanceBootstrapping && isCommunityMode"
-				ref="projectControlsRef"
-				class="explorer-page__project-controls-anchor frontdoor-page-nav-align-anchor"
+				v-if="isCommunityMode"
+				class="explorer-page__project-controls-stack"
 			>
 				<ExplorerProjectControls
+					v-if="!isInstanceBootstrapping"
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
+					v-model:selected-module-name="selectedModuleName"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
 					v-model:include-internal-endpoints="includeInternalEndpoints"
+					:visible-modules="visibleModules"
+					:has-selectable-modules="hasVisibleSelectableModules"
+					:select-module="selectModule"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
+				/>
+				<div
+					id="explorer-module-rail-anchor"
+					class="explorer-page__module-rail-anchor"
 				/>
 			</div>
 		</div>
 
 		<ClientOnly v-if="isCommunityMode">
 			<Teleport
-				to="#explorer-end-panel"
+				:to="moduleRailTeleportTarget"
 				:disabled="!isActiveExplorerRoute"
 			>
 				<ExplorerModuleRail
-					:style="endPanelNavStyle"
-					:modules="modules"
-					:failed-modules="failedModules"
-					:has-selectable-modules="hasSelectableModules"
-					:selected-module-name="selectedModuleName"
-					:expanded-module-names="expandedModuleNames"
-					:wiki-display-name="wikiDisplayName"
+					v-if="isExplorerModuleRailVisible && visibleSelectedModule"
+					:key="layoutMode"
+					:selected-module="visibleSelectedModule"
+					:selected-endpoint-operation-id="selectedEndpointOperationId"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
-					@module-expand-toggle="onModuleExpandToggle"
+					:layout-mode="layoutMode"
 					@endpoint-click="onEndpointClick"
 				/>
 			</Teleport>
@@ -297,7 +340,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			<template v-else>
 				<section class="explorer-page__reference-panel">
 					<header
-						v-if="isCommunityMode && selectedModule"
+						v-if="isCommunityMode && visibleSelectedModule"
 						ref="referenceHeaderRef"
 						class="explorer-page__reference-header"
 					>
@@ -305,9 +348,25 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 							{{ moduleLabel }}
 						</p>
 						<div class="explorer-page__reference-heading">
-							<h2 class="explorer-page__reference-title">
-								<bdi>{{ selectedModule.label }}</bdi>
-							</h2>
+							<div class="explorer-page__reference-title-group">
+								<h2 class="explorer-page__reference-title">
+									<bdi>{{ visibleSelectedModule.headingTitle }}</bdi>
+								</h2>
+								<CdxInfoChip
+									v-if="visibleSelectedModule.showBetaChip"
+									status="warning"
+									class="explorer-module-chip"
+								>
+									{{ betaChipLabel }}
+								</CdxInfoChip>
+								<CdxInfoChip
+									v-if="visibleSelectedModule.versionChipLabel"
+									status="success"
+									class="explorer-module-chip"
+								>
+									<bdi>{{ visibleSelectedModule.versionChipLabel }}</bdi>
+								</CdxInfoChip>
+							</div>
 							<CdxInfoChip
 								v-if="wikiDisplayName"
 								status="subtle"
@@ -319,7 +378,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					</header>
 
 					<CdxMessage
-						v-if="isCommunityMode && !openApiSpecUrl"
+						v-if="isCommunityMode && !visibleOpenApiSpecUrl"
 						type="warning"
 					>
 						{{ missingSpecLabel }}
@@ -399,6 +458,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	max-inline-size: 60ch;
 }
 
+.explorer-page__project-controls-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-100 );
+	min-inline-size: 0;
+}
+
+.explorer-page__module-rail-anchor {
+	min-inline-size: 0;
+}
+
 .explorer-page__bootstrap-loading {
 	/* Contained to the page so a stuck loader cannot cover the shell header. */
 	position: absolute;
@@ -435,10 +505,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	min-inline-size: 0;
 }
 
-.explorer-page__reference-title {
+.explorer-page__reference-title-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-50 );
 	flex: 1 1 auto;
 	min-inline-size: 0;
+}
+
+.explorer-page__reference-title {
 	margin: 0;
+	min-inline-size: 0;
 }
 
 .explorer-page__wiki-info-chip {
@@ -450,8 +528,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
  * Codex subtle InfoChip (transparent fill, base border). Re-assert here because the
  * default .cdx-info-chip rules use notice colours until cdx-info-chip--subtle applies.
  */
-.explorer-page__wiki-info-chip.cdx-info-chip,
-.explorer-page__reference-heading :deep( .cdx-info-chip ) {
+.explorer-page__wiki-info-chip.cdx-info-chip {
 	background-color: var( --background-color-transparent );
 	border-color: var( --border-color-base );
 }
@@ -473,12 +550,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__scalar-shell {
 	/* Contain Scalar `position: fixed` UI so it cannot cover the shell header. */
+	position: relative;
 	transform: translateZ( 0 );
 	min-inline-size: 0;
 	min-block-size: 24rem;
 	border: 1px solid var( --border-color-subtle );
 	border-radius: var( --border-radius-base );
-	overflow: hidden;
+	/*
+	 * Clip horizontal bleed after resize; vertical scroll is enabled from 960px below.
+	 * overflow-inline: clip keeps the inline-end border visible (border sits outside padding).
+	 */
+	overflow-inline: clip;
+	overflow-block: hidden;
 	background-color: var( --background-color-base );
 	padding-inline: var( --spacing-150 );
 	padding-block: 0;
@@ -544,7 +627,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	.explorer-page__scalar-shell {
 		block-size: 100%;
 		min-block-size: 0;
-		overflow: auto;
+		overflow-block: auto;
+		overflow-inline: clip;
 		overscroll-behavior: contain;
 	}
 }

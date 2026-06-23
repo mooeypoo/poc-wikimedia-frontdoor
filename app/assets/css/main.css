@@ -207,23 +207,18 @@ pre code {
 .explorer-page .cdx-select-vue,
 .explorer-page .cdx-select-vue__menu-wrapper,
 .explorer-page .cdx-combobox,
-.explorer-page .cdx-combobox__menu-wrapper,
-.explorer-module-rail .cdx-select-vue,
-.explorer-module-rail .cdx-select-vue__menu-wrapper {
+.explorer-page .cdx-combobox__menu-wrapper {
 	position: relative;
 }
 
+/*
+ * Floating Select / Combobox menus must stack above explorer page content.
+ * Do not override Codex MenuItem hover, highlighted, or selected styles here —
+ * interaction states are owned by @wikimedia/codex (see DESIGN_REQUIREMENTS.md).
+ */
 .explorer-page .cdx-select-vue__menu,
 .explorer-page .cdx-combobox__menu,
-.explorer-page .cdx-menu,
-.explorer-module-rail .cdx-select-vue__menu,
-.explorer-module-rail .cdx-menu {
-	background-color: var( --background-color-base );
-	color: var( --color-base );
-	border: 1px solid var( --border-color-base );
-	box-shadow: 0 4px 4px 0 rgba( 0, 0, 0, 0.06 ), 0 0 8px 0 rgba( 0, 0, 0, 0.06 );
-	opacity: 1;
-	/* Above sibling rail content only; explorer main column stacks above the end panel. */
+.explorer-page .cdx-menu {
 	z-index: 50;
 }
 
@@ -231,34 +226,15 @@ pre code {
 .explorer-page .cdx-menu__group {
 	margin: 0;
 	padding: 0;
-	background-color: var( --background-color-base );
 	list-style: none;
 }
 
 .explorer-page .cdx-menu-item {
-	background-color: var( --background-color-base );
-	color: var( --color-base );
 	list-style: none;
 }
 
 .explorer-page .cdx-menu-item::marker {
 	content: '';
-}
-
-.explorer-page .cdx-menu-item__content,
-.explorer-page .cdx-menu-item__content:hover,
-.explorer-page .cdx-menu-item__content:visited {
-	color: inherit;
-	text-decoration: none;
-	background-color: transparent;
-	display: flex;
-	align-items: center;
-}
-
-.explorer-page .cdx-menu-item--enabled.cdx-menu-item--highlighted,
-.explorer-page .cdx-menu-item--enabled.cdx-menu-item--selected,
-.explorer-page .cdx-menu-item--enabled.cdx-menu-item--selected.cdx-menu-item--highlighted {
-	color: var( --color-base );
 }
 
 /* Syntax highlighting */

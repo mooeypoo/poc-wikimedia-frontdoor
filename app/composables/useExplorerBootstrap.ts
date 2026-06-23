@@ -1,6 +1,9 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
+import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../config/explorerOptIn'
+import { resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
+import { resolveEndpointOperationId } from '../utils/explorerEndpointLabels'
 
 export interface ExplorerModuleOperation {
 	id: string
@@ -20,6 +23,7 @@ export interface ExplorerBootstrapModule {
 	versionChipLabel?: string
 	showBetaChip: boolean
 	specUrl: string
+	moduleDescription?: string
 	operations: ExplorerModuleOperation[]
 	hasSpecError: boolean
 	specErrorMessage?: string
@@ -59,6 +63,8 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  *
  * @param selectedWikiInstanceId - Reactive wiki instance id.
  * @returns Reactive bootstrap state, selected module state, and selection actions.
+ *   {@link isExplorerModuleRailVisible} is true only after bootstrap succeeds so the end-column
+ *   rail mounts together with module data and aligned project controls.
  *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
 export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabled: Ref<boolean> = ref( true ) ) {
@@ -73,6 +79,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 	const scalarSwitchState = ref<'idle' | 'switching'>( 'idle' )
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
+	const selectedEndpointOperationId = ref<string | null>( null )
 	const { logEvent } = useExplorerDiagnostics()
 
 	let requestGeneration = 0
@@ -80,6 +87,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 
 	const isInstanceBootstrapping = computed( () => instanceBootstrapState.value === 'loading' )
 	const hasInstanceBootstrapError = computed( () => instanceBootstrapState.value === 'error' )
+	const isExplorerModuleRailVisible = computed( () => instanceBootstrapState.value === 'ready' )
 	const isScalarSwitching = computed( () => scalarSwitchState.value === 'switching' )
 
 	const selectedModule = computed( () => {
@@ -199,6 +207,12 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 
 		if ( options.operationTarget ) {
 			pendingOperationTarget.value = options.operationTarget
+			selectedEndpointOperationId.value = resolveEndpointOperationId(
+				modules.value.find( ( moduleItem ) => moduleItem.name === moduleName ),
+				options.operationTarget
+			)
+		} else {
+			selectedEndpointOperationId.value = null
 		}
 
 		// Only block on Scalar reload when the spec URL changes (new module).
@@ -238,9 +252,11 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		instanceBootstrapState.value = 'loading'
 		instanceBootstrapErrorMessage.value = ''
 		modules.value = []
+		wikiDisplayName.value = ''
 		selectedModuleName.value = ''
 		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
+		selectedEndpointOperationId.value = null
 		scalarSwitchState.value = 'idle'
 
 		logEvent( 'bootstrap.start', {
@@ -263,7 +279,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 			modules.value = bootstrapResponse.modules
 			wikiDisplayName.value = bootstrapResponse.wikiDisplayName
 
-			const defaultModule = bootstrapResponse.modules.find( ( moduleItem ) => !moduleItem.hasSpecError )
+			const defaultModule = resolveFirstExplorerRailModule(
+				bootstrapResponse.modules,
+				DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS
+			)
 
 			if ( defaultModule ) {
 				selectModule( defaultModule.name, {
@@ -388,7 +407,9 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		selectedModule,
 		openApiSpecUrl,
 		pendingOperationTarget,
+		selectedEndpointOperationId,
 		isInstanceBootstrapping,
+		isExplorerModuleRailVisible,
 		hasInstanceBootstrapError,
 		instanceBootstrapErrorMessage,
 		isScalarSwitching,

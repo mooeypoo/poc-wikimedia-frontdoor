@@ -1,21 +1,32 @@
 <script setup lang="ts">
-import { CdxCheckbox, CdxCombobox, CdxField } from '@wikimedia/codex'
-import {
-	EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
-	EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS
-} from '../../../config/explorerOptIn'
-import { useWikiInstancePicker } from '../../composables/useWikiInstancePicker'
+import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover, CdxSelect } from '@wikimedia/codex'
+import { cdxIconInfo } from '@wikimedia/codex-icons'
+import type { ExplorerBootstrapModule } from '../../composables/useExplorerBootstrap'
+import { useExplorerModuleSelect } from '../../composables/useExplorerModuleSelect'
+import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
+import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
 
 /**
- * ExplorerProjectControls — wiki project combobox and opt-in filters for the explorer.
+ * ExplorerProjectControls — project, language, REST API module, and opt-in filters.
  *
  * Presentational only; selection state is owned by the explorer page via `defineModel`.
+ * Project and language resolve to a wiki instance id for bootstrap.
  */
-defineProps<{
+const props = defineProps<{
 	isInstanceBootstrapping: boolean
+	visibleModules: ExplorerBootstrapModule[]
+	hasSelectableModules: boolean
+	selectModule: (
+		moduleName: string,
+		options: { source: 'module-select' }
+	) => boolean
 }>()
 
 const selectedWikiInstanceId = defineModel<string>( 'selectedWikiInstanceId', {
+	required: true
+} )
+
+const selectedModuleName = defineModel<string>( 'selectedModuleName', {
 	required: true
 } )
 
@@ -28,112 +39,249 @@ const includeInternalEndpoints = defineModel<boolean>( 'includeInternalEndpoints
 } )
 
 const { $bananaI18n } = useNuxtApp()
-const { wikiInstanceMenuItems, wikiProjectComboboxSelected } = useWikiInstancePicker( selectedWikiInstanceId )
+const {
+	projectMenuItems,
+	languageMenuItems,
+	projectComboboxSelected,
+	languageComboboxSelected,
+	isLanguageSelectorDisabled
+} = useExplorerProjectLanguagePicker( selectedWikiInstanceId )
 
-const wikiProjectLabel = computed( () => $bananaI18n( 'explorer-wiki-project-label' ) )
-const wikiProjectDescription = computed( () => $bananaI18n( 'explorer-wiki-project-help' ) )
+const visibleModulesRef = toRef( props, 'visibleModules' )
+const isModuleSelectDisabledRef = computed( () => {
+	return props.isInstanceBootstrapping || !props.hasSelectableModules
+} )
+
+const {
+	moduleMenuItems,
+	moduleSelectMenuConfig,
+	moduleSelectDefaultLabel,
+	selectedModuleValue,
+	isModuleSelectDisabled
+} = useExplorerModuleSelect(
+	visibleModulesRef,
+	selectedModuleName,
+	props.selectModule,
+	isModuleSelectDisabledRef
+)
+
+const projectLabel = computed( () => $bananaI18n( 'explorer-project-label' ) )
+const languageLabel = computed( () => $bananaI18n( 'explorer-project-language-label' ) )
+const wikimediaProjectTitle = computed( () => $bananaI18n( 'explorer-wikimedia-project-title' ) )
+const restApiModuleLabel = computed( () => $bananaI18n( 'explorer-rest-api-module-label' ) )
+const restApiModuleDescription = computed( () => $bananaI18n( 'explorer-rest-api-module-description' ) )
 const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
-const betaEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-beta-endpoints' ) )
-const internalEndpointsLabel = computed( () => $bananaI18n( 'explorer-opt-in-internal-endpoints' ) )
+const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
+const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
+const optInPopoverIntro = computed( () => $bananaI18n( 'explorer-opt-in-popover-intro' ) )
+const optInPopoverBetaLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-label' ) )
+const optInPopoverBetaBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-body' ) )
+const optInPopoverInternalLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-label' ) )
+const optInPopoverInternalBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-body' ) )
 
-const optInCheckboxOptions = computed( () => [
-	{
-		value: EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS,
-		label: betaEndpointsLabel.value
-	},
-	{
-		value: EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS,
-		label: internalEndpointsLabel.value
-	}
-] )
+const { optInCheckboxOptions, selectedOptInValues } = useExplorerOptInCheckboxGroup(
+	includeBetaEndpoints,
+	includeInternalEndpoints
+)
+
+const optInPopoverTrigger = ref<InstanceType<typeof CdxButton> | undefined>()
+const isOptInPopoverOpen = ref( false )
 
 /**
- * Bridges the explorer page’s boolean opt-in flags to Codex’s array-based checkbox group model.
+ * Toggles the opt-in help popover open state from the quiet info trigger.
+ *
+ * @returns Nothing.
  */
-const selectedOptInValues = computed( {
-	get(): string[] {
-		const selectedValues: string[] = []
+function onOptInPopoverTriggerClick(): void {
+	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
+}
 
-		if ( includeBetaEndpoints.value ) {
-			selectedValues.push( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
-		}
-
-		if ( includeInternalEndpoints.value ) {
-			selectedValues.push( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
-		}
-
-		return selectedValues
-	},
-	set( nextSelectedValues: string[] ) {
-		includeBetaEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS )
-		includeInternalEndpoints.value = nextSelectedValues.includes( EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS )
-	}
-} )
 </script>
 
 <template>
 	<section
 		class="explorer-project-controls"
-		aria-labelledby="explorer-project-controls-wiki-label"
 	>
-		<CdxField class="explorer-project-controls__wiki-field">
-			<template #label>
-				<span id="explorer-project-controls-wiki-label">
-					{{ wikiProjectLabel }}
-				</span>
-			</template>
-			<template #description>
-				{{ wikiProjectDescription }}
-			</template>
-			<CdxCombobox
-				v-model:selected="wikiProjectComboboxSelected"
-				:menu-items="wikiInstanceMenuItems"
-				:disabled="isInstanceBootstrapping"
-			/>
-		</CdxField>
-
 		<CdxField
-			class="explorer-project-controls__opt-in"
+			class="explorer-project-controls__project-fieldset"
 			:is-fieldset="true"
 		>
 			<template #label>
-				{{ optInLabel }}
+				{{ wikimediaProjectTitle }}
 			</template>
-			<CdxCheckbox
-				v-for="optInOption in optInCheckboxOptions"
-				:key="optInOption.value"
-				v-model="selectedOptInValues"
-				:input-value="optInOption.value"
-				:disabled="isInstanceBootstrapping"
-			>
-				{{ optInOption.label }}
-			</CdxCheckbox>
+			<div class="explorer-project-controls__project-fields">
+				<CdxField class="explorer-project-controls__project-field">
+					<template #label>
+						{{ projectLabel }}
+					</template>
+					<CdxCombobox
+						v-model:selected="projectComboboxSelected"
+						:menu-items="projectMenuItems"
+						:disabled="isInstanceBootstrapping"
+					/>
+				</CdxField>
+
+				<CdxField class="explorer-project-controls__language-field">
+					<template #label>
+						{{ languageLabel }}
+					</template>
+					<CdxCombobox
+						v-model:selected="languageComboboxSelected"
+						:menu-items="languageMenuItems"
+						:disabled="isInstanceBootstrapping || isLanguageSelectorDisabled"
+					/>
+				</CdxField>
+			</div>
 		</CdxField>
+
+		<div class="explorer-project-controls__module-row">
+			<CdxField class="explorer-project-controls__module-field">
+				<template #label>
+					{{ restApiModuleLabel }}
+				</template>
+				<template #description>
+					{{ restApiModuleDescription }}
+				</template>
+				<CdxSelect
+					v-model:selected="selectedModuleValue"
+					class="explorer-project-controls__module-select"
+					:menu-items="moduleMenuItems"
+					:menu-config="moduleSelectMenuConfig"
+					:default-label="moduleSelectDefaultLabel"
+					:disabled="isModuleSelectDisabled"
+				/>
+			</CdxField>
+
+			<CdxField
+				class="explorer-project-controls__opt-in"
+				:is-fieldset="true"
+			>
+				<template #label>
+					<span class="explorer-project-controls__opt-in-label">
+						{{ optInLabel }}
+						<CdxButton
+							ref="optInPopoverTrigger"
+							class="explorer-project-controls__opt-in-info-trigger"
+							weight="quiet"
+							type="button"
+							:aria-label="optInPopoverTriggerLabel"
+							:aria-expanded="isOptInPopoverOpen"
+							@click="onOptInPopoverTriggerClick"
+						>
+							<CdxIcon :icon="cdxIconInfo" />
+						</CdxButton>
+						<CdxPopover
+							class="explorer-project-controls__opt-in-help-popover"
+							v-model:open="isOptInPopoverOpen"
+							:anchor="optInPopoverTrigger"
+							:title="optInPopoverTitle"
+							placement="bottom-start"
+							:use-close-button="true"
+						>
+							<div class="explorer-project-controls__opt-in-popover">
+								<p class="explorer-project-controls__opt-in-popover-intro">
+									{{ optInPopoverIntro }}
+								</p>
+								<ul class="explorer-project-controls__opt-in-popover-list">
+									<li>
+										<strong class="explorer-project-controls__opt-in-popover-term">
+											{{ optInPopoverBetaLabel }}
+										</strong>
+										{{ optInPopoverBetaBody }}
+									</li>
+									<li>
+										<strong class="explorer-project-controls__opt-in-popover-term">
+											{{ optInPopoverInternalLabel }}
+										</strong>
+										{{ optInPopoverInternalBody }}
+									</li>
+								</ul>
+							</div>
+						</CdxPopover>
+					</span>
+				</template>
+				<CdxCheckbox
+					v-for="optInOption in optInCheckboxOptions"
+					:key="optInOption.value"
+					v-model="selectedOptInValues"
+					:input-value="optInOption.value"
+					:disabled="isInstanceBootstrapping"
+				>
+					{{ optInOption.label }}
+				</CdxCheckbox>
+			</CdxField>
+		</div>
 	</section>
 </template>
 
 <style scoped>
 .explorer-project-controls {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: var( --spacing-150 );
+	flex-direction: column;
+	gap: var( --spacing-100 );
 	padding: var( --spacing-75 );
 	inline-size: 100%;
 	box-sizing: border-box;
-	border-radius: var( --border-radius-base );
-	background-color: var( --background-color-neutral-subtle );
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --fd-explorer-controls-surface-background-color );
 	min-inline-size: 0;
 }
 
-.explorer-project-controls__wiki-field {
-	flex: 0 1 40rem;
+.explorer-project-controls__project-fieldset {
+	flex: 1 1 auto;
 	min-inline-size: 0;
 	max-inline-size: min( 40rem, 100% );
+	margin-block-start: 0;
 }
 
-.explorer-project-controls__wiki-field :deep( .cdx-combobox ),
-.explorer-project-controls__wiki-field :deep( .cdx-text-input ) {
+.explorer-project-controls__project-fieldset :deep( .cdx-field__label ) {
+	margin-block-end: 0;
+}
+
+.explorer-project-controls__project-fields {
+	display: flex;
+	flex-wrap: wrap;
+	row-gap: var( --spacing-100 );
+	column-gap: var( --spacing-150 );
+	min-inline-size: 0;
+	margin-block-start: var( --spacing-75 );
+}
+
+.explorer-project-controls__project-field,
+.explorer-project-controls__language-field {
+	flex: 1 1 12rem;
+	min-inline-size: 0;
+	margin-block-start: 0;
+}
+
+.explorer-project-controls__project-field :deep( .cdx-combobox ),
+.explorer-project-controls__project-field :deep( .cdx-text-input ),
+.explorer-project-controls__language-field :deep( .cdx-combobox ),
+.explorer-project-controls__language-field :deep( .cdx-text-input ) {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.explorer-project-controls__module-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	row-gap: var( --spacing-100 );
+	column-gap: var( --spacing-150 );
+	min-inline-size: 0;
+	inline-size: 100%;
+}
+
+.explorer-project-controls__module-field {
+	flex: 1 1 12rem;
+	min-inline-size: 0;
+	max-inline-size: min( 40rem, 100% );
+	margin-block-start: 0;
+}
+
+.explorer-project-controls__module-field :deep( .cdx-select-vue ),
+.explorer-project-controls__module-select {
 	inline-size: 100%;
 	max-inline-size: 100%;
 	min-inline-size: 0;
@@ -142,7 +290,35 @@ const selectedOptInValues = computed( {
 .explorer-project-controls__opt-in {
 	flex: 0 1 auto;
 	min-inline-size: 0;
-	/* Codex fields default to margin-block-start: 16px; align with the wiki field row. */
 	margin-block-start: 0;
+}
+
+.explorer-project-controls__opt-in-label {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-25 );
+}
+
+.explorer-project-controls__opt-in-info-trigger {
+	flex-shrink: 0;
+}
+
+.explorer-project-controls__opt-in-popover {
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-intro {
+	margin: 0;
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-list {
+	margin: var( --spacing-50 ) 0 0;
+	padding-inline-start: var( --spacing-125 );
+	font-weight: var( --font-weight-normal );
+}
+
+.explorer-project-controls__opt-in-popover-term {
+	font-weight: var( --font-weight-bold );
 }
 </style>
