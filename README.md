@@ -20,6 +20,13 @@ yarn install
 bun install
 ```
 
+### Environment variables
+
+Copy `.env.example` to `.env` and fill in:
+
+- `NUXT_OAUTH_COOKIE_SECRET` — 32-byte secret used to encrypt the transient Wikimedia OAuth PKCE handshake cookie. Generate with `openssl rand -base64 32`. On Netlify, set this as a site environment variable — never commit it.
+- `NUXT_PUBLIC_OAUTH_CLIENT_ID` — `client_id` from the approved Wikimedia OAuth 2.0 consumer registration (see [docs/adr-wikimedia-oauth-authentication.md](/home/moriel/code/wikimedia/frontdoor/docs/adr-wikimedia-oauth-authentication.md)).
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:

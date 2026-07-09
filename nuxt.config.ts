@@ -13,6 +13,19 @@ export default defineNuxtConfig( {
 		'@pinia/nuxt',
 		'@nuxtjs/i18n'
 	],
+
+	// Wikimedia OAuth 2.0 + PKCE (docs/adr-wikimedia-oauth-authentication.md §10 Step B1).
+	// oauthCookieSecret is server-only; the public block is safe to expose since the
+	// OAuth client is a public PKCE client (no client secret involved).
+	runtimeConfig: {
+		oauthCookieSecret: '',
+		public: {
+			oauthClientId: '',
+			oauthAuthorizeUrl: 'https://meta.wikimedia.org/w/rest.php/oauth2/authorize',
+			oauthScope: 'basic'
+		}
+	},
+
 	app: {
 		head: {
 			link: [
