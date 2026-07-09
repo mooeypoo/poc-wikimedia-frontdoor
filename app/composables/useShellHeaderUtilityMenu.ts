@@ -1,13 +1,15 @@
 import type { MenuButtonItemData, MenuItemValue } from '@wikimedia/codex'
 import { cdxIconConfigure } from '@wikimedia/codex-icons'
+import { useOAuthSession } from './useOAuthSession'
 
 const UTILITY_MENU_VALUE = {
 	settings: 'settings',
-	login: 'login'
+	login: 'login',
+	logout: 'logout'
 } as const
 
 /**
- * Builds collapsed utility-row overflow menu items (settings and log in only).
+ * Builds collapsed utility-row overflow menu items (settings and log in/out).
  *
  * Interface language remains a compact `CdxSelect` beside the collapsed search icon;
  * it is not included in this menu.
@@ -16,6 +18,7 @@ const UTILITY_MENU_VALUE = {
  */
 export function useShellHeaderUtilityMenu() {
 	const { $bananaI18n } = useNuxtApp()
+	const { isLoggedIn, login, logout } = useOAuthSession()
 	const menuSelection = ref<MenuItemValue | null>( null )
 
 	const menuItems = computed( (): MenuButtonItemData[] => {
@@ -26,10 +29,15 @@ export function useShellHeaderUtilityMenu() {
 				icon: cdxIconConfigure,
 				disabled: true
 			},
-			{
-				label: $bananaI18n( 'header-login-label' ),
-				value: UTILITY_MENU_VALUE.login
-			}
+			isLoggedIn.value
+				? {
+					label: $bananaI18n( 'header-logout-label' ),
+					value: UTILITY_MENU_VALUE.logout
+				}
+				: {
+					label: $bananaI18n( 'header-login-label' ),
+					value: UTILITY_MENU_VALUE.login
+				}
 		]
 	} )
 
@@ -47,9 +55,9 @@ export function useShellHeaderUtilityMenu() {
 		}
 
 		if ( selectedValue === UTILITY_MENU_VALUE.login ) {
-			// Non-functional log-in prototype — same as the expanded text link.
-			menuSelection.value = null
-			return
+			login()
+		} else if ( selectedValue === UTILITY_MENU_VALUE.logout ) {
+			logout()
 		}
 
 		menuSelection.value = null

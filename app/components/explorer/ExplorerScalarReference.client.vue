@@ -2,9 +2,12 @@
 import '@scalar/api-reference/style.css'
 import '../../assets/css/explorer-codex-overrides.css'
 import { ApiReference } from '@scalar/api-reference'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { CdxButton, CdxInfoChip, CdxMessage, CdxToggleSwitch } from '@wikimedia/codex'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import type { ScalarNavigationEntry } from '../../utils/scalarOperationNavigation'
+import { useOAuthSession } from '../../composables/useOAuthSession'
+import { useTryItOutWithOAuth } from '../../composables/useTryItOutWithOAuth'
 
 /**
  * ExplorerScalarReference — client-only Scalar ApiReference wrapper.
@@ -20,6 +23,45 @@ const props = defineProps<{
 const emit = defineEmits<{
 	'interface-ready': [ ScalarInterfaceHandle ]
 }>()
+
+const { $bananaI18n } = useNuxtApp()
+const { isLoggedIn, username, login, logout } = useOAuthSession()
+const { tryItOutWithOAuth } = useTryItOutWithOAuth()
+
+const authBadgeLabel = computed(
+	() => $bananaI18n( 'explorer-auth-badge-logged-in', { $1: username.value ?? '' } )
+)
+const authToggleLabel = computed( () => $bananaI18n( 'explorer-auth-toggle-use-session' ) )
+const sessionExpiredLabel = computed( () => $bananaI18n( 'explorer-auth-session-expired' ) )
+const sessionExpiredLoginLabel = computed( () => $bananaI18n( 'explorer-auth-session-expired-login' ) )
+
+const isSessionExpired = ref( false )
+
+/**
+ * Flags the session as expired when a Try-it-out request comes back 401 while
+ * the OAuth token is being injected (ADR §10 Step D2).
+ *
+ * @param eventPayload - `hooks:on:request:complete` payload from Scalar's bus.
+ */
+function onScalarRequestComplete( eventPayload?: unknown ): void {
+	const response = ( eventPayload as { payload?: { response?: Response } } | undefined )?.payload?.response
+	if ( response?.status === 401 && isLoggedIn.value && tryItOutWithOAuth.value ) {
+		isSessionExpired.value = true
+	}
+}
+
+/**
+ * Clears the expired-session state and restarts the login flow.
+ */
+function onSessionExpiredLogin(): void {
+	isSessionExpired.value = false
+	logout()
+	login()
+}
+
+watch( isLoggedIn, () => {
+	isSessionExpired.value = false
+} )
 
 const apiReferenceRef = ref<{
 	eventBus?: ScalarInterfaceHandle[ 'eventBus' ]
@@ -84,6 +126,18 @@ watch( apiReferenceRef, () => {
 	} )
 } )
 
+let unsubscribeRequestComplete: ( () => void ) | null = null
+
+watch( apiReferenceRef, ( apiReferenceInstance ) => {
+	unsubscribeRequestComplete?.()
+	unsubscribeRequestComplete =
+		apiReferenceInstance?.eventBus?.on?.( 'hooks:on:request:complete', onScalarRequestComplete ) ?? null
+} )
+
+onBeforeUnmount( () => {
+	unsubscribeRequestComplete?.()
+} )
+
 watch( activeSpecUrl, () => {
 	void nextTick( () => {
 		emitInterfaceReady()
@@ -98,8 +152,65 @@ onMounted( () => {
 </script>
 
 <template>
+	<div
+		class="explorer-scalar-reference__auth-row"
+		:class="{ 'explorer-scalar-reference__auth-row--visible': isLoggedIn }"
+		aria-live="polite"
+	>
+		<template v-if="isLoggedIn">
+			<CdxInfoChip
+				class="explorer-scalar-reference__auth-badge"
+				status="notice"
+			>
+				{{ authBadgeLabel }}
+			</CdxInfoChip>
+			<CdxToggleSwitch
+				v-model="tryItOutWithOAuth"
+				class="explorer-scalar-reference__auth-toggle"
+			>
+				{{ authToggleLabel }}
+			</CdxToggleSwitch>
+		</template>
+	</div>
+	<CdxMessage
+		v-if="isSessionExpired"
+		class="explorer-scalar-reference__session-expired"
+		type="warning"
+		allow-user-dismiss
+		@user-dismissed="isSessionExpired = false"
+	>
+		{{ sessionExpiredLabel }}
+		<CdxButton
+			class="explorer-scalar-reference__session-expired-login"
+			action="progressive"
+			@click="onSessionExpiredLogin"
+		>
+			{{ sessionExpiredLoginLabel }}
+		</CdxButton>
+	</CdxMessage>
 	<ApiReference
 		ref="apiReferenceRef"
 		:configuration="configuration"
 	/>
 </template>
+
+<style scoped>
+.explorer-scalar-reference__auth-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var( --spacing-100 );
+}
+
+.explorer-scalar-reference__auth-row--visible {
+	padding: var( --spacing-50 ) var( --spacing-100 );
+}
+
+.explorer-scalar-reference__session-expired {
+	margin: var( --spacing-50 ) var( --spacing-100 );
+}
+
+.explorer-scalar-reference__session-expired-login {
+	margin-inline-start: var( --spacing-50 );
+}
+</style>

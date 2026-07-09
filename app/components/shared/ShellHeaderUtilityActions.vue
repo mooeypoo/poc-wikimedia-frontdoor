@@ -16,6 +16,7 @@ import { SUPPORTED_INTERFACE_LOCALES } from '../../../config/interfaceLocales'
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
+import { useOAuthSession } from '../../composables/useOAuthSession'
 import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtilityMenu'
 import { isolateLabel } from '../../utils/bidiIsolation'
 
@@ -62,11 +63,16 @@ watch( hasQuery, ( newHasQuery ) => {
 } )
 
 const { menuSelection, menuItems, handleMenuSelection } = useShellHeaderUtilityMenu()
+const { isLoggedIn, username, login, logout } = useOAuthSession()
 
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
+const logoutLinkLabel = computed( () => $bananaI18n( 'header-logout-label' ) )
+const loggedInAsLabel = computed(
+	() => $bananaI18n( 'header-logged-in-as', { $1: username.value ?? '' } )
+)
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
@@ -226,14 +232,31 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			</template>
 		</CdxSelect>
 
-		<a
+		<span
 			v-show="!isUtilityCollapsed"
-			href="#"
-			class="shell-header-utility-actions__login-link"
-			@click.prevent
+			class="shell-header-utility-actions__session"
 		>
-			{{ loginLinkLabel }}
-		</a>
+			<template v-if="isLoggedIn">
+				<span class="shell-header-utility-actions__logged-in-as">
+					{{ loggedInAsLabel }}
+				</span>
+				<a
+					href="#"
+					class="shell-header-utility-actions__login-link"
+					@click.prevent="logout()"
+				>
+					{{ logoutLinkLabel }}
+				</a>
+			</template>
+			<a
+				v-else
+				href="#"
+				class="shell-header-utility-actions__login-link"
+				@click.prevent="login()"
+			>
+				{{ loginLinkLabel }}
+			</a>
+		</span>
 
 		<CdxMenuButton
 			v-show="isUtilityCollapsed"
@@ -357,6 +380,20 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	line-height: var( --line-height-small );
 	color: var( --color-subtle );
 	white-space: nowrap;
+}
+
+.shell-header-utility-actions__session {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-50 );
+	white-space: nowrap;
+}
+
+.shell-header-utility-actions__logged-in-as {
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	color: var( --color-subtle );
 }
 
 .shell-header-utility-actions__login-link {
