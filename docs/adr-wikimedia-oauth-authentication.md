@@ -158,15 +158,38 @@ The exact key names depend on what the OpenAPI spec declares for its security sc
 
 [useScalarConfig.ts](/home/moriel/code/wikimedia/frontdoor/app/composables/useScalarConfig.ts) becomes session-aware: it reads `useOAuthSession()` reactively, and when the token is present it emits the `authentication` block alongside the existing fields.  Scalar's documented `Object.assign` update pattern still applies — the existing reactive update mechanism is unchanged.
 
-### 5.6 "You are logged in" indicator inside the Explorer
+### 5.6 Toggle: use OAuth credentials in Try it out
+
+The user asked whether it's possible to let a reader turn OAuth-credential injection on/off, rather than it being all-or-nothing once logged in.
+
+**Feasibility confirmed by inspecting the installed `@scalar/types` v1.46.4 declarations directly** (`node_modules/@scalar/types/dist/api-reference/authentication-configuration.d.ts` — same audit approach as [adr-enterprise-explorer-integration.md §7.1](/home/moriel/code/wikimedia/frontdoor/docs/adr-enterprise-explorer-integration.md)):
+
+```ts
+export type AuthenticationConfiguration = {
+  preferredSecurityScheme?: string | (string | string[])[] | null
+  securitySchemes?: Record<string, PartialDeep<SecurityScheme>>
+  createAnySecurityScheme?: boolean
+}
+```
+
+`preferredSecurityScheme` explicitly types `| null`, and `securitySchemes` entries are `PartialDeep` (every field optional).  Both are ordinary reactive config values with no special lifecycle — they can be added and cleared the same way `useScalarConfig.ts` already mutates `spec.url` (§5.5), via `Object.assign` on the same reactive object.  No remount of `<ApiReference>` is required to flip the toggle.
+
+Scalar separately ships its own per-operation auth selector (`Auth.vue`, backed by `get-default-security.ts`) where a reader can already pick "no security" for a single request.  That control is spec-scoped and has no notion of our OAuth session — it's a manual, per-request override, not a persistent "use my Wikimedia login or not" switch.  It doesn't satisfy the ask; the toggle below is orthogonal to it, and a reader can still use Scalar's own selector on top of whatever this toggle sets.
+
+**Design:**
+- A `useTryItOutWithOAuth` boolean, exposed as a plain composable-level `ref` (not Pinia) — it's ephemeral UI state, not session identity, so it doesn't belong in `stores/oauthSession.js`.  Defaults to `true` whenever `isLoggedIn` becomes `true`; meaningless (and hidden) while logged out.  Like the access token itself (§8.6), it resets to its default on a full reload — no persistence needed since the token it's gating is also in-memory-only.
+- `useScalarConfig.ts` (§5.5, Step C1) reads both `accessToken` and this ref. When logged in **and** the toggle is on, it emits the `authentication` block from §5.5. Otherwise it emits `authentication: { preferredSecurityScheme: null, securitySchemes: {} }` — explicitly clearing the forced scheme/token (`Object.assign` merges keys, it doesn't delete them, so the "off" state must be written, not omitted).
+- UI: a Codex `CdxToggleSwitch` next to the "logged in" badge (§5.7), labelled via banana-i18n (`explorer-auth-toggle-use-session` — `Use my Wikimedia login for Try it out`). Rendered only while logged in.
+
+### 5.7 "You are logged in" indicator inside the Explorer
 
 [ExplorerScalarReference.client.vue](/home/moriel/code/wikimedia/frontdoor/app/components/explorer/ExplorerScalarReference.client.vue) gains a small inline badge above the Scalar shell, rendered only when the OAuth session is logged in:
 
 > 🔓 Logged in as **Mooeypoo**. Try-it-out requests will be sent with your bearer token.
 
-The badge uses Codex components for consistency with the rest of the shell.  It is `aria-live="polite"` so screen readers announce when the badge appears/disappears as login state changes.  Wording goes through banana-i18n like every other interface string.
+The badge uses Codex components for consistency with the rest of the shell.  It is `aria-live="polite"` so screen readers announce when the badge appears/disappears as login state changes.  Wording goes through banana-i18n like every other interface string.  The toggle switch from §5.6 sits alongside it, in the same badge row.
 
-### 5.7 Where the session is mounted
+### 5.8 Where the session is mounted
 
 The `useOAuthSession` composable is called from [app/layouts/default.vue](/home/moriel/code/wikimedia/frontdoor/app/layouts/default.vue) so the Pinia store hydrates on every page (content pages and Explorer alike), and the header's "Log in" / "Log out as <user>" control reads from it.  Because the access token is in-memory only (§5.4), the store's initial state on every navigation that crosses the SSR / client-only boundary is "logged out" until the user logs in again — see §8.6.
 
@@ -241,9 +264,10 @@ OAuth 2.0 consumer approvals on Meta historically take **days** of human review.
 | Extend `useScalarConfig.ts` to emit `authentication` block when token present | S | Existing |
 | Verify the security-scheme name in MediaWiki REST specs (`bearerAuth` assumed) | S | (audit task) |
 | Add the "Logged in as <user>" badge to `ExplorerScalarReference.client.vue` | S | Existing |
-| Smoke-test an authenticated try-it-out against one wiki | S | manual |
+| Add the "use my login for Try it out" toggle switch + wire it into `useScalarConfig.ts` (§5.6) | S | Existing |
+| Smoke-test an authenticated try-it-out against one wiki, with the toggle both on and off | S | manual |
 
-**Subtotal: ~1 day.**
+**Subtotal: ~1–1.5 days.**
 
 ### 7.4 Phase D: Refresh, logout, expiry UX
 
@@ -510,7 +534,9 @@ Add to every locale in `i18n/`:
 
 #### Step C1 — Extend `useScalarConfig.ts`
 
-When `useOAuthSession().accessToken` is set, emit an `authentication` block alongside the existing config fields:
+Add a `useTryItOutWithOAuth()` composable exposing a plain `ref<boolean>` (default `true`), separate from the `oauthSession` Pinia store (§5.6 — it's ephemeral UI state, not session identity). Reset it to `true` whenever `isLoggedIn` transitions to `true`.
+
+When `useOAuthSession().accessToken` is set **and** the toggle is on, emit an `authentication` block alongside the existing config fields:
 
 ```ts
 authentication: {
@@ -521,9 +547,20 @@ authentication: {
 }
 ```
 
-Watch `accessToken` and update the Scalar configuration via the documented `Object.assign` pattern.
+Otherwise — logged out, or toggle switched off — emit:
 
-**Verify:** With the user logged in, opening any endpoint in Scalar shows the Authentication panel populated with the bearer token.  A "Try it out" request includes `Authorization: Bearer …` in the network tab.
+```ts
+authentication: {
+  preferredSecurityScheme: null,
+  securitySchemes: {}
+}
+```
+
+This must be written explicitly rather than omitted: `Object.assign` merges keys onto the existing reactive config, it doesn't delete them, so clearing the forced scheme/token requires setting them to empty/`null` values.
+
+Watch both `accessToken` and the toggle ref, and update the Scalar configuration via the documented `Object.assign` pattern.
+
+**Verify:** With the user logged in and the toggle on, opening any endpoint in Scalar shows the Authentication panel populated with the bearer token, and a "Try it out" request includes `Authorization: Bearer …` in the network tab. Flipping the toggle off and repeating the same request sends no `Authorization` header.
 
 #### Step C2 — Audit security-scheme name in production discovery specs
 
@@ -531,11 +568,13 @@ Sample one or two specs from `server/api/discovery.get.ts` for each wiki instanc
 
 **Verify:** Authenticated "Try it out" works on at least one operation per wiki in `config/instances.ts`.
 
-#### Step C3 — Badge inside the Explorer
+#### Step C3 — Badge and toggle inside the Explorer
 
 In `ExplorerScalarReference.client.vue`, render a Codex info badge above the Scalar shell when `useOAuthSession().isLoggedIn`.  Text via banana-i18n: `explorer-auth-badge-logged-in` — `Logged in as $1. Try-it-out requests will be sent with your bearer token.`  `aria-live="polite"`.
 
-**Verify:** Badge appears immediately on login, disappears immediately on logout; screen readers announce the change.
+In the same badge row, render a `CdxToggleSwitch` bound to `useTryItOutWithOAuth()`, labelled via banana-i18n: `explorer-auth-toggle-use-session` — `Use my Wikimedia login for Try it out`. Hidden while logged out.
+
+**Verify:** Badge and toggle appear immediately on login, disappear immediately on logout; screen readers announce the badge change; toggling off/on immediately changes whether subsequent "Try it out" requests carry the bearer token (no page reload needed).
 
 ---
 
