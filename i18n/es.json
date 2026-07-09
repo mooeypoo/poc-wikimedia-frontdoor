@@ -85,6 +85,8 @@
   "explorer-module-placeholder": "Selecciona un modulo",
   "explorer-instance-placeholder": "Selecciona una instancia",
   "explorer-loading-interface": "Cargando la interfaz del explorador...",
+  "explorer-auth-badge-logged-in": "Sesión iniciada como {{bidi:$1}}. Las solicitudes de prueba se enviarán con tu token de portador.",
+  "explorer-auth-toggle-use-session": "Usar mi cuenta de Wikimedia para las pruebas",
   "explorer-refresh-button": "Reintentar descubrimiento",
   "explorer-empty-modules": "No hay modulos disponibles para esta instancia.",
   "explorer-no-selectable-modules": "No hay modulos con especificaciones utilizables para esta instancia.",

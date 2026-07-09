@@ -81,6 +81,8 @@
   "explorer-module-placeholder": "یک ماژول انتخاب کنید",
   "explorer-instance-placeholder": "یک نمونه انتخاب کنید",
   "explorer-loading-interface": "در حال بارگذاری رابط کاوشگر...",
+  "explorer-auth-badge-logged-in": "با نام {{bidi:$1}} وارد شده‌اید. درخواست‌های آزمایشی با توکن دسترسی شما ارسال می‌شوند.",
+  "explorer-auth-toggle-use-session": "استفاده از حساب ویکی‌مدیای من برای درخواست‌های آزمایشی",
   "explorer-refresh-button": "تلاش دوباره برای کشف",
   "explorer-empty-modules": "هیچ ماژولی برای این نمونه در دسترس نیست.",
   "explorer-no-selectable-modules": "هیچ ماژولی با مشخصات قابل استفاده برای این نمونه در دسترس نیست.",

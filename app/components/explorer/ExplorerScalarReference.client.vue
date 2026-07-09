@@ -2,9 +2,12 @@
 import '@scalar/api-reference/style.css'
 import '../../assets/css/explorer-codex-overrides.css'
 import { ApiReference } from '@scalar/api-reference'
+import { CdxInfoChip, CdxToggleSwitch } from '@wikimedia/codex'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import type { ScalarNavigationEntry } from '../../utils/scalarOperationNavigation'
+import { useOAuthSession } from '../../composables/useOAuthSession'
+import { useTryItOutWithOAuth } from '../../composables/useTryItOutWithOAuth'
 
 /**
  * ExplorerScalarReference — client-only Scalar ApiReference wrapper.
@@ -20,6 +23,15 @@ const props = defineProps<{
 const emit = defineEmits<{
 	'interface-ready': [ ScalarInterfaceHandle ]
 }>()
+
+const { $bananaI18n } = useNuxtApp()
+const { isLoggedIn, username } = useOAuthSession()
+const { tryItOutWithOAuth } = useTryItOutWithOAuth()
+
+const authBadgeLabel = computed(
+	() => $bananaI18n( 'explorer-auth-badge-logged-in', { $1: username.value ?? '' } )
+)
+const authToggleLabel = computed( () => $bananaI18n( 'explorer-auth-toggle-use-session' ) )
 
 const apiReferenceRef = ref<{
 	eventBus?: ScalarInterfaceHandle[ 'eventBus' ]
@@ -98,8 +110,41 @@ onMounted( () => {
 </script>
 
 <template>
+	<div
+		class="explorer-scalar-reference__auth-row"
+		:class="{ 'explorer-scalar-reference__auth-row--visible': isLoggedIn }"
+		aria-live="polite"
+	>
+		<template v-if="isLoggedIn">
+			<CdxInfoChip
+				class="explorer-scalar-reference__auth-badge"
+				status="notice"
+			>
+				{{ authBadgeLabel }}
+			</CdxInfoChip>
+			<CdxToggleSwitch
+				v-model="tryItOutWithOAuth"
+				class="explorer-scalar-reference__auth-toggle"
+			>
+				{{ authToggleLabel }}
+			</CdxToggleSwitch>
+		</template>
+	</div>
 	<ApiReference
 		ref="apiReferenceRef"
 		:configuration="configuration"
 	/>
 </template>
+
+<style scoped>
+.explorer-scalar-reference__auth-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var( --spacing-100 );
+}
+
+.explorer-scalar-reference__auth-row--visible {
+	padding: var( --spacing-50 ) var( --spacing-100 );
+}
+</style>

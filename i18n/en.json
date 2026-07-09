@@ -85,6 +85,8 @@
   "explorer-module-placeholder": "Select a module",
   "explorer-instance-placeholder": "Select an instance",
   "explorer-loading-interface": "Loading explorer interface...",
+  "explorer-auth-badge-logged-in": "Logged in as {{bidi:$1}}. Try-it-out requests will be sent with your bearer token.",
+  "explorer-auth-toggle-use-session": "Use my Wikimedia login for Try it out",
   "explorer-refresh-button": "Retry discovery",
   "explorer-empty-modules": "No modules available for this instance.",
   "explorer-no-selectable-modules": "No modules with usable specs are available for this instance.",
