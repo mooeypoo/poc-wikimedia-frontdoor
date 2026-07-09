@@ -87,6 +87,8 @@
   "explorer-loading-interface": "Cargando la interfaz del explorador...",
   "explorer-auth-badge-logged-in": "Sesión iniciada como {{bidi:$1}}. Las solicitudes de prueba se enviarán con tu token de portador.",
   "explorer-auth-toggle-use-session": "Usar mi cuenta de Wikimedia para las pruebas",
+  "explorer-auth-session-expired": "Tu sesión ha caducado.",
+  "explorer-auth-session-expired-login": "Volver a iniciar sesión",
   "explorer-refresh-button": "Reintentar descubrimiento",
   "explorer-empty-modules": "No hay modulos disponibles para esta instancia.",
   "explorer-no-selectable-modules": "No hay modulos con especificaciones utilizables para esta instancia.",

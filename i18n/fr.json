@@ -87,6 +87,8 @@
   "explorer-loading-interface": "Chargement de l'interface de l'explorateur...",
   "explorer-auth-badge-logged-in": "Connecté en tant que {{bidi:$1}}. Les requêtes d'essai seront envoyées avec votre jeton d'accès.",
   "explorer-auth-toggle-use-session": "Utiliser mon compte Wikimedia pour les essais",
+  "explorer-auth-session-expired": "Votre session a expiré.",
+  "explorer-auth-session-expired-login": "Se reconnecter",
   "explorer-refresh-button": "Reessayer la decouverte",
   "explorer-empty-modules": "Aucun module disponible pour cette instance.",
   "explorer-no-selectable-modules": "Aucun module avec une specification exploitable n'est disponible pour cette instance.",

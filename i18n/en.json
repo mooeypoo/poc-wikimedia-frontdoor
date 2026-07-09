@@ -87,6 +87,8 @@
   "explorer-loading-interface": "Loading explorer interface...",
   "explorer-auth-badge-logged-in": "Logged in as {{bidi:$1}}. Try-it-out requests will be sent with your bearer token.",
   "explorer-auth-toggle-use-session": "Use my Wikimedia login for Try it out",
+  "explorer-auth-session-expired": "Your session has expired.",
+  "explorer-auth-session-expired-login": "Log in again",
   "explorer-refresh-button": "Retry discovery",
   "explorer-empty-modules": "No modules available for this instance.",
   "explorer-no-selectable-modules": "No modules with usable specs are available for this instance.",

@@ -87,6 +87,8 @@
   "explorer-loading-interface": "Shown while the Scalar explorer bundle is loading after the page chrome has rendered.",
   "explorer-auth-badge-logged-in": "Badge above the API explorer shown while the user has an active OAuth session. Parameters:\n* $1 - the Wikimedia username of the logged-in user, wrapped in bidi isolation.",
   "explorer-auth-toggle-use-session": "Label for the toggle switch that controls whether Scalar \"Try it out\" requests include the user's OAuth bearer token.",
+  "explorer-auth-session-expired": "Warning message shown in the API explorer when a \"Try it out\" request returns HTTP 401 while the user's OAuth token is being injected, indicating the session expired.",
+  "explorer-auth-session-expired-login": "Label for the button inside the expired-session warning message that clears the stale session and restarts the OAuth login flow.",
   "explorer-refresh-button": "Button to retry discovery after failure.",
   "explorer-empty-modules": "Shown when discovery returns no modules.",
   "explorer-no-selectable-modules": "Shown when all discovered modules failed spec loading and none can be selected.",
