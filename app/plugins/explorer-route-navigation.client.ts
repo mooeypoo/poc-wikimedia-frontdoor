@@ -18,6 +18,15 @@ export default defineNuxtPlugin( () => {
 			return
 		}
 
+		// The OAuth callback populates the in-memory session store and then
+		// redirects to `returnTo`. A hard reload here would wipe that store
+		// (ADR §5.4 keeps the access token in memory only), so allow the
+		// client-side transition — the callback is itself a fresh app boot,
+		// so Scalar still mounts from a clean slate.
+		if ( from.path === '/oauth/callback' ) {
+			return
+		}
+
 		const resolvedTarget = router.resolve( to )
 		window.location.assign( resolvedTarget.href )
 		return false

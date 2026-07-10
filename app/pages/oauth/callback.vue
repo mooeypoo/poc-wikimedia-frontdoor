@@ -43,16 +43,6 @@ onMounted( async () => {
 			body: { code, state }
 		} )
 
-		// TEMP DEBUG: verify expiresAt in prod. Remove once diagnosed.
-		// eslint-disable-next-line no-console
-		console.log( '[oauth debug] exchange response', {
-			username: response.username,
-			hasAccessToken: Boolean( response.accessToken ),
-			expiresAt: response.expiresAt,
-			expiresInSeconds: Math.round( ( response.expiresAt - Date.now() ) / 1000 ),
-			now: Date.now()
-		} )
-
 		setSession( {
 			username: response.username,
 			accessToken: response.accessToken,
