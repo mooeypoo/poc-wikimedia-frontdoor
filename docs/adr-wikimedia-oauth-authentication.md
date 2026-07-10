@@ -132,9 +132,9 @@ The cookie is set with `HttpOnly; Secure; SameSite=Lax`, `Path=/`, and a short m
 
 ### 5.4 Access token storage — in-memory Pinia, never localStorage
 
-The access token returned from the exchange lives only in the `oauthSession` Pinia store.  It is **never** written to `localStorage` or `sessionStorage`.  This means:
+The access token returned from the exchange lives only in the `oauthSession` Pinia store.  It is **never** written to `localStorage`, and it is written to `sessionStorage` only for the duration of a single navigation as a handoff mechanism (see §10 Step B4).  This means:
 
-- A page reload loses the in-memory token.  On mount, the store has no token; the UI shows "logged out" until the user clicks login again.  For the prototype this is acceptable (resolves §8.6).
+- A page reload loses the in-memory token.  On mount, the store has no token; the UI shows "logged out" until the user clicks login again.  For the prototype this is acceptable (resolves §8.6).  The sessionStorage handoff key is cleared on first read, so it never survives a subsequent reload.
 - An XSS payload that can reach the Pinia store can exfiltrate the token.  Mitigation: keep the Front Door's XSS surface small, request only the `basic` scope, accept short-lived tokens.
 - We do not surface the token to any third-party domain.  Scalar consumes it via the `authentication` configuration prop — it stays in the same JS realm.
 
@@ -332,6 +332,8 @@ A Meta-issued OAuth 2.0 bearer is *expected* to work against every SUL-linked wi
 
 A reload drops the access token; the user re-logs-in.  This is acceptable for the prototype.
 
+The single-navigation `sessionStorage` handoff described in §5.4 and §10 Step B4 does not weaken this invariant: the handoff key is read-and-cleared by a client plugin on the destination page before its first render, so any subsequent reload finds no key and boots into the logged-out state.
+
 **Documented for future improvement:** storing a refresh token (HttpOnly, encrypted) in the session cookie and refreshing transparently on mount would let the session survive reloads without exposing the access token to JS storage.  Not implemented in this iteration because it expands server-side surface and contradicts §8.3's directive.
 
 ### 8.7 Resolved: `basic` scope only — flag what else might be needed
@@ -475,11 +477,15 @@ Accepts `{ code, state }` from the client.  Reads `{ verifier, state, returnTo }
 
 #### Step B4 — `pages/oauth/callback.vue`
 
-Vue page with no SSR.  On mount: read `route.query.code` and `route.query.state`.  Call `POST /api/auth/oauth/exchange` with `{ code, state }` (the HttpOnly session cookie is attached automatically).  Hydrate the Pinia store with the returned `{ accessToken, username, expiresAt }`.  `router.replace(returnTo)` using the value the server echoed back.
+Vue page.  On mount: read `route.query.code` and `route.query.state`.  Call `POST /api/auth/oauth/exchange` with `{ code, state }` (the HttpOnly session cookie is attached automatically).  Instead of writing the returned `{ accessToken, username, expiresAt }` straight into the Pinia store and calling `router.replace(returnTo)`, the callback stashes the payload in `sessionStorage` under a single-use key (see `app/utils/oauthHandoff.ts`) and triggers a full document navigation via `window.location.replace(returnTo)`.
 
-The `code_verifier` is never read by the page — it lives only in the HttpOnly session cookie and is consumed server-side by the exchange route.  No client-side state-helper endpoint is needed.
+This detour exists because `app/plugins/explorer-route-navigation.client.ts` forces a full document reload on any transition into or out of `/explorer` so Scalar's `ApiReference` can remount cleanly — a router-level transition either fights that reload (wiping the in-memory Pinia store) or bypasses it (breaking Scalar's mount with a `Cannot destructure property 'bum'` error).  The handoff hops the token across the reload.
 
-**Verify:** Land on `/oauth/callback?code=…&state=…` after a real authorize flow; arrive on `returnTo` logged in, no flashes of the callback page content, no console errors.
+A companion client plugin, `app/plugins/oauth-handoff.client.ts`, runs on the destination page, reads the sessionStorage entry once, removes it, and calls `oauthSession.set(payload)`.  The token is in storage only during that one navigation; every reload after that clears it and the UI returns to logged-out (preserves §8.6).
+
+The `code_verifier` is never read by the page — it lives only in the HttpOnly session cookie and is consumed server-side by the exchange route.  No client-side state-helper endpoint is needed.  `window.location.replace` (not `assign`) keeps the callback URL, with its single-use `code`, out of the browser history.
+
+**Verify:** Land on `/oauth/callback?code=…&state=…` after a real authorize flow; arrive on `returnTo` logged in (header shows username, Scalar's Authentication panel carries the bearer token), no `bum` unmount errors in the console, and reloading `returnTo` returns to logged-out.
 
 #### Step B5 — `stores/oauthSession.js`
 
@@ -495,7 +501,7 @@ defineStore('oauthSession', () => {
 })
 ```
 
-**Verify:** `pinia-plugin-persistedstate` (or equivalent) is NOT in use for this store.  `accessToken` does not appear in `localStorage` or `sessionStorage` after login.
+**Verify:** `pinia-plugin-persistedstate` (or equivalent) is NOT in use for this store.  `accessToken` does not appear in `localStorage` at any point, and does not appear in `sessionStorage` once the destination page has finished booting (the callback→destination handoff key from Step B4 is read-and-cleared before the destination's first render).
 
 #### Step B6 — `app/composables/useOAuthSession.ts`
 
