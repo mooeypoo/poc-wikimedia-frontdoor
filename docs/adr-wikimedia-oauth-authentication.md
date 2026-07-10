@@ -158,6 +158,8 @@ The exact key names depend on what the OpenAPI spec declares for its security sc
 
 [useScalarConfig.ts](/home/moriel/code/wikimedia/frontdoor/app/composables/useScalarConfig.ts) becomes session-aware: it reads `useOAuthSession()` reactively, and when the token is present it emits the `authentication` block alongside the existing fields.  Scalar's documented `Object.assign` update pattern still applies — the existing reactive update mechanism is unchanged.
 
+Scalar renders its own visible "Authentication" panel from `components.securitySchemes` in the document.  MediaWiki module specs currently declare only cookie-based `CentralAuthSessionProvider-*` schemes there, which are unusable cross-origin from Front Door (browsers strip the `Cookie` header from cross-origin `fetch` and refuse to set third-party cookies).  Surfacing those in the UI is misleading and encourages a broken auth path, so Front Door hides that panel by default via a CSS override and gates any reveal behind a Codex dialog — see §5.9.  Auth injection into requests happens via our `authentication` configuration regardless of panel visibility.
+
 ### 5.6 Toggle: use OAuth credentials in Try it out
 
 The user asked whether it's possible to let a reader turn OAuth-credential injection on/off, rather than it being all-or-nothing once logged in.
@@ -192,6 +194,27 @@ The badge uses Codex components for consistency with the rest of the shell.  It 
 ### 5.8 Where the session is mounted
 
 The `useOAuthSession` composable is called from [app/layouts/default.vue](/home/moriel/code/wikimedia/frontdoor/app/layouts/default.vue) so the Pinia store hydrates on every page (content pages and Explorer alike), and the header's "Log in" / "Log out as <user>" control reads from it.  Because the access token is in-memory only (§5.4), the store's initial state on every navigation that crosses the SSR / client-only boundary is "logged out" until the user logs in again — see §8.6.
+
+### 5.9 Scalar's Authentication panel — hidden by default, revealable with acknowledgement
+
+Front Door surfaces exactly one primary auth mechanism to end users — the OAuth toggle from §5.6.  Scalar's built-in Authentication panel, which lists every scheme declared in the current spec's `components.securitySchemes`, is **hidden by default** via a CSS override in [app/assets/css/explorer-codex-overrides.css](/home/moriel/code/wikimedia/frontdoor/app/assets/css/explorer-codex-overrides.css).
+
+The rationale is functional, not just cosmetic:
+
+- Every module spec today declares three cookie-based schemes (`CentralAuthSessionProvider-Session`, `-UserID`, `-Token`) that a browser at `wikifrodo.netlify.app` **cannot** exercise against `en.wikipedia.org` — cookies are same-origin, and `Cookie` is a forbidden header on cross-origin `fetch` calls.
+- Once upstream adds a bearer scheme (§5.5, awaited), our config-based injection covers authenticated requests without the user needing to touch Scalar's panel at all.
+- Advanced users can still reach the panel for inspection or manual override, so the affordance is preserved — behind a small friction hurdle.
+
+The reveal path uses a new composable, [useAdvancedAuthPanel.ts](/home/moriel/code/wikimedia/frontdoor/app/composables/useAdvancedAuthPanel.ts), and a Codex `CdxDialog`:
+
+- The badge/toggle row above the Scalar shell carries a second `CdxToggleSwitch` labelled `explorer-auth-panel-toggle-label` ("Show authentication panel (advanced)").  Unlike the OAuth toggle, this control is visible regardless of login state — the panel exists for inspection, not just for authenticated use.
+- Turning the toggle on for the first time opens a `CdxDialog` with i18n keys `explorer-auth-panel-dialog-title`, `explorer-auth-panel-dialog-body`, `explorer-auth-panel-dialog-cancel` ("Keep hidden"), `explorer-auth-panel-dialog-confirm` ("Show panel").  A `CdxCheckbox` labelled `explorer-auth-panel-dialog-dont-show-again` lets the user suppress future dialogs for the browser.
+- Confirming the dialog reveals the panel (CSS class flips off the wrapper) and, if the checkbox was ticked, writes `explorer-auth-panel-acknowledged=true` to `localStorage`.  Subsequent enables read that flag and reveal directly without prompting.
+- Turning the toggle off never prompts — reducing exposure needs no acknowledgement.
+- Panel visibility itself is **not** persisted; it defaults to hidden on every fresh session.  This mirrors the §8.6 precedent (safer defaults each fresh boot; explicit opt-in each time).  Only the acknowledgement flag persists.
+- On reveal, the component scrolls the auth section into view so keyboard and pointer users notice the change.
+
+The CSS selector targets `.scalar-reference-intro-auth` — a stable, semantic class Scalar's `Content.vue` assigns directly on the auth section's wrapper.  This is a UI-surface override, not an internal contract: any Scalar version bump can silently rename or remove that class, causing the panel to reappear.  Mitigation is documented in §12.
 
 ---
 
@@ -364,6 +387,24 @@ The session-cookie work could be done three ways:
 | Hand-rolled crypto | Total control. | Cryptographic primitives are easy to misuse; no upside over `h3.useSession` here. |
 
 We choose `h3.useSession`.  The other two are documented so a future maintainer who hits its limits can see why they were rejected and what the alternatives are.
+
+### 8.9 Resolved: hide Scalar's built-in Authentication panel by default
+
+Scalar renders every scheme declared in the current spec's `components.securitySchemes` in an "Authentication" panel inside its reference view.  For MediaWiki module specs today, that means three cookie-based `CentralAuthSessionProvider-*` schemes that are functionally inert from Front Door's origin (browsers strip `Cookie` from cross-origin `fetch` and refuse to set third-party cookies).  Surfacing them prominently teaches users a broken auth path and confuses the mental model — the OAuth toggle is the only mechanism that actually works from this origin.
+
+**Decision:** hide the panel by default via a CSS override (see §5.9 and the `.scalar-reference-intro-auth` selector).  Keep it reachable for advanced users via the "Show authentication panel (advanced)" toggle plus a Codex confirmation dialog on first reveal.
+
+**Alternatives considered:**
+
+| Alternative | Why rejected |
+|---|---|
+| Leave the panel visible and add an explanation `CdxMessage` above it | Users still read the misleading CentralAuth entries as the primary auth affordance.  Less opinionated but louder in the wrong direction. |
+| Prefill CentralAuth values from the OAuth session | Technically wrong (values aren't equivalent) and functionally useless (browsers ignore the `Cookie` header cross-origin anyway).  Would teach a broken mental model. |
+| Set `preferredSecurityScheme: 'bearerAuth'` and rely on Scalar defaulting to bearer | Requires upstream to declare bearer first, and still lets confused users click into CentralAuth.  Will be combined with the hide once upstream lands. |
+| Post-render CSS/DOM hacks driven from JS | Bought no benefit over a pure-CSS class flip and added moving parts. |
+| Ask upstream to remove the cookie-based schemes | Independently valid and pursued in parallel, but not something we can block on for a user-visible UX bug. |
+
+Fragility of the CSS-hide is accepted and documented as a §12 risk with a Scalar-upgrade mitigation.
 
 ---
 
@@ -582,6 +623,24 @@ In the same badge row, render a `CdxToggleSwitch` bound to `useTryItOutWithOAuth
 
 **Verify:** Badge and toggle appear immediately on login, disappear immediately on logout; screen readers announce the badge change; toggling off/on immediately changes whether subsequent "Try it out" requests carry the bearer token (no page reload needed).
 
+#### Step C4 — Hide Scalar's Authentication panel with an "advanced" reveal toggle
+
+Add the composable [app/composables/useAdvancedAuthPanel.ts](/home/moriel/code/wikimedia/frontdoor/app/composables/useAdvancedAuthPanel.ts) (module-scoped visibility ref, `localStorage`-backed acknowledgement, actions for reveal request / confirm / cancel / hide), a CSS override in [app/assets/css/explorer-codex-overrides.css](/home/moriel/code/wikimedia/frontdoor/app/assets/css/explorer-codex-overrides.css) that hides `.scalar-reference-intro-auth` under a wrapper class, and the toggle-plus-dialog wiring in [ExplorerScalarReference.client.vue](/home/moriel/code/wikimedia/frontdoor/app/components/explorer/ExplorerScalarReference.client.vue).
+
+i18n keys added in all six locales (see §5.9): `explorer-auth-panel-toggle-label`, `explorer-auth-panel-dialog-title`, `explorer-auth-panel-dialog-body`, `explorer-auth-panel-dialog-dont-show-again`, `explorer-auth-panel-dialog-cancel`, `explorer-auth-panel-dialog-confirm`.
+
+**Verify:**
+
+- Fresh browser (or `localStorage` cleared): auth panel is hidden by default; toggle exists in the badge row regardless of login state.
+- Flipping the toggle on opens the dialog; **Keep hidden** dismisses it and leaves the toggle off; **Show panel** reveals the panel and scrolls it into view.
+- Ticking "Don't show this message again" then confirming persists `explorer-auth-panel-acknowledged=true` in `localStorage`; subsequent enables reveal directly without a dialog.
+- Reload always returns to hidden regardless of prior state; acknowledgement flag survives the reload.
+- Toggling off never prompts.
+- RTL locales (`he`, `fa`): dialog and toggle mirror correctly.
+- No console errors on any of the above.
+
+Fragility mitigation (see §12): after every `@scalar/api-reference` upgrade, load `/explorer` and confirm the panel is still hidden by default.
+
 ---
 
 ### Phase D: Logout, expiry, error handling
@@ -618,3 +677,4 @@ The OAuth handshake architecture in this ADR — public client, in-memory token,
 3. **Cross-wiki bearer rejection** — §8.5.  Mitigation documented; verification deferred.
 4. **XSS exfiltration of access token** — accepted risk for the prototype (§5.4).  Mitigation: minimal scope, short token lifetime, no other third-party scripts in the Explorer.
 5. **Single consumer used for dev + prod** — accepted prototype compromise (§8.2).  Must be split before going beyond prototype.
+6. **Scalar DOM/class churn silently reverting the Auth-panel hide** (§5.9, §8.9) — our CSS override targets `.scalar-reference-intro-auth`, a class Scalar assigns semantically today but does not treat as public API.  A minor version bump could rename or remove it, at which point the panel reappears without warning and users see the misleading CentralAuth entries again.  **Mitigation:** after every `@scalar/api-reference` upgrade, load `/explorer` in the browser and confirm the built-in Auth panel is still hidden by default; if broken, re-verify the selector against the new rendered DOM and update the override.  Longer-term mitigation would be a lightweight E2E assertion that `.scalar-reference-intro-auth` is not visible by default on the explorer page.

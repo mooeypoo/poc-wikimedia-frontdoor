@@ -2,10 +2,11 @@
 import '@scalar/api-reference/style.css'
 import '../../assets/css/explorer-codex-overrides.css'
 import { ApiReference } from '@scalar/api-reference'
-import { CdxButton, CdxInfoChip, CdxMessage, CdxToggleSwitch } from '@wikimedia/codex'
+import { CdxButton, CdxCheckbox, CdxDialog, CdxInfoChip, CdxMessage, CdxToggleSwitch } from '@wikimedia/codex'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import type { ScalarNavigationEntry } from '../../utils/scalarOperationNavigation'
+import { useAdvancedAuthPanel } from '../../composables/useAdvancedAuthPanel'
 import { useOAuthSession } from '../../composables/useOAuthSession'
 import { useTryItOutWithOAuth } from '../../composables/useTryItOutWithOAuth'
 
@@ -27,6 +28,14 @@ const emit = defineEmits<{
 const { $bananaI18n } = useNuxtApp()
 const { isLoggedIn, username, login, logout } = useOAuthSession()
 const { tryItOutWithOAuth } = useTryItOutWithOAuth()
+const {
+	isPanelVisible: isAuthPanelVisible,
+	isDialogOpen: isAuthPanelDialogOpen,
+	requestReveal: requestAuthPanelReveal,
+	confirmReveal: confirmAuthPanelReveal,
+	cancelReveal: cancelAuthPanelReveal,
+	hidePanel: hideAuthPanel
+} = useAdvancedAuthPanel()
 
 const authBadgeLabel = computed(
 	() => $bananaI18n( 'explorer-auth-badge-logged-in', { $1: username.value ?? '' } )
@@ -34,6 +43,56 @@ const authBadgeLabel = computed(
 const authToggleLabel = computed( () => $bananaI18n( 'explorer-auth-toggle-use-session' ) )
 const sessionExpiredLabel = computed( () => $bananaI18n( 'explorer-auth-session-expired' ) )
 const sessionExpiredLoginLabel = computed( () => $bananaI18n( 'explorer-auth-session-expired-login' ) )
+const authPanelToggleLabel = computed( () => $bananaI18n( 'explorer-auth-panel-toggle-label' ) )
+const authPanelDialogTitle = computed( () => $bananaI18n( 'explorer-auth-panel-dialog-title' ) )
+const authPanelDialogBody = computed( () => $bananaI18n( 'explorer-auth-panel-dialog-body' ) )
+const authPanelDialogDontShowAgain = computed(
+	() => $bananaI18n( 'explorer-auth-panel-dialog-dont-show-again' )
+)
+const authPanelDialogCancel = computed( () => $bananaI18n( 'explorer-auth-panel-dialog-cancel' ) )
+const authPanelDialogConfirm = computed( () => $bananaI18n( 'explorer-auth-panel-dialog-confirm' ) )
+
+const dontShowAuthPanelWarningAgain = ref( false )
+
+/**
+ * v-model target for the "Advanced authentication" toggle. Reads visibility
+ * state and delegates writes through the composable — enabling opens the
+ * confirmation dialog (unless previously acknowledged), disabling hides
+ * immediately with no prompt.
+ */
+const authPanelToggleModel = computed<boolean>( {
+	get: () => isAuthPanelVisible.value,
+	set: ( nextValue ) => {
+		if ( nextValue ) {
+			requestAuthPanelReveal()
+		} else {
+			hideAuthPanel()
+		}
+	}
+} )
+
+function onAuthPanelDialogConfirm(): void {
+	confirmAuthPanelReveal( dontShowAuthPanelWarningAgain.value )
+	dontShowAuthPanelWarningAgain.value = false
+}
+
+function onAuthPanelDialogCancel(): void {
+	cancelAuthPanelReveal()
+	dontShowAuthPanelWarningAgain.value = false
+}
+
+// Scroll the newly-revealed auth section into view so keyboard/pointer users
+// notice the change without hunting for it. Scalar renders the panel via its
+// own component tree, so we only need to react to the visibility flip here.
+watch( isAuthPanelVisible, ( nextVisible ) => {
+	if ( !nextVisible ) {
+		return
+	}
+	void nextTick( () => {
+		document.querySelector( '.scalar-reference-intro-auth' )
+			?.scrollIntoView( { behavior: 'smooth', block: 'nearest' } )
+	} )
+} )
 
 const isSessionExpired = ref( false )
 
@@ -153,8 +212,7 @@ onMounted( () => {
 
 <template>
 	<div
-		class="explorer-scalar-reference__auth-row"
-		:class="{ 'explorer-scalar-reference__auth-row--visible': isLoggedIn }"
+		class="explorer-scalar-reference__auth-row explorer-scalar-reference__auth-row--visible"
 		aria-live="polite"
 	>
 		<template v-if="isLoggedIn">
@@ -171,7 +229,29 @@ onMounted( () => {
 				{{ authToggleLabel }}
 			</CdxToggleSwitch>
 		</template>
+		<CdxToggleSwitch
+			v-model="authPanelToggleModel"
+			class="explorer-scalar-reference__auth-panel-toggle"
+		>
+			{{ authPanelToggleLabel }}
+		</CdxToggleSwitch>
 	</div>
+	<CdxDialog
+		:open="isAuthPanelDialogOpen"
+		:title="authPanelDialogTitle"
+		:primary-action="{ label: authPanelDialogConfirm, actionType: 'progressive' }"
+		:default-action="{ label: authPanelDialogCancel }"
+		@update:open="( nextOpen ) => { if ( !nextOpen ) onAuthPanelDialogCancel() }"
+		@primary="onAuthPanelDialogConfirm"
+		@default="onAuthPanelDialogCancel"
+	>
+		<p class="explorer-scalar-reference__auth-panel-dialog-body">
+			{{ authPanelDialogBody }}
+		</p>
+		<CdxCheckbox v-model="dontShowAuthPanelWarningAgain">
+			{{ authPanelDialogDontShowAgain }}
+		</CdxCheckbox>
+	</CdxDialog>
 	<CdxMessage
 		v-if="isSessionExpired"
 		class="explorer-scalar-reference__session-expired"
@@ -188,10 +268,12 @@ onMounted( () => {
 			{{ sessionExpiredLoginLabel }}
 		</CdxButton>
 	</CdxMessage>
-	<ApiReference
-		ref="apiReferenceRef"
-		:configuration="configuration"
-	/>
+	<div :class="{ 'explorer-scalar-reference--hide-auth-panel': !isAuthPanelVisible }">
+		<ApiReference
+			ref="apiReferenceRef"
+			:configuration="configuration"
+		/>
+	</div>
 </template>
 
 <style scoped>
@@ -212,5 +294,13 @@ onMounted( () => {
 
 .explorer-scalar-reference__session-expired-login {
 	margin-inline-start: var( --spacing-50 );
+}
+
+.explorer-scalar-reference__auth-panel-toggle {
+	margin-inline-start: auto;
+}
+
+.explorer-scalar-reference__auth-panel-dialog-body {
+	margin-block-end: var( --spacing-100 );
 }
 </style>
