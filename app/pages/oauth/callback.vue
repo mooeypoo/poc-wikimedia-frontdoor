@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { CdxMessage, CdxProgressBar } from '@wikimedia/codex'
-import { useOAuthSession } from '../../composables/useOAuthSession'
+import { OAUTH_HANDOFF_STORAGE_KEY } from '../../utils/oauthHandoff'
 
 /**
  * OAuth callback landing page (docs/adr-wikimedia-oauth-authentication.md
  * §10 Step B4).
  *
  * Meta redirects here with ?code=…&state=… after the user authorizes. The
- * exchange must run client-side so the resulting access token lands in the
- * browser-memory Pinia store (ADR §5.4), hence the onMounted-only logic.
+ * exchange must run client-side so the resulting access token can be handed
+ * off to the destination page (ADR §5.4).
+ *
+ * The destination is reached via `window.location.replace` rather than
+ * `router.replace` so the explorer route boundary plugin can force the clean
+ * remount Scalar needs. The token is stashed in sessionStorage across that
+ * single navigation and read+cleared on the other side by the oauth-handoff
+ * plugin — the token is in storage only during that handoff moment.
  */
 
 interface ExchangeResponse {
@@ -19,8 +25,6 @@ interface ExchangeResponse {
 }
 
 const route = useRoute()
-const router = useRouter()
-const { setSession } = useOAuthSession()
 const { $bananaI18n } = useNuxtApp()
 
 const hasError = ref( false )
@@ -43,15 +47,15 @@ onMounted( async () => {
 			body: { code, state }
 		} )
 
-		setSession( {
+		sessionStorage.setItem( OAUTH_HANDOFF_STORAGE_KEY, JSON.stringify( {
 			username: response.username,
 			accessToken: response.accessToken,
 			expiresAt: response.expiresAt
-		} )
+		} ) )
 
-		// replace() keeps the callback URL (with its single-use code) out of
-		// the browser history.
-		await router.replace( response.returnTo )
+		// replace() (not assign()) keeps the callback URL, with its single-use
+		// code, out of the browser history.
+		window.location.replace( response.returnTo )
 	} catch {
 		hasError.value = true
 	}
