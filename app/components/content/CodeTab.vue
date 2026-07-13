@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import type { Ref } from 'vue'
+import type { VNode } from 'vue'
+
+/**
+ * Markdown code-tab panel marker. {@link CodeTabs} collects these children and
+ * renders them inside framed {@link CdxTab} panels.
+ */
+defineOptions( {
+	name: 'CodeTab'
+} )
 
 const props = defineProps<{
 	label: string
 }>()
 
-const registerTab = inject<( label: string ) => void>( 'code-tabs:register' )
-const activeTab = inject<Ref<string>>( 'code-tabs:active' )
+const slots = useSlots()
 
-const isActive = computed( () => activeTab?.value === props.label )
+const registerTab = inject<( registration: {
+	label: string
+	content: () => VNode[]
+} ) => void>( 'code-tabs:register' )
 
-onMounted( () => {
-	registerTab?.( props.label )
+registerTab?.( {
+	label: props.label,
+	content: () => slots.default?.() ?? []
 } )
 </script>
 
 <template>
-	<div
-		v-show="isActive"
-		role="tabpanel"
-		class="code-tab"
-	>
-		<slot />
-	</div>
+	<!-- Content is rendered by CodeTabs inside CdxTab. -->
 </template>

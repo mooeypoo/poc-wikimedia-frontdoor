@@ -151,7 +151,7 @@ Vue components placed in `app/components/content/` are auto-registered as MDC co
 
 - Use `CdxIcon` + `cdxIconLink` in `ProseH2.vue` … `ProseH6.vue` for heading anchor icons. The default `@nuxtjs/mdc` heading component wraps the full heading text in `<a>` — the override renders heading text as plain text and places a `CdxIcon` link alongside it, shown on hover via CSS.
 - Use `CdxMessage` for callout/alert boxes — its `type` prop covers `notice`, `warning`, and `error` variants.
-- Use `CdxTabs` + `CdxTab` for tabbed code groups.
+- Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs.
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
 

@@ -23,8 +23,8 @@ No new dependencies are required.
 |---|---|---|
 | Header anchors | Custom component | `ProseH2.vue`…`ProseH6.vue` override default prose headings; plain text + hover `CdxIcon` link |
 | External link icons | Custom component | `ProseA.vue` overrides default prose anchor; appends `CdxIcon` for `https?://` links |
-| Callouts | Custom component | `Callout.vue` wraps `CdxMessage`; `type` prop + optional `#title` named slot |
-| Code tabs | Custom components | `CodeTabs.vue` + `CodeTab.vue`; custom tab UI styled with Codex tokens |
+| Callouts | Custom component | `Callout.vue` wraps `CdxMessage`; `type` prop + optional `#title` named slot (bold first paragraph via CSS) |
+| Code tabs | Custom components | `CodeTabs.vue` + `CodeTab.vue` wrap **`CdxTabs` (`framed`)** + `CdxTab`; module border `--border-color-muted`; code `pre` padding `--spacing-75` |
 | File inclusion | Custom component | `Include.vue` resolves relative paths against current locale + route, queries content collection |
 | Expandable sections | Built-in | Native `<details>` / `<summary>`; no configuration needed |
 | Buttons | Custom component | `AppButton.vue`; `NuxtLink` (internal) or `<a>` (external) styled as a Codex progressive button |
@@ -88,7 +88,7 @@ upgrading. Responses from the old endpoint will return `410 Gone` after the depr
 
 ## Code Tabs
 
-**Custom components** — `CodeTabs.vue` + `CodeTab.vue` implement a tab UI styled with Codex tokens.
+**Custom components** — `CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop and **`CdxTab`** panels (framed tabs are for bordered modules; quiet tabs are used in shell navigation). The module uses `--border-color-muted`; each code block has 12px (`--spacing-75`) padding inside the panel.
 All tab panels remain in the DOM (`v-show`), so Ctrl+F searches all tabs regardless of which is active.
 
 ::::code-tabs

@@ -217,8 +217,8 @@ All planned markdown features are achievable with packages already installed:
 | Line highlighting | Needs config | Add `transformerMetaHighlight()` to `content.highlight.transformers` |
 | Diff annotations | Needs config | Add `transformerNotationDiff()` to `content.highlight.transformers` |
 | External link icons | Needs component | `app/components/content/ProseA.vue` using `CdxIcon` + `cdxIconLinkExternal` |
-| Callouts (info / warning) | Needs component | `app/components/content/Callout.vue` using `CdxMessage` |
-| Code tabs | Needs component | `app/components/content/CodeTabs.vue` + `CodeTab.vue` using `CdxTabs` + `CdxTab` |
+| Callouts (info / warning) | ✅ Implemented | `app/components/content/Callout.vue` using `CdxMessage`; optional `#title` slot (Markdown `<p>`, bolded via CSS) |
+| Code tabs | ✅ Implemented | `app/components/content/CodeTabs.vue` + `CodeTab.vue` using **`CdxTabs` (`framed`)** + `CdxTab` — see **Framed code tabs** below |
 | Buttons | Needs component | `app/components/content/AppButton.vue` using `CdxButton` |
 | Next / Previous navigation | Needs page change | Read `prev` / `next` frontmatter in `[...slug].vue`; render with `CdxButton` + arrow icons |
 | File inclusion | Needs verification | MDC `::include` built-in; test against `content/[locale]/` path structure |
@@ -229,6 +229,24 @@ All planned markdown features are achievable with packages already installed:
 - Block components use `::component-name{props}\ncontent\n::` syntax in Markdown.
 - All new content components follow the same RTL/BiDi and logical-property rules as the rest of the codebase.
 - Interface labels within content components go through banana-i18n.
+
+### Framed code tabs
+
+**Decision:** Tabbed code blocks in Markdown use Codex `CdxTabs` with **`framed={true}`**, not quiet tabs.
+
+**Rationale:**
+
+- Codex [Tabs guidance](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html) reserves **framed** tabs for content inside a bordered module; **quiet** tabs are for in-page navigation (the shell primary nav already uses quiet `CdxTabs` via `ShellPrimaryNav`).
+- A tabbed code sample is a bounded module on a prose page — same visual role as Codex’s framed demo (header strip + white content panel), not a site nav strip.
+- Framed tabs provide correct header interaction (hover, selected, keyboard) without custom `.cdx-tabs__list__item` overrides (forbidden on explorer picker menus; code tabs inherit native Codex tab styles).
+
+**Implementation notes:**
+
+- Outer module: `border: 1px solid var(--border-color-muted)`, `border-radius: 2px`, `overflow: hidden`.
+- Code panels: `pre` padding `var(--spacing-75)` (12px); margins reset so the panel connects to the selected tab label.
+- MDC nesting is bridged with `CodeTab` → `provide`/`inject` registration because `CdxTabs` only accepts direct `CdxTab` slot children.
+
+**Alternatives considered:** Custom tab buttons styled with Codex tokens (rejected — duplicates `CdxTabs` and diverges from the design system); quiet `CdxTabs` (rejected — wrong semantic/visual role for a code module).
 
 ---
 

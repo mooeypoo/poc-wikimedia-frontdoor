@@ -754,9 +754,26 @@ Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/
 |---|---|---|
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
-| `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error`) | `::callout{type="warning"}` block |
-| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block |
+| `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block; optional `#title` slot — title is a Markdown `<p>` (not wrapped again); first paragraph bolded via CSS; `align-self: flex-start` on `.cdx-message__content` so the icon aligns with the title row |
+| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
 | `AppButton.vue` | `CdxButton` | `::app-button{href="…" label="…"}` inline |
+
+#### Code tabs
+
+`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`).
+
+**Why framed:** Tabbed code blocks are self-contained modules on prose pages, not page-level navigation. Framed tabs supply the gray header row, white selected-tab label, and content panel chrome without reimplementing tab interaction states.
+
+**MDC bridge:** `CdxTabs` requires direct `CdxTab` children. MDC nests `:::code-tab` blocks inside `::::code-tabs`, so `CodeTab` registers each panel (label + default-slot render function) during `setup()` via `provide`/`inject`; `CodeTabs` renders `CdxTab` panels from that registry. A hidden `<slot />` mount point keeps registration SSR-safe.
+
+**Styling exceptions** (documented; tab header metrics remain Codex-owned):
+
+| Rule | Token / value | Rationale |
+|---|---|---|
+| Module border | `1px solid var(--border-color-muted)` | Muted module edge per Codex framed-tabs-in-a-box pattern |
+| Module radius | `2px` | Matches Codex framed tab label corner radius |
+| Code padding | `var(--spacing-75)` (12px) on `pre` | Inset code inside the white content panel |
+| Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM for find-in-page across tabs |
 
 ### Page-layer features — need `[...slug].vue` update
 
