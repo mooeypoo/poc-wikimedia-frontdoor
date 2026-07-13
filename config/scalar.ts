@@ -15,10 +15,10 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	showDeveloperTools: 'never',
 	layout: 'modern' as const,
 	theme: 'default' as const,
-	// Force light mode until the site has a full dark-mode implementation.
-	// Scalar otherwise follows the OS `prefers-color-scheme`, which surfaces a
-	// half-finished dark theme. This also hides Scalar's dark-mode toggle.
-	forceDarkModeState: 'light' as const,
+	// The site owns color mode (useColorMode); Scalar's `darkMode` boolean is
+	// driven from it in useScalarConfig. Hide Scalar's own toggle so there is a
+	// single control — the shell header switch — as the source of truth.
+	hideDarkModeToggle: true,
 	showSidebar: false,
 	searchHotKey: 'k',
 	metaData: {
