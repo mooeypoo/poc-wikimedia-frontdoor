@@ -1,7 +1,9 @@
 # ADR: Remote Content Fetching
 
-**Status:** Decided  
+**Status:** Decided (Phase 1 implemented; Step 2 / wiki-translated-page designed, not yet implemented)  
 **Scope:** Build-time prose content — Markdown files fetched from remote URLs and rendered as shell-chrome pages
+
+**Related:** `docs/adr-language-catalog.md` — the wiki strategy (§9) writes translations into locales defined by the unified language catalog. That ADR (Steps 1 + 1.5) is a prerequisite for the wiki strategy to have locales to land in.
 
 ---
 
@@ -34,7 +36,7 @@ Maintaining two parallel scripts (`sync-wiki-content.js` for wiki sources and a 
 ```ts
 export interface RemoteContentSource {
   id: string
-  strategy: 'markdown-url'  // extend when Phase 2 strategies added
+  strategy: 'markdown-url' | 'mediawiki-translated-page'  // wiki strategy: see §9.1 for its extra fields
   remoteUrl: string
   localPath: string
 
@@ -271,21 +273,137 @@ The placeholder title is overridden by `source.overrideFrontmatter.title` if dec
 
 ---
 
+## 9. Wiki translated-page strategy — `strategy: 'mediawiki-translated-page'` (Step 2)
+
+**Decision:** Add a strategy that fetches a MediaWiki **page-translation** page and *all* of its translation subpages, converts each to Markdown, and writes one file per locale into `content/[locale]/[localPath].md`. This is the concrete implementation of what the ADR previously stubbed as Phase 2c, and it **subsumes Phase 2a** (multi-locale) for wiki sources: translations are auto-discovered, not hand-listed in `localeFiles`.
+
+**Scope boundary — page translation, not interlanguage links.** This strategy targets the **Translate extension / page-translation model**, where translations live at subpages `Foo/<langcode>` (e.g. `Help:Extension:Translate/fr`). The Wikipedia-style **interlanguage-links** model (independent per-language articles via `langlinks`) is explicitly **out of scope** — it is a different content model, not subpages of one page.
+
+### 9.1 Config shape
+
+```ts
+export interface RemoteContentSource {
+  // ...existing fields...
+  strategy: 'markdown-url' | 'mediawiki-translated-page'  // extended union
+
+  // Wiki strategy fields (required when strategy === 'mediawiki-translated-page'):
+  wikiApiUrl?: string          // e.g. 'https://www.mediawiki.org/w/api.php'
+  pageTitle?: string           // canonical source page title, e.g. 'Help:Extension:Translate'
+  minTranslatedPercent?: number  // skip translations below this completeness (default: skip only 0%)
+  componentMapping?: {         // conservative element→MDC mapping toggles (see §9.4)
+    code?: boolean             // default true
+    callouts?: boolean         // default true
+    tabber?: boolean           // default false
+  }
+  linkPolicy?: 'absolute-external'  // default; rewrite wiki links to absolute URLs
+  attribution?: {              // see §9.5
+    license?: string           // e.g. 'CC BY-SA 4.0'
+  }
+}
+```
+
+`remoteUrl` / `locale` / `localeFiles` are not used by this strategy (translations are discovered). `localPath`, `overrideFrontmatter`, and `navEntry` behave as for other strategies.
+
+### 9.2 Translation discovery — `messagegroupstats`
+
+**Decision:** Discover which languages a page is translated into via the Translate extension's `messagegroupstats` (verified live against mediawiki.org):
+
+```
+GET {wikiApiUrl}?action=query&meta=messagegroupstats
+    &mgsgroup=page-{pageTitle}&mgsprop=total,translated
+    &mgssuppressempty=1&formatversion=2
+```
+
+Returns per-language `{ code, language, total, translated, fuzzy, proofread }`. The group id is `page-` + the **canonical title with spaces** (namespace included).
+
+- **Fetch all discovered languages** (per the project decision to support every language). Each maps directly onto a locale in the unified catalog (`docs/adr-language-catalog.md`), so no locale metadata is invented here.
+- **Completeness gate:** skip a language whose `translated` is `0`; keep the rest. `minTranslatedPercent` tunes this. `fuzzy` units count as translated (Translate serves untranslated units in the source language anyway).
+- **Requires the Translate extension** on the target wiki. If a page is not translation-enabled, discovery returns nothing and the source degrades to source-language-only (§9.6).
+
+### 9.3 HTML source — Parsoid REST `/html`
+
+**Decision:** Fetch each translation's HTML from the **core REST API Parsoid endpoint**:
+
+```
+GET {wikiHost}/w/rest.php/v1/page/{title}/html      // title = '{pageTitle}/{langcode}', percent-encoded
+```
+
+**Rationale:** Parsoid HTML is semantically structured (`data-mw`, section wrappers, `rel="mw:WikiLink"`, `<figure>`), which is the better substrate for a rule-based HTML→Markdown + element→component mapping, and it is MediaWiki's documented forward direction. The trade-off (accepted): it is heavier and needs more aggressive stripping than legacy `action=parse` output, and page metadata (display title) may need a second call.
+
+**Encoding caveat (verified):** the subpage slash must be percent-encoded in the path (`Help%3AExtension%3ATranslate%2Ffr`). The Parsoid `~lang` variant syntax is **not** the mechanism for translation subpages and 404s.
+
+**Noise to strip before conversion:** the `<languages/>` translation bar (`.mw-pt-languages`), TOC, edit-section links, category boxes, and navboxes. `Special:MyLanguage/` links are resolved to absolute URLs (§9.7).
+
+### 9.4 HTML→Markdown + element→MDC mapping (conservative)
+
+**Converter:** `turndown` + `turndown-plugin-gfm` (GFM tables, strikethrough). Added as dependencies only when this strategy is implemented.
+
+**Mapping tier — conservative safe set (default):**
+- **Fenced code with language** — `<pre>` / `<div class="mw-highlight mw-highlight-lang-*">` → ` ```lang ` (custom Turndown rule reading the `lang-*` class). *Default on.*
+- **Message/note boxes → `::callout{type=...}`** — MediaWiki `.cdx-message`, `.mw-message-box`, `.ambox` mapped to the nearest callout type. *Default on.*
+
+**Opportunistic (config-gated, default off):**
+- **Tabber** (`.tabber` from the Tabber extension) → `::code-tabs` / `::code-tab`. *Off unless `componentMapping.tabber`.*
+
+**Degrade / strip:**
+- Infoboxes, navboxes, TOC, edit-section links, the language bar → dropped.
+- `<references/>` / footnotes → flattened to an ordered list at the page end (MDC has no footnote component).
+- Images → absolute-ized and hot-linked (§9.7); thumb framing unwrapped.
+
+Mapping targets **must** be exactly the names of components registered in `app/components/content/` (per §7, an unregistered `::component` renders as a no-op block and silently vanishes).
+
+### 9.5 Licensing & attribution — frontmatter + rendered footer
+
+**Decision:** Wikimedia prose is CC BY-SA; reuse requires attribution, a link back, and a license notice. Every fetched page carries provenance **and renders a visible footer**:
+
+- **Frontmatter** (injected at fetch time): `sourceUrl`, `sourceRevision`, `sourceWiki`, `license`, `fetchedAt`.
+- **Rendered footer:** the fetch step appends an `::attribution{}` MDC block to the body; a new `Attribution` content component renders "Adapted from [page] on [wiki], licensed CC BY-SA, revision N." This keeps the render pipeline (§7) untouched — it is just content.
+
+`fetchedAt` requires a real timestamp; the script stamps it at write time.
+
+### 9.6 Per-locale build-failure behavior (amends §6)
+
+§6's warn/stale/placeholder policy applies **per locale file**, not per source:
+- One locale's fetch failing must not drop the others; each translation is fetched and written independently.
+- Stale fallback and empty placeholder are decided per `content/[locale]/[localPath].md`.
+- If discovery (§9.2) itself fails, fall back to the source-language page alone (stale/placeholder as available), and warn. The build never fails.
+
+### 9.7 Link & image rewriting
+
+- **Internal wiki links** (`/wiki/...`, `rel="mw:WikiLink"`, `Special:MyLanguage/...`) → rewritten to **absolute URLs** on the source wiki (`linkPolicy: 'absolute-external'`). They render through `ProseA` with the external-link icon. Not mapped to portal routes in v1.
+- **Images** → absolute-ized to `upload.wikimedia.org` and **hot-linked** (no asset localization in v1). Revisit if CSP or offline builds require local copies.
+
+### 9.8 API etiquette
+
+- **Descriptive `User-Agent`** on every request (Wikimedia policy requires it).
+- **Concurrency cap** across locales × pages; do not fan out unbounded.
+- Respect `maxlag`; back off on 429 / `Retry-After`.
+
+### 9.9 MDC-injection hazard (must handle)
+
+Converted Markdown may contain `::`, `:`, or `{…}` sequences that Nuxt Content's MDC parser interprets as components/spans. Wiki content (e.g. `::` inside a code sample, or `{{...}}` remnants) can silently become a broken component or be stripped. The converter **must escape** these sequences in prose/code output. This is the single most likely rendering-corruption bug in this strategy and needs explicit test coverage.
+
+### 9.10 Relationship to multi-locale (Phase 2a)
+
+For wiki sources, translations are discovered (§9.2), so the reserved `localeFiles` map (§4) is **not** used — this strategy supersedes Phase 2a for wiki content. `localeFiles` remains available for the generic `markdown-url` (and future `html-url`) strategies where locale URLs are known but not discoverable.
+
+---
+
 ## Future phases
 
-### Phase 2a — Multi-locale per source
+### Phase 2a — Multi-locale per source (generic sources only)
 
-Extend `RemoteContentSource` with `localeFiles` (see §4). The script fetches one file per declared locale and writes to `content/[locale]/[localPath].md`. Existing single-URL entries continue to work unchanged.
+Extend `RemoteContentSource` with `localeFiles` (see §4). The script fetches one file per declared locale and writes to `content/[locale]/[localPath].md`. Existing single-URL entries continue to work unchanged. **Superseded for wiki sources** by the auto-discovery of `strategy: 'mediawiki-translated-page'` (§9.10); `localeFiles` remains for `markdown-url` / `html-url` sources.
 
 ### Phase 2b — HTML-to-Markdown (`strategy: 'html-url'`)
 
-Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), convert with **Turndown** (already the documented approach for MediaWiki content in the previously planned `sync-wiki-content.js`). Add Turndown as a dependency only when this phase is started.
+Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), convert with **Turndown** + `turndown-plugin-gfm`. Add these as dependencies only when this phase is started. Shares the conversion + element→MDC mapping path with §9.4.
 
 The `htmlSelector` field is required for this strategy — without it, Turndown converts the full HTML page including the remote site's nav and footer into Markdown.
 
-### Phase 2c — MediaWiki Action API (`strategy: 'mediawiki-action-api'`)
+### Phase 2c — Wiki translated pages — **specified in §9**
 
-Add `strategy: 'mediawiki-action-api'` as a specialised form of HTML-to-Markdown that calls `action=parse` on the MediaWiki instance rather than fetching a static URL. This is the strategy originally documented for `sync-wiki-content.js`. It shares the Turndown conversion path with `'html-url'` but differs in how the source HTML is obtained.
+The MediaWiki-page strategy is now fully specified as `strategy: 'mediawiki-translated-page'` (§9). It uses the Parsoid REST `/html` endpoint (not `action=parse`) and discovers translations via `messagegroupstats`. This replaces the earlier `'mediawiki-action-api'` stub.
 
 ### Phase 2d — Explorer side nav target
 
@@ -339,7 +457,9 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 | Document | Section | Required correction |
 |---|---|---|
 | `ARCHITECTURE.md` | Wiki content sync | Update to reference `scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`. Remove references to `sync-wiki-content.js` and `wikiContentSources.js`. |
-| `ARCHITECTURE.md` | Wiki content sync | Note that Turndown is not yet a dependency — it will be added when Phase 2b/2c HTML conversion is implemented. |
+| `ARCHITECTURE.md` | Wiki content sync | Note that `turndown` + `turndown-plugin-gfm` are added only when the wiki strategy (§9) / Phase 2b is implemented. |
 | `TECH_DECISIONS.md` | Wiki content sync | Same corrections as above. |
-| `TECH_DECISIONS.md` | Experiment 3 | Reference this ADR as the implementation track for wiki content pull. |
+| `TECH_DECISIONS.md` | Experiment 3 | Reference this ADR (§9) as the implementation track for wiki content pull. |
 | `AGENTS.md` | Rule 6 (All configuration goes in config files) | Replace "Wiki content sync sources" bullet with reference to `config/remoteContentSources.ts`. |
+| `scripts/fetch-remote-content.mjs` | `mergeFrontmatter` | The hand-rolled YAML parse (splits on `:`) is lossy on nested keys / arrays / colon-bearing values. Move to the `yaml` dependency (already installed) before injecting wiki frontmatter (title, provenance, attribution). |
+| `docs/adr-language-catalog.md` | — | Prerequisite: the wiki strategy (§9) writes into locales defined by the unified language catalog. |
