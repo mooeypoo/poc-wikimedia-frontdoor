@@ -2,23 +2,23 @@
 import {
 	CdxButton,
 	CdxIcon,
+	CdxLookup,
 	CdxMenuButton,
-	CdxSearchInput,
-	CdxSelect
+	CdxSearchInput
 } from '@wikimedia/codex'
+import type { MenuItemData } from '@wikimedia/codex'
 import {
 	cdxIconConfigure,
 	cdxIconEllipsis,
 	cdxIconLanguage,
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
-import { SUPPORTED_INTERFACE_LOCALES } from '../../../config/interfaceLocales'
+import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/languages'
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useOAuthSession } from '../../composables/useOAuthSession'
 import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtilityMenu'
-import { isolateLabel } from '../../utils/bidiIsolation'
 
 /**
  * Header utility row — search, settings, interface language, and log in.
@@ -30,10 +30,8 @@ import { isolateLabel } from '../../utils/bidiIsolation'
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
  */
 
-interface PickerMenuItem {
-	label: string
-	value: string
-}
+/** Cap on rendered language menu items — typing narrows the ~575-language list. */
+const MAX_LANGUAGE_MENU_ITEMS = 50
 
 const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', {
 	required: true
@@ -80,23 +78,150 @@ const selectedLanguageCodeLabel = computed( () => {
 	return selectedInterfaceLocale.value.toUpperCase()
 } )
 
-/**
- * Resolved label for the active interface locale — never falls back to the select placeholder.
- *
- * @returns Isolated display label for `selectedInterfaceLocale`.
- */
-const selectedLanguageDisplayLabel = computed( () => {
-	return isolateLabel(
-		$bananaI18n( `interface-language-${ selectedInterfaceLocale.value }` )
-	)
+/** Active language's native name (autonym), shown in the picker input. */
+const selectedLanguageAutonym = computed( () => {
+	return getLanguageByCode( selectedInterfaceLocale.value )?.autonym
+		?? selectedInterfaceLocale.value
 } )
 
-const languageMenuItems = computed<PickerMenuItem[]>( () => {
-	return SUPPORTED_INTERFACE_LOCALES.map( ( localeCode ) => ( {
-		value: localeCode,
-		label: isolateLabel( $bananaI18n( `interface-language-${ localeCode }` ) )
-	} ) )
+/**
+ * Every language as a lookup menu item. `label` is the native autonym; the
+ * English name rides along as supporting text (and both feed the filter). The
+ * `language` field sets the correct `lang` attribute so each autonym renders in
+ * its own script/direction.
+ */
+const allLanguageMenuItems: MenuItemData[] = SUPPORTED_LANGUAGES.map( ( language ) => ( {
+	value: language.code,
+	label: language.autonym,
+	supportingText: language.name,
+	language: { label: language.bcp47 }
+} ) )
+
+// Lookup state: the typed filter term, the selected value, and the input text.
+const languageSearchTerm = ref( '' )
+const languageSelection = ref<string | null>( selectedInterfaceLocale.value )
+const languageInputValue = ref<string>( selectedLanguageAutonym.value )
+const isLanguageLookupOpen = ref( false )
+const languageLookupRef = useTemplateRef<{ $el: HTMLElement }>( 'languageLookupRef' )
+
+/**
+ * Menu items filtered by the typed term (native name, English name, or code),
+ * capped for render performance. The active language is always kept present so
+ * its selected state renders even when it falls outside the cap.
+ */
+const languageMenuItems = computed<MenuItemData[]>( () => {
+	const term = languageSearchTerm.value.trim().toLowerCase()
+
+	const matches = term
+		? allLanguageMenuItems.filter( ( item ) =>
+			( item.label ?? '' ).toLowerCase().includes( term ) ||
+			( item.supportingText ?? '' ).toLowerCase().includes( term ) ||
+			String( item.value ).toLowerCase().includes( term )
+		)
+		: allLanguageMenuItems
+
+	const capped = matches.slice( 0, MAX_LANGUAGE_MENU_ITEMS )
+
+	if ( !capped.some( ( item ) => item.value === languageSelection.value ) ) {
+		const active = allLanguageMenuItems.find(
+			( item ) => item.value === languageSelection.value
+		)
+		if ( active ) {
+			capped.unshift( active )
+		}
+	}
+
+	return capped
 } )
+
+// Keep the lookup in sync when the interface locale changes elsewhere
+// (e.g. via locale-prefixed navigation).
+watch( selectedInterfaceLocale, ( nextLocale ) => {
+	languageSelection.value = nextLocale
+	languageInputValue.value = getLanguageByCode( nextLocale )?.autonym ?? nextLocale
+	languageSearchTerm.value = ''
+} )
+
+/**
+ * Records the typed filter term as the user searches the language list.
+ *
+ * @param value - Current input value (null when cleared).
+ */
+function handleLanguageInput( value: string | number | null ): void {
+	languageSearchTerm.value = value === null ? '' : String( value )
+}
+
+/**
+ * Commits a language choice: updates the model (which drives locale routing),
+ * resets the input to the chosen autonym, and closes the compact popover.
+ *
+ * @param value - Selected language code (null when the selection is cleared).
+ */
+function handleLanguageSelection( value: string | number | null ): void {
+	if ( value === null || value === '' ) {
+		return
+	}
+
+	const nextLocale = String( value )
+	selectedInterfaceLocale.value = nextLocale
+	languageInputValue.value =
+		getLanguageByCode( nextLocale )?.autonym ?? nextLocale
+	languageSearchTerm.value = ''
+	isLanguageLookupOpen.value = false
+}
+
+/**
+ * Resets the lookup input to the active language and clears the filter term.
+ */
+function resetLanguageLookupInput(): void {
+	languageInputValue.value = selectedLanguageAutonym.value
+	languageSearchTerm.value = ''
+}
+
+/**
+ * Opens the language popover and focuses the lookup input so the user can type
+ * immediately.
+ */
+function openLanguageLookup(): void {
+	resetLanguageLookupInput()
+	isLanguageLookupOpen.value = true
+	nextTick( () => {
+		languageLookupRef.value?.$el.querySelector( 'input' )?.focus()
+	} )
+}
+
+/**
+ * Closes the language popover and restores the input to the active language.
+ */
+function closeLanguageLookup(): void {
+	isLanguageLookupOpen.value = false
+	resetLanguageLookupInput()
+}
+
+/**
+ * Toggles the language popover from the globe + code button.
+ */
+function toggleLanguageLookup(): void {
+	if ( isLanguageLookupOpen.value ) {
+		closeLanguageLookup()
+	} else {
+		openLanguageLookup()
+	}
+}
+
+/**
+ * Closes the language popover when focus leaves its container (an outside
+ * click or tab-away); selecting a menu item keeps focus within and does not
+ * trigger this.
+ *
+ * @param event - Focusout event from the language control wrapper.
+ */
+function handleLanguageAreaFocusOut( event: FocusEvent ): void {
+	const container = event.currentTarget as HTMLElement
+	if ( !container.contains( event.relatedTarget as Node ) ) {
+		closeLanguageLookup()
+	}
+}
 
 /**
  * Opens the search results panel when the field is focused and a query is present.
@@ -197,40 +322,43 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconConfigure" />
 		</CdxButton>
 
-		<CdxSelect
-			:key="direction"
-			v-model:selected="selectedInterfaceLocale"
-			class="shell-header-utility-actions__language-select"
-			:class="{
-				'shell-header-utility-actions__language-select--compact': isUtilityCollapsed
-			}"
-			:menu-items="languageMenuItems"
-			:default-label="selectedLanguageDisplayLabel"
-			:aria-label="interfaceLanguageLabel"
+		<div
+			class="shell-header-utility-actions__language"
+			@focusout="handleLanguageAreaFocusOut"
+			@keydown.escape="closeLanguageLookup"
 		>
-			<template #label>
-				<span
-					class="shell-header-utility-actions__language-select-label"
-					:class="{
-						'shell-header-utility-actions__language-select-label--compact': isUtilityCollapsed
-					}"
-				>
-					<CdxIcon :icon="cdxIconLanguage" />
-					<span
-						v-if="isUtilityCollapsed"
-						class="shell-header-utility-actions__language-code"
-					>
-						<bdi>{{ selectedLanguageCodeLabel }}</bdi>
-					</span>
-					<span
-						v-else
-						class="shell-header-utility-actions__language-select-text"
-					>
-						{{ selectedLanguageDisplayLabel }}
-					</span>
-				</span>
-			</template>
-		</CdxSelect>
+			<CdxButton
+				class="shell-header-utility-actions__language-toggle"
+				weight="quiet"
+				:aria-label="interfaceLanguageLabel"
+				:aria-expanded="isLanguageLookupOpen"
+				@click="toggleLanguageLookup"
+			>
+				<CdxIcon :icon="cdxIconLanguage" />
+				<bdi class="shell-header-utility-actions__language-code">
+					{{ selectedLanguageCodeLabel }}
+				</bdi>
+			</CdxButton>
+
+			<div
+				v-show="isLanguageLookupOpen"
+				class="shell-header-utility-actions__language-popover"
+			>
+				<CdxLookup
+					ref="languageLookupRef"
+					:key="direction"
+					v-model:selected="languageSelection"
+					v-model:input-value="languageInputValue"
+					class="shell-header-utility-actions__language-lookup"
+					:menu-items="languageMenuItems"
+					:start-icon="cdxIconLanguage"
+					:aria-label="interfaceLanguageLabel"
+					:placeholder="interfaceLanguageLabel"
+					@input="handleLanguageInput"
+					@update:selected="handleLanguageSelection"
+				/>
+			</div>
+		</div>
 
 		<span
 			v-show="!isUtilityCollapsed"
@@ -324,55 +452,21 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	flex: 0 0 auto;
 }
 
-.shell-header-utility-actions__language-select {
-	flex: 0 1 auto;
-	min-inline-size: 8rem;
-	max-inline-size: 11rem;
-}
-
-.shell-header-utility-actions__language-select--compact {
+/*
+ * Language control: a compact globe + uppercase-code button at all widths,
+ * opening the searchable lookup in a popover. Keeping it icon-sized (rather
+ * than an always-open input) preserves top-bar room for the log-in link and
+ * future utilities (e.g. a dark-mode toggle).
+ */
+.shell-header-utility-actions__language {
+	position: relative;
 	flex: 0 0 auto;
-	min-inline-size: 0;
-	max-inline-size: none;
 }
 
-.shell-header-utility-actions__language-select:deep( .cdx-select-vue ) {
-	max-inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.shell-header-utility-actions__language-select--compact:deep( .cdx-select-vue ) {
-	max-inline-size: none;
-}
-
-.shell-header-utility-actions__language-select:deep( .cdx-select-vue__handle ) {
-	max-inline-size: 100%;
-	min-inline-size: 0;
-	overflow: hidden;
-}
-
-.shell-header-utility-actions__language-select--compact:deep( .cdx-select-vue__handle ) {
-	max-inline-size: none;
-	overflow: visible;
-}
-
-.shell-header-utility-actions__language-select-label {
+.shell-header-utility-actions__language-toggle {
 	display: inline-flex;
 	align-items: center;
-	gap: var( --spacing-50 );
-	min-inline-size: 0;
-	max-inline-size: 100%;
-	overflow: hidden;
-}
-
-.shell-header-utility-actions__language-select-label--compact {
 	gap: var( --spacing-25 );
-}
-
-.shell-header-utility-actions__language-select-text {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .shell-header-utility-actions__language-code {
@@ -380,6 +474,25 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	line-height: var( --line-height-small );
 	color: var( --color-subtle );
 	white-space: nowrap;
+}
+
+.shell-header-utility-actions__language-popover {
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-end: 0;
+	z-index: 20;
+	inline-size: 18rem;
+	max-inline-size: min( 18rem, 90vw );
+	margin-block-start: var( --spacing-25 );
+	padding: var( --spacing-75 );
+	background-color: var( --background-color-base );
+	border: 1px solid var( --border-color-base );
+	border-radius: var( --border-radius-base );
+	box-shadow: var( --box-shadow-drop-medium );
+}
+
+.shell-header-utility-actions__language-lookup {
+	inline-size: 100%;
 }
 
 .shell-header-utility-actions__session {

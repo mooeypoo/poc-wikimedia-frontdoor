@@ -1,5 +1,6 @@
 import Banana from 'banana-i18n'
 import type { Ref } from 'vue'
+import { getLanguageByCode } from '../../config/languages'
 import messagesEnglish from '../../i18n/en.json'
 import messagesSpanish from '../../i18n/es.json'
 import messagesFrench from '../../i18n/fr.json'
@@ -64,11 +65,16 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 	/**
 	 * Updates the active interface locale.
 	 *
+	 * Accepts any locale in the language catalog (config/languages.ts). Locales
+	 * without an `i18n/*.json` message file render English chrome via the message
+	 * fallback in `i18n()` — there is no curated "interface locales" subset.
+	 * Unknown codes fall back to English.
+	 *
 	 * @param nextLocale - New locale code.
 	 * @returns Nothing.
 	 */
 	function setInterfaceLocale( nextLocale: string ): void {
-		interfaceLocale.value = MESSAGES_BY_LOCALE[ nextLocale ] ? nextLocale : 'en'
+		interfaceLocale.value = getLanguageByCode( nextLocale ) ? nextLocale : 'en'
 	}
 
 	// Use bananaI18n only — @nuxtjs/i18n already registers $i18n for content locale routing.
