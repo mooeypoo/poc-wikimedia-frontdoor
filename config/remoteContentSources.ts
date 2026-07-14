@@ -40,14 +40,48 @@ export interface RemoteContentSource {
 	/**
 	 * Fetch strategy.
 	 *
-	 * 'markdown-url'         — fetch raw Markdown from remoteUrl (Phase 1, implemented)
-	 * 'mediawiki-action-api' — fetch via MediaWiki Action API, convert HTML→Markdown (Phase 2)
-	 * 'html-url'             — fetch HTML from remoteUrl, convert to Markdown (Phase 2)
+	 * 'markdown-url'             — fetch raw Markdown from remoteUrl (implemented)
+	 * 'mediawiki-translated-page' — fetch a MediaWiki page + all its translation
+	 *                              subpages (Parsoid HTML → Markdown), one file per
+	 *                              locale (implemented; see the wiki fields below and
+	 *                              docs/adr-remote-content-fetching.md §9)
 	 */
-	strategy: 'markdown-url'  // extend the union type when Phase 2 strategies are added
+	strategy: 'markdown-url' | 'mediawiki-translated-page'
 
-	/** URL from which to fetch the raw Markdown content. */
-	remoteUrl: string
+	/** URL from which to fetch the raw Markdown content. Required for 'markdown-url'. */
+	remoteUrl?: string
+
+	// ---- Fields for strategy 'mediawiki-translated-page' ----
+
+	/** MediaWiki Action API endpoint, e.g. 'https://www.mediawiki.org/w/api.php'. */
+	wikiApiUrl?: string
+
+	/** Canonical source page title (with namespace), e.g. 'Help:Extension:Translate'. */
+	pageTitle?: string
+
+	/**
+	 * Skip translations whose completeness is below this percentage (0–100).
+	 * Defaults to 1 — i.e. skip only 0%-translated languages; keep the rest and
+	 * let untranslated units fall through to the source language.
+	 */
+	minTranslatedPercent?: number
+
+	/** Conservative element → MDC component mapping toggles. */
+	componentMapping?: {
+		/** Fenced code blocks with language (default true). */
+		code?: boolean
+		/** Message/note boxes → `::callout` (default true). */
+		callouts?: boolean
+	}
+
+	/**
+	 * Attribution metadata for CC BY-SA reuse. When present, provenance is written
+	 * to frontmatter and a `::attribution` footer is appended to each page.
+	 */
+	attribution?: {
+		/** SPDX-style license id, e.g. 'CC BY-SA 4.0'. */
+		license: string
+	}
 
 	/**
 	 * Path under content/[locale]/ where the file will be written, without
@@ -137,7 +171,26 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		navEntry: {
 			target: 'primary',
 			messageKey: 'nav-remote-md',
-			navPosition: 'after:get-help'
+			navPosition: 'after:community'
+		}
+	},
+	{
+		// Demo of the wiki translated-page strategy: fetches a translatable
+		// mediawiki.org page and its translation subpages, one file per locale.
+		// Reachable at /wiki-translate-help (and /<locale>/wiki-translate-help).
+		// minTranslatedPercent keeps the demo to well-translated locales.
+		id: 'demo-wiki-translated',
+		strategy: 'mediawiki-translated-page',
+		wikiApiUrl: 'https://www.mediawiki.org/w/api.php',
+		pageTitle: 'Help:Extension:Translate',
+		localPath: 'wiki-translate-help',
+		minTranslatedPercent: 85,
+		overrideFrontmatter: { title: 'Translate extension (from mediawiki.org)' },
+		attribution: { license: 'CC BY-SA 4.0' },
+		navEntry: {
+			target: 'primary',
+			messageKey: 'nav-wiki-translate',
+			navPosition: 'after:community'
 		}
 	}
 ]

@@ -1,6 +1,6 @@
 # ADR: Remote Content Fetching
 
-**Status:** Decided (Phase 1 implemented; Step 2 / wiki-translated-page designed, not yet implemented)  
+**Status:** Decided (Phase 1 and the wiki-translated-page strategy §9 implemented)  
 **Scope:** Build-time prose content — Markdown files fetched from remote URLs and rendered as shell-chrome pages
 
 **Related:** `docs/adr-language-catalog.md` — the wiki strategy (§9) writes translations into locales defined by the unified language catalog. That ADR (Steps 1 + 1.5) is a prerequisite for the wiki strategy to have locales to land in.
@@ -336,7 +336,7 @@ GET {wikiHost}/w/rest.php/v1/page/{title}/html      // title = '{pageTitle}/{lan
 
 ### 9.4 HTML→Markdown + element→MDC mapping (conservative)
 
-**Converter:** `turndown` + `turndown-plugin-gfm` (GFM tables, strikethrough). Added as dependencies only when this strategy is implemented.
+**Converter:** the **unified / rehype / remark** pipeline (`rehype-parse` → `rehype-remark` → `remark-gfm` → `remark-stringify`), which is **already present** as a transitive dependency of `@nuxt/content` — no new install. This deviates from the earlier plan to use **Turndown**: the sandbox's npm registry allowlist blocks installing Turndown, and unified is both available and more idiomatic for a Nuxt Content project (Nuxt Content itself parses MDC with `remark-mdc`). The element→MDC mapping is implemented as `rehype-remark` handlers; MDC component syntax (`::callout`) is emitted via mdast `html` nodes passed through verbatim by `remark-stringify`. Implemented in `scripts/lib/wikiContentConversion.mjs`.
 
 **Mapping tier — conservative safe set (default):**
 - **Fenced code with language** — `<pre>` / `<div class="mw-highlight mw-highlight-lang-*">` → ` ```lang ` (custom Turndown rule reading the `lang-*` class). *Default on.*
@@ -397,7 +397,7 @@ Extend `RemoteContentSource` with `localeFiles` (see §4). The script fetches on
 
 ### Phase 2b — HTML-to-Markdown (`strategy: 'html-url'`)
 
-Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), convert with **Turndown** + `turndown-plugin-gfm`. Add these as dependencies only when this phase is started. Shares the conversion + element→MDC mapping path with §9.4.
+Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), and convert through the same unified pipeline as §9.4 (`scripts/lib/wikiContentConversion.mjs`), sharing its element→MDC mapping.
 
 The `htmlSelector` field is required for this strategy — without it, Turndown converts the full HTML page including the remote site's nav and footer into Markdown.
 
@@ -457,7 +457,7 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 | Document | Section | Required correction |
 |---|---|---|
 | `ARCHITECTURE.md` | Wiki content sync | Update to reference `scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`. Remove references to `sync-wiki-content.js` and `wikiContentSources.js`. |
-| `ARCHITECTURE.md` | Wiki content sync | Note that `turndown` + `turndown-plugin-gfm` are added only when the wiki strategy (§9) / Phase 2b is implemented. |
+| `ARCHITECTURE.md` | Wiki content sync | The wiki strategy (§9) converts HTML with the **unified/rehype/remark** pipeline already bundled via `@nuxt/content` (not Turndown — see §9.4). No new dependency was added. |
 | `TECH_DECISIONS.md` | Wiki content sync | Same corrections as above. |
 | `TECH_DECISIONS.md` | Experiment 3 | Reference this ADR (§9) as the implementation track for wiki content pull. |
 | `AGENTS.md` | Rule 6 (All configuration goes in config files) | Replace "Wiki content sync sources" bullet with reference to `config/remoteContentSources.ts`. |

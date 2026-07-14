@@ -188,5 +188,7 @@
   "section-nav-get-help-title": "Section heading for Get help links.",
   "section-nav-get-help-troubleshooting-guide": "Placeholder link for the troubleshooting guide.",
   "section-nav-about-label": "Accessible name for the About left-hand section navigation.",
-  "section-nav-about-title": "Section heading for About links."
+  "section-nav-about-title": "Section heading for About links.",
+  "content-attribution-adapted-from": "Attribution footer lead-in on a content page adapted from a wiki. Followed by the source page title (linked), wiki host, license, and revision.",
+  "nav-wiki-translate": "Primary-nav label for the demo page imported from the Help:Extension:Translate wiki page. English placeholder in non-en locales pending translation."
 }
