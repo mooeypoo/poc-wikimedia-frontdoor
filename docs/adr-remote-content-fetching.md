@@ -96,7 +96,7 @@ export interface RemoteContentNavEntry {
 - The script imports this config directly; no discovery, no runtime reading.
 - Adding a new remote source requires a code change to this file and a deploy — this is intentional. Remote sources are explicit declarations, not dynamic.
 - Phase 1 sources use `remoteUrl` + `locale`; Phase 2 will use `localeFiles` instead. Both can coexist in the same config file.
-- Gitignore prevents fetched files from being committed; they are always regenerated from remote sources at build time.
+- Imported files are **committed** (not gitignored) so their git diff is the developer's review surface (§8, §10); they are regenerated on demand by the standalone fetch command, not on every build.
 
 ---
 
@@ -259,22 +259,31 @@ The placeholder title is overridden by `source.overrideFrontmatter.title` if dec
 
 ---
 
-## 8. Build pipeline integration
+## 8. Fetch is decoupled from build; imported content is committed
 
-**Decision:** Add the fetch script as a pre-step in both `generate` and `build:netlify`:
+**Decision:** Fetching and building are **independent steps**. `build` / `generate` do **not** run the fetch script; they build whatever content is on disk. The fetch script is a standalone command, and its output — the imported content files — is **committed to the repository** (see §10, which reverses the earlier gitignore decision).
 
 ```json
 "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
-"generate": "npm run fetch-remote-content && nuxt generate",
-"build": "npm run fetch-remote-content && nuxt build",
-"build:netlify": "NITRO_PRESET=netlify npm run fetch-remote-content && nuxt build"
+"generate": "nuxt generate",
+"build": "nuxt build",
+"build:netlify": "NITRO_PRESET=netlify nuxt build"
 ```
 
-**Rationale:** Remote content must be on disk before Nuxt Content builds its SQLite index. Running it earlier ensures the index includes fetched files.
+**Workflow:**
+1. A developer (or a scheduled job) runs `npm run fetch-remote-content` when content should be refreshed.
+2. They **review the resulting git diff** — added / changed / removed pages and slugs (§10) — and decide whether the fetch is acceptable and whether any editorial follow-up is needed (e.g. a redirect for a removed slug, §10).
+3. They commit the content. Normal `build` / deploy then uses the committed content.
+
+**Rationale:**
+- **You can rebuild without re-fetching**, and re-fetch without an immediate build. The two concerns no longer block each other.
+- **Deterministic, network-free builds.** CI builds from committed content — no build-time dependency on mediawiki.org being up, and no per-build fan-out of API requests.
+- **Human review gate.** Because the fetch output is a committed diff, a bad fetch (an outage producing placeholders, an unexpected mass removal) is caught in review and simply not committed — it never reaches a deploy. This is what mitigates the wipe-first outage risk noted in §6.
 
 **Consequences:**
-- Local `nuxt dev` does not call the fetch script, so the wipe-and-recreate lifecycle (§10) only runs at build time. Developers working on remotely-fetched prose run `npm run fetch-remote-content` manually; imported files already on disk are left untouched by `dev`.
-- Fetched files in `content/` are **gitignored** so generated content is never committed and is always regenerated from the authoritative source. Because slugs are dynamic, the ignore entries are generated from config (each source's `localPath`) rather than hand-maintained per slug (§10). The stale-copy fallback that previously covered network failures is retired (§6, §10).
+- Content freshness now depends on someone running the fetch and committing — a manual developer action or a scheduled bot that opens a PR. It is no longer implicit in every build.
+- Local `nuxt dev` builds from committed content; the wipe-and-recreate lifecycle (§10) runs only when the fetch script is invoked.
+- Imported files must be **idempotent** so an unchanged page produces no diff (§9.5, §10).
 
 ---
 
@@ -361,10 +370,10 @@ Mapping targets **must** be exactly the names of components registered in `app/c
 
 **Decision:** Wikimedia prose is CC BY-SA; reuse requires attribution, a link back, and a license notice. Every fetched page carries provenance **and renders a visible footer**:
 
-- **Frontmatter** (injected at fetch time): `sourceUrl`, `sourceRevision`, `sourceWiki`, `license`, `fetchedAt`, plus the `remoteImport` cleanup marker (§10).
+- **Frontmatter** (injected at fetch time): `sourceUrl`, `sourceRevision`, `sourceWiki`, `license`, plus the `remoteImport` cleanup marker (§10).
 - **Rendered footer:** the fetch step appends an `::attribution{}` MDC block to the body; a new `Attribution` content component renders "Adapted from [page] on [wiki], licensed CC BY-SA, revision N." This keeps the render pipeline (§7) untouched — it is just content.
 
-`fetchedAt` requires a real timestamp; the script stamps it at write time.
+**No `fetchedAt` in the committed frontmatter.** A wall-clock fetch timestamp would change on every run and produce a diff on *every* file even when nothing changed, drowning the review signal (§8, §10). Content version is instead conveyed by `sourceRevision` (the Parsoid ETag revision); *when* it was fetched is recorded by the git commit. This keeps imported files idempotent — an unchanged upstream page re-fetches to byte-identical output and shows no diff.
 
 ### 9.6 Per-locale build-failure behavior (amends §6)
 
@@ -396,7 +405,7 @@ For wiki sources, translations are discovered (§9.2), so the reserved `localeFi
 
 ## 10. Imported-content lifecycle: wipe-and-recreate cleanup
 
-**Decision:** Every build **deletes all previously-imported files, then recreates them** from current config. No orphaned import survives a build — whether it came from a source removed from config, a changed `localPath`/slug, a changed `locale`, or a translation that dropped below `minTranslatedPercent` (or was removed upstream).
+**Decision:** Every fetch run **deletes all previously-imported files, then recreates them** from current config. No orphaned import survives a run — whether it came from a source removed from config, a changed `localPath`/slug, a changed `locale`, or a translation that dropped below `minTranslatedPercent` (or was removed upstream). (The run is the standalone fetch command, not a build — §8.)
 
 **Context / problem:** The original design only ever *wrote* files; it never removed them. Renaming a `localPath`, dropping a source, or losing a translation left the old file in `content/`, and Nuxt Content kept indexing and serving it. The portal needs the set of imported files to always equal what the current config + current remote state describe.
 
@@ -410,7 +419,7 @@ The wipe scans `content/` recursively, parses each `.md`'s frontmatter (with the
 
 - Because the marker lives in frontmatter, **every imported write must produce a frontmatter block.** A bare `markdown-url` source whose remote file has no frontmatter (and no `overrideFrontmatter`) now always gets one injected.
 
-**Lifecycle, per build:**
+**Lifecycle, per fetch run** (the standalone `fetch-remote-content` command — *not* every build, §8):
 1. **Wipe** — delete every marked file under `content/`; prune any locale directory left empty.
 2. **Recreate** — fetch and write all configured sources, stamping the marker on each file.
 3. **Log** — report counts: wiped, written, placeholder.
@@ -420,14 +429,23 @@ The wipe scans `content/` recursively, parses each `.md`'s frontmatter (with the
 - **No orphan diffing.** A blanket wipe covers *every* orphan case (removed source, changed slug/locale, dropped translation) with one mechanism, instead of per-case reconciliation logic that is easy to get subtly wrong.
 - **Config is the single source of truth** for what should exist, not the contents of `content/`.
 
-**Interaction with §6 — the stale tier is retired.** Because imported files are deleted before re-fetching, a failed fetch has no last-known-good copy to preserve; failure always yields the empty placeholder. **Accepted cost:** if the source wiki/URL is unreachable during a build, its imported pages become placeholders until the next successful build. This was chosen deliberately over graceful staleness, to guarantee the portal never serves content that no longer exists upstream.
+**Interaction with §6 — the stale tier is retired.** Because imported files are deleted before re-fetching, a failed fetch has no last-known-good copy to preserve; failure yields the empty placeholder. The outage risk this created is now caught by the **review gate** below rather than shipped: a fetch that produces placeholders shows up as such in the git diff and is simply not committed. Builds never fetch (§8), so a wiki outage cannot degrade a deploy — only a *reviewed and committed* fetch changes what ships.
+
+**Committed output & the review diff (the reason imported files are not gitignored).** Imported files are **committed to the repository.** The point is that the fetch run's **git diff is the developer's review surface** — it shows exactly which pages, translations, and slugs were added, changed, or removed. This is why wipe-and-recreate pairs so well with committing: a removed source/slug/translation appears as a **deleted file** in the diff (an overwrite-only approach would hide it), so the developer can:
+- judge whether the fetch is "successful" (expected changes) or wrong (an outage's mass placeholders, an unexpected mass removal) before committing;
+- take editorial follow-up a script cannot decide — most importantly, **add a redirect** in `config/contentRedirects.ts` (`LEGACY_PATH_REDIRECTS`, HTTP 301) when an imported slug disappears and its old URL should not 404. *Caveat:* that config currently emits redirects only for the default locale + `es/fr/he/fa` (`NON_DEFAULT_CONTENT_LOCALE_CODES`), so for a removed slug that existed across many catalog locales, redirect coverage should be widened — a follow-up now that content locales span the full catalog (see `docs/adr-language-catalog.md`).
+
+For this diff to be meaningful, imported output must be **idempotent** — no volatile fields (see §9.5, `fetchedAt` removed) — so an unchanged upstream page yields no diff and only real changes surface.
+
+*Tradeoffs of committing:* generated content adds to repo size and history churn, and can produce merge conflicts on branches (resolve by re-running the fetch). Acceptable for curated sources; revisit if a source explodes into thousands of committed locale files.
 
 **Edge cases covered:** source removed from config · `localPath`/slug changed · `locale` changed (markdown-url) · translation dropped or below threshold (with successful discovery) · fresh checkout (nothing marked to wipe) · hand-authored files (no marker, untouched) · placeholders (marked, so re-wiped) · per-file fetch failures (isolated to that file).
 
 **Consequences:**
-- The wipe deletes only regenerable, gitignored files; a fatal script error still exits `1` and fails the build, so a wipe that cannot be followed by a successful recreate never reaches a deploy.
-- `.gitignore` entries for imported content are generated from config (from each source's `localPath`) so they track dynamic slugs; the alternative is manual per-slug entries.
-- `nuxt dev` does not run the lifecycle; imported files persist untouched in dev (§8).
+- The wipe deletes only regenerable, marked files (always reproducible by re-running the fetch); it never touches unmarked authored content. A fatal error exits `1`, and since the run is reviewed before commit, a wipe not followed by a clean recreate is discarded rather than shipped.
+- Imported content is **committed, not gitignored** — the `.gitignore` entries for imported files are removed. (Reverses the earlier gitignore decision in §2/§8.)
+- Content freshness is a deliberate, reviewed act (manual run or scheduled PR bot), not an implicit build side-effect (§8).
+- `nuxt dev` does not run the lifecycle; it builds from committed content.
 
 ---
 
@@ -505,4 +523,5 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 | `AGENTS.md` | Rule 6 (All configuration goes in config files) | Replace "Wiki content sync sources" bullet with reference to `config/remoteContentSources.ts`. |
 | `scripts/fetch-remote-content.mjs` | `mergeFrontmatter` | The hand-rolled YAML parse (splits on `:`) is lossy on nested keys / arrays / colon-bearing values. Move to the `yaml` dependency (already installed) before injecting wiki frontmatter (title, provenance, attribution). |
 | `docs/adr-language-catalog.md` | — | Prerequisite: the wiki strategy (§9) writes into locales defined by the unified language catalog. |
-| `ARCHITECTURE.md` | Remote content fetching | Describe the wipe-and-recreate lifecycle (§10): every build deletes all files marked `remoteImport: true`, then recreates them; `.gitignore` entries for imported content are generated from config. Note the stale-copy fallback is retired. |
+| `ARCHITECTURE.md` | Remote content fetching | Describe the wipe-and-recreate lifecycle (§10) run by the standalone fetch command (build no longer fetches, §8); imported content is committed and reviewed via its git diff; the stale-copy fallback is retired. |
+| `.gitignore` | imported content | Remove the imported-content ignore entries (`content/en/demo-remote-markdown.md`, `content/*/wiki-translate-help.md`) — imported files are now committed (§8, §10). |
