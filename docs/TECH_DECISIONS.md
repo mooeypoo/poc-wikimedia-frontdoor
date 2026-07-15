@@ -172,8 +172,8 @@ When content is unavailable in the requested locale, the fallback chain declared
 - Flow: Authorization Code + PKCE
 - Token exchange handled in a Nuxt server route (`server/routes/oauth/callback.ts`) — keeps client secret server-side
 - Token stored in the `oauthSession` Pinia store
-- `useOAuthSession()` composable exposes token state to both the shell (for display) and the Scalar wrapper (for pre-filling auth)
-- User's active tokens are displayed in a custom panel alongside the explorer (Scalar plugin at `views: content.end`)
+- `useOAuthSession()` composable exposes session state to the shell for display only (logged-in username, Log in / Log out in the top bar)
+- MVP scope: OAuth does **not** integrate with Scalar — no bearer injection, no in-explorer auth UI. See [adr-wikimedia-oauth-authentication.md §0](adr-wikimedia-oauth-authentication.md). Token-management UI is deferred to the future standalone SPA (ADR §11).
 
 ---
 

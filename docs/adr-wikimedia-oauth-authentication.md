@@ -1,7 +1,38 @@
 # ADR: Wikimedia OAuth 2.0 authentication
 
-**Status:** Proposed — prototype; not yet implemented
-**Scope:** User login via Wikimedia OAuth 2.0, session persistence across the shell and the Explorer, bearer-token injection into Scalar "Try it out", and forward-looking placement for a future standalone token-management SPA
+**Status:** Partially implemented — session + top-bar identity shipped; Scalar integration reverted for the MVP
+**Scope:** User login via Wikimedia OAuth 2.0, session persistence across the shell and the Explorer, and forward-looking placement for a future standalone token-management SPA
+
+---
+
+## 0. MVP decision: OAuth does not integrate with Scalar
+
+> **Decision (2026-07, supersedes §5.5–§5.9 below):** We tried wiring the OAuth
+> session into Scalar's "Try it out" (bearer-token injection, an in-Explorer
+> "logged in" badge, a per-session credential toggle, and a reveal toggle for
+> Scalar's built-in Authentication panel) and learned it added UI surface and
+> coupling without delivering usable authenticated requests — the MediaWiki
+> REST specs still declare no bearer scheme (§5.5, §9.3), so injection is inert,
+> and the cookie-based schemes Scalar surfaces cannot work cross-origin (§5.9).
+>
+> **For the MVP, OAuth's entire role is:**
+> 1. Establish the session (PKCE handshake, token exchange, in-memory Pinia
+>    store — Phase B, all shipped and retained).
+> 2. Show the logged-in username (and Log in / Log out) in the shell top bar.
+>
+> Nothing else listens to or is affected by the OAuth session. Specifically,
+> the following described in §5.5–§5.9 are **removed / not implemented**:
+> `useScalarConfig` no longer builds an `authentication` block; there is no
+> `useTryItOutWithOAuth` toggle; there is no in-Explorer login badge or
+> expired-session prompt; and there is no `useAdvancedAuthPanel` reveal toggle
+> or dialog. Scalar's built-in Authentication panel stays hidden
+> unconditionally via CSS (§5.9), because the cross-origin-cookie rationale is
+> independent of OAuth.
+>
+> When a bearer scheme does land upstream, re-integrating injection should be
+> its own scoped change — most likely folded into the future token-management
+> SPA (§11), which is now the only planned surface that consumes OAuth beyond
+> session identity.
 
 ---
 
@@ -140,6 +171,10 @@ The access token returned from the exchange lives only in the `oauthSession` Pin
 
 ### 5.5 Scalar integration
 
+> **Superseded by §0 (MVP):** not implemented. `useScalarConfig` builds no
+> `authentication` block; the design below is retained as the record of what a
+> future re-integration would look like once a bearer scheme lands upstream.
+
 `@scalar/api-reference` supports a configuration block of the shape:
 
 ```ts
@@ -161,6 +196,9 @@ The exact key names depend on what the OpenAPI spec declares for its security sc
 Scalar renders its own visible "Authentication" panel from `components.securitySchemes` in the document.  MediaWiki module specs currently declare only cookie-based `CentralAuthSessionProvider-*` schemes there, which are unusable cross-origin from Front Door (browsers strip the `Cookie` header from cross-origin `fetch` and refuse to set third-party cookies).  Surfacing those in the UI is misleading and encourages a broken auth path, so Front Door hides that panel by default via a CSS override and gates any reveal behind a Codex dialog — see §5.9.  Auth injection into requests happens via our `authentication` configuration regardless of panel visibility.
 
 ### 5.6 Toggle: use OAuth credentials in Try it out
+
+> **Superseded by §0 (MVP):** removed. The `useTryItOutWithOAuth` composable and
+> its `CdxToggleSwitch` were deleted; there is no per-session credential toggle.
 
 The user asked whether it's possible to let a reader turn OAuth-credential injection on/off, rather than it being all-or-nothing once logged in.
 
@@ -185,6 +223,10 @@ Scalar separately ships its own per-operation auth selector (`Auth.vue`, backed 
 
 ### 5.7 "You are logged in" indicator inside the Explorer
 
+> **Superseded by §0 (MVP):** removed. There is no in-Explorer login badge or
+> credential row; login state is shown only in the shell top bar (§5.8). The
+> `ExplorerScalarReference.client.vue` wrapper no longer reads the OAuth session.
+
 [ExplorerScalarReference.client.vue](/home/moriel/code/wikimedia/frontdoor/app/components/explorer/ExplorerScalarReference.client.vue) gains a small inline badge above the Scalar shell, rendered only when the OAuth session is logged in:
 
 > 🔓 Logged in as **Mooeypoo**. Try-it-out requests will be sent with your bearer token.
@@ -195,7 +237,15 @@ The badge uses Codex components for consistency with the rest of the shell.  It 
 
 The `useOAuthSession` composable is called from [app/layouts/default.vue](/home/moriel/code/wikimedia/frontdoor/app/layouts/default.vue) so the Pinia store hydrates on every page (content pages and Explorer alike), and the header's "Log in" / "Log out as <user>" control reads from it.  Because the access token is in-memory only (§5.4), the store's initial state on every navigation that crosses the SSR / client-only boundary is "logged out" until the user logs in again — see §8.6.
 
-### 5.9 Scalar's Authentication panel — hidden by default, revealable with acknowledgement
+### 5.9 Scalar's Authentication panel — hidden unconditionally
+
+> **Amended by §0 (MVP):** the panel is still hidden, but *unconditionally* —
+> the `useAdvancedAuthPanel` composable, the reveal `CdxToggleSwitch`, and the
+> acknowledgement dialog were all removed. The cross-origin-cookie rationale
+> below stands on its own (it is not an OAuth concern), so the CSS override now
+> hides `.scalar-reference-intro-auth` with no toggle to reveal it. The
+> paragraphs about the reveal path, the dialog, and the acknowledgement flag no
+> longer describe shipped behaviour.
 
 Front Door surfaces exactly one primary auth mechanism to end users — the OAuth toggle from §5.6.  Scalar's built-in Authentication panel, which lists every scheme declared in the current spec's `components.securitySchemes`, is **hidden by default** via a CSS override in [app/assets/css/explorer-codex-overrides.css](/home/moriel/code/wikimedia/frontdoor/app/assets/css/explorer-codex-overrides.css).
 
@@ -666,7 +716,7 @@ The user asked for a separate standalone SPA that queries the Wikimedia OAuth AP
 - An expanded scope on this consumer (almost certainly `oauthadmin` or similar) — meaning a re-approval of the registration.
 - Token-listing UI, consumer-creation UI, plenty of safety around destructive actions (revoke).
 
-The OAuth handshake architecture in this ADR — public client, in-memory token, Pinia-backed composable — is the foundation that page will sit on.  When that work begins it should produce its own follow-up ADR; this one stays focused on the auth handshake and Explorer integration.
+The OAuth handshake architecture in this ADR — public client, in-memory token, Pinia-backed composable — is the foundation that page will sit on.  Following the §0 MVP decision, this SPA is now the **only** planned surface that consumes the OAuth session for anything beyond top-bar identity; any future re-integration of bearer injection into Scalar (§5.5) would most naturally live alongside it.  When that work begins it should produce its own follow-up ADR; this one stays focused on the auth handshake and top-bar session identity.
 
 ---
 
@@ -677,4 +727,4 @@ The OAuth handshake architecture in this ADR — public client, in-memory token,
 3. **Cross-wiki bearer rejection** — §8.5.  Mitigation documented; verification deferred.
 4. **XSS exfiltration of access token** — accepted risk for the prototype (§5.4).  Mitigation: minimal scope, short token lifetime, no other third-party scripts in the Explorer.
 5. **Single consumer used for dev + prod** — accepted prototype compromise (§8.2).  Must be split before going beyond prototype.
-6. **Scalar DOM/class churn silently reverting the Auth-panel hide** (§5.9, §8.9) — our CSS override targets `.scalar-reference-intro-auth`, a class Scalar assigns semantically today but does not treat as public API.  A minor version bump could rename or remove it, at which point the panel reappears without warning and users see the misleading CentralAuth entries again.  **Mitigation:** after every `@scalar/api-reference` upgrade, load `/explorer` in the browser and confirm the built-in Auth panel is still hidden by default; if broken, re-verify the selector against the new rendered DOM and update the override.  Longer-term mitigation would be a lightweight E2E assertion that `.scalar-reference-intro-auth` is not visible by default on the explorer page.
+6. **Scalar DOM/class churn silently reverting the Auth-panel hide** (§5.9, §8.9) — our CSS override targets `.scalar-reference-intro-auth`, a class Scalar assigns semantically today but does not treat as public API.  A minor version bump could rename or remove it, at which point the panel reappears without warning and users see the misleading CentralAuth entries again (there is no longer a reveal toggle, so the panel is meant to stay hidden always).  **Mitigation:** after every `@scalar/api-reference` upgrade, load `/explorer` in the browser and confirm the built-in Auth panel is still hidden; if broken, re-verify the selector against the new rendered DOM and update the override.  Longer-term mitigation would be a lightweight E2E assertion that `.scalar-reference-intro-auth` is not visible on the explorer page.
