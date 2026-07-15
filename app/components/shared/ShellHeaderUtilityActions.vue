@@ -4,16 +4,32 @@ import {
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
+<<<<<<< HEAD
 	CdxSearchInput
+=======
+	CdxSearchInput,
+	CdxSelect,
+	CdxToggleButtonGroup,
+	type ButtonGroupItem
+>>>>>>> origin/main
 } from '@wikimedia/codex'
 import type { MenuItemData } from '@wikimedia/codex'
 import {
+	cdxIconBright,
 	cdxIconConfigure,
 	cdxIconEllipsis,
+	cdxIconHalfBright,
 	cdxIconLanguage,
+	cdxIconMoon,
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
+<<<<<<< HEAD
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/languages'
+=======
+import type { ColorMode } from '../../../config/colorMode'
+import { SUPPORTED_INTERFACE_LOCALES } from '../../../config/interfaceLocales'
+import { useColorMode } from '../../composables/useColorMode'
+>>>>>>> origin/main
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
@@ -62,6 +78,47 @@ watch( hasQuery, ( newHasQuery ) => {
 
 const { menuSelection, menuItems, handleMenuSelection } = useShellHeaderUtilityMenu()
 const { isLoggedIn, username, login, logout } = useOAuthSession()
+const { mode: colorMode, setMode: setColorMode } = useColorMode()
+
+const colorModeGroupLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
+
+// Light / Auto / Dark, in that order. Icon-only (label: null); the icons read as
+// sun / half-sun / moon. `auto` follows the operating system preference.
+const colorModeButtons = computed<ButtonGroupItem[]>( () => [
+	{
+		value: 'light',
+		label: null,
+		icon: cdxIconBright,
+		ariaLabel: $bananaI18n( 'color-mode-light-label' )
+	},
+	{
+		value: 'auto',
+		label: null,
+		icon: cdxIconHalfBright,
+		ariaLabel: $bananaI18n( 'color-mode-auto-label' )
+	},
+	{
+		value: 'dark',
+		label: null,
+		icon: cdxIconMoon,
+		ariaLabel: $bananaI18n( 'color-mode-dark-label' )
+	}
+] )
+
+/**
+ * Applies a color-mode selection from the toggle group.
+ *
+ * The group is single-select, so it never emits an array; ignore a null value
+ * so the active mode cannot be cleared.
+ *
+ * @param value - Selected color-mode value.
+ */
+function handleColorModeSelect( value: string | number | ( string | number )[] | null ): void {
+	if ( typeof value !== 'string' ) {
+		return
+	}
+	setColorMode( value as ColorMode )
+}
 
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
@@ -313,6 +370,14 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
+		<CdxToggleButtonGroup
+			class="shell-header-utility-actions__color-mode"
+			:model-value="colorMode"
+			:buttons="colorModeButtons"
+			:aria-label="colorModeGroupLabel"
+			@update:model-value="handleColorModeSelect"
+		/>
+
 		<CdxButton
 			v-show="!isUtilityCollapsed"
 			class="shell-header-utility-actions__settings-button"
@@ -448,7 +513,8 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 .shell-header-utility-actions__settings-button,
 .shell-header-utility-actions__search-toggle,
-.shell-header-utility-actions__utility-menu {
+.shell-header-utility-actions__utility-menu,
+.shell-header-utility-actions__color-mode {
 	flex: 0 0 auto;
 }
 
