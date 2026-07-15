@@ -4,14 +4,9 @@ import {
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
-<<<<<<< HEAD
-	CdxSearchInput
-=======
 	CdxSearchInput,
-	CdxSelect,
 	CdxToggleButtonGroup,
 	type ButtonGroupItem
->>>>>>> origin/main
 } from '@wikimedia/codex'
 import type { MenuItemData } from '@wikimedia/codex'
 import {
@@ -23,13 +18,9 @@ import {
 	cdxIconMoon,
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
-<<<<<<< HEAD
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/languages'
-=======
 import type { ColorMode } from '../../../config/colorMode'
-import { SUPPORTED_INTERFACE_LOCALES } from '../../../config/interfaceLocales'
 import { useColorMode } from '../../composables/useColorMode'
->>>>>>> origin/main
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
