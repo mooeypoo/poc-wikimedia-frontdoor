@@ -40,12 +40,9 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 		id: 'community',
 		messageKey: 'nav-community',
 		path: '/community'
-	},
-	{
-		id: 'get-help',
-		messageKey: 'nav-get-help',
-		path: '/get-help'
 	}
+	// 'get-help' was replaced in the primary bar by the wiki-translated demo page
+	// (see config/remoteContentSources.ts). The /get-help content page still exists.
 ]
 
 /** Locale-independent path for the API Explorer header link. */

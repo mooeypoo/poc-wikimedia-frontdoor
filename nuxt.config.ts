@@ -2,6 +2,7 @@
 
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
+import { SUPPORTED_LANGUAGES } from './config/languages'
 import {
 	COLOR_MODES,
 	COLOR_MODE_STORAGE_KEY,
@@ -108,13 +109,16 @@ export default defineNuxtConfig( {
 		strategy: 'prefix_except_default',
 		defaultLocale: 'en',
 		detectBrowserLanguage: false,
-		locales: [
-			{ code: 'en', language: 'en-US' },
-			{ code: 'es', language: 'es-ES' },
-			{ code: 'fr', language: 'fr-FR' },
-			{ code: 'he', language: 'he-IL' },
-			{ code: 'fa', language: 'fa-IR' }
-		]
+		// One list for every locale: sourced from the generated language catalog
+		// (config/languages.ts). Locales without content or interface strings fall
+		// back through the chain to English. See docs/adr-language-catalog.md.
+		// Registered under the SSR build; full static generation does not scale to
+		// this many locales (ADR §7).
+		locales: SUPPORTED_LANGUAGES.map( ( language ) => ( {
+			code: language.code,
+			language: language.bcp47,
+			dir: language.dir
+		} ) )
 	},
 
 	// Global CSS: Codex design tokens + our shell styles.

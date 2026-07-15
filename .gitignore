@@ -27,3 +27,5 @@ logs
 
 # Fetched remote content — regenerated at build time
 content/en/demo-remote-markdown.md
+# Wiki translated-page output (one file per discovered locale)
+content/*/wiki-translate-help.md

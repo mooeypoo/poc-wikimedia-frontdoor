@@ -251,7 +251,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Footer 32px page-bottom inset | `padding-block-end: --spacing-200` on `.shell-site-footer` | Matches start section nav scroll-end; short pages: no scrollbar; `min-block-size: 100%` on content scrollport pins footer |
 | Footer width vs Figma | Main column only — not x=241 / width=1199 (main+end) | **Intentional deviation** from [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) |
 | Header utility row (Figma) | `.frontdoor-shell__header-top` + `ShellHeaderUtilityActions` | **24px** logo–search gap; search **256px** min triggers collapse; `CdxMenuButton` for overflow utilities |
-| Interface language icon on trigger only | `CdxSelect` `#label` slot + `:key="direction"` | Menu items text-only; `isolateLabel()` for BiDi; remount on LTR ↔ RTL |
+| Interface language picker | `CdxLookup` (searchable) + `:key="direction"` | Type-to-filter over the full language catalog; autonym labels; remount on LTR ↔ RTL. See "Interface language picker" below. |
 | Codex RTL sheet toggled on locale switch | `codex-rtl-styles.client.ts` | **`link.disabled`** prototype — prevents stale RTL layout on LTR locales without reload |
 
 **Architecture reference:** `ARCHITECTURE.md` → Shell layout and chrome.
@@ -262,7 +262,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxSelect`), Log in link |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), Log in link |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`) plus separate **API Explorer** progressive link (`cdxIconArrowNext`) |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -275,9 +275,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps within the row are **`--spacing-100` (16px)**. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
-**Collapsed utility row:** Icon-only **search** button, **compact language** `CdxSelect` (globe icon + uppercase locale code in `--color-subtle`), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in**. Search button activation is **deferred**.
+**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in**. Search button activation is **deferred**.
 
-**Utility row layout (expanded):** Search field, settings icon button, `CdxSelect` for interface language, log-in text link — same as prior decision.
+**Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link.
+
+**Language control is compact at all widths.** With ~575 languages to choose from (and further utilities coming, e.g. a dark-mode toggle), an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
 
 **Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`) and **API Explorer** link (`flex: 0 0 auto`) on the same baseline. The link sits **immediately after** the last tab with **`gap: var(--spacing-150)` (24px)** — not pushed to the inline-end of the row. Link label from `nav-api`; arrow icon uses **`--color-progressive`**. Active on `/explorer` routes; no tab selected when explorer is active.
 
@@ -308,17 +310,19 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Search (`CdxSearchInput`) | Flexes in the header (max **640px**); **`min-inline-size: 256px`** when expanded; collapses to icon-only when the actions track is narrower than `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`useHeaderUtilityCollapse`) |
 | Search icon button | Shown in collapsed mode; **activation deferred** (no overlay yet) |
 | Settings (`CdxButton` + configure icon) | **Disabled** prototype; inline when expanded; overflow menu when collapsed |
-| Interface language (`CdxSelect`) | **Always visible** — full locale name when expanded; **icon + uppercase code** (`--color-subtle`) when collapsed |
+| Interface language (`CdxLookup`) | **Globe + uppercase code** `CdxButton` at all widths; click opens the searchable lookup in a popover. Keeps the bar compact. |
 | Log in | Text link when expanded; overflow menu item when collapsed — **non-functional** prototype |
 | Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in only when collapsed |
 
-**Interface language select (icon display):** Per Figma header chrome, the globe icon appears on the **closed** select trigger only — not on each dropdown option. Implementation:
+**Interface language picker:** The portal supports the **full Wikimedia language catalog** (~575 locales; `config/languages.ts`), not a curated few — so the picker is a **searchable `CdxLookup`**, not a `CdxSelect`. There is one language list for both content and interface; locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`). Implementation:
 
-- **`menuItems`** — `value` + `label` only (no `icon` on items).
-- **`#label` slot** — renders `CdxIcon` (`cdxIconLanguage`) beside the active locale label from `selectedInterfaceLocale` (never the `interface-language-placeholder`). **`default-label`** is bound to the same resolved label so Codex never shows placeholder copy.
-- **BiDi** — labels pass through `isolateLabel()` (Unicode FSI/PDI) because Codex menu item labels cannot be wrapped in `<bdi>` (same constraint as combobox options).
-- **Width** — `min-inline-size: 8rem`, `max-inline-size: 11rem` on `.shell-header-utility-actions__language-select`; long locale names ellipsize on `.shell-header-utility-actions__language-select-text` via `overflow: hidden` / `text-overflow: ellipsis` on the label text span only (Codex handle keeps default layout).
-- **LTR ↔ RTL switching** — `:key="direction"` remounts the select; `codex-rtl-styles.client.ts` enables/disables `codex.style-rtl.css` so Codex mirrored rules do not persist after switching back to an LTR interface locale (**prototype workaround** — no full reload required).
+- **`menuItems`** — one per catalog language: `label` = **autonym** (native name), `supportingText` = English `name`, `language: { label: bcp47 }` so each autonym renders under the correct `lang` attribute (script/direction). The globe is the input's **`start-icon`** (`cdxIconLanguage`), forwarded to the inner `CdxTextInput`.
+- **Filtering** — typing filters by autonym, English name, or code (case-insensitive). Results are **capped at `MAX_LANGUAGE_MENU_ITEMS` (50)** for render performance; the active language is always kept present. Typing narrows the list.
+- **Trigger (all widths)** — a **globe + uppercase code** `CdxButton` (`--color-subtle`); clicking toggles a **popover** (anchored under the button, `inset-inline-end: 0`, `box-shadow-drop-medium`) containing the `CdxLookup`. Opening focuses the input; focus-out of the container, Escape, or a selection closes it. Menu-item clicks keep focus (Codex prevents blur on option mousedown), so they do not close the popover early.
+- **Selection** — `@update:selected` commits the code to `selectedInterfaceLocale` (which drives locale routing via the layout), resets the input to the chosen autonym, and closes the popover.
+- **BiDi** — autonyms render with per-item `lang` via the `language` field; the trigger code sits in `<bdi>`.
+- **Width** — the trigger is icon-sized (`flex: 0 0 auto`), keeping top-bar room for log-in and future utilities; the popover is `18rem` / `min(18rem, 90vw)`.
+- **LTR ↔ RTL switching** — `:key="direction"` remounts the lookup; `codex-rtl-styles.client.ts` enables/disables `codex.style-rtl.css` so Codex mirrored rules do not persist after switching back to an LTR interface locale (**prototype workaround** — no full reload required).
 - **Known open issue (RTL expand chevron):** In Hebrew/Persian interface locales the mandatory `CdxSelect` expand indicator may not appear. Root cause: global `codex.style.css` plus toggled `codex.style-rtl.css` both apply; indicator gets conflicting physical `left`/`right` rules. Per-component Codex CSS overrides were attempted and **reverted**. See `ARCHITECTURE.md` → RTL and BiDi.
 
 **Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`, `.frontdoor-shell__api-explorer-link`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `config/headerChrome.ts`.

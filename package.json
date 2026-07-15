@@ -7,6 +7,7 @@
     "build:netlify": "NITRO_PRESET=netlify npm run fetch-remote-content && nuxt build",
     "dev": "nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
+    "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
     "generate": "npm run fetch-remote-content && nuxt generate",
     "generate:static": "npm run fetch-remote-content && nuxt generate",
     "preview": "nuxt preview",
