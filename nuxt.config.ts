@@ -2,9 +2,7 @@
 
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
-<<<<<<< HEAD
 import { SUPPORTED_LANGUAGES } from './config/languages'
-=======
 import {
 	COLOR_MODES,
 	COLOR_MODE_STORAGE_KEY,
@@ -22,7 +20,6 @@ const colorModeFoucScript = `(function(){try{` +
 	`${ JSON.stringify( COLOR_MODES ) }.forEach(function(x){e.classList.remove('fd-theme--'+x);});` +
 	`e.classList.add('fd-theme--'+m);` +
 	`}catch(e){}})();`
->>>>>>> origin/main
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
