@@ -3,40 +3,9 @@ import type { Ref } from 'vue'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../config/scalar'
 import { useColorMode } from './useColorMode'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
-import { useOAuthSession } from './useOAuthSession'
-import { useTryItOutWithOAuth } from './useTryItOutWithOAuth'
 
 interface ScalarConfigOptions {
 	onLoaded?: ( slug: string ) => void
-}
-
-/**
- * Builds the Scalar `authentication` block for the current session state
- * (docs/adr-wikimedia-oauth-authentication.md §5.5, §10 Step C1).
- *
- * The "off" shape must be written explicitly rather than omitted: Scalar
- * config updates go through `Object.assign`, which merges keys but never
- * deletes them, so clearing a previously injected token requires emitting
- * empty/null values.
- *
- * @param accessToken - Current OAuth bearer token, or null when logged out.
- * @param useOAuthForRequests - Whether the user wants the token applied.
- * @returns Scalar authentication configuration.
- */
-function buildAuthenticationConfig( accessToken: string | null, useOAuthForRequests: boolean ) {
-	if ( accessToken && useOAuthForRequests ) {
-		return {
-			preferredSecurityScheme: 'bearerAuth',
-			securitySchemes: {
-				bearerAuth: { token: accessToken }
-			}
-		}
-	}
-
-	return {
-		preferredSecurityScheme: null,
-		securitySchemes: {}
-	}
 }
 
 /**
@@ -48,8 +17,6 @@ function buildAuthenticationConfig( accessToken: string | null, useOAuthForReque
  */
 export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: ScalarConfigOptions = {} ) {
 	const { logEvent } = useExplorerDiagnostics()
-	const { accessToken } = useOAuthSession()
-	const { tryItOutWithOAuth } = useTryItOutWithOAuth()
 	const { resolvedMode } = useColorMode()
 
 	const scalarConfiguration = reactive( {
@@ -60,8 +27,7 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 		},
 		spec: {
 			url: openApiSpecUrl.value ?? ''
-		},
-		authentication: buildAuthenticationConfig( accessToken.value, tryItOutWithOAuth.value )
+		}
 	} )
 
 	watch( openApiSpecUrl, ( nextOpenApiSpecUrl ) => {
@@ -94,18 +60,6 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 		logEvent( 'scalar.config_updated', {
 			updateStrategy: 'object_assign',
 			darkMode: nextResolvedMode
-		} )
-	}, { flush: 'post' } )
-
-	watch( [ accessToken, tryItOutWithOAuth ], ( [ nextAccessToken, nextTryItOutWithOAuth ] ) => {
-		Object.assign( scalarConfiguration, {
-			authentication: buildAuthenticationConfig( nextAccessToken, nextTryItOutWithOAuth )
-		} )
-
-		// Never log the token itself — only whether injection is active.
-		logEvent( 'scalar.config_updated', {
-			updateStrategy: 'object_assign',
-			authentication: nextAccessToken && nextTryItOutWithOAuth ? 'bearer' : 'none'
 		} )
 	}, { flush: 'post' } )
 
