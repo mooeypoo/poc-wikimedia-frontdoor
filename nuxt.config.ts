@@ -2,6 +2,23 @@
 
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
+import {
+	COLOR_MODES,
+	COLOR_MODE_STORAGE_KEY,
+	DEFAULT_COLOR_MODE
+} from './config/colorMode'
+
+// Pre-hydration color-mode script. Runs synchronously in <head> before first
+// paint so the stored theme choice is on <html> before the body renders,
+// avoiding a light flash on SSR content routes. Mirrors useColorMode.ts; the
+// two share config/colorMode.ts so the storage key and class names cannot drift.
+const colorModeFoucScript = `(function(){try{` +
+	`var m=localStorage.getItem(${ JSON.stringify( COLOR_MODE_STORAGE_KEY ) });` +
+	`if(${ JSON.stringify( COLOR_MODES ) }.indexOf(m)===-1){m=${ JSON.stringify( DEFAULT_COLOR_MODE ) };}` +
+	`var e=document.documentElement;` +
+	`${ JSON.stringify( COLOR_MODES ) }.forEach(function(x){e.classList.remove('fd-theme--'+x);});` +
+	`e.classList.add('fd-theme--'+m);` +
+	`}catch(e){}})();`
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
@@ -32,6 +49,13 @@ export default defineNuxtConfig( {
 				{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
 				{ rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
 				{ rel: 'stylesheet', href: BRAND_WORDMARK_FONT_STYLESHEET_URL }
+			],
+			// Sole initial setter of the theme class: runs before first paint and is
+			// then maintained at runtime by useColorMode via classList. Deliberately
+			// NOT mirrored in htmlAttrs.class — unhead would re-assert its static value
+			// and accumulate with the runtime class (e.g. forcing `auto` back on).
+			script: [
+				{ innerHTML: colorModeFoucScript, tagPosition: 'head' }
 			]
 		}
 	},
@@ -56,7 +80,13 @@ export default defineNuxtConfig( {
 		build: {
 			markdown: {
 				highlight: {
-					theme: 'github-light',
+					// Dual themes: Shiki emits both palettes inline, the dark one as
+					// `--shiki-dark*` custom properties. main.css swaps to them under
+					// the dark theme classes so code blocks follow the site mode.
+					theme: {
+						default: 'github-light',
+						dark: 'github-dark'
+					},
 					langs: [
 						'javascript',
 						'typescript',
@@ -90,7 +120,10 @@ export default defineNuxtConfig( {
 	// Global CSS: Codex design tokens + our shell styles.
 	css: [
 		'@wikimedia/codex/dist/codex.style.css',
-		'~/assets/css/main.css'
+		'~/assets/css/main.css',
+		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
+		// Loads after main.css so it overrides the light :root token defaults.
+		'~/assets/css/color-modes.css'
 	],
 
 	routeRules: {

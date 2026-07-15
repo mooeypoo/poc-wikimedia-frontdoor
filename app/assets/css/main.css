@@ -304,3 +304,35 @@ pre.has-line-numbers .line::before {
 	color: var( --color-error );
 	padding-inline-end: var( --spacing-50 );
 }
+
+/*
+ * Dark-mode code blocks. The dual Shiki theme (nuxt.config.ts) runs with
+ * `defaultColor: false`, so @nuxtjs/mdc sets each token's light + dark palette
+ * as `--shiki-default*` / `--shiki-dark*` custom properties and injects a base
+ * rule `html .shiki span { color: var(--shiki-default) }`. MDC's own dark rule
+ * keys on a `.dark` class, which we don't use, so we re-assert the dark vars
+ * under our theme classes instead.
+ *
+ * Selectors are intentionally NOT wrapped in :where() — they must out-specify
+ * MDC's `html .shiki span` (0,1,2); `html.fd-theme--dark .shiki span` is (0,2,2).
+ * Property list mirrors MDC's exactly (note `background`, not background-color).
+ * Mirrors the fd-theme--dark / prefers-color-scheme→fd-theme--auto split used
+ * for tokens in color-modes.css.
+ */
+html.fd-theme--dark .shiki span {
+	color: var( --shiki-dark );
+	background: var( --shiki-dark-bg );
+	font-style: var( --shiki-dark-font-style );
+	font-weight: var( --shiki-dark-font-weight );
+	text-decoration: var( --shiki-dark-text-decoration );
+}
+
+@media ( prefers-color-scheme: dark ) {
+	html.fd-theme--auto .shiki span {
+		color: var( --shiki-dark );
+		background: var( --shiki-dark-bg );
+		font-style: var( --shiki-dark-font-style );
+		font-weight: var( --shiki-dark-font-weight );
+		text-decoration: var( --shiki-dark-text-decoration );
+	}
+}
