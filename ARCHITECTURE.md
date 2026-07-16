@@ -89,8 +89,11 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── ar.json
 │   └── [locale].json
 │
-├── scripts/                    # Build-time and maintenance scripts
-│   └── sync-wiki-content.js    # Fetches on-wiki translations → writes to content/
+├── scripts/                        # Maintenance scripts (run on demand, not by build)
+│   ├── fetch-remote-content.mjs    # Fetches remote/on-wiki content → writes to content/
+│   ├── lib/
+│   │   └── wikiContentConversion.mjs  # Parsoid HTML → MDC Markdown (unified pipeline)
+│   └── generate-language-catalog.mjs  # Regenerates config/languages.generated.ts
 │
 ├── stores/                     # Pinia stores
 │   └── oauthSession.js         # OAuth token state and session management
@@ -776,14 +779,13 @@ MDC ships a built-in `Include` component via `@nuxtjs/mdc`. The syntax is `::inc
 
 ## Remote content fetching
 
-Build-time content fetching is handled by `scripts/fetch-remote-content.mjs`. The script:
-1. Reads remote sources from `config/remoteContentSources.ts`
-2. Fetches content from configured remote URLs according to each source's `strategy`
-3. Phase 1 (`strategy: 'markdown-url'`) fetches raw Markdown directly
-4. Phase 2 (`strategy: 'html-url'` and `strategy: 'mediawiki-action-api'`) will convert HTML to Markdown using Turndown (not yet a dependency)
-5. Writes files to `content/[locale]/[path].md`
+Content import is handled by `scripts/fetch-remote-content.mjs`, reading sources from `config/remoteContentSources.ts`. Two strategies:
+1. `markdown-url` — fetch raw Markdown from a URL.
+2. `mediawiki-translated-page` — fetch a MediaWiki page and all its translation subpages: discover locales via the Translate extension's `messagegroupstats`, fetch each locale's Parsoid HTML (`/w/rest.php/v1/page/{title}/html`), and convert to MDC Markdown with the unified/rehype/remark pipeline in `scripts/lib/wikiContentConversion.mjs` (code-with-language and message-box→`::callout` mapping; CC BY-SA attribution footer). Writes `content/[locale]/[localPath].md`.
 
-The script is run as part of the build pipeline before `nuxt generate` and `nuxt build`. It is idempotent and graceful: fetch failures do not fail the build. A stale copy is kept if available; otherwise an empty placeholder is written. See `docs/adr-remote-content-fetching.md` for the full decision record.
+**Decoupled from the build.** The fetcher is a **standalone command** (`npm run fetch-remote-content`); `build` / `generate` do not run it. A developer (or scheduled job) runs it, reviews the resulting git diff, and commits — so imported content is **committed** (not gitignored) and builds are deterministic and network-free.
+
+**Wipe-and-recreate lifecycle.** Every run first deletes all previously-imported files (frontmatter `remoteImport: true`) and prunes emptied locale dirs, then recreates them — so removed sources, changed slugs/locales, and dropped translations leave no orphan. Authored content has no marker and is never touched. Output is idempotent (no volatile fields), so an unchanged page produces no diff. A failed fetch writes an empty placeholder (no stale-copy fallback); the build never fails. See `docs/adr-remote-content-fetching.md` (§8, §10) for the full decision record.
 
 ---
 

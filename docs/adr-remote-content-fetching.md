@@ -514,6 +514,8 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 
 ## Corrections to existing documentation
 
+**Status: applied** — `ARCHITECTURE.md`, `docs/TECH_DECISIONS.md`, `AGENTS.md`, `README.md`, and `.gitignore` have been reconciled with this ADR (standalone fetch, wipe-and-recreate, committed content, unified converter). The table below is retained as the record of what changed.
+
 | Document | Section | Required correction |
 |---|---|---|
 | `ARCHITECTURE.md` | Wiki content sync | Update to reference `scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`. Remove references to `sync-wiki-content.js` and `wikiContentSources.js`. |

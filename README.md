@@ -45,6 +45,18 @@ yarn dev
 bun run dev
 ```
 
+## Imported content
+
+Some pages are imported from remote sources (raw Markdown URLs, or MediaWiki pages with their translations) declared in [config/remoteContentSources.ts](/home/moriel/code/wikimedia/frontdoor/config/remoteContentSources.ts). This is a **standalone step, not part of the build** — the build uses whatever imported content is committed.
+
+```bash
+npm run fetch-remote-content
+```
+
+Each run wipes and recreates the imported files, then you **review the git diff** (added / changed / removed pages and slugs) and commit. Removed slugs are your cue to add a redirect in [config/contentRedirects.ts](/home/moriel/code/wikimedia/frontdoor/config/contentRedirects.ts). Imported files are committed (not gitignored); `npm run dev` and the production build use the committed copies. See [docs/adr-remote-content-fetching.md](/home/moriel/code/wikimedia/frontdoor/docs/adr-remote-content-fetching.md).
+
+The full language catalog is likewise generated on demand with `npm run generate-language-catalog` (see [docs/adr-language-catalog.md](/home/moriel/code/wikimedia/frontdoor/docs/adr-language-catalog.md)).
+
 ## Production
 
 Build the application for production:
