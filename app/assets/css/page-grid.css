@@ -32,9 +32,10 @@
  *
  * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
  * legacy exploratory value — superseded by transparent panel + inline-end border.
- * The same hex is reused for explorer control surfaces via
- * --fd-explorer-controls-surface-background-color (config/explorerSurfaces.ts).
- * Token retained unused for start panel revert. See DESIGN_REQUIREMENTS.md.
+ * Token retained unused for start panel revert. Explorer control surfaces use
+ * --fd-explorer-controls-surface-background-color → Codex
+ * --background-color-neutral-subtle (config/explorerSurfaces.ts).
+ * See DESIGN_REQUIREMENTS.md.
  */
 
 :root {
@@ -120,10 +121,11 @@
 	);
 
 	/*
-	 * Explorer project controls + module rail surfaces (exploratory Codex values).
+	 * Explorer project controls + module rail surfaces.
+	 * Background: Codex `--background-color-neutral-subtle` (theme-aware; not a fixed hex).
 	 * Keep in sync with config/explorerSurfaces.ts.
 	 */
-	--fd-explorer-controls-surface-background-color: #f3f3f3;
+	--fd-explorer-controls-surface-background-color: var( --background-color-neutral-subtle );
 	--fd-explorer-controls-surface-border-radius: 4px;
 
 	/*

@@ -462,7 +462,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 Top to bottom:
 
-1. **Page header** — community mode `h1` (Wikimedia API modules) + description **`explorer-description`**: “Discover REST API modules and test requests against Wikimedia projects” (max **60ch** width on subtitle)
+1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover REST APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
 2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, REST API module select, opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout)
 3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
 
@@ -575,14 +575,14 @@ Top to bottom:
 
 ### Surfaces (project controls + module rail)
 
-**Decision:** Both **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share exploratory surface tokens:
+**Decision:** Both **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share surface tokens:
 
 | Token | Value | CSS variable |
 |-------|-------|--------------|
-| Background | `#F3F3F3` | `--fd-explorer-controls-surface-background-color` |
+| Background | Codex **`--background-color-neutral-subtle`** | `--fd-explorer-controls-surface-background-color` |
 | Border radius | **4px** | `--fd-explorer-controls-surface-border-radius` |
 
-Source of truth for the hex/radius values: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Distinct from **`--background-color-neutral-subtle`** and Codex **`--border-radius-base` (2px)** — exploratory values under Codex review for explorer control surfaces only.
+Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Background follows the Codex theme token so light/dark modes keep readable contrast — the earlier fixed `#F3F3F3` exploratory hex failed dark-mode text contrast and was superseded. Border radius remains an exploratory **4px** value (Codex **`--border-radius-base`** is **2px**).
 
 ### Endpoint list
 
@@ -619,7 +619,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
 
-**Surface:** **`--fd-explorer-controls-surface-background-color`** (`#F3F3F3`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
+**Surface:** **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
 ---
 
