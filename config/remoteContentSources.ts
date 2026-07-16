@@ -1,15 +1,15 @@
 /**
- * Declares remote content sources fetched at build time by
- * scripts/fetch-remote-content.mjs.
+ * Declares remote content sources imported by scripts/fetch-remote-content.mjs.
  *
- * Each entry maps a remote URL to a local content path. Fetched files are
- * written to content/[locale]/[localPath].md before the build runs.
+ * Each entry maps a remote source to a local content path; imported files are
+ * written to content/[locale]/[localPath].md. Importing is a standalone command
+ * (`npm run fetch-remote-content`), not part of the build, and its output is
+ * committed and reviewed via git diff.
  *
- * Phase 1 supports strategy 'markdown-url' only.
- * Phase 2 will add 'mediawiki-action-api' and 'html-url' as additional
- * strategy values without changing the shape of existing entries.
+ * Strategies (both implemented): 'markdown-url' and 'mediawiki-translated-page'.
  *
- * @see scripts/fetch-remote-content.mjs
+ * How to add/change a source: docs/content-import-guide.md (Part 1).
+ * @see scripts/fetch-remote-content.mjs, docs/adr-remote-content-fetching.md
  */
 
 export interface RemoteContentNavEntry {
@@ -168,11 +168,11 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		remoteUrl: 'https://gitlab.wikimedia.org/repos/ci-tools/wikimedia-spectral-ruleset/-/raw/main/README.md?ref_type=heads',
 		localPath: 'demo-remote-markdown',
 		overrideFrontmatter: { title: 'Demo Remote Markdown' },
-		navEntry: {
-			target: 'primary',
-			messageKey: 'nav-remote-md',
-			navPosition: 'after:community'
-		}
+		// navEntry: {
+		// 	target: 'primary',
+		// 	messageKey: 'nav-remote-md',
+		// 	navPosition: 'after:community'
+		// }
 	},
 	{
 		// Demo of the wiki translated-page strategy: fetches a translatable
@@ -187,10 +187,10 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		minTranslatedPercent: 85,
 		overrideFrontmatter: { title: 'Translate extension (from mediawiki.org)' },
 		attribution: { license: 'CC BY-SA 4.0' },
-		navEntry: {
-			target: 'primary',
-			messageKey: 'nav-wiki-translate',
-			navPosition: 'after:community'
-		}
+		// navEntry: {
+		// 	target: 'primary',
+		// 	messageKey: 'nav-wiki-translate',
+		// 	navPosition: 'after:community'
+		// }
 	}
 ]

@@ -155,9 +155,9 @@ Event handler props: `onInstanceChange`, `onLanguageSelect`, `onAuthComplete`
 
 ## Wiki content sync
 
-Some on-wiki pages (policy, descriptions) have translations that are pulled into the Markdown content directory at build time via `scripts/sync-wiki-content.js`. The script calls the MediaWiki Action API, converts HTML to Markdown, and writes locale-prefixed files to `content/[locale]/`. It runs before `nuxt generate` and is idempotent.
+Some on-wiki pages (policy, descriptions) and their translations are pulled into the Markdown content directory via `scripts/fetch-remote-content.mjs` (`mediawiki-translated-page` strategy). It discovers translations via the Translate extension's `messagegroupstats`, fetches each locale's Parsoid HTML, and converts to MDC Markdown with the unified/rehype/remark pipeline, writing locale-prefixed files to `content/[locale]/`.
 
-Sources are declared in `config/wikiContentSources.js`.
+The fetcher is a **standalone command decoupled from the build**: run it on demand, review the git diff, and commit — imported content is committed, not gitignored. Each run wipes and recreates all imported files (marked `remoteImport: true`) so orphans never linger; output is idempotent. Sources are declared in `config/remoteContentSources.ts`. See `docs/adr-remote-content-fetching.md`.
 
 ---
 
@@ -272,10 +272,10 @@ Verify the Wikimedia OAuth 2.0 Authorization Code + PKCE flow works end-to-end, 
 ---
 
 ### Experiment 3 — Wiki content pull and language fallback
-**Status: pending Experiment 1**
+**Status: implemented** — see `docs/adr-remote-content-fetching.md` (§9, §10).
 
-Verify that on-wiki pages can be fetched via the MediaWiki Action API, converted to Markdown, stored per locale in Nuxt Content, and that the fallback chain renders correctly when a locale file is absent.
+On-wiki pages are fetched with the `mediawiki-translated-page` strategy: translations discovered via `messagegroupstats`, each locale's **Parsoid HTML** (core REST) converted to Markdown with the **unified/rehype/remark** pipeline (not the Action API + Turndown originally sketched here), stored per locale in Nuxt Content, with the existing fallback chain rendering when a locale file is absent.
 
-**Success:** Build script is stable, Markdown conversion is acceptable for prose content, fallback renders without error, fallback notice is shown.
+**Outcome:** conversion is acceptable for prose; the fetcher is a standalone, idempotent, wipe-and-recreate command whose committed output is reviewed via git diff.
 
-**Failure mode to document:** MediaWiki HTML-to-Markdown conversion is unacceptable for the target pages — mitigation is restricting to prose-only pages or maintaining separate Markdown-native versions outside the wiki.
+**Failure mode to watch:** HTML-to-Markdown conversion unacceptable for a given page — mitigation is restricting to prose-only pages or maintaining Markdown-native versions outside the wiki.
