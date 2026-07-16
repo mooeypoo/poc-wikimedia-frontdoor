@@ -83,20 +83,6 @@
 	top: -8px !important;
 }
 
-/*
- * Module beta/version InfoChips (rail headings and reference header).
- * Text-only: hide Codex status icons; keep warning/success chip colours.
- */
-.frontdoor-shell--explorer .explorer-module-chip {
-	flex-shrink: 0;
-	font-weight: var( --font-weight-normal );
-}
-
-.frontdoor-shell--explorer .explorer-module-chip .cdx-info-chip__icon,
-.frontdoor-shell--explorer .explorer-module-chip .cdx-info-chip__icon--vue {
-	display: none;
-}
-
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
 	display: flex;
 	align-items: center;

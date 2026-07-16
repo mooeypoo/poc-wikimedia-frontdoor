@@ -464,19 +464,9 @@ Top to bottom:
 
 1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover REST APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
 2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, REST API module select, opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout)
-3. **Reference panel** — module label, title row (`headingTitle` + beta/version chips + wiki InfoChip), Scalar shell
+3. **Reference panel** — Scalar shell (no separate module title / chip header above the shell)
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
-
-### Reference panel title row
-
-**Decision:** Match the module rail heading pattern:
-
-- `h2` shows parsed **`headingTitle`** (for example “Attribution API”), not the long bootstrap `label`, in `<bdi>`
-- **Beta** (warning) and **version** (success) chips use shared class **`explorer-module-chip`** (text-only, icons hidden) — same styles as the rail via `explorer-codex-overrides.css`
-- **Wiki** project name remains a separate **subtle** InfoChip at the end of the row
-
-**Source:** `app/pages/explorer/[[view]].vue`, `explorerModuleRailHeading.ts`.
 
 ### Reference panel (wide ≥ 960px)
 

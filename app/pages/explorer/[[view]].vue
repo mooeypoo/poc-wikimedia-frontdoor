@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CdxInfoChip, CdxMessage } from '@wikimedia/codex'
+import { CdxMessage } from '@wikimedia/codex'
 import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
@@ -88,8 +88,6 @@ watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 	setActiveExplorerWikiInstanceId( wikiInstanceId )
 }, { immediate: true } )
 
-const referenceHeaderRef = ref<HTMLElement | null>( null )
-const referenceModuleLabelRef = ref<HTMLElement | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
@@ -215,8 +213,6 @@ const explorerTitle = computed( () => {
 const explorerDescription = computed( () =>
 	isCommunityMode.value ? $bananaI18n( 'explorer-description' ) : ''
 )
-const moduleLabel = computed( () => $bananaI18n( 'explorer-module-label' ) )
-const betaChipLabel = computed( () => $bananaI18n( 'explorer-module-beta-chip-label' ) )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
@@ -339,44 +335,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 			<template v-else>
 				<section class="explorer-page__reference-panel">
-					<header
-						v-if="isCommunityMode && visibleSelectedModule"
-						ref="referenceHeaderRef"
-						class="explorer-page__reference-header"
-					>
-						<p ref="referenceModuleLabelRef">
-							{{ moduleLabel }}
-						</p>
-						<div class="explorer-page__reference-heading">
-							<div class="explorer-page__reference-title-group">
-								<h2 class="explorer-page__reference-title">
-									<bdi>{{ visibleSelectedModule.headingTitle }}</bdi>
-								</h2>
-								<CdxInfoChip
-									v-if="visibleSelectedModule.showBetaChip"
-									status="warning"
-									class="explorer-module-chip"
-								>
-									{{ betaChipLabel }}
-								</CdxInfoChip>
-								<CdxInfoChip
-									v-if="visibleSelectedModule.versionChipLabel"
-									status="success"
-									class="explorer-module-chip"
-								>
-									<bdi>{{ visibleSelectedModule.versionChipLabel }}</bdi>
-								</CdxInfoChip>
-							</div>
-							<CdxInfoChip
-								v-if="wikiDisplayName"
-								status="subtle"
-								class="explorer-page__wiki-info-chip"
-							>
-								<bdi>{{ wikiDisplayName }}</bdi>
-							</CdxInfoChip>
-						</div>
-					</header>
-
 					<CdxMessage
 						v-if="isCommunityMode && !visibleOpenApiSpecUrl"
 						type="warning"
@@ -492,60 +450,12 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	margin: 0;
 }
 
-.explorer-page__reference-header p {
-	margin: 0;
-}
-
-.explorer-page__reference-heading {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: var( --spacing-50 );
-	min-inline-size: 0;
-}
-
-.explorer-page__reference-title-group {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var( --spacing-50 );
-	flex: 1 1 auto;
-	min-inline-size: 0;
-}
-
-.explorer-page__reference-title {
-	margin: 0;
-	min-inline-size: 0;
-}
-
-.explorer-page__wiki-info-chip {
-	flex: 0 0 auto;
-	max-inline-size: 100%;
-}
-
-/*
- * Codex subtle InfoChip (transparent fill, base border). Re-assert here because the
- * default .cdx-info-chip rules use notice colours until cdx-info-chip--subtle applies.
- */
-.explorer-page__wiki-info-chip.cdx-info-chip {
-	background-color: var( --background-color-transparent );
-	border-color: var( --border-color-base );
-}
-
 .explorer-page__reference-panel {
 	display: grid;
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
 	overflow: hidden;
-}
-
-.explorer-page__reference-header {
-	display: grid;
-	gap: var( --spacing-25 );
-	padding-block: var( --spacing-50 );
-	padding-inline: 0;
 }
 
 .explorer-page__scalar-shell {
