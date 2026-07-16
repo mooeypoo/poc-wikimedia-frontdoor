@@ -184,13 +184,28 @@ function resolveUrl( url, origin, baseHref ) {
 }
 
 /**
+ * Reads a shared-partial placeholder name from an element, if it is one.
+ * Convention (ADR §11.3): `<div class="frontdoor-partial" data-partial="name">`.
+ *
+ * @param {object} node - hast element node.
+ * @returns {string|null} The partial name, or null when not a placeholder.
+ */
+function partialPlaceholderName( node ) {
+	if ( node.tagName !== 'div' || !classList( node ).includes( 'frontdoor-partial' ) ) {
+		return null
+	}
+	const name = node.properties?.dataPartial
+	return typeof name === 'string' && name.length > 0 ? name : null
+}
+
+/**
  * rehype plugin: reduce a Parsoid document to clean, content-only hast.
  *
- * @param {{ origin: string }} options - Conversion options.
+ * @param {{ origin: string, componentMapping: object, isRegisteredPartial?: (name: string) => boolean, onWarn?: (message: string) => void }} options
  * @returns {(tree: object) => void} Transformer.
  */
 function rehypeCleanWikiContent( options ) {
-	const { origin } = options
+	const { origin, componentMapping, isRegisteredPartial, onWarn } = options
 
 	return ( tree ) => {
 		// Read <base href> and locate <body> before discarding the document shell.
@@ -225,8 +240,23 @@ function rehypeCleanWikiContent( options ) {
 				return [ SKIP, index ]
 			}
 
+			// Shared-partial placeholder → `::partial{name}` marker. An unregistered
+			// name is dropped with a warning (the allowlist is the security boundary).
+			const placeholder = partialPlaceholderName( node )
+			if ( placeholder !== null ) {
+				if ( isRegisteredPartial && !isRegisteredPartial( placeholder ) ) {
+					onWarn?.( `unregistered shared partial "${ placeholder }" — placeholder dropped` )
+					parent.children.splice( index, 1 )
+					return [ SKIP, index ]
+				}
+				node.tagName = 'x-partial'
+				node.properties = { partialName: placeholder }
+				node.children = []
+				return
+			}
+
 			// Message box → callout marker (handled by a rehype-remark handler).
-			if ( isCallout( node ) ) {
+			if ( componentMapping.callouts !== false && isCallout( node ) ) {
 				const type = calloutType( node )
 				node.tagName = 'x-callout'
 				node.properties = { calloutType: type }
@@ -273,41 +303,50 @@ function rehypeCleanWikiContent( options ) {
 	}
 }
 
-/** rehype-remark handlers for the conservative MDC element mapping. */
-const mdcHandlers = {
-	/**
-	 * Emits a `::callout{type=...}` MDC block wrapping the converted children.
-	 *
-	 * @param {object} state - hast-util-to-mdast state.
-	 * @param {object} node - The `x-callout` hast node.
-	 * @returns {object[]} mdast nodes.
-	 */
-	'x-callout': ( state, node ) => {
-		const type = node.properties?.calloutType || 'notice'
-		const children = state.all( node )
-		return [
-			{ type: 'html', value: `::callout{type="${ type }"}` },
-			...children,
-			{ type: 'html', value: '::' }
-		]
-	},
+/**
+ * Builds the rehype-remark handlers for the conversion registry. Content
+ * conversions (callout, code language) are gated by `componentMapping`; the
+ * structural shared-partial conversion is always present (ADR §11.1).
+ *
+ * @param {object} componentMapping - Per-source toggles ({ code?, callouts? }).
+ * @returns {Record<string, Function>} hast-util-to-mdast handlers.
+ */
+function buildMdcHandlers( componentMapping ) {
+	return {
+		/**
+		 * `x-callout` → `::callout{type=...}` MDC block around the converted children.
+		 */
+		'x-callout': ( state, node ) => {
+			const type = node.properties?.calloutType || 'notice'
+			const children = state.all( node )
+			return [
+				{ type: 'html', value: `::callout{type="${ type }"}` },
+				...children,
+				{ type: 'html', value: '::' }
+			]
+		},
 
-	/**
-	 * Emits a fenced code block, detecting the language from MediaWiki's
-	 * `mw-highlight-lang-*` (or generic `language-*`) class on the `<pre>` or a
-	 * descendant. Overrides the default `pre` handler so highlighted blocks keep
-	 * their language.
-	 *
-	 * @param {object} state - hast-util-to-mdast state.
-	 * @param {object} node - The `pre` hast node.
-	 * @returns {object} mdast code node.
-	 */
-	pre: ( state, node ) => {
-		const lang = findCodeLang( node )
-		const value = hastToString( node ).replace( /\n$/, '' )
-		const codeNode = { type: 'code', lang: lang || null, meta: null, value }
-		state.patch( node, codeNode )
-		return codeNode
+		/**
+		 * `x-partial` → `::partial{name=...}` directive (empty block); the shared
+		 * partial is resolved and rendered at page-render time (ADR §11.4).
+		 */
+		'x-partial': ( _state, node ) => {
+			const name = node.properties?.partialName
+			return { type: 'html', value: `::partial{name="${ name }"}\n::` }
+		},
+
+		/**
+		 * `<pre>` → fenced code block. When `componentMapping.code` is not disabled,
+		 * the language is detected from MediaWiki's `mw-highlight-lang-*` (or generic
+		 * `language-*`) class on the `<pre>` or a descendant.
+		 */
+		pre: ( state, node ) => {
+			const lang = componentMapping.code !== false ? findCodeLang( node ) : null
+			const value = hastToString( node ).replace( /\n$/, '' )
+			const codeNode = { type: 'code', lang: lang || null, meta: null, value }
+			state.patch( node, codeNode )
+			return codeNode
+		}
 	}
 }
 
@@ -315,15 +354,26 @@ const mdcHandlers = {
  * Converts wiki page HTML to MDC-compatible Markdown.
  *
  * @param {string} html - Parsoid HTML (full document or fragment).
- * @param {{ origin: string }} options - Conversion options; `origin` is the
- *   source wiki origin used to absolutize links/media.
+ * @param {object} options - Conversion options.
+ * @param {string} options.origin - Source wiki origin (absolutizes links/media).
+ * @param {object} [options.componentMapping] - Content-conversion toggles
+ *   ({ code?, callouts? }); both default on.
+ * @param {(name: string) => boolean} [options.isRegisteredPartial] - Allowlist
+ *   predicate; when provided, unregistered partial placeholders are dropped.
+ * @param {(message: string) => void} [options.onWarn] - Warning sink.
  * @returns {Promise<string>} Markdown body (no frontmatter).
  */
 export async function convertWikiHtmlToMarkdown( html, options ) {
+	const componentMapping = options.componentMapping ?? {}
 	const file = await unified()
 		.use( rehypeParse, { fragment: false } )
-		.use( rehypeCleanWikiContent, { origin: options.origin } )
-		.use( rehypeRemark, { handlers: mdcHandlers } )
+		.use( rehypeCleanWikiContent, {
+			origin: options.origin,
+			componentMapping,
+			isRegisteredPartial: options.isRegisteredPartial,
+			onWarn: options.onWarn
+		} )
+		.use( rehypeRemark, { handlers: buildMdcHandlers( componentMapping ) } )
 		.use( remarkGfm )
 		.use( remarkStringify, {
 			bullet: '-',

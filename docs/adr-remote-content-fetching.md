@@ -1,6 +1,6 @@
 # ADR: Remote Content Fetching
 
-**Status:** Decided (Phase 1 and the wiki-translated-page strategy §9 implemented; the wipe-and-recreate lifecycle §10 is decided, not yet implemented)  
+**Status:** Decided (Phase 1, the wiki-translated-page strategy §9, and the wipe-and-recreate lifecycle §10 implemented; the conversion registry & shared partials §11 (Phase 3) are decided, not yet implemented)  
 **Scope:** Build-time prose content — Markdown files fetched from remote URLs and rendered as shell-chrome pages
 
 **Related:** `docs/adr-language-catalog.md` — the wiki strategy (§9) writes translations into locales defined by the unified language catalog. That ADR (Steps 1 + 1.5) is a prerequisite for the wiki strategy to have locales to land in.
@@ -350,7 +350,7 @@ GET {wikiHost}/w/rest.php/v1/page/{title}/html      // title = '{pageTitle}/{lan
 
 ### 9.4 HTML→Markdown + element→MDC mapping (conservative)
 
-**Converter:** the **unified / rehype / remark** pipeline (`rehype-parse` → `rehype-remark` → `remark-gfm` → `remark-stringify`), which is **already present** as a transitive dependency of `@nuxt/content` — no new install. This deviates from the earlier plan to use **Turndown**: the sandbox's npm registry allowlist blocks installing Turndown, and unified is both available and more idiomatic for a Nuxt Content project (Nuxt Content itself parses MDC with `remark-mdc`). The element→MDC mapping is implemented as `rehype-remark` handlers; MDC component syntax (`::callout`) is emitted via mdast `html` nodes passed through verbatim by `remark-stringify`. Implemented in `scripts/lib/wikiContentConversion.mjs`.
+**Converter:** the **unified / rehype / remark** pipeline (`rehype-parse` → `rehype-remark` → `remark-gfm` → `remark-stringify`), which is **already present** as a transitive dependency of `@nuxt/content` — no new install. This deviates from the earlier plan to use **Turndown**: the sandbox's npm registry allowlist blocks installing Turndown, and unified is both available and more idiomatic for a Nuxt Content project (Nuxt Content itself parses MDC with `remark-mdc`). The element→MDC mapping is implemented as `rehype-remark` handlers; MDC component syntax (`::callout`) is emitted via mdast `html` nodes passed through verbatim by `remark-stringify`. Implemented in `scripts/lib/wikiContentConversion.mjs`. Phase 3 (§11.1) formalizes these handlers into a toggleable conversion registry and adds the shared-partial placeholder rule.
 
 **Mapping tier — conservative safe set (default):**
 - **Fenced code with language** — `<pre>` / `<div class="mw-highlight mw-highlight-lang-*">` → ` ```lang ` (a rehype-remark `pre` handler reading the `mw-highlight-lang-*` / `language-*` class). *Default on.*
@@ -446,6 +446,66 @@ For this diff to be meaningful, imported output must be **idempotent** — no vo
 - Imported content is **committed, not gitignored** — the `.gitignore` entries for imported files are removed. (Reverses the earlier gitignore decision in §2/§8.)
 - Content freshness is a deliberate, reviewed act (manual run or scheduled PR bot), not an implicit build side-effect (§8).
 - `nuxt dev` does not run the lifecycle; it builds from committed content.
+
+---
+
+## 11. Conversion registry & shared partials (Phase 3)
+
+Phase 3 has two related parts: it formalizes HTML→MDC mapping into an extensible **conversion registry** (which finally wires the previously-inert `componentMapping`), and it adds **shared partials** — a way for a wiki page to request that a portal-authored partial be inserted at a marked spot.
+
+### 11.1 Conversion registry
+
+**Decision:** the element→MDC handlers (fenced code with language, inline code, message-box→`::callout`) become a declared, ordered **registry of conversions** rather than ad-hoc handlers. Each conversion is a detector (a hast predicate) + a transform (rehype-remark handler / hast rewrite). `config/remoteContentSources.ts` `componentMapping` toggles which *content* conversions are enabled per source (default-on for the safe set); this replaces the inert field. The registry keeps output deterministic/idempotent (§9.5, §10).
+
+Two kinds of conversion:
+- **Content conversions** — element → MDC (code, inline code, callout). Toggleable via `componentMapping`.
+- **Structural conversion** — the shared-partial placeholder (§11.2), always evaluated; controlled by the allowlist rather than a toggle.
+
+### 11.2 Shared partials — model
+
+**Decision:** a shared partial's **content lives entirely on the markdown side** (a portal-authored partial file). The wiki page contains only a **placeholder** naming *which* partial to insert and *where*. On fetch, the placeholder is replaced by a `::partial{name="…"}` directive; the partial itself is never extracted from, or defined by, the wiki.
+
+**Rationale:**
+- Authored once, editable without re-fetching; shared across all translations by construction (every locale's page emits the same directive).
+- The partial may use MDC components, Vue, and banana-i18n — it is normal portal content, not converted wiki HTML.
+- No canonical-source / divergence / `<translate>`-unit concerns (the wiki holds no partial content).
+
+### 11.3 Placeholder convention (wiki side)
+
+The wiki author (who controls the source page) marks an insertion point with an **empty** element carrying the partial name:
+
+```html
+<div class="frontdoor-partial" data-partial="api-example"></div>
+```
+
+(or a wiki template that renders the same). Being empty, it survives translation untouched whether or not it sits inside a `<translate>` unit. The converter detects it in the Parsoid HTML by the `frontdoor-partial` class + `data-partial` attribute.
+
+### 11.4 The `::partial` directive & component
+
+- The converter replaces each placeholder with `::partial{name="api-example"}`.
+- `app/components/content/Partial.vue` resolves `name` → a registered partial (§11.5) and renders it via `ContentRenderer`.
+- `::partial` is a normal MDC component, so authored pages may use it too.
+
+### 11.5 Allowlist registry & safety
+
+**Decision:** partial names are resolved through an **allowlist** in `config/sharedPartials.ts` (`name → content path`). Because the name comes from wiki text, this is a **security boundary**:
+- Only registered names resolve; names are sanitized (no path traversal, no arbitrary content paths).
+- The converter validates the name **at fetch time**: an unknown name emits a **warning** (visible in the committed diff / log) and the directive is omitted rather than emitted for a non-existent partial.
+- `Partial.vue` likewise renders nothing (with a dev warning) for an unregistered or missing partial.
+
+### 11.6 Authored-partial storage & lifecycle
+
+- Shared partials are authored at `content/_partials/shared/<name>.md` — committed, hand-maintained, and **never fetched or wiped** (they carry no `remoteImport` marker, so the §10 cleanup ignores them). The `_partials` convention keeps them queryable but non-routed.
+- The registry maps each `name` to that path; changing a partial is a one-file edit, no re-fetch.
+
+### 11.7 Edge cases & consequences
+
+- **Unknown/unregistered name** → fetch-time warning + directive omitted; `Partial.vue` renders nothing if one slips through.
+- **Registered name, missing file** → component renders nothing + dev warning.
+- **Idempotency** — placeholder→directive substitution is deterministic, so no diff noise (§10).
+- **Wipe** — fetched pages (carrying `::partial` directives) are imported content, wiped/recreated normally; authored partials are untouched.
+- **Attribution** — the fetched page keeps its CC BY-SA footer (§9.5); the shared partial is portal-authored content and needs none.
+- **Nesting** — a shared partial may itself use `::callout` etc.; guard against `::partial` cycles is out of scope (author responsibility).
 
 ---
 

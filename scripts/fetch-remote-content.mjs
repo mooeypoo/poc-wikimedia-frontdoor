@@ -30,6 +30,7 @@ import { promises as fs } from 'node:fs'
 import YAML from 'yaml'
 import { REMOTE_CONTENT_SOURCES } from '../config/remoteContentSources.ts'
 import { convertWikiHtmlToMarkdown } from './lib/wikiContentConversion.mjs'
+import { isRegisteredSharedPartial } from '../config/sharedPartials.ts'
 
 const __filename = fileURLToPath( import.meta.url )
 const projectRoot = dirname( dirname( __filename ) )
@@ -289,9 +290,10 @@ function parsoidHtmlUrl( wikiApiUrl, title ) {
  * @param {object} source - Wiki source config.
  * @param {string} origin - Wiki origin (e.g. 'https://www.mediawiki.org').
  * @param {string} locale - Locale code.
+ * @param {(message: string) => void} onWarn - Deduped warning sink for this source.
  * @returns {Promise<string>} Full Markdown document.
  */
-async function fetchAndConvertLocale( source, origin, locale ) {
+async function fetchAndConvertLocale( source, origin, locale, onWarn ) {
 	// The source language lives at both the bare title and `/en`; other locales
 	// live at `/<locale>`. Try the locale subpage first, then the bare title.
 	const candidates = locale === 'en'
@@ -317,7 +319,12 @@ async function fetchAndConvertLocale( source, origin, locale ) {
 		throw lastError ?? new Error( 'no page variant found' )
 	}
 
-	const body = await convertWikiHtmlToMarkdown( html, { origin } )
+	const body = await convertWikiHtmlToMarkdown( html, {
+		origin,
+		componentMapping: source.componentMapping,
+		isRegisteredPartial: isRegisteredSharedPartial,
+		onWarn
+	} )
 
 	// Provenance for frontmatter + attribution footer.
 	const sourceUrl = `${ origin }/wiki/${ usedTitle.replace( / /g, '_' ) }`
@@ -392,12 +399,22 @@ async function processWikiTranslatedSource( source ) {
 		`[fetch-remote-content] ${ source.id }: ${ locales.length } locale(s) — ${ locales.join( ', ' ) }`
 	)
 
+	// Converter warnings (e.g. an unregistered shared-partial placeholder) repeat
+	// across every locale — dedupe them to one line per source.
+	const warned = new Set()
+	const onWarn = ( message ) => {
+		if ( !warned.has( message ) ) {
+			warned.add( message )
+			console.warn( `⚠ ${ source.id }: ${ message }` )
+		}
+	}
+
 	return mapWithConcurrency( locales, FETCH_CONCURRENCY, ( locale ) => {
 		const filePath = join( projectRoot, 'content', locale, `${ source.localPath }.md` )
 		const label = `${ source.id } → ${ locale }/${ source.localPath }.md`
 		return writeOrFallback(
 			filePath,
-			() => fetchAndConvertLocale( source, origin, locale ),
+			() => fetchAndConvertLocale( source, origin, locale, onWarn ),
 			{
 				label,
 				placeholderTitle: String( source.overrideFrontmatter?.title ?? source.pageTitle ),
