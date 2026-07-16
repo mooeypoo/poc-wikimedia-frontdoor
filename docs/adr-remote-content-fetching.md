@@ -1,7 +1,9 @@
 # ADR: Remote Content Fetching
 
-**Status:** Decided  
+**Status:** Decided (Phase 1, the wiki-translated-page strategy §9, and the wipe-and-recreate lifecycle §10 implemented; the conversion registry & shared partials §11 (Phase 3) are decided, not yet implemented)  
 **Scope:** Build-time prose content — Markdown files fetched from remote URLs and rendered as shell-chrome pages
+
+**Related:** `docs/adr-language-catalog.md` — the wiki strategy (§9) writes translations into locales defined by the unified language catalog. That ADR (Steps 1 + 1.5) is a prerequisite for the wiki strategy to have locales to land in.
 
 ---
 
@@ -34,7 +36,7 @@ Maintaining two parallel scripts (`sync-wiki-content.js` for wiki sources and a 
 ```ts
 export interface RemoteContentSource {
   id: string
-  strategy: 'markdown-url'  // extend when Phase 2 strategies added
+  strategy: 'markdown-url' | 'mediawiki-translated-page'  // wiki strategy: see §9.1 for its extra fields
   remoteUrl: string
   localPath: string
 
@@ -94,7 +96,7 @@ export interface RemoteContentNavEntry {
 - The script imports this config directly; no discovery, no runtime reading.
 - Adding a new remote source requires a code change to this file and a deploy — this is intentional. Remote sources are explicit declarations, not dynamic.
 - Phase 1 sources use `remoteUrl` + `locale`; Phase 2 will use `localeFiles` instead. Both can coexist in the same config file.
-- Gitignore prevents fetched files from being committed; they are always regenerated from remote sources at build time.
+- Imported files are **committed** (not gitignored) so their git diff is the developer's review surface (§8, §10); they are regenerated on demand by the standalone fetch command, not on every build.
 
 ---
 
@@ -199,41 +201,46 @@ This is out of scope for Phase 1. The `target` field is defined as a string unio
 
 ---
 
-## 6. Build failure behavior: warn always; use stale copy if available; emit empty placeholder if not
+## 6. Build failure behavior: warn always; emit empty placeholder on failure
+
+> **Revised.** The original decision kept a *stale copy* (last-known-good) when a
+> fetch failed. That tier is **retired** by the wipe-and-recreate lifecycle in
+> §10: imported files are deleted before re-fetching, so no prior copy exists to
+> fall back to. Failure now always produces the empty placeholder.
 
 **Decision:**
 
 | Condition | Behavior |
 |---|---|
-| Fetch succeeds | Write file, log success |
-| Fetch fails; stale copy exists (`content/[locale]/[localPath].md` already on disk) | Keep stale file, emit a **warning** naming the source and the stale file path, continue build |
-| Fetch fails; no stale copy | Write a minimal **empty placeholder** page (see shape below), emit a **warning** naming the source, continue build |
+| Fetch succeeds | Write file (with the `remoteImport` marker, §10), log success |
+| Fetch fails | Write a minimal **empty placeholder** page (see shape below), emit a **warning** naming the source, continue build |
 | `REMOTE_CONTENT_SOURCES` is empty | No-op, log "no remote content sources configured" |
 
-The build **never fails** due to a remote source being unreachable. The portal must be deployable even when third-party content sources are temporarily unavailable.
+The build **never fails** due to a remote source being unreachable (the script exits `0`; a placeholder keeps the route live). The portal must be deployable even when third-party content sources are temporarily unavailable.
 
 **Empty placeholder shape:**
 
 ```markdown
 ---
 title: Content unavailable
+remoteImport: true
 ---
 
 This page's content could not be fetched at build time.
 ```
 
-The placeholder title is overridden by `source.overrideFrontmatter.title` if declared. The body is a plain English fallback. This is a safety net, not a designed state — the warning in the build log surfaces it for investigation.
+The placeholder title is overridden by `source.overrideFrontmatter.title` if declared. The `remoteImport` marker is required so the placeholder is itself cleaned up on the next build (§10). The body is a plain English fallback. This is a safety net, not a designed state — the warning in the build log surfaces it for investigation.
 
 **Rationale:**
 
 - Failing the build on an external network dependency turns every third-party outage into a deployment blocker. That is not acceptable for infrastructure the portal does not control.
 - Silently omitting a page (writing nothing when the fetch fails) is worse: the route returns a 404 without any signal that content was expected there, and visitors who already have that URL bookmarked hit a dead page.
-- A stale copy is the best possible outcome of a failed fetch — it preserves the last known good content. Always warning means the operator knows the content is out of date.
 - An empty placeholder is visually undesirable but operationally safe. It keeps the nav entry live and surfaceable, so the problem is noticed rather than hidden.
 
+**Accepted tradeoff:** because §10 wipes imported files before re-fetching, a source that is unreachable during a build yields placeholders rather than the previous content. This is the deliberate cost of guaranteeing no stale or orphaned imports (see §10 rationale). Operators must treat placeholder warnings in the build log as actionable.
+
 **Consequences:**
-- The build script must check for stale file existence before writing. If the fetch fails, do not touch the existing file.
-- The script must exit with code `0` in all cases (stale and placeholder both count as non-fatal).
+- The script must exit with code `0` in all fetch-failure cases (placeholder is non-fatal).
 - CI should surface build warnings to the developer — do not pipe the script's stderr to `/dev/null`.
 
 ---
@@ -252,40 +259,271 @@ The placeholder title is overridden by `source.overrideFrontmatter.title` if dec
 
 ---
 
-## 8. Build pipeline integration
+## 8. Fetch is decoupled from build; imported content is committed
 
-**Decision:** Add the fetch script as a pre-step in both `generate` and `build:netlify`:
+**Decision:** Fetching and building are **independent steps**. `build` / `generate` do **not** run the fetch script; they build whatever content is on disk. The fetch script is a standalone command, and its output — the imported content files — is **committed to the repository** (see §10, which reverses the earlier gitignore decision).
 
 ```json
 "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
-"generate": "npm run fetch-remote-content && nuxt generate",
-"build": "npm run fetch-remote-content && nuxt build",
-"build:netlify": "NITRO_PRESET=netlify npm run fetch-remote-content && nuxt build"
+"generate": "nuxt generate",
+"build": "nuxt build",
+"build:netlify": "NITRO_PRESET=netlify nuxt build"
 ```
 
-**Rationale:** Remote content must be on disk before Nuxt Content builds its SQLite index. Running it earlier ensures the index includes fetched files.
+**Workflow:**
+1. A developer (or a scheduled job) runs `npm run fetch-remote-content` when content should be refreshed.
+2. They **review the resulting git diff** — added / changed / removed pages and slugs (§10) — and decide whether the fetch is acceptable and whether any editorial follow-up is needed (e.g. a redirect for a removed slug, §10).
+3. They commit the content. Normal `build` / deploy then uses the committed content.
+
+**Rationale:**
+- **You can rebuild without re-fetching**, and re-fetch without an immediate build. The two concerns no longer block each other.
+- **Deterministic, network-free builds.** CI builds from committed content — no build-time dependency on mediawiki.org being up, and no per-build fan-out of API requests.
+- **Human review gate.** Because the fetch output is a committed diff, a bad fetch (an outage producing placeholders, an unexpected mass removal) is caught in review and simply not committed — it never reaches a deploy. This is what mitigates the wipe-first outage risk noted in §6.
 
 **Consequences:**
-- Local `nuxt dev` does not call the fetch script. Developers working on prose pages that are fetched remotely need to run `npm run fetch-remote-content` once manually before starting the dev server, or rely on any stale copy already on disk.
-- The fetched files in `content/` should be added to `.gitignore` if they are meant to be regenerated every build, or committed if a stable local copy is preferred for development. **This must be decided per source.** The current recommendation is: add fetched files to `.gitignore` so they are always regenerated from the authoritative remote source, and rely on the stale-fallback behavior to cover network failures.
+- Content freshness now depends on someone running the fetch and committing — a manual developer action or a scheduled bot that opens a PR. It is no longer implicit in every build.
+- Local `nuxt dev` builds from committed content; the wipe-and-recreate lifecycle (§10) runs only when the fetch script is invoked.
+- Imported files must be **idempotent** so an unchanged page produces no diff (§9.5, §10).
+
+---
+
+## 9. Wiki translated-page strategy — `strategy: 'mediawiki-translated-page'` (Step 2)
+
+**Decision:** Add a strategy that fetches a MediaWiki **page-translation** page and *all* of its translation subpages, converts each to Markdown, and writes one file per locale into `content/[locale]/[localPath].md`. This is the concrete implementation of what the ADR previously stubbed as Phase 2c, and it **subsumes Phase 2a** (multi-locale) for wiki sources: translations are auto-discovered, not hand-listed in `localeFiles`.
+
+**Scope boundary — page translation, not interlanguage links.** This strategy targets the **Translate extension / page-translation model**, where translations live at subpages `Foo/<langcode>` (e.g. `Help:Extension:Translate/fr`). The Wikipedia-style **interlanguage-links** model (independent per-language articles via `langlinks`) is explicitly **out of scope** — it is a different content model, not subpages of one page.
+
+### 9.1 Config shape
+
+```ts
+export interface RemoteContentSource {
+  // ...existing fields...
+  strategy: 'markdown-url' | 'mediawiki-translated-page'  // extended union
+
+  // Wiki strategy fields (required when strategy === 'mediawiki-translated-page'):
+  wikiApiUrl?: string          // e.g. 'https://www.mediawiki.org/w/api.php'
+  pageTitle?: string           // canonical source page title, e.g. 'Help:Extension:Translate'
+  minTranslatedPercent?: number  // skip translations below this completeness (default: skip only 0%)
+  componentMapping?: {         // conservative element→MDC mapping toggles (see §9.4)
+    code?: boolean             // default true
+    callouts?: boolean         // default true
+    tabber?: boolean           // default false
+  }
+  linkPolicy?: 'absolute-external'  // default; rewrite wiki links to absolute URLs
+  attribution?: {              // see §9.5
+    license?: string           // e.g. 'CC BY-SA 4.0'
+  }
+}
+```
+
+`remoteUrl` / `locale` / `localeFiles` are not used by this strategy (translations are discovered). `localPath`, `overrideFrontmatter`, and `navEntry` behave as for other strategies.
+
+### 9.2 Translation discovery — `messagegroupstats`
+
+**Decision:** Discover which languages a page is translated into via the Translate extension's `messagegroupstats` (verified live against mediawiki.org):
+
+```
+GET {wikiApiUrl}?action=query&meta=messagegroupstats
+    &mgsgroup=page-{pageTitle}&mgsprop=total,translated
+    &mgssuppressempty=1&formatversion=2
+```
+
+Returns per-language `{ code, language, total, translated, fuzzy, proofread }`. The group id is `page-` + the **canonical title with spaces** (namespace included).
+
+- **Fetch all discovered languages** (per the project decision to support every language). Each maps directly onto a locale in the unified catalog (`docs/adr-language-catalog.md`), so no locale metadata is invented here.
+- **Completeness gate:** skip a language whose `translated` is `0`; keep the rest. `minTranslatedPercent` tunes this. `fuzzy` units count as translated (Translate serves untranslated units in the source language anyway).
+- **Requires the Translate extension** on the target wiki. If a page is not translation-enabled, discovery returns nothing and the source degrades to source-language-only (§9.6).
+
+### 9.3 HTML source — Parsoid REST `/html`
+
+**Decision:** Fetch each translation's HTML from the **core REST API Parsoid endpoint**:
+
+```
+GET {wikiHost}/w/rest.php/v1/page/{title}/html      // title = '{pageTitle}/{langcode}', percent-encoded
+```
+
+**Rationale:** Parsoid HTML is semantically structured (`data-mw`, section wrappers, `rel="mw:WikiLink"`, `<figure>`), which is the better substrate for a rule-based HTML→Markdown + element→component mapping, and it is MediaWiki's documented forward direction. The trade-off (accepted): it is heavier and needs more aggressive stripping than legacy `action=parse` output, and page metadata (display title) may need a second call.
+
+**Encoding caveat (verified):** the subpage slash must be percent-encoded in the path (`Help%3AExtension%3ATranslate%2Ffr`). The Parsoid `~lang` variant syntax is **not** the mechanism for translation subpages and 404s.
+
+**Noise to strip before conversion:** the `<languages/>` translation bar (`.mw-pt-languages`), TOC, edit-section links, category boxes, and navboxes. `Special:MyLanguage/` links are resolved to absolute URLs (§9.7).
+
+### 9.4 HTML→Markdown + element→MDC mapping (conservative)
+
+**Converter:** the **unified / rehype / remark** pipeline (`rehype-parse` → `rehype-remark` → `remark-gfm` → `remark-stringify`), which is **already present** as a transitive dependency of `@nuxt/content` — no new install. This deviates from the earlier plan to use **Turndown**: the sandbox's npm registry allowlist blocks installing Turndown, and unified is both available and more idiomatic for a Nuxt Content project (Nuxt Content itself parses MDC with `remark-mdc`). The element→MDC mapping is implemented as `rehype-remark` handlers; MDC component syntax (`::callout`) is emitted via mdast `html` nodes passed through verbatim by `remark-stringify`. Implemented in `scripts/lib/wikiContentConversion.mjs`. Phase 3 (§11.1) formalizes these handlers into a toggleable conversion registry and adds the shared-partial placeholder rule.
+
+**Mapping tier — conservative safe set (default):**
+- **Fenced code with language** — `<pre>` / `<div class="mw-highlight mw-highlight-lang-*">` → ` ```lang ` (a rehype-remark `pre` handler reading the `mw-highlight-lang-*` / `language-*` class). *Default on.*
+- **Message/note boxes → `::callout{type=...}`** — MediaWiki `.cdx-message`, `.mw-message-box`, `.ambox` mapped to the nearest callout type. *Default on.*
+
+**Opportunistic (config-gated, default off):**
+- **Tabber** (`.tabber` from the Tabber extension) → `::code-tabs` / `::code-tab`. *Off unless `componentMapping.tabber`.*
+
+**Degrade / strip:**
+- Infoboxes, navboxes, TOC, edit-section links, the language bar → dropped.
+- `<references/>` / footnotes → flattened to an ordered list at the page end (MDC has no footnote component).
+- Images → absolute-ized and hot-linked (§9.7); thumb framing unwrapped.
+
+Mapping targets **must** be exactly the names of components registered in `app/components/content/` (per §7, an unregistered `::component` renders as a no-op block and silently vanishes).
+
+### 9.5 Licensing & attribution — frontmatter + rendered footer
+
+**Decision:** Wikimedia prose is CC BY-SA; reuse requires attribution, a link back, and a license notice. Every fetched page carries provenance **and renders a visible footer**:
+
+- **Frontmatter** (injected at fetch time): `sourceUrl`, `sourceRevision`, `sourceWiki`, `license`, plus the `remoteImport` cleanup marker (§10).
+- **Rendered footer:** the fetch step appends an `::attribution{}` MDC block to the body; a new `Attribution` content component renders "Adapted from [page] on [wiki], licensed CC BY-SA, revision N." This keeps the render pipeline (§7) untouched — it is just content.
+
+**No `fetchedAt` in the committed frontmatter.** A wall-clock fetch timestamp would change on every run and produce a diff on *every* file even when nothing changed, drowning the review signal (§8, §10). Content version is instead conveyed by `sourceRevision` (the Parsoid ETag revision); *when* it was fetched is recorded by the git commit. This keeps imported files idempotent — an unchanged upstream page re-fetches to byte-identical output and shows no diff.
+
+### 9.6 Per-locale build-failure behavior (amends §6)
+
+§6's warn/placeholder policy applies **per locale file**, not per source:
+- One locale's fetch failing must not drop the others; each translation is fetched and written independently.
+- The empty placeholder is decided per `content/[locale]/[localPath].md` (there is no stale copy — §10 wipes imported files first).
+- If discovery (§9.2) itself fails, attempt only the source-language page, write a placeholder if that also fails, and warn. The build never fails.
+
+### 9.7 Link & image rewriting
+
+- **Internal wiki links** (`/wiki/...`, `rel="mw:WikiLink"`, `Special:MyLanguage/...`) → rewritten to **absolute URLs** on the source wiki (`linkPolicy: 'absolute-external'`). They render through `ProseA` with the external-link icon. Not mapped to portal routes in v1.
+- **Images** → absolute-ized to `upload.wikimedia.org` and **hot-linked** (no asset localization in v1). Revisit if CSP or offline builds require local copies.
+
+### 9.8 API etiquette
+
+- **Descriptive `User-Agent`** on every request (Wikimedia policy requires it).
+- **Concurrency cap** across locales × pages; do not fan out unbounded.
+- Respect `maxlag`; back off on 429 / `Retry-After`.
+
+### 9.9 MDC-injection hazard (must handle)
+
+Converted Markdown may contain `::`, `:`, or `{…}` sequences that Nuxt Content's MDC parser interprets as components/spans. Wiki content (e.g. `::` inside a code sample, or `{{...}}` remnants) can silently become a broken component or be stripped. The converter **must escape** these sequences in prose/code output. This is the single most likely rendering-corruption bug in this strategy and needs explicit test coverage.
+
+### 9.10 Relationship to multi-locale (Phase 2a)
+
+For wiki sources, translations are discovered (§9.2), so the reserved `localeFiles` map (§4) is **not** used — this strategy supersedes Phase 2a for wiki content. `localeFiles` remains available for the generic `markdown-url` (and future `html-url`) strategies where locale URLs are known but not discoverable.
+
+---
+
+## 10. Imported-content lifecycle: wipe-and-recreate cleanup
+
+**Decision:** Every fetch run **deletes all previously-imported files, then recreates them** from current config. No orphaned import survives a run — whether it came from a source removed from config, a changed `localPath`/slug, a changed `locale`, or a translation that dropped below `minTranslatedPercent` (or was removed upstream). (The run is the standalone fetch command, not a build — §8.)
+
+**Context / problem:** The original design only ever *wrote* files; it never removed them. Renaming a `localPath`, dropping a source, or losing a translation left the old file in `content/`, and Nuxt Content kept indexing and serving it. The portal needs the set of imported files to always equal what the current config + current remote state describe.
+
+**Identification — a frontmatter marker.** Every file the fetch script writes — wiki pages, `markdown-url` pages, and empty placeholders — carries a marker in its frontmatter:
+
+```yaml
+remoteImport: true   # plus sourceId, for logging/debugging
+```
+
+The wipe scans `content/` recursively, parses each `.md`'s frontmatter (with the `yaml` package), and deletes exactly the files where `remoteImport === true`. Hand-authored content has no marker and is never touched. This is the safety mechanism that lets a blanket wipe coexist with authored pages in the same tree (§7).
+
+- Because the marker lives in frontmatter, **every imported write must produce a frontmatter block.** A bare `markdown-url` source whose remote file has no frontmatter (and no `overrideFrontmatter`) now always gets one injected.
+
+**Lifecycle, per fetch run** (the standalone `fetch-remote-content` command — *not* every build, §8):
+1. **Wipe** — delete every marked file under `content/`; prune any locale directory left empty.
+2. **Recreate** — fetch and write all configured sources, stamping the marker on each file.
+3. **Log** — report counts: wiped, written, placeholder.
+
+**Why wipe-first (always-fresh) rather than reconcile-and-keep-stale:**
+- **Deterministic.** The output is a pure function of config + current remote state; there is no accumulated on-disk history to reason about.
+- **No orphan diffing.** A blanket wipe covers *every* orphan case (removed source, changed slug/locale, dropped translation) with one mechanism, instead of per-case reconciliation logic that is easy to get subtly wrong.
+- **Config is the single source of truth** for what should exist, not the contents of `content/`.
+
+**Interaction with §6 — the stale tier is retired.** Because imported files are deleted before re-fetching, a failed fetch has no last-known-good copy to preserve; failure yields the empty placeholder. The outage risk this created is now caught by the **review gate** below rather than shipped: a fetch that produces placeholders shows up as such in the git diff and is simply not committed. Builds never fetch (§8), so a wiki outage cannot degrade a deploy — only a *reviewed and committed* fetch changes what ships.
+
+**Committed output & the review diff (the reason imported files are not gitignored).** Imported files are **committed to the repository.** The point is that the fetch run's **git diff is the developer's review surface** — it shows exactly which pages, translations, and slugs were added, changed, or removed. This is why wipe-and-recreate pairs so well with committing: a removed source/slug/translation appears as a **deleted file** in the diff (an overwrite-only approach would hide it), so the developer can:
+- judge whether the fetch is "successful" (expected changes) or wrong (an outage's mass placeholders, an unexpected mass removal) before committing;
+- take editorial follow-up a script cannot decide — most importantly, **add a redirect** in `config/contentRedirects.ts` (`LEGACY_PATH_REDIRECTS`, HTTP 301) when an imported slug disappears and its old URL should not 404. *Caveat:* that config currently emits redirects only for the default locale + `es/fr/he/fa` (`NON_DEFAULT_CONTENT_LOCALE_CODES`), so for a removed slug that existed across many catalog locales, redirect coverage should be widened — a follow-up now that content locales span the full catalog (see `docs/adr-language-catalog.md`).
+
+For this diff to be meaningful, imported output must be **idempotent** — no volatile fields (see §9.5, `fetchedAt` removed) — so an unchanged upstream page yields no diff and only real changes surface.
+
+*Tradeoffs of committing:* generated content adds to repo size and history churn, and can produce merge conflicts on branches (resolve by re-running the fetch). Acceptable for curated sources; revisit if a source explodes into thousands of committed locale files.
+
+**Edge cases covered:** source removed from config · `localPath`/slug changed · `locale` changed (markdown-url) · translation dropped or below threshold (with successful discovery) · fresh checkout (nothing marked to wipe) · hand-authored files (no marker, untouched) · placeholders (marked, so re-wiped) · per-file fetch failures (isolated to that file).
+
+**Consequences:**
+- The wipe deletes only regenerable, marked files (always reproducible by re-running the fetch); it never touches unmarked authored content. A fatal error exits `1`, and since the run is reviewed before commit, a wipe not followed by a clean recreate is discarded rather than shipped.
+- Imported content is **committed, not gitignored** — the `.gitignore` entries for imported files are removed. (Reverses the earlier gitignore decision in §2/§8.)
+- Content freshness is a deliberate, reviewed act (manual run or scheduled PR bot), not an implicit build side-effect (§8).
+- `nuxt dev` does not run the lifecycle; it builds from committed content.
+
+---
+
+## 11. Conversion registry & shared partials (Phase 3)
+
+Phase 3 has two related parts: it formalizes HTML→MDC mapping into an extensible **conversion registry** (which finally wires the previously-inert `componentMapping`), and it adds **shared partials** — a way for a wiki page to request that a portal-authored partial be inserted at a marked spot.
+
+### 11.1 Conversion registry
+
+**Decision:** the element→MDC handlers (fenced code with language, inline code, message-box→`::callout`) become a declared, ordered **registry of conversions** rather than ad-hoc handlers. Each conversion is a detector (a hast predicate) + a transform (rehype-remark handler / hast rewrite). `config/remoteContentSources.ts` `componentMapping` toggles which *content* conversions are enabled per source (default-on for the safe set); this replaces the inert field. The registry keeps output deterministic/idempotent (§9.5, §10).
+
+Two kinds of conversion:
+- **Content conversions** — element → MDC (code, inline code, callout). Toggleable via `componentMapping`.
+- **Structural conversion** — the shared-partial placeholder (§11.2), always evaluated; controlled by the allowlist rather than a toggle.
+
+### 11.2 Shared partials — model
+
+**Decision:** a shared partial's **content lives entirely on the markdown side** (a portal-authored partial file). The wiki page contains only a **placeholder** naming *which* partial to insert and *where*. On fetch, the placeholder is replaced by a `::partial{name="…"}` directive; the partial itself is never extracted from, or defined by, the wiki.
+
+**Rationale:**
+- Authored once, editable without re-fetching; shared across all translations by construction (every locale's page emits the same directive).
+- The partial may use MDC components, Vue, and banana-i18n — it is normal portal content, not converted wiki HTML.
+- No canonical-source / divergence / `<translate>`-unit concerns (the wiki holds no partial content).
+
+### 11.3 Placeholder convention (wiki side)
+
+The wiki author (who controls the source page) marks an insertion point with an **empty** element carrying the partial name:
+
+```html
+<div class="frontdoor-partial" data-partial="api-example"></div>
+```
+
+(or a wiki template that renders the same). Being empty, it survives translation untouched whether or not it sits inside a `<translate>` unit. The converter detects it in the Parsoid HTML by the `frontdoor-partial` class + `data-partial` attribute.
+
+### 11.4 The `::partial` directive & component
+
+- The converter replaces each placeholder with `::partial{name="api-example"}`.
+- `app/components/content/Partial.vue` resolves `name` → a registered partial (§11.5) and renders it via `ContentRenderer`.
+- `::partial` is a normal MDC component, so authored pages may use it too.
+
+### 11.5 Allowlist registry & safety
+
+**Decision:** partial names are resolved through an **allowlist** in `config/sharedPartials.ts` (`name → content path`). Because the name comes from wiki text, this is a **security boundary**:
+- Only registered names resolve; names are sanitized (no path traversal, no arbitrary content paths).
+- The converter validates the name **at fetch time**: an unknown name emits a **warning** (visible in the committed diff / log) and the directive is omitted rather than emitted for a non-existent partial.
+- `Partial.vue` likewise renders nothing (with a dev warning) for an unregistered or missing partial.
+
+### 11.6 Authored-partial storage & lifecycle
+
+- Shared partials are authored at `content/_partials/shared/<name>.md` — committed, hand-maintained, and **never fetched or wiped** (they carry no `remoteImport` marker, so the §10 cleanup ignores them). The `_partials` convention keeps them queryable but non-routed.
+- The registry maps each `name` to that path; changing a partial is a one-file edit, no re-fetch.
+
+### 11.7 Edge cases & consequences
+
+- **Unknown/unregistered name** → fetch-time warning + directive omitted; `Partial.vue` renders nothing if one slips through.
+- **Registered name, missing file** → component renders nothing + dev warning.
+- **Idempotency** — placeholder→directive substitution is deterministic, so no diff noise (§10).
+- **Wipe** — fetched pages (carrying `::partial` directives) are imported content, wiped/recreated normally; authored partials are untouched.
+- **Attribution** — the fetched page keeps its CC BY-SA footer (§9.5); the shared partial is portal-authored content and needs none.
+- **Nesting** — a shared partial may itself use `::callout` etc.; guard against `::partial` cycles is out of scope (author responsibility).
 
 ---
 
 ## Future phases
 
-### Phase 2a — Multi-locale per source
+### Phase 2a — Multi-locale per source (generic sources only)
 
-Extend `RemoteContentSource` with `localeFiles` (see §4). The script fetches one file per declared locale and writes to `content/[locale]/[localPath].md`. Existing single-URL entries continue to work unchanged.
+Extend `RemoteContentSource` with `localeFiles` (see §4). The script fetches one file per declared locale and writes to `content/[locale]/[localPath].md`. Existing single-URL entries continue to work unchanged. **Superseded for wiki sources** by the auto-discovery of `strategy: 'mediawiki-translated-page'` (§9.10); `localeFiles` remains for `markdown-url` / `html-url` sources.
 
 ### Phase 2b — HTML-to-Markdown (`strategy: 'html-url'`)
 
-Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), convert with **Turndown** (already the documented approach for MediaWiki content in the previously planned `sync-wiki-content.js`). Add Turndown as a dependency only when this phase is started.
+Add `strategy: 'html-url'` support to the script. Fetch HTML, extract the content region using a configured CSS selector (`htmlSelector` field), and convert through the same unified pipeline as §9.4 (`scripts/lib/wikiContentConversion.mjs`), sharing its element→MDC mapping.
 
-The `htmlSelector` field is required for this strategy — without it, Turndown converts the full HTML page including the remote site's nav and footer into Markdown.
+The `htmlSelector` field is required for this strategy — without it, the converter would turn the full HTML page (including the remote site's nav and footer) into Markdown.
 
-### Phase 2c — MediaWiki Action API (`strategy: 'mediawiki-action-api'`)
+### Phase 2c — Wiki translated pages — **specified in §9**
 
-Add `strategy: 'mediawiki-action-api'` as a specialised form of HTML-to-Markdown that calls `action=parse` on the MediaWiki instance rather than fetching a static URL. This is the strategy originally documented for `sync-wiki-content.js`. It shares the Turndown conversion path with `'html-url'` but differs in how the source HTML is obtained.
+The MediaWiki-page strategy is now fully specified as `strategy: 'mediawiki-translated-page'` (§9). It uses the Parsoid REST `/html` endpoint (not `action=parse`) and discovers translations via `messagegroupstats`. This replaces the earlier `'mediawiki-action-api'` stub.
 
 ### Phase 2d — Explorer side nav target
 
@@ -336,10 +574,16 @@ Extend `RemoteContentNavEntry.target` to include `'explorer-side'` (see §5).
 
 ## Corrections to existing documentation
 
+**Status: applied** — `ARCHITECTURE.md`, `docs/TECH_DECISIONS.md`, `AGENTS.md`, `README.md`, and `.gitignore` have been reconciled with this ADR (standalone fetch, wipe-and-recreate, committed content, unified converter). The table below is retained as the record of what changed.
+
 | Document | Section | Required correction |
 |---|---|---|
 | `ARCHITECTURE.md` | Wiki content sync | Update to reference `scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`. Remove references to `sync-wiki-content.js` and `wikiContentSources.js`. |
-| `ARCHITECTURE.md` | Wiki content sync | Note that Turndown is not yet a dependency — it will be added when Phase 2b/2c HTML conversion is implemented. |
+| `ARCHITECTURE.md` | Wiki content sync | The wiki strategy (§9) converts HTML with the **unified/rehype/remark** pipeline already bundled via `@nuxt/content` (not Turndown — see §9.4). No new dependency was added. |
 | `TECH_DECISIONS.md` | Wiki content sync | Same corrections as above. |
-| `TECH_DECISIONS.md` | Experiment 3 | Reference this ADR as the implementation track for wiki content pull. |
+| `TECH_DECISIONS.md` | Experiment 3 | Reference this ADR (§9) as the implementation track for wiki content pull. |
 | `AGENTS.md` | Rule 6 (All configuration goes in config files) | Replace "Wiki content sync sources" bullet with reference to `config/remoteContentSources.ts`. |
+| `scripts/fetch-remote-content.mjs` | `mergeFrontmatter` | The hand-rolled YAML parse (splits on `:`) is lossy on nested keys / arrays / colon-bearing values. Move to the `yaml` dependency (already installed) before injecting wiki frontmatter (title, provenance, attribution). |
+| `docs/adr-language-catalog.md` | — | Prerequisite: the wiki strategy (§9) writes into locales defined by the unified language catalog. |
+| `ARCHITECTURE.md` | Remote content fetching | Describe the wipe-and-recreate lifecycle (§10) run by the standalone fetch command (build no longer fetches, §8); imported content is committed and reviewed via its git diff; the stale-copy fallback is retired. |
+| `.gitignore` | imported content | Remove the imported-content ignore entries (`content/en/demo-remote-markdown.md`, `content/*/wiki-translate-help.md`) — imported files are now committed (§8, §10). |
