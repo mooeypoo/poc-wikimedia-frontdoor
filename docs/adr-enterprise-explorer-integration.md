@@ -43,7 +43,7 @@ This is a static, externally hosted OpenAPI YAML.  It is not fetched via the Wik
 
 - The Enterprise spec **must not** go through `/server/api/explorer-bootstrap.get.ts` — that route is scoped to wiki instances and the discovery protocol.
 - The spec URL is a single stable external URL with no per-wiki variation.  It belongs in config, not in runtime discovery.
-- The existing remote content fetching infrastructure (`/scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`) handles Markdown prose pages at build time.  The Enterprise spec is fetched at runtime by Scalar (passed as `spec.url`).  These are separate concerns and should stay separate.
+- The existing remote content fetching infrastructure (`/scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`) imports Markdown prose pages via a standalone, pre-committed fetch step (not the build).  The Enterprise spec is fetched at runtime by Scalar (passed as `spec.url`).  These are separate concerns and should stay separate.
 
 **Proposed config location:** A new `config/enterpriseExplorer.ts` file following the existing `config/scalar.ts` and `config/instances.ts` conventions:
 

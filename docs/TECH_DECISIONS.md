@@ -155,9 +155,9 @@ Event handler props: `onInstanceChange`, `onLanguageSelect`, `onAuthComplete`
 
 ## Wiki content sync
 
-Some on-wiki pages (policy, descriptions) have translations that are pulled into the Markdown content directory at build time via `scripts/sync-wiki-content.js`. The script calls the MediaWiki Action API, converts HTML to Markdown, and writes locale-prefixed files to `content/[locale]/`. It runs before `nuxt generate` and is idempotent.
+Some on-wiki pages (policy, descriptions) and their translations are pulled into the Markdown content directory via `scripts/fetch-remote-content.mjs` (`mediawiki-translated-page` strategy). It discovers translations via the Translate extension's `messagegroupstats`, fetches each locale's Parsoid HTML, and converts to MDC Markdown with the unified/rehype/remark pipeline, writing locale-prefixed files to `content/[locale]/`.
 
-Sources are declared in `config/wikiContentSources.js`.
+The fetcher is a **standalone command decoupled from the build**: run it on demand, review the git diff, and commit — imported content is committed, not gitignored. Each run wipes and recreates all imported files (marked `remoteImport: true`) so orphans never linger; output is idempotent. Sources are declared in `config/remoteContentSources.ts`. See `docs/adr-remote-content-fetching.md`.
 
 ---
 
@@ -172,8 +172,8 @@ When content is unavailable in the requested locale, the fallback chain declared
 - Flow: Authorization Code + PKCE
 - Token exchange handled in a Nuxt server route (`server/routes/oauth/callback.ts`) — keeps client secret server-side
 - Token stored in the `oauthSession` Pinia store
-- `useOAuthSession()` composable exposes token state to both the shell (for display) and the Scalar wrapper (for pre-filling auth)
-- User's active tokens are displayed in a custom panel alongside the explorer (Scalar plugin at `views: content.end`)
+- `useOAuthSession()` composable exposes session state to the shell for display only (logged-in username, Log in / Log out in the top bar)
+- MVP scope: OAuth does **not** integrate with Scalar — no bearer injection, no in-explorer auth UI. See [adr-wikimedia-oauth-authentication.md §0](adr-wikimedia-oauth-authentication.md). Token-management UI is deferred to the future standalone SPA (ADR §11).
 
 ---
 
@@ -290,10 +290,10 @@ Verify the Wikimedia OAuth 2.0 Authorization Code + PKCE flow works end-to-end, 
 ---
 
 ### Experiment 3 — Wiki content pull and language fallback
-**Status: pending Experiment 1**
+**Status: implemented** — see `docs/adr-remote-content-fetching.md` (§9, §10).
 
-Verify that on-wiki pages can be fetched via the MediaWiki Action API, converted to Markdown, stored per locale in Nuxt Content, and that the fallback chain renders correctly when a locale file is absent.
+On-wiki pages are fetched with the `mediawiki-translated-page` strategy: translations discovered via `messagegroupstats`, each locale's **Parsoid HTML** (core REST) converted to Markdown with the **unified/rehype/remark** pipeline (not the Action API + Turndown originally sketched here), stored per locale in Nuxt Content, with the existing fallback chain rendering when a locale file is absent.
 
-**Success:** Build script is stable, Markdown conversion is acceptable for prose content, fallback renders without error, fallback notice is shown.
+**Outcome:** conversion is acceptable for prose; the fetcher is a standalone, idempotent, wipe-and-recreate command whose committed output is reviewed via git diff.
 
-**Failure mode to document:** MediaWiki HTML-to-Markdown conversion is unacceptable for the target pages — mitigation is restricting to prose-only pages or maintaining separate Markdown-native versions outside the wiki.
+**Failure mode to watch:** HTML-to-Markdown conversion unacceptable for a given page — mitigation is restricting to prose-only pages or maintaining Markdown-native versions outside the wiki.

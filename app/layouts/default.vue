@@ -2,7 +2,7 @@
 import { CdxIcon } from '@wikimedia/codex'
 import { cdxIconArrowNext } from '@wikimedia/codex-icons'
 import { API_EXPLORER_NAVIGATION_PATH } from '../../config/mainNavigation'
-import { SUPPORTED_INTERFACE_LOCALES } from '../../config/interfaceLocales'
+import { SUPPORTED_LANGUAGES } from '../../config/languages'
 import { useDirection } from '../composables/useDirection'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
@@ -34,8 +34,11 @@ const {
 	navigationSections: pageSectionNavigationSections
 } = usePageSectionNav()
 
-const supportedInterfaceLocales = SUPPORTED_INTERFACE_LOCALES
-const nonDefaultInterfaceLocales = supportedInterfaceLocales.filter( ( localeCode ) => localeCode !== 'en' )
+// Locale prefixes recognised when syncing the interface locale to the route.
+// Sourced from the full language catalog — every registered i18n locale.
+const nonDefaultInterfaceLocales = SUPPORTED_LANGUAGES
+	.map( ( language ) => language.code )
+	.filter( ( localeCode ) => localeCode !== 'en' )
 
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
