@@ -739,41 +739,72 @@ Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/
 | Expandable sections | Native HTML `<details>` / `<summary>` in Markdown |
 | Standard Markdown | Bold, italic, tables, lists, blockquotes, inline code |
 
-### Shiki transformer features — need `nuxt.config.ts` change
+### Shiki transformer features
 
-`@shikijs/transformers` is already installed as a transitive dependency of `@nuxt/content`. No new package is needed — add transformers to `content.highlight.transformers` in `nuxt.config.ts`:
+`@shikijs/transformers` is a transitive dependency of `@nuxt/content`. Line numbers use a project-specific transformer plus CSS counters; line highlighting and diffs use `transformerMetaHighlight()` / `transformerNotationDiff()` wired in `nuxt.config.ts` (see demo page).
 
-| Feature | Transformer |
+| Feature | Mechanism |
 |---|---|
-| Line numbers | `transformerMetaLineNumbers()` |
+| Line numbers | Custom meta transformer + CSS counters in `main.css` |
 | Line highlighting (`{3-5}` in code fence meta) | `transformerMetaHighlight()` |
 | Diff annotations (`// [!code ++]` / `// [!code --]`) | `transformerNotationDiff()` |
 
-### MDC component features — need new Vue files
+### MDC content components
 
-`@nuxt/content` ships MDC (Markdown Components): any `.vue` file placed in `app/components/content/` is auto-registered and callable from Markdown using `::component-name` block syntax. All new content components must use **Codex** (`@wikimedia/codex`) — already installed — wherever an appropriate widget exists.
+`@nuxt/content` ships MDC (Markdown Components): any `.vue` file placed in `app/components/content/` is auto-registered and callable from Markdown using `::component-name` block syntax. All content components must use **Codex** (`@wikimedia/codex`) — already installed — wherever an appropriate widget exists.
 
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
-| `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error`) | `::callout{type="warning"}` block |
-| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block |
-| `AppButton.vue` | `CdxButton` | `::app-button{href="…" label="…"}` inline |
+| `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
+| `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
+| `AppButton.vue` | Progressive button styling (NuxtLink / `<a>`) | `::app-button{href="…" label="…"}` inline |
+| `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
+| `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
+| `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
 
-### Page-layer features — need `[...slug].vue` update
+#### Callouts
 
-| Feature | Change |
+`Callout.vue` wraps Codex **`CdxMessage`**. Optional `#title` named slot content is Markdown; MDC already emits a `<p>`, so the component must **not** wrap the title in another `<p>` or `<strong>` (invalid nesting misaligned the status icon from the title). When a title is present:
+
+- The first child paragraph of `.cdx-message__content` is bolded via CSS (Codex multiline message pattern).
+- `.cdx-message__content` uses `align-self: flex-start` so the icon aligns with the title row (Codex centers content for single-line messages by default).
+
+Imported wiki message boxes map to `::callout{type=…}` via the remote-content conversion registry (`docs/adr-remote-content-fetching.md`).
+
+#### Code tabs
+
+`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`).
+
+**Why framed:** Tabbed code blocks are self-contained modules on prose pages, not page-level navigation. Framed tabs supply the gray header row, white selected-tab label, and content panel chrome without reimplementing tab interaction states.
+
+**MDC bridge:** `CdxTabs` requires direct `CdxTab` children. MDC nests `:::code-tab` blocks inside `::::code-tabs`, so `CodeTab` registers each panel (label + default-slot render function) during `setup()` via `provide`/`inject`; `CodeTabs` renders `CdxTab` panels from that registry. A hidden `<slot />` mount point keeps registration SSR-safe (registration must not wait for `onMounted`).
+
+**Styling exceptions** (documented; tab header metrics remain Codex-owned):
+
+| Rule | Token / value | Rationale |
+|---|---|---|
+| Module border | `1px solid var(--border-color-muted)` | Muted module edge per Codex framed-tabs-in-a-box pattern |
+| Module radius | `var(--border-radius-base)` | Matches Codex framed tab label corner radius |
+| Code padding | `var(--spacing-75)` (12px) on `pre` | Inset code inside the white content panel |
+| Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM for find-in-page across tabs |
+
+### Page-layer features
+
+| Feature | Status |
 |---|---|
-| Next / Previous navigation | Read `page.prev` / `page.next` frontmatter fields; render `CdxButton` links with `cdxIconArrowPrevious` / `cdxIconArrowNext` |
+| Next / Previous navigation | Implemented in `[...slug].vue` — reads `page.prev` / `page.next` frontmatter; `NuxtLink` + `CdxIcon` arrows (`cdxIconArrowPrevious` / `cdxIconArrowNext`, `flip-for-rtl`) |
 
-### File inclusion — needs verification
+### File inclusion
 
-MDC ships a built-in `Include` component via `@nuxtjs/mdc`. The syntax is `::include{file="./path/to/file.md"}`. This needs end-to-end testing to confirm path resolution works correctly against the `content/[locale]/` directory structure.
+**Locale-relative includes:** `app/components/content/Include.vue` resolves `::include{file="./…"}` against the current page locale and route, then renders via `ContentRenderer`. Demo: `content/en/use-content-and-data.md` → `./_partials/api-note.md`.
+
+**Shared (portal-authored) partials:** `::partial{name}` via `Partial.vue` + `config/sharedPartials.ts` allowlist — used by imported wiki pages and authored content; see Remote content fetching below and ADR §11.
 
 ### Demo page
 
-`content/en/use-content-and-data.md` exercises every feature listed above with inline status notes (works today / not yet configured / not yet implemented). Use it as the acceptance test surface when implementing any item in this section.
+`content/en/use-content-and-data.md` exercises markdown rendering features with inline status notes. Use it as the acceptance test surface when changing content components or Shiki configuration.
 
 ---
 
