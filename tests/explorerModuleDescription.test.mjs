@@ -47,3 +47,22 @@ test( 'normalizeOpenApiModuleDescription strips Site API access boilerplate suff
 		'Provides information about Wikimedia project sites, including sitemaps. To prevent abusive scraping and ensure fair use of infrastructure, access to endpoints in this API is restricted to specific user groups.'
 	)
 } )
+
+test( 'normalizeOpenApiModuleDescription keeps Attribution API one-line summary', () => {
+	const attributionDescription = [
+		'The Attribution API provides well-structured attribution data for content across Wikimedia projects.',
+		'For more information about the Attribution API, see the [docs on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Attribution_API).',
+		'For more information about attribution guidelines, expectations, and style guides when reusing Wikimedia content, see the [Attribution Framework](https://wikimedia-attribution.toolforge.org/attribution-signals/overview.html).',
+		'Have questions or comments about this API? Help shape the experience and functionality while during the beta period by [joining the discussion](https://www.mediawiki.org/wiki/Talk:Attribution_API).'
+	].join( ' ' )
+
+	const normalized = normalizeOpenApiModuleDescription(
+		attributionDescription,
+		'attribution/v0-beta'
+	)
+
+	assert.equal(
+		normalized,
+		'The Attribution API provides well-structured attribution data for content across Wikimedia projects.'
+	)
+} )

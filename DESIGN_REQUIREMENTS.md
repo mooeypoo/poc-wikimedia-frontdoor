@@ -547,7 +547,7 @@ Top to bottom:
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
 
-**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
+**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes; Attribution API `attribution/v0-beta` docs / framework / beta-talk links, leaving the one-line product summary). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
 **Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented exceptions.
 

@@ -22,5 +22,7 @@ export const EXPLORER_MODULE_DESCRIPTION_MESSAGE_KEYS: Record<string, string> = 
  * after markdown normalization. Keyed by discovery module name (for example `site/v1`).
  */
 export const EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS: Record<string, RegExp> = {
-	'site/v1': /\s*For more information about who can access this API,.+$/i
+	'site/v1': /\s*For more information about who can access this API,.+$/i,
+	// Keep the one-line product summary; drop docs / Attribution Framework / beta talk links.
+	'attribution/v0-beta': /\s*For more information about the Attribution API,.+$/i
 }
