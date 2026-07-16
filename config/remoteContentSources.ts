@@ -168,11 +168,11 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		remoteUrl: 'https://gitlab.wikimedia.org/repos/ci-tools/wikimedia-spectral-ruleset/-/raw/main/README.md?ref_type=heads',
 		localPath: 'demo-remote-markdown',
 		overrideFrontmatter: { title: 'Demo Remote Markdown' },
-		navEntry: {
-			target: 'primary',
-			messageKey: 'nav-remote-md',
-			navPosition: 'after:community'
-		}
+		// navEntry: {
+		// 	target: 'primary',
+		// 	messageKey: 'nav-remote-md',
+		// 	navPosition: 'after:community'
+		// }
 	},
 	{
 		// Demo of the wiki translated-page strategy: fetches a translatable
@@ -187,10 +187,10 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		minTranslatedPercent: 85,
 		overrideFrontmatter: { title: 'Translate extension (from mediawiki.org)' },
 		attribution: { license: 'CC BY-SA 4.0' },
-		navEntry: {
-			target: 'primary',
-			messageKey: 'nav-wiki-translate',
-			navPosition: 'after:community'
-		}
+		// navEntry: {
+		// 	target: 'primary',
+		// 	messageKey: 'nav-wiki-translate',
+		// 	navPosition: 'after:community'
+		// }
 	}
 ]
