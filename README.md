@@ -47,7 +47,7 @@ bun run dev
 
 ## Imported content
 
-Some pages are imported from remote sources (raw Markdown URLs, or MediaWiki pages with their translations) declared in [config/remoteContentSources.ts](/home/moriel/code/wikimedia/frontdoor/config/remoteContentSources.ts). This is a **standalone step, not part of the build** — the build uses whatever imported content is committed.
+Some pages are imported from remote sources (raw Markdown URLs, or MediaWiki pages with their translations) declared in [config/remoteContentSources.ts](/home/moriel/code/wikimedia/frontdoor/config/remoteContentSources.ts). This is a **standalone step, not part of the build** — the build uses whatever imported content is committed. For step-by-step instructions on adding/changing sources and shared partials, see the [content import guide](/home/moriel/code/wikimedia/frontdoor/docs/content-import-guide.md).
 
 ```bash
 npm run fetch-remote-content

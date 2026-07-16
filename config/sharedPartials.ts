@@ -11,6 +11,8 @@
  * Authored partial files live at `content/_partials/shared/<name>.md`
  * (committed, hand-maintained, never fetched or wiped). They are ordinary
  * content and may use MDC components, Vue, and banana-i18n.
+ *
+ * How to add/change a shared partial: docs/content-import-guide.md (Part 2).
  */
 export interface SharedPartial {
 	/** Stable name referenced by `::partial{name}` and the wiki placeholder. */
