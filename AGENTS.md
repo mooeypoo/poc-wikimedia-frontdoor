@@ -150,8 +150,8 @@ See `ARCHITECTURE.md` → "CSS direction strategy" for the full rationale.
 Vue components placed in `app/components/content/` are auto-registered as MDC components and callable from Markdown. When building or modifying these components, use Codex widgets wherever a suitable one exists. Do not introduce bespoke styling for things Codex already covers (buttons, messages/callouts, tabs, icons).
 
 - Use `CdxIcon` + `cdxIconLink` in `ProseH2.vue` … `ProseH6.vue` for heading anchor icons. The default `@nuxtjs/mdc` heading component wraps the full heading text in `<a>` — the override renders heading text as plain text and places a `CdxIcon` link alongside it, shown on hover via CSS.
-- Use `CdxMessage` for callout/alert boxes — its `type` prop covers `notice`, `warning`, and `error` variants.
-- Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs.
+- Use `CdxMessage` for callout/alert boxes — its `type` prop covers `notice`, `warning`, `error`, and `success` variants. For titled callouts, pass `#title` as Markdown (MDC already emits a `<p>`); do not re-wrap the title — see `ARCHITECTURE.md` → “Markdown content pages” → Callouts.
+- Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs. Quiet tabs remain reserved for shell chrome (`ShellPrimaryNav`).
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
 

@@ -2,12 +2,23 @@
 import { CdxTab, CdxTabs } from '@wikimedia/codex'
 import type { PropType, VNode } from 'vue'
 
+/**
+ * Registration payload from a child {@link CodeTab} for one framed panel.
+ */
 interface CodeTabRegistration {
 	name: string
 	label: string
 	content: () => VNode[]
 }
 
+/**
+ * Markdown tabbed code module: Codex {@link CdxTabs} with `framed`, fed by
+ * nested `:::code-tab` children via provide/inject (MDC cannot nest `CdxTab`
+ * as direct slot children of `CdxTabs`).
+ *
+ * @see ARCHITECTURE.md → Markdown content pages → Code tabs
+ * @see docs/TECH_DECISIONS.md → Framed code tabs
+ */
 const tabs = ref<CodeTabRegistration[]>( [] )
 
 /**
@@ -112,8 +123,8 @@ provide( 'code-tabs:register', registerTab )
  */
 .code-tabs :deep( .cdx-tabs--framed ) {
 	border: 1px solid var( --border-color-muted );
-	/* Codex tabs use 2px corner radius on tab labels */
-	border-radius: 2px;
+	/* Matches Codex framed tab label radius (--border-radius-base = 2px). */
+	border-radius: var( --border-radius-base );
 	overflow: hidden;
 	background-color: var( --background-color-base );
 }
@@ -135,8 +146,9 @@ provide( 'code-tabs:register', registerTab )
 }
 
 .code-tabs :deep( .cdx-tab pre ) {
-	margin: 0;
-	border-radius: 0;
+	margin-block: 0;
+	margin-inline: 0;
+	border-radius: var( --border-radius-sharp );
 	padding-block: var( --spacing-75 );
 	padding-inline: var( --spacing-75 );
 }

@@ -64,7 +64,8 @@ links are left unchanged.
 ## Callouts
 
 **Custom component** — `Callout.vue` wraps `CdxMessage`. Accepts a `type` prop (`notice`, `warning`,
-`error`, `success`) and an optional `#title` named slot rendered as a bold label above the body.
+`error`, `success`) and an optional `#title` named slot. The title is Markdown (already a `<p>` from MDC);
+it is bolded via CSS and the status icon is top-aligned with the title row (not vertically centered against the full body).
 
 ::callout
 #title
