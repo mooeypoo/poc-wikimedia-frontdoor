@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Fetches remote content sources at build time and writes them to the
- * content directory before the Nuxt build runs.
+ * Fetches remote content sources and writes them to the content directory.
+ * This is a STANDALONE command, decoupled from the build (ADR §8): run it to
+ * refresh imported content, review the resulting git diff, then commit. The
+ * build itself does not fetch.
  *
  * Reads from config/remoteContentSources.ts and processes each source
  * according to its strategy:
@@ -11,9 +13,12 @@
  *                                   subpages (Parsoid HTML → Markdown), one file
  *                                   per locale (docs/adr-remote-content-fetching.md §9)
  *
- * Exit code: always 0 (never fails the build). Fetch failures are mitigated per
- * file via stale-copy fallback and empty placeholders. Always check stderr for
- * warnings.
+ * Lifecycle (ADR §10): every run first WIPES all previously-imported files
+ * (frontmatter `remoteImport: true`), then recreates them from current config —
+ * so removed sources, changed slugs/locales, and dropped translations leave no
+ * orphan. Authored content (no marker) is never touched. A failed fetch yields
+ * an empty placeholder (no stale-copy fallback). Exit code: always 0 on fetch
+ * failures; check stderr for warnings.
  *
  * Usage:
  *   node scripts/fetch-remote-content.mjs
@@ -109,30 +114,28 @@ function serializeDocument( data, body ) {
 }
 
 /**
- * Merges override fields into a Markdown document's frontmatter using a real
- * YAML parser (nested keys, arrays, and colon-bearing values are preserved).
+ * Frontmatter fields marking a file as script-managed imported content. The
+ * wipe phase (see §10 of the ADR) deletes exactly the files carrying this
+ * marker; hand-authored content never has it.
  *
- * @param {string} content - Raw Markdown.
- * @param {Record<string, unknown>} overrideFrontmatter - Fields to merge on top.
- * @returns {string}
+ * @param {string} sourceId - Owning source id (provenance / debugging).
+ * @returns {{ remoteImport: true, sourceId: string }}
  */
-function mergeFrontmatter( content, overrideFrontmatter ) {
-	if ( !overrideFrontmatter || Object.keys( overrideFrontmatter ).length === 0 ) {
-		return content
-	}
-	const { data, body } = parseFrontmatter( content )
-	return serializeDocument( { ...data, ...overrideFrontmatter }, body )
+function importMarker( sourceId ) {
+	return { remoteImport: true, sourceId }
 }
 
 /**
- * Creates an empty placeholder page.
+ * Creates an empty placeholder page (carries the import marker so it is itself
+ * cleaned up on the next run).
  *
- * @param {string} [title='Content unavailable'] - Page title.
+ * @param {string} title - Page title.
+ * @param {string} sourceId - Owning source id.
  * @returns {string}
  */
-function createEmptyPlaceholder( title = 'Content unavailable' ) {
+function createEmptyPlaceholder( title, sourceId ) {
 	return serializeDocument(
-		{ title },
+		{ title: title || 'Content unavailable', ...importMarker( sourceId ) },
 		"This page's content could not be fetched at build time.\n"
 	)
 }
@@ -148,42 +151,27 @@ async function ensureDir( dir ) {
 }
 
 /**
- * Checks whether a file exists.
+ * Writes produced content to a file, falling back to an empty placeholder when
+ * production fails. Never throws.
  *
- * @param {string} filePath - File path.
- * @returns {Promise<boolean>}
- */
-async function fileExists( filePath ) {
-	try {
-		await fs.access( filePath )
-		return true
-	} catch {
-		return false
-	}
-}
-
-/**
- * Writes produced content to a file, falling back to a stale copy or an empty
- * placeholder when production fails. Never throws.
+ * There is no stale-copy fallback: the wipe phase (§10) deletes imported files
+ * before this runs, so no prior copy exists. A failed fetch yields a placeholder
+ * that the operator catches in the committed diff (§8).
  *
  * @param {string} filePath - Destination file.
  * @param {() => Promise<string>} produce - Produces the file content (may throw).
- * @param {{ label: string, placeholderTitle: string }} options
- * @returns {Promise<{ status: 'success'|'stale'|'placeholder', message: string }>}
+ * @param {{ label: string, placeholderTitle: string, sourceId: string }} options
+ * @returns {Promise<{ status: 'success'|'placeholder', message: string }>}
  */
-async function writeOrFallback( filePath, produce, { label, placeholderTitle } ) {
+async function writeOrFallback( filePath, produce, { label, placeholderTitle, sourceId } ) {
 	try {
 		const content = await produce()
 		await ensureDir( dirname( filePath ) )
 		await fs.writeFile( filePath, content, 'utf-8' )
 		return { status: 'success', message: `✓ ${ label }` }
 	} catch ( error ) {
-		if ( await fileExists( filePath ) ) {
-			console.warn( `⚠ ${ label }: fetch failed (${ error.message }), using stale ${ filePath }` )
-			return { status: 'stale', message: `⚠ ${ label } (stale)` }
-		}
 		await ensureDir( dirname( filePath ) )
-		await fs.writeFile( filePath, createEmptyPlaceholder( placeholderTitle ), 'utf-8' )
+		await fs.writeFile( filePath, createEmptyPlaceholder( placeholderTitle, sourceId ), 'utf-8' )
 		console.warn( `⚠ ${ label }: fetch failed (${ error.message }), wrote empty placeholder` )
 		return { status: 'placeholder', message: `⚠ ${ label } (empty placeholder)` }
 	}
@@ -230,10 +218,18 @@ async function processMarkdownUrlSource( source ) {
 
 	return writeOrFallback( filePath, async () => {
 		const { text } = await fetchText( source.remoteUrl )
-		return source.overrideFrontmatter
-			? mergeFrontmatter( text, source.overrideFrontmatter )
-			: text
-	}, { label, placeholderTitle: String( source.overrideFrontmatter?.title ?? source.id ) } )
+		const { data, body } = parseFrontmatter( text )
+		// Always emit a frontmatter block so the import marker is present, even
+		// when the remote file had no frontmatter and no override is configured.
+		return serializeDocument(
+			{ ...data, ...( source.overrideFrontmatter ?? {} ), ...importMarker( source.id ) },
+			body
+		)
+	}, {
+		label,
+		placeholderTitle: String( source.overrideFrontmatter?.title ?? source.id ),
+		sourceId: source.id
+	} )
 }
 
 // ---------------------------------------------------------------------------
@@ -329,6 +325,9 @@ async function fetchAndConvertLocale( source, origin, locale ) {
 	const revision = /"?(\d+)\//.exec( etag )?.[ 1 ] ?? null
 	const sourceWiki = new URL( origin ).host
 
+	// No wall-clock field (e.g. fetchedAt): imported files must be idempotent so
+	// an unchanged upstream page re-fetches to byte-identical output and shows no
+	// diff (ADR §9.5, §10). Content version is carried by sourceRevision.
 	const frontmatter = {
 		title: source.overrideFrontmatter?.title ?? source.pageTitle,
 		...source.overrideFrontmatter,
@@ -336,7 +335,7 @@ async function fetchAndConvertLocale( source, origin, locale ) {
 		sourceWiki,
 		...( revision ? { sourceRevision: revision } : {} ),
 		...( source.attribution?.license ? { license: source.attribution.license } : {} ),
-		fetchedAt: new Date().toISOString()
+		...importMarker( source.id )
 	}
 
 	const withFooter = source.attribution
@@ -399,9 +398,64 @@ async function processWikiTranslatedSource( source ) {
 		return writeOrFallback(
 			filePath,
 			() => fetchAndConvertLocale( source, origin, locale ),
-			{ label, placeholderTitle: String( source.overrideFrontmatter?.title ?? source.pageTitle ) }
+			{
+				label,
+				placeholderTitle: String( source.overrideFrontmatter?.title ?? source.pageTitle ),
+				sourceId: source.id
+			}
 		)
 	} )
+}
+
+// ---------------------------------------------------------------------------
+// Cleanup (wipe)
+// ---------------------------------------------------------------------------
+
+/**
+ * Deletes every previously-imported file (frontmatter `remoteImport: true`)
+ * under the content directory, then prunes any directory left empty.
+ * Hand-authored content has no marker and is never touched. See ADR §10.
+ *
+ * @returns {Promise<number>} Number of files deleted.
+ */
+async function wipeImportedContent() {
+	const contentRoot = join( projectRoot, 'content' )
+	let wiped = 0
+
+	async function pruneIfEmpty( dir ) {
+		if ( dir === contentRoot ) {
+			return
+		}
+		const remaining = await fs.readdir( dir )
+		if ( remaining.length === 0 ) {
+			await fs.rmdir( dir )
+		}
+	}
+
+	async function walk( dir ) {
+		let entries
+		try {
+			entries = await fs.readdir( dir, { withFileTypes: true } )
+		} catch {
+			return
+		}
+		for ( const entry of entries ) {
+			const full = join( dir, entry.name )
+			if ( entry.isDirectory() ) {
+				await walk( full )
+				await pruneIfEmpty( full )
+			} else if ( entry.name.endsWith( '.md' ) ) {
+				const { data } = parseFrontmatter( await fs.readFile( full, 'utf-8' ) )
+				if ( data?.remoteImport === true ) {
+					await fs.unlink( full )
+					wiped++
+				}
+			}
+		}
+	}
+
+	await walk( contentRoot )
+	return wiped
 }
 
 // ---------------------------------------------------------------------------
@@ -414,8 +468,15 @@ async function processWikiTranslatedSource( source ) {
  * @returns {Promise<void>}
  */
 async function main() {
+	// Wipe first so removed sources, changed slugs/locales, and dropped
+	// translations leave no orphan behind (ADR §10). Runs even when no sources
+	// are configured, so emptying the config clears all imported files.
+	const wiped = await wipeImportedContent()
+
 	if ( REMOTE_CONTENT_SOURCES.length === 0 ) {
-		console.log( '[fetch-remote-content] no remote content sources configured' )
+		console.log(
+			`[fetch-remote-content] wiped ${ wiped } imported file(s); no remote content sources configured`
+		)
 		return
 	}
 
@@ -435,7 +496,7 @@ async function main() {
 		( result.status === 'success' ? console.log : console.warn )( result.message )
 	} )
 	console.log(
-		`[fetch-remote-content] wrote ${ count( 'success' ) }, stale ${ count( 'stale' ) }, ` +
+		`[fetch-remote-content] wiped ${ wiped }, wrote ${ count( 'success' ) }, ` +
 		`placeholder ${ count( 'placeholder' ) }`
 	)
 }
