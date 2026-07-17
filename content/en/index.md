@@ -1,3 +1,7 @@
+---
+sidebar: false
+---
+
 # Welcome to Front Door
 
 This page is the English source for the localized markdown flow.

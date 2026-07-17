@@ -1,5 +1,5 @@
 import { useMainNavigationLinks } from './useMainNavigationLinks'
-import { getMainNavigationIdFromPath } from '../utils/contentRoute'
+import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -25,6 +25,11 @@ export function usePrimaryNavigationTab() {
 		}
 
 		if ( isExplorerRoutePath( route.path ) ) {
+			return ''
+		}
+
+		// Front page (`/`) is not a tab — no tab is active there.
+		if ( stripContentLocalePrefix( route.path ) === '/' ) {
 			return ''
 		}
 

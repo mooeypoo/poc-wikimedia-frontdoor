@@ -45,6 +45,10 @@ yarn dev
 bun run dev
 ```
 
+## Authoring content
+
+Hand-authored pages live under [content/](/home/moriel/code/wikimedia/frontdoor/content/) as Markdown (`content/<locale>/<slug>.md`). For adding and moving pages, editing the top menu, and controlling the left sidebar (including the `sidebar` frontmatter field), see the [content authoring guide](/home/moriel/code/wikimedia/frontdoor/docs/content-authoring-guide.md).
+
 ## Imported content
 
 Some pages are imported from remote sources (raw Markdown URLs, or MediaWiki pages with their translations) declared in [config/remoteContentSources.ts](/home/moriel/code/wikimedia/frontdoor/config/remoteContentSources.ts). This is a **standalone step, not part of the build** — the build uses whatever imported content is committed. For step-by-step instructions on adding/changing sources and shared partials, see the [content import guide](/home/moriel/code/wikimedia/frontdoor/docs/content-import-guide.md).
