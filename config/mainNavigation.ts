@@ -19,7 +19,7 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 	{
 		id: 'get-started',
 		messageKey: 'nav-get-started',
-		path: '/'
+		path: '/get-started'
 	},
 	{
 		id: 'use-content-and-data',

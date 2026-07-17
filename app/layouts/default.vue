@@ -31,7 +31,8 @@ const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
 const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
 	navigationLabel: pageSectionNavigationLabel,
-	navigationSections: pageSectionNavigationSections
+	navigationSections: pageSectionNavigationSections,
+	isSidebarHidden
 } = usePageSectionNav()
 
 // Locale prefixes recognised when syncing the interface locale to the route.
@@ -174,7 +175,8 @@ useHead( {
 		class="frontdoor-shell"
 		:class="{
 			'frontdoor-shell--explorer': isExplorerRoute,
-			'frontdoor-shell--nav-collapsed': isNavigationCollapsed
+			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
+			'frontdoor-shell--sidebar-hidden': isSidebarHidden
 		}"
 	>
 		<div class="frontdoor-shell__chrome-band">
@@ -543,7 +545,8 @@ useHead( {
 	}
 
 	/* Collapsed start nav: body band grows into the former start-panel + gutter space. */
-	.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns,
+	.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
 	}
 }

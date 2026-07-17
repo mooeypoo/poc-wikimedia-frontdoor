@@ -8,7 +8,7 @@ import { useMainNavigationLinks } from '../../composables/useMainNavigationLinks
  * Mark: `public/images/developer-portal-logo-mark.svg`. Wordmark lines use banana-i18n
  * (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in Montserrat.
  */
-const { getStartedPath } = useMainNavigationLinks()
+const { homePath } = useMainNavigationLinks()
 const { $bananaI18n } = useNuxtApp()
 
 const brandLogoAccessibleLabel = computed( () => $bananaI18n( 'app-title' ) )
@@ -18,7 +18,7 @@ const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-de
 
 <template>
 	<NuxtLink
-		:to="getStartedPath"
+		:to="homePath"
 		class="shell-header-brand"
 		:aria-label="brandLogoAccessibleLabel"
 	>

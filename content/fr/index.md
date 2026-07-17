@@ -1,3 +1,7 @@
+---
+sidebar: false
+---
+
 # Bienvenue sur Front Door
 
 Cette page existe en francais.

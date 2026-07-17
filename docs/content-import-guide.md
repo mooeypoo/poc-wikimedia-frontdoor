@@ -218,6 +218,7 @@ page, not just imported ones:
 
 ## Related
 
+- `docs/content-authoring-guide.md` — hand-authored pages, the top menu, and sidebar control.
 - `docs/adr-remote-content-fetching.md` — decisions (strategies, lifecycle §10, conversion registry & shared partials §11).
 - `docs/adr-language-catalog.md` — the locale catalog imported pages land in.
 - Regenerate the language catalog: `npm run generate-language-catalog`.
