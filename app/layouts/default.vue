@@ -216,7 +216,7 @@ useHead( {
 										:active-navigation-id="activeNavigationId"
 										@navigation-select="handlePrimaryNavigationSelect"
 									/>
-									<span class="frontdoor-shell__api-explorer-link-wrap">
+									<!-- <span class="frontdoor-shell__api-explorer-link-wrap">
 										<NuxtLink
 											:to="API_EXPLORER_NAVIGATION_PATH"
 											class="frontdoor-shell__api-explorer-link"
@@ -229,7 +229,7 @@ useHead( {
 												class="frontdoor-shell__api-explorer-link-icon"
 											/>
 										</NuxtLink>
-									</span>
+									</span> -->
 								</div>
 							</div>
 							<SharedShellCollapsedNavigation
