@@ -22,14 +22,9 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 		path: '/get-started'
 	},
 	{
-		id: 'use-content-and-data',
-		messageKey: 'nav-use-content-and-data',
-		path: '/use-content-and-data'
-	},
-	{
-		id: 'tools-and-bots',
-		messageKey: 'nav-tools-and-bots',
-		path: '/tools-and-bots'
+		id: 'apis',
+		messageKey: 'nav-api',
+		path: '/explorer'
 	},
 	{
 		id: 'contribute',
@@ -40,9 +35,12 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 		id: 'community',
 		messageKey: 'nav-community',
 		path: '/community'
+	},
+	{
+		id: 'get-help',
+		messageKey: 'nav-get-help',
+		path: '/get-help'
 	}
-	// 'get-help' was replaced in the primary bar by the wiki-translated demo page
-	// (see config/remoteContentSources.ts). The /get-help content page still exists.
 ]
 
 /** Locale-independent path for the API Explorer header link. */

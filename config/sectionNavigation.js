@@ -39,38 +39,35 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'get-started',
 				titleMessageKey: 'section-nav-get-started-title',
 				items: [
-					{ id: 'introduction', messageKey: 'section-nav-get-started-introduction' },
-					{ id: 'learn-about-wikimedia-projects', messageKey: 'section-nav-get-started-learn-about-wikimedia-projects' },
-					{ id: 'learn-about-wikimedia-technology', messageKey: 'section-nav-get-started-learn-about-wikimedia-technology' },
-					{ id: 'explore-featured-apps', messageKey: 'section-nav-get-started-explore-featured-apps' }
+					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start' },
+					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia' }
 				]
 			},
 			{
-				id: 'build-for-wikimedia-communities',
-				titleMessageKey: 'section-nav-get-started-build-for-wikimedia-communities-title',
+				id: 'for-communities',
+				titleMessageKey: 'section-nav-get-started-for-communities-title',
 				items: [
-					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features' },
-					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots' },
 					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content' },
 					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data' },
-					{ id: 'mediawiki-and-extensions', messageKey: 'section-nav-get-started-mediawiki-and-extensions' }
+					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features' },
+					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots' }
 				]
 			},
 			{
-				id: 'build-for-commercial-use-cases',
-				titleMessageKey: 'section-nav-get-started-build-for-commercial-use-cases-title',
+				id: 'for-enterprise',
+				titleMessageKey: 'section-nav-get-started-for-enterprise-title',
 				items: [
-					{ id: 'content-reuse', messageKey: 'section-nav-get-started-content-reuse' },
-					{ id: 'embedded-learning', messageKey: 'section-nav-get-started-embedded-learning' },
-					{ id: 'commercial-decision-making', messageKey: 'section-nav-get-started-commercial-decision-making' }
+					{ id: 'about-enterprise', messageKey: 'section-nav-get-started-about-enterprise' },
+					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases' }
 				]
 			},
 			{
-				id: 'use-wikimedia-data-in-research',
-				titleMessageKey: 'section-nav-get-started-use-wikimedia-data-in-research-title',
+				id: 'explore',
+				titleMessageKey: 'section-nav-get-started-explore-title',
 				items: [
-					{ id: 'study-wikimedia-communities', messageKey: 'section-nav-get-started-study-wikimedia-communities' },
-					{ id: 'data-for-academic-research', messageKey: 'section-nav-get-started-data-for-academic-research' }
+					{ id: 'explore-featured-apps', messageKey: 'section-nav-get-started-explore-featured-apps' },
+					{ id: 'tutorials', messageKey: 'section-nav-get-started-tutorials' },
+					{ id: 'by-language', messageKey: 'section-nav-get-started-by-language' }
 				]
 			}
 		]
