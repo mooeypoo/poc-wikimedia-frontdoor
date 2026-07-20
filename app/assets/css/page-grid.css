@@ -32,7 +32,10 @@
  *
  * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
  * legacy exploratory value — superseded by transparent panel + inline-end border.
- * Token retained unused in :root for possible revert. See DESIGN_REQUIREMENTS.md.
+ * Token retained unused for start panel revert. Explorer control surfaces use
+ * --fd-explorer-controls-surface-background-color → Codex
+ * --background-color-neutral-subtle (config/explorerSurfaces.ts).
+ * See DESIGN_REQUIREMENTS.md.
  */
 
 :root {
@@ -116,6 +119,14 @@
 		+ var( --spacing-100 )
 		+ 5.5rem
 	);
+
+	/*
+	 * Explorer project controls + module rail surfaces.
+	 * Background: Codex `--background-color-neutral-subtle` (theme-aware; not a fixed hex).
+	 * Keep in sync with config/explorerSurfaces.ts.
+	 */
+	--fd-explorer-controls-surface-background-color: var( --background-color-neutral-subtle );
+	--fd-explorer-controls-surface-border-radius: 4px;
 
 	/*
 	 * Estimate of the chrome band block-size (utility row + primary nav + padding).
