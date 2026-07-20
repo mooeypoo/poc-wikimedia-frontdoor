@@ -178,7 +178,8 @@ Composables live in `composables/` and are named with the `use` prefix describin
 - `useShellAuthNavigation()` — header Log in / username→`/account` over OAuth session
 - `useAccountDashboardPage()` — account page labels, OAuth-preferred username, sign-out; composes token dashboard + Reset dialog
 - `useDeveloperTokenDashboard()` — prototype API key lists, Meta-Wiki request/delete links, confirm-reset regenerate handlers
-- `useAccountResetApiKeyDialog()` — Reset API key `CdxDialog` open/confirm state and banana labels (Figma 626:7921)
+- `useAccountResetApiKeyDialog()` — Reset API key `CdxDialog` confirm→success flow, banana labels, revealed Client ID / secret / refresh token (Figma 626:7921 / 633:7695)
+- `useCopyWithCopiedTooltip()` — clipboard copy + brief `CdxTooltip` “Copied!” feedback (Reset success quiet copy)
 - `useDiscovery(instance)` — fetches and parses the /discovery endpoint
 
 ### Documentation
@@ -250,7 +251,7 @@ Before marking any component complete, verify:
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
 - [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
 - [ ] Account dashboard: username and seed/API key fields in `<bdi>`; Client ID / secrets use intentional `dir="ltr"` with a comment; interface labels via banana-i18n
-- [ ] Account Reset confirmation dialog (`AccountResetApiKeyDialog` / `CdxDialog`): all title, body, Cancel, Reset, and close labels via banana (`account-reset-dialog-*`); inherits interface `dir` from the shell (no direction pin)
+- [ ] Account Reset confirmation dialog (`AccountResetApiKeyDialog` / `CdxDialog`): confirm + success copy via banana (`account-reset-dialog-*`); success rows are **Client ID**, **Client secret**, **Refresh token**; bold labels (`--font-weight-bold`); credential values in `<bdi dir="ltr">` with monospace; quiet copy stays mounted and uses `CdxTooltip` “Copied!” via `useCopyWithCopiedTooltip`; intro / credential list / warning separated by `--spacing-100`; inherits interface `dir` from the shell
 - [ ] Header logged-in username is a progressive link to locale-aware `/account` (no “Logged in as” prefix); `aria-label` from `header-auth-link-aria`
 
 ---

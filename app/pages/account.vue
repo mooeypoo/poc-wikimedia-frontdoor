@@ -29,15 +29,22 @@ const {
 	onDeleteOAuthConsumer,
 	onRequestNewAuthenticationToken,
 	isResetDialogOpen,
+	isResetDialogSuccessStep,
 	resetDialogTitle,
 	resetDialogBody,
+	resetDialogSuccessIntro,
+	resetDialogWarning,
 	resetDialogCloseLabel,
+	resetDialogCopyAriaLabel,
+	resetDialogCopiedTooltipLabel,
+	resetDialogCredentialsListAriaLabel,
 	resetDialogPrimaryAction,
 	resetDialogDefaultAction,
+	revealedCredentialRows,
 	openResetPersonalApiKeyDialog,
 	openResetApplicationApiKeyDialog,
 	closeResetApiKeyDialog,
-	confirmResetApiKeyDialog,
+	onResetDialogPrimaryAction,
 	pageTitleBefore,
 	pageTitleAfter,
 	developerTokensSectionTitle,
@@ -192,12 +199,19 @@ onMounted( () => {
 
 		<AccountResetApiKeyDialog
 			v-model:open="isResetDialogOpen"
+			:is-success-step="isResetDialogSuccessStep"
 			:title="resetDialogTitle"
 			:body="resetDialogBody"
+			:success-intro="resetDialogSuccessIntro"
+			:warning="resetDialogWarning"
+			:credential-rows="revealedCredentialRows"
+			:credentials-list-aria-label="resetDialogCredentialsListAriaLabel"
+			:copy-aria-label="resetDialogCopyAriaLabel"
+			:copied-tooltip-label="resetDialogCopiedTooltipLabel"
 			:close-button-label="resetDialogCloseLabel"
 			:primary-action="resetDialogPrimaryAction"
 			:default-action="resetDialogDefaultAction"
-			@confirm="confirmResetApiKeyDialog"
+			@primary="onResetDialogPrimaryAction"
 			@cancel="closeResetApiKeyDialog"
 		/>
 	</div>

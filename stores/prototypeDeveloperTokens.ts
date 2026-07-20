@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import type { PrototypeDeveloperJwt, PrototypeOAuthConsumer } from '../config/tokenManagement'
 import {
+	createPrototypeClientSecret,
+	createPrototypeRefreshToken,
 	PROTOTYPE_SEED_DEVELOPER_JWTS,
 	PROTOTYPE_SEED_OAUTH_CONSUMERS
 } from '../config/tokenManagement'
@@ -37,45 +39,66 @@ export const usePrototypeDeveloperTokensStore = defineStore( 'prototypeDeveloper
 	}
 
 	/**
-	 * Regenerates a personal API key’s prototype secret and issued date (Reset confirm).
+	 * Regenerates a personal API key’s prototype secrets and issued date (Reset confirm).
+	 *
+	 * Client ID (`consumerKey`) is preserved. Client secret, refresh token, and access token
+	 * are replaced with new prototype values for the Reset success dialog (Figma 633:7695).
 	 *
 	 * @param tokenId - Row identifier from {@link PrototypeDeveloperJwt.id}.
-	 * @returns Nothing.
+	 * @returns The updated row, or `null` if the id was not found.
 	 */
-	function regenerateDeveloperJwt( tokenId: string ): void {
+	function regenerateDeveloperJwt( tokenId: string ): PrototypeDeveloperJwt | null {
 		const issuedOn = new Date().toISOString().slice( 0, 10 )
+		let updatedToken: PrototypeDeveloperJwt | null = null
+
 		developerJwts.value = developerJwts.value.map( ( token ) => {
 			if ( token.id !== tokenId ) {
 				return token
 			}
 
-			return {
+			updatedToken = {
 				...token,
+				clientSecret: createPrototypeClientSecret(),
+				refreshToken: createPrototypeRefreshToken(),
 				accessToken: `eyJprototype.reset.${ tokenId }.${ Date.now() }`,
 				issuedOn
 			}
+
+			return updatedToken
 		} )
+
+		return updatedToken
 	}
 
 	/**
-	 * Regenerates an application API key’s prototype client secret and issued date.
+	 * Regenerates an application API key’s prototype client secret, refresh token, and issued date.
+	 *
+	 * Client ID (`consumerKey`) is preserved. New secret/refresh values are shown in the
+	 * Reset success dialog (Figma 633:7695).
 	 *
 	 * @param consumerId - Row identifier from {@link PrototypeOAuthConsumer.id}.
-	 * @returns Nothing.
+	 * @returns The updated row, or `null` if the id was not found.
 	 */
-	function regenerateOAuthConsumer( consumerId: string ): void {
+	function regenerateOAuthConsumer( consumerId: string ): PrototypeOAuthConsumer | null {
 		const registeredOn = new Date().toISOString().slice( 0, 10 )
+		let updatedConsumer: PrototypeOAuthConsumer | null = null
+
 		oauthConsumers.value = oauthConsumers.value.map( ( consumer ) => {
 			if ( consumer.id !== consumerId ) {
 				return consumer
 			}
 
-			return {
+			updatedConsumer = {
 				...consumer,
-				clientSecret: `prototype-reset-secret-${ Date.now() }`,
+				clientSecret: createPrototypeClientSecret(),
+				refreshToken: createPrototypeRefreshToken(),
 				registeredOn
 			}
+
+			return updatedConsumer
 		} )
+
+		return updatedConsumer
 	}
 
 	/**

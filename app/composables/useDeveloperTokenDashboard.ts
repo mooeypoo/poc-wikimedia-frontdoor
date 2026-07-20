@@ -5,6 +5,7 @@ import {
 	META_OAUTH2_CONSUMER_REGISTRATION_URL,
 	META_OAUTH_CONSUMER_LIST_URL
 } from '../../config/auth'
+import type { PrototypeDeveloperJwt, PrototypeOAuthConsumer } from '../../config/tokenManagement'
 import { storeToRefs } from 'pinia'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { openUrlInNewTab } from '../utils/openUrlInNewTab'
@@ -32,8 +33,8 @@ import type {
  *   clientSecretLabel: import('vue').ComputedRef<string>,
  *   onDeleteDeveloperJwt: (tokenId: string) => void,
  *   onDeleteOAuthConsumer: (consumerId: string) => void,
- *   onConfirmResetDeveloperJwt: (tokenId: string) => void,
- *   onConfirmResetOAuthConsumer: (consumerId: string) => void,
+ *   onConfirmResetDeveloperJwt: (tokenId: string) => import('../../config/tokenManagement').PrototypeDeveloperJwt | null,
+ *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
  *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
  * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, delete/request
@@ -119,20 +120,20 @@ export function useDeveloperTokenDashboard() {
 	 * Regenerates prototype credentials for a personal API key after dialog confirm.
 	 *
 	 * @param tokenId - Token row id.
-	 * @returns Nothing.
+	 * @returns The updated personal key row, or `null` if not found.
 	 */
-	function onConfirmResetDeveloperJwt( tokenId: string ): void {
-		prototypeDeveloperTokensStore.regenerateDeveloperJwt( tokenId )
+	function onConfirmResetDeveloperJwt( tokenId: string ): PrototypeDeveloperJwt | null {
+		return prototypeDeveloperTokensStore.regenerateDeveloperJwt( tokenId )
 	}
 
 	/**
 	 * Regenerates prototype credentials for an application API key after dialog confirm.
 	 *
 	 * @param consumerId - Consumer row id.
-	 * @returns Nothing.
+	 * @returns The updated application key row, or `null` if not found.
 	 */
-	function onConfirmResetOAuthConsumer( consumerId: string ): void {
-		prototypeDeveloperTokensStore.regenerateOAuthConsumer( consumerId )
+	function onConfirmResetOAuthConsumer( consumerId: string ): PrototypeOAuthConsumer | null {
+		return prototypeDeveloperTokensStore.regenerateOAuthConsumer( consumerId )
 	}
 
 	/**

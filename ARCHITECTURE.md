@@ -90,7 +90,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   ├── auth.ts                 # Account path, Meta-Wiki OAuth URLs, prototype defaults
-│   ├── tokenManagement.ts      # Prototype API key row types and seed data (Figma /account)
+│   ├── tokenManagement.ts      # Prototype API key types/seeds; Reset success secret generators
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
@@ -191,7 +191,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `usePrototypeAuthSession()` | Prototype account session seeding for direct `/account` visits; wraps `prototypeAuthSession` store (token tables remain prototype until Meta list APIs land) |
 | `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes `useDeveloperTokenDashboard` + `useAccountResetApiKeyDialog` |
 | `useDeveloperTokenDashboard()` | Prototype API key list state/view-models, Meta-Wiki URLs from `config/auth.ts`, delete/request handlers; confirm-reset regenerate via Pinia |
-| `useAccountResetApiKeyDialog()` | Reset confirmation dialog state (`CdxDialog`, Figma `626:7921`): open/pending key, banana labels (`account-reset-dialog-*`), confirm → regenerate prototype credentials |
+| `useAccountResetApiKeyDialog()` | Reset dialog state (`CdxDialog`): confirm → success steps (Figma `626:7921` / `633:7695`), banana labels (`account-reset-dialog-*`), revealed Client ID / secret / refresh-token rows, confirm regenerate + Done close |
+| `useCopyWithCopiedTooltip()` | Clipboard copy + brief focus/blur so `CdxTooltip` shows “Copied!” (Reset success quiet copy; keeps trigger mounted) |
 | `useShellAuthNavigation()` | Shell header session control: OAuth `login`/`logout`, username, locale-aware `/account` path, `header-auth-link-aria` |
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items (settings, username→account, log in/out) |
 
@@ -200,10 +201,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 - **Start column:** Hidden via `content-sidebar.global` middleware publishing `sidebar: false` for `/account` (and locale-prefixed equivalents) so `isSidebarHidden` collapses the grid track — no empty section nav.
 - **Title:** banana `account-page-title-before` + `<bdi>` username + `account-page-title-after` (English: `{username}’s dashboard`). Username prefers OAuth session; falls back to prototype seed only for direct visits without OAuth.
 - **Sections:** Personal API keys and Application API keys — Codex `CdxButton` (quiet Reset / destructive quiet Delete; progressive “Request new API key”), `CdxMessage` write-token notice on application cards. Interface copy from banana; seed row fields from `config/tokenManagement.ts` are external (BiDi-isolated).
-- **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`, Figma `626:7921`). Open/confirm state and banana strings live in `useAccountResetApiKeyDialog` (page/dialog components stay presentational). Confirm calls `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (prototype only; Meta-owned reset later). Cancel / close / Escape dismiss without changes.
+- **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`). Confirm step (Figma `626:7921`) warns; primary Reset regenerates via `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (new client secret + refresh token from `createPrototypeClientSecret` / `createPrototypeRefreshToken` in `config/tokenManagement.ts`; client id preserved) and advances to the success step (Figma `633:7695`). Success UI: intro + three rows (**Client ID**, **Client secret**, **Refresh token**) with bold banana labels (`--font-weight-bold`), BiDi-isolated monospace values (`dir="ltr"`), quiet copy (`AccountResetCredentialCopyButton` → `useCopyWithCopiedTooltip` + `CdxTooltip` “Copied!”; button must not remount after click), and inline warning `CdxMessage`. Section stack uses `--spacing-100` (16px) between intro, credential list, and warning. **Done** / close dismisses. Open/step/credential state lives in `useAccountResetApiKeyDialog`.
 - **Sign out:** Destructive `CdxButton` — clears OAuth and navigates home when logged in; otherwise resets prototype session.
 
-**Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component. `AccountResetApiKeyDialog` wraps Codex `CdxDialog` (progressive Reset + neutral Cancel + close); labels are props from the Reset composable.
+**Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component. `AccountResetApiKeyDialog` wraps Codex `CdxDialog` (confirm then success); success rows use `AccountResetCredentialCopyButton` (quiet `cdxIconCopy` + stable mount + `CdxTooltip`).
 
 ---
 
@@ -659,7 +660,7 @@ Any string not produced by banana-i18n must be wrapped in `<bdi>`. This is enfor
 - Article titles, page names, or namespace names from any wiki
 - Any string whose language is not statically known at component-write time
 
-Strings from banana-i18n are safe to render without isolation — their direction matches the interface direction by definition. Account Reset dialog copy (`account-reset-dialog-*`) is interface text and does not require `<bdi>`.
+Strings from banana-i18n are safe to render without isolation — their direction matches the interface direction by definition. Account Reset dialog chrome (`account-reset-dialog-*`, client-id/secret field labels) is interface text and does not require `<bdi>`; revealed credential **values** in the success step do (with intentional `dir="ltr"`).
 
 ### Known gap: Scalar spec content
 
@@ -925,7 +926,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Header auth (Log in / username→account) | `app/composables/useShellAuthNavigation.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `app/composables/useOAuthSession.ts`, `app/stores/oauthSession.js` |
 | OAuth PKCE flow | `server/api/auth/oauth/login.get.ts`, `server/api/auth/oauth/exchange.post.ts`, `app/pages/oauth/callback.vue`, `app/plugins/oauth-handoff.client.ts`, `app/utils/oauthHandoff.ts`, `docs/adr-wikimedia-oauth-authentication.md` |
-| Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountResetApiKeyDialog.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
+| Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountResetApiKeyDialog.vue`, `AccountResetCredentialCopyButton.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
