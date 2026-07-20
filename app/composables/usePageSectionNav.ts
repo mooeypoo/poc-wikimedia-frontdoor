@@ -67,7 +67,9 @@ const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string,
  *
  * A page's `sidebar` frontmatter overrides path-based resolution: `false` hides
  * the menu, a string forces a named menu, `true`/omitted uses the path (see
- * `useContentPageSidebar`).
+ * `useContentPageSidebar`). The `/account` Vue page is not Nuxt Content —
+ * `content-sidebar.global` publishes `sidebar: false` for that path so the
+ * shell collapses the start column (Figma `/account` has no section nav).
  *
  * @returns {{
  *   navigationLabel: import('vue').ComputedRef<string>,

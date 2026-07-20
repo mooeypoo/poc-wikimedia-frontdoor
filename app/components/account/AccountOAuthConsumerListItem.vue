@@ -1,124 +1,63 @@
 <script setup lang="ts">
-import { CdxButton, CdxIcon, CdxMenuButton } from '@wikimedia/codex'
-import { cdxIconEllipsis } from '@wikimedia/codex-icons'
+import { CdxButton, CdxMessage } from '@wikimedia/codex'
 import AccountTokenListItemLayout from './AccountTokenListItemLayout.vue'
-import AccountTokenSecretCell from './AccountTokenSecretCell.vue'
-import {
-	buildAccountTokenRowMenuItems,
-	isAccountTokenRowDeleteAction,
-	isAccountTokenRowManageOnMetaAction
-} from '../../utils/accountTokenRowActions'
 import type { AccountOAuthConsumerListItem } from '../../types/accountTokenList'
 
 /**
- * OAuth consumer list item — application name, masked client ID, metadata, overflow row actions.
+ * Application API key list item — name, description, client id/secret, meta, write-token notice.
  */
 const properties = defineProps<{
 	item: AccountOAuthConsumerListItem
-	registeredMetaPrefix: string
-	grantsMetaPrefix: string
+	clientIdLabel: string
+	clientSecretLabel: string
+	issuedMetaPrefix: string
+	statusMetaPrefix: string
+	permissionsMetaPrefix: string
+	resetButtonLabel: string
 	deleteButtonLabel: string
-	manageOnMetaButtonLabel: string
-	rowActionsMenuAriaLabel: string
-	showManageOnMeta: boolean
-	revealSecretAriaLabel: string
-	hideSecretAriaLabel: string
-	copySecretAriaLabel: string
-	tokenSecretActionsAriaLabel: string
+	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
+	reset: [ consumerId: string ]
 	delete: [ consumerId: string ]
-	'manage-on-meta': []
 }>()
 
-const hasMultipleRowActions = computed( () => properties.showManageOnMeta )
-
-const rowMenuItems = computed( () =>
-	buildAccountTokenRowMenuItems( {
-		showManageOnMeta: properties.showManageOnMeta,
-		manageOnMetaLabel: properties.manageOnMetaButtonLabel,
-		deleteLabel: properties.deleteButtonLabel
-	} )
-)
+/**
+ * Emits reset for this application key.
+ *
+ * @returns Nothing.
+ */
+function onReset(): void {
+	emit( 'reset', properties.item.id )
+}
 
 /**
- * Emits delete for this list item.
+ * Emits delete for this application key.
  *
  * @returns Nothing.
  */
 function onDelete(): void {
 	emit( 'delete', properties.item.id )
 }
-
-/**
- * Emits manage-on-Meta-Wiki for this consumer.
- *
- * @returns Nothing.
- */
-function onManageOnMeta(): void {
-	emit( 'manage-on-meta' )
-}
-
-/**
- * Handles overflow menu selection for this consumer row.
- *
- * @param selectedValue - Menu item value from `CdxMenuButton`.
- * @returns Nothing.
- */
-function onRowMenuActionSelected( selectedValue: string | null ): void {
-	if ( isAccountTokenRowDeleteAction( selectedValue ) ) {
-		onDelete()
-		return
-	}
-
-	if ( isAccountTokenRowManageOnMetaAction( selectedValue ) ) {
-		onManageOnMeta()
-	}
-}
 </script>
 
 <template>
 	<AccountTokenListItemLayout>
-		<h3 class="account-oauth-consumer-list-item__title">
-			<bdi>{{ properties.item.applicationName }}</bdi>
-		</h3>
-
-		<div class="account-oauth-consumer-list-item__secret-row">
-			<AccountTokenSecretCell
-				:secret-value="properties.item.consumerKey"
-				:reveal-secret-aria-label="properties.revealSecretAriaLabel"
-				:hide-secret-aria-label="properties.hideSecretAriaLabel"
-				:copy-secret-aria-label="properties.copySecretAriaLabel"
-				:token-secret-actions-aria-label="properties.tokenSecretActionsAriaLabel"
-			/>
-		</div>
-
-		<div class="account-oauth-consumer-list-item__meta">
-			<p class="account-oauth-consumer-list-item__meta-item">
-				<span>{{ properties.registeredMetaPrefix }}</span>
-				<bdi>{{ properties.item.registeredOn }}</bdi>
-			</p>
-			<p
-				class="account-oauth-consumer-list-item__meta-item account-oauth-consumer-list-item__meta-item--grants"
-				:title="properties.item.grantSummary"
-			>
-				<span>{{ properties.grantsMetaPrefix }}</span>
-				<bdi>{{ properties.item.grantSummary }}</bdi>
-			</p>
-		</div>
+		<template #title>
+			<h3 class="account-oauth-consumer-list-item__title">
+				<bdi>{{ properties.item.applicationName }}</bdi>
+			</h3>
+		</template>
 
 		<template #actions>
-			<CdxMenuButton
-				v-if="hasMultipleRowActions"
-				:menu-items="rowMenuItems"
-				:aria-label="properties.rowActionsMenuAriaLabel"
-				@update:selected="onRowMenuActionSelected"
-			>
-				<CdxIcon :icon="cdxIconEllipsis" />
-			</CdxMenuButton>
 			<CdxButton
-				v-else
+				weight="quiet"
+				@click="onReset"
+			>
+				{{ properties.resetButtonLabel }}
+			</CdxButton>
+			<CdxButton
 				action="destructive"
 				weight="quiet"
 				@click="onDelete"
@@ -126,6 +65,61 @@ function onRowMenuActionSelected( selectedValue: string | null ): void {
 				{{ properties.deleteButtonLabel }}
 			</CdxButton>
 		</template>
+
+		<p class="account-oauth-consumer-list-item__description">
+			<bdi>{{ properties.item.description }}</bdi>
+		</p>
+
+		<div class="account-oauth-consumer-list-item__credentials">
+			<p class="account-oauth-consumer-list-item__credential">
+				<span>{{ properties.clientIdLabel }}</span>
+				<!-- LTR: OAuth client IDs are inherently left-to-right. -->
+				<code
+					class="account-oauth-consumer-list-item__credential-value"
+					dir="ltr"
+				>
+					<bdi>{{ properties.item.consumerKey }}</bdi>
+				</code>
+			</p>
+			<p class="account-oauth-consumer-list-item__credential">
+				<span>{{ properties.clientSecretLabel }}</span>
+				<span
+					class="account-oauth-consumer-list-item__credential-masked"
+					dir="ltr"
+					aria-hidden="true"
+				>{{ properties.item.maskedClientSecret }}</span>
+			</p>
+		</div>
+
+		<div class="account-oauth-consumer-list-item__meta">
+			<p class="account-oauth-consumer-list-item__meta-item">
+				<span>{{ properties.issuedMetaPrefix }}</span>
+				<bdi>{{ properties.item.registeredOn }}</bdi>
+			</p>
+			<span
+				class="account-oauth-consumer-list-item__meta-divider"
+				aria-hidden="true"
+			/>
+			<p class="account-oauth-consumer-list-item__meta-item">
+				<span>{{ properties.statusMetaPrefix }}</span>
+				<bdi>{{ properties.item.status }}</bdi>
+			</p>
+			<span
+				class="account-oauth-consumer-list-item__meta-divider"
+				aria-hidden="true"
+			/>
+			<p class="account-oauth-consumer-list-item__meta-item">
+				<span>{{ properties.permissionsMetaPrefix }}</span>
+				<bdi>{{ properties.item.permissions }}</bdi>
+			</p>
+		</div>
+
+		<CdxMessage
+			class="account-oauth-consumer-list-item__notice"
+			type="notice"
+		>
+			{{ properties.writeTokenNotice }}
+		</CdxMessage>
 	</AccountTokenListItemLayout>
 </template>
 
@@ -137,15 +131,43 @@ function onRowMenuActionSelected( selectedValue: string | null ): void {
 	line-height: var( --line-height-small );
 }
 
-.account-oauth-consumer-list-item__secret-row {
-	padding-block: var( --spacing-25 );
+.account-oauth-consumer-list-item__description {
+	margin: 0;
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+}
+
+.account-oauth-consumer-list-item__credentials {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-50 );
+}
+
+.account-oauth-consumer-list-item__credential {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-50 );
+	margin: 0;
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+}
+
+.account-oauth-consumer-list-item__credential-value {
+	font-family: var( --font-family-monospace, monospace );
+	font-size: var( --font-size-medium );
+}
+
+.account-oauth-consumer-list-item__credential-masked {
+	font-family: var( --font-family-monospace, monospace );
+	letter-spacing: 0.05em;
 }
 
 .account-oauth-consumer-list-item__meta {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var( --spacing-100 );
+	gap: var( --spacing-50 );
 	margin: 0;
 	font-size: var( --font-size-small );
 	line-height: var( --line-height-small );
@@ -159,23 +181,14 @@ function onRowMenuActionSelected( selectedValue: string | null ): void {
 	margin: 0;
 }
 
-.account-oauth-consumer-list-item__meta-item--grants {
-	flex-wrap: nowrap;
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	max-inline-size: 100%;
-	overflow: hidden;
-	white-space: nowrap;
-}
-
-.account-oauth-consumer-list-item__meta-item--grants > span {
+.account-oauth-consumer-list-item__meta-divider {
+	inline-size: 1px;
+	block-size: 1rem;
+	background-color: var( --border-color-subtle );
 	flex-shrink: 0;
 }
 
-.account-oauth-consumer-list-item__meta-item--grants > bdi {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	min-inline-size: 0;
+.account-oauth-consumer-list-item__notice {
+	inline-size: 100%;
 }
 </style>

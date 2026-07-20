@@ -175,6 +175,9 @@ Composables live in `composables/` and are named with the `use` prefix describin
 - `useWikiModules(instance)` — fetches and caches modules for a given instance
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
+- `useShellAuthNavigation()` — header Log in / username→`/account` over OAuth session
+- `useAccountDashboardPage()` — account page labels, OAuth-preferred username, sign-out
+- `useDeveloperTokenDashboard()` — prototype API key lists and Meta-Wiki actions
 - `useDiscovery(instance)` — fetches and parses the /discovery endpoint
 
 ### Documentation
@@ -245,6 +248,8 @@ Before marking any component complete, verify:
 - [ ] The component works correctly when the interface is LTR but the displayed wiki instance is an RTL-language wiki
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
 - [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
+- [ ] Account dashboard: username and seed/API key fields in `<bdi>`; Client ID / secrets use intentional `dir="ltr"` with a comment; interface labels via banana-i18n
+- [ ] Header logged-in username is a progressive link to locale-aware `/account` (no “Logged in as” prefix); `aria-label` from `header-auth-link-aria`
 
 ---
 

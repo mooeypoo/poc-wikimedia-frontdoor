@@ -25,6 +25,14 @@ export default defineNuxtRouteMiddleware( async ( to ) => {
 	}
 
 	const contentPath = stripContentLocalePrefix( to.path )
+
+	// Account dashboard is a Vue page (not Nuxt Content); hide the start column
+	// so an empty section nav track is not reserved (Figma /account layout).
+	if ( contentPath === '/account' ) {
+		publishContentPageSidebar( to.path, false )
+		return
+	}
+
 	const slugPath = contentPath === '/' ? '' : contentPath.replace( /^\/+/, '' )
 	const localeCode = contentLocaleFromPath( to.path )
 

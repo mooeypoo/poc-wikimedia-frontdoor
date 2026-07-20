@@ -1,9 +1,11 @@
 /**
  * Authentication-related configuration for the Front Door developer portal.
  *
- * Real Wikimedia OAuth 2.0 + PKCE integration is planned for Experiment 2
- * (`stores/oauthSession` + `useOAuthSession()` per ARCHITECTURE.md). Prototype
- * account dashboard state uses `stores/prototypeAuthSession.ts` until that work lands.
+ * Real Wikimedia OAuth 2.0 + PKCE lives in `stores/oauthSession` + `useOAuthSession()`
+ * (see `docs/adr-wikimedia-oauth-authentication.md` and `ARCHITECTURE.md` → OAuth session).
+ * The account dashboard prototype still seeds demo token rows via
+ * `stores/prototypeAuthSession.ts` / `config/tokenManagement.ts` until Meta token list
+ * APIs are wired; the header username always comes from the OAuth session when logged in.
  */
 
 /**

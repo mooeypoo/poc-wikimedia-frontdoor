@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
 - Default Nuxt elements such as skeletons need to be replaced by Codex components
 - Search and settings controls are present but **disabled** or non-functional
-- Account dashboard prototype lives at `/account`; header utility row uses OAuth login/logout
+- Account dashboard prototype lives at `/account` (no start-column section nav); after OAuth login the header shows the Meta username as a progressive link to that dashboard
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
@@ -263,7 +263,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), Log in link |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`) plus separate **API Explorer** progressive link (`cdxIconArrowNext`) |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -276,9 +276,9 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps within the row are **`--spacing-100` (16px)**. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
-**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in**. Search button activation is **deferred**.
+**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in** (or username → account + **Log out** when authenticated). Search button activation is **deferred**.
 
-**Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link.
+**Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link — or authenticated **username** link to `/account`.
 
 **Language control is compact at all widths.** With ~575 languages to choose from (and further utilities coming, e.g. a dark-mode toggle), an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
 
@@ -312,8 +312,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Search icon button | Shown in collapsed mode; **activation deferred** (no overlay yet) |
 | Settings (`CdxButton` + configure icon) | **Disabled** prototype; inline when expanded; overflow menu when collapsed |
 | Interface language (`CdxLookup`) | **Globe + uppercase code** `CdxButton` at all widths; click opens the searchable lookup in a popover. Keeps the bar compact. |
-| Log in | Text link when expanded; overflow menu item when collapsed — **non-functional** prototype |
-| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in only when collapsed |
+| Log in / account | **Log in** text link when signed out (starts Meta OAuth + PKCE, returns to the current page). When signed in: **username only** (no “Logged in as” prefix) as a Codex progressive link (`NuxtLink` → locale-aware `/account`); `aria-label` from `header-auth-link-aria`. Collapsed overflow menu: username → account, plus **Log out** |
+| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in when signed out; settings + username → account + log out when signed in |
 
 **Interface language picker:** The portal supports the **full Wikimedia language catalog** (~575 locales; `config/languages.ts`), not a curated few — so the picker is a **searchable `CdxLookup`**, not a `CdxSelect`. There is one language list for both content and interface; locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`). Implementation:
 
@@ -333,6 +333,23 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
 **Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `config/shellNavigation.ts`.
+
+### Account dashboard (`/account`)
+
+**Decision:** Account dashboard layout and copy follow [Unified Developer Front Door — `/account` (Figma node 966:21207)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=966-21207).
+
+| Element | Behaviour |
+|---------|-----------|
+| Start column | **Hidden** (`sidebar: false` via `content-sidebar.global` for `/account`) — full-width main column; no empty section nav |
+| Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Prefer OAuth username when logged in |
+| Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link |
+| Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, write-token `CdxMessage` notice |
+| Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration) |
+| Log out | Destructive `CdxButton` below a subtle border divider |
+
+**i18n:** Interface strings in `i18n/*.json` (`account-*` keys). Prototype row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
+
+**Source:** `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
 
 ### Primary navigation row (superseded)
 

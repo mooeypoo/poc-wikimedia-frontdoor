@@ -1,41 +1,44 @@
-import { usePrototypeAuthSession } from './usePrototypeAuthSession'
+import { useAccountPath } from './useAccountPath'
+import { useOAuthSession } from './useOAuthSession'
 
 /**
- * Resolves shell header link to the prototype account dashboard.
+ * Resolves shell header account navigation after Wikimedia OAuth login.
  *
- * Always links to `/account`. Shows the prototype wiki username when a session is active;
- * otherwise shows the generic account dashboard label.
+ * When logged in, the header shows the Meta username as a progressive link to
+ * the locale-aware `/account` dashboard. Components must not read the OAuth
+ * store directly — this composable encapsulates session + path resolution.
  *
  * @returns {{
- *   isAuthenticated: import('vue').ComputedRef<boolean>,
- *   username: import('vue').ComputedRef<string>,
- *   headerAuthLinkPath: import('vue').ComputedRef<string>,
- *   headerAccountLabel: import('vue').ComputedRef<string>,
- *   headerAuthLinkAccessibleLabel: import('vue').ComputedRef<string>
- * }} Shell header account link path, labels, and session username for the template.
+ *   isLoggedIn: import('vue').ComputedRef<boolean>,
+ *   username: import('vue').ComputedRef<string | null>,
+ *   accountPath: import('vue').ComputedRef<string>,
+ *   headerAuthLinkAccessibleLabel: import('vue').ComputedRef<string>,
+ *   login: (returnTo?: string) => void,
+ *   logout: () => void
+ * }} Header account link state and OAuth actions.
  */
 export function useShellAuthNavigation() {
 	const { $bananaI18n } = useNuxtApp()
-	const { isAuthenticated, username, accountPath } = usePrototypeAuthSession()
-
-	const headerAuthLinkPath = computed( () => accountPath.value )
-
-	const headerAccountLabel = computed( () => $bananaI18n( 'header-account-label' ) )
+	const { isLoggedIn, username, login, logout } = useOAuthSession()
+	const { accountPath } = useAccountPath()
 
 	/**
-	 * Accessible name when the header shows the wiki username (links to the dashboard).
+	 * Accessible name for the username → account dashboard link.
 	 *
-	 * @returns banana-i18n string; $1 is the username.
+	 * Visible text is only the username; this aria-label clarifies the destination.
+	 *
+	 * @returns banana-i18n string; $1 is the wiki username.
 	 */
 	const headerAuthLinkAccessibleLabel = computed( () =>
-		$bananaI18n( 'header-auth-link-aria', { $1: username.value } )
+		$bananaI18n( 'header-auth-link-aria', { $1: username.value ?? '' } )
 	)
 
 	return {
-		isAuthenticated,
+		isLoggedIn,
 		username,
-		headerAuthLinkPath,
-		headerAccountLabel,
-		headerAuthLinkAccessibleLabel
+		accountPath,
+		headerAuthLinkAccessibleLabel,
+		login,
+		logout
 	}
 }

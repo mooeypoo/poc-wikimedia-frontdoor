@@ -1,25 +1,33 @@
-/** View-model for a developer JWT row on the account dashboard list. */
+/** View-model for a personal API key row on the account dashboard list. */
 export interface AccountDeveloperTokenListItem {
 	id: string
 	/** Token display name (external string from API or prototype seed). */
 	title: string
-	/** Full bearer token value (masked in the list item UI). */
-	accessToken: string
 	/** Issued date string for metadata (external). */
 	issuedOn: string
-	/** Last-used date string from API/seed, or null when never used. */
-	lastUsedOn: string | null
+	/** Approval status (external). */
+	status: string
+	/** Permissions summary (external). */
+	permissions: string
 }
 
-/** View-model for an OAuth consumer row on the account dashboard list. */
+/** View-model for an application OAuth key row on the account dashboard list. */
 export interface AccountOAuthConsumerListItem {
 	id: string
 	/** Application name (external string). */
 	applicationName: string
-	/** OAuth client ID (masked in the list item UI). */
+	/** Application description (external string). */
+	description: string
+	/** OAuth client ID (shown in full). */
 	consumerKey: string
-	/** Grant summary (external string; may truncate in the UI). */
-	grantSummary: string
-	/** Registration date string (external). */
+	/** OAuth client secret (full value; masked form is `maskedClientSecret`). */
+	clientSecret: string
+	/** Masked client secret for display (from `maskSecretValue`). */
+	maskedClientSecret: string
+	/** Approval status (external). */
+	status: string
+	/** Permissions summary (external). */
+	permissions: string
+	/** Issued / registration date string (external). */
 	registeredOn: string
 }

@@ -3,22 +3,20 @@ import AccountDeveloperTokenListItem from './AccountDeveloperTokenListItem.vue'
 import type { AccountDeveloperTokenListItem as AccountDeveloperTokenListItemModel } from '../../types/accountTokenList'
 
 /**
- * List of developer JWT cards for the account dashboard section.
+ * List of personal API key cards for the account dashboard section.
  */
 const properties = defineProps<{
 	listAriaLabel: string
 	items: AccountDeveloperTokenListItemModel[]
 	issuedMetaPrefix: string
-	lastUsedMetaPrefix: string
-	neverUsedLabel: string
+	statusMetaPrefix: string
+	permissionsMetaPrefix: string
+	resetButtonLabel: string
 	deleteButtonLabel: string
-	revealSecretAriaLabel: string
-	hideSecretAriaLabel: string
-	copySecretAriaLabel: string
-	tokenSecretActionsAriaLabel: string
 }>()
 
 const emit = defineEmits<{
+	reset: [ tokenId: string ]
 	delete: [ tokenId: string ]
 }>()
 </script>
@@ -33,13 +31,11 @@ const emit = defineEmits<{
 			:key="item.id"
 			:item="item"
 			:issued-meta-prefix="properties.issuedMetaPrefix"
-			:last-used-meta-prefix="properties.lastUsedMetaPrefix"
-			:never-used-label="properties.neverUsedLabel"
+			:status-meta-prefix="properties.statusMetaPrefix"
+			:permissions-meta-prefix="properties.permissionsMetaPrefix"
+			:reset-button-label="properties.resetButtonLabel"
 			:delete-button-label="properties.deleteButtonLabel"
-			:reveal-secret-aria-label="properties.revealSecretAriaLabel"
-			:hide-secret-aria-label="properties.hideSecretAriaLabel"
-			:copy-secret-aria-label="properties.copySecretAriaLabel"
-			:token-secret-actions-aria-label="properties.tokenSecretActionsAriaLabel"
+			@reset="emit( 'reset', $event )"
 			@delete="emit( 'delete', $event )"
 		/>
 	</ul>

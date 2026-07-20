@@ -5,10 +5,9 @@ import AccountExternalMetaLink from '../components/account/AccountExternalMetaLi
 import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumerList.vue'
 
 /**
- * Developer account dashboard — prototype token management for community APIs.
+ * Developer account dashboard — personal and application API keys (Figma `/account`).
  *
- * Labels and list data: {@link useAccountDashboardPage}; Meta-Wiki URLs and actions via
- * {@link useDeveloperTokenDashboard} (spread at composable root for template reactivity).
+ * Labels and list data: {@link useAccountDashboardPage}.
  */
 const {
 	username,
@@ -16,50 +15,38 @@ const {
 	resetPrototypeAccountSession,
 	hasDeveloperJwts,
 	hasOAuthConsumers,
-	requestDeveloperJwtUrl,
-	requestOAuthApplicationUrl,
-	oauthForDevelopersDocUrl,
 	ownerOnlyConsumersDocUrl,
+	oauthForDevelopersDocUrl,
 	developerJwtListItems,
 	oauthConsumerListItems,
 	issuedMetaPrefix,
-	lastUsedMetaPrefix,
-	registeredMetaPrefix,
-	grantsMetaPrefix,
-	neverUsedLabel,
-	revealSecretAriaLabel,
-	hideSecretAriaLabel,
-	copySecretAriaLabel,
-	tokenSecretActionsAriaLabel,
+	statusMetaPrefix,
+	permissionsMetaPrefix,
+	clientIdLabel,
+	clientSecretLabel,
 	onDeleteDeveloperJwt,
 	onDeleteOAuthConsumer,
-	onOpenManageConsumersOnMeta,
+	onResetDeveloperJwt,
+	onResetOAuthConsumer,
+	onRequestNewAuthenticationToken,
 	pageTitleBefore,
 	pageTitleAfter,
 	developerTokensSectionTitle,
 	developerTokensDescription,
 	oauthTokensSectionTitle,
 	oauthTokensDescription,
-	requestDeveloperTokenGuidance,
-	requestOAuthApplicationGuidance,
-	requestDeveloperTokenLabel,
-	requestOAuthApplicationLabel,
-	requestDeveloperTokenAriaLabel,
-	requestOAuthApplicationAriaLabel,
+	requestNewTokenLabel,
 	developerJwtEmptyMessage,
 	oauthConsumersEmptyMessage,
+	resetTokenLabel,
 	deleteTokenLabel,
-	adjustScopeLabel,
-	rowActionsMenuAriaLabel,
+	writeTokenNotice,
 	signOutButtonLabel,
 	learnMoreOAuthLabel,
 	learnMoreOwnerOnlyLabel,
 	learnMoreOAuthAriaLabel,
 	learnMoreOwnerOnlyAriaLabel,
-	developerTokensHelpBefore,
-	developerTokensHelpAfter,
-	oauthTokensHelpBefore,
-	oauthTokensHelpAfter,
+	learnMoreAboutBefore,
 	developerJwtListAriaLabel,
 	oauthConsumersListAriaLabel
 } = useAccountDashboardPage()
@@ -82,30 +69,30 @@ onMounted( () => {
 
 		<section
 			class="account-page__section"
-			aria-labelledby="account-developer-tokens-heading"
+			aria-labelledby="account-personal-keys-heading"
 		>
-			<h2
-				id="account-developer-tokens-heading"
-				class="account-page__section-heading"
-			>
-				{{ developerTokensSectionTitle }}
-			</h2>
-			<p class="account-page__prose account-page__section-description">
-				{{ developerTokensDescription }}
-			</p>
+			<div class="account-page__section-intro">
+				<h2
+					id="account-personal-keys-heading"
+					class="account-page__section-heading"
+				>
+					{{ developerTokensSectionTitle }}
+				</h2>
+				<p class="account-page__prose account-page__section-description">
+					{{ developerTokensDescription }}
+				</p>
+			</div>
 
 			<AccountDeveloperTokenList
 				v-if="hasDeveloperJwts"
 				:list-aria-label="developerJwtListAriaLabel"
 				:items="developerJwtListItems"
 				:issued-meta-prefix="issuedMetaPrefix"
-				:last-used-meta-prefix="lastUsedMetaPrefix"
-				:never-used-label="neverUsedLabel"
+				:status-meta-prefix="statusMetaPrefix"
+				:permissions-meta-prefix="permissionsMetaPrefix"
+				:reset-button-label="resetTokenLabel"
 				:delete-button-label="deleteTokenLabel"
-				:reveal-secret-aria-label="revealSecretAriaLabel"
-				:hide-secret-aria-label="hideSecretAriaLabel"
-				:copy-secret-aria-label="copySecretAriaLabel"
-				:token-secret-actions-aria-label="tokenSecretActionsAriaLabel"
+				@reset="onResetDeveloperJwt"
 				@delete="onDeleteDeveloperJwt"
 			/>
 			<CdxMessage
@@ -115,59 +102,56 @@ onMounted( () => {
 				{{ developerJwtEmptyMessage }}
 			</CdxMessage>
 
-			<div class="account-page__section-request">
-				<p class="account-page__section-action">
-					<AccountExternalMetaLink
-						:href="requestDeveloperJwtUrl"
-						:accessible-label="requestDeveloperTokenAriaLabel"
-					>
-						{{ requestDeveloperTokenLabel }}
-					</AccountExternalMetaLink>
-				</p>
-				<p class="account-page__prose account-page__request-guidance account-page__request-guidance--subtle">
-					{{ requestDeveloperTokenGuidance }}
-					<br>
-					{{ developerTokensHelpBefore }}
-					<AccountExternalMetaLink
-						:href="ownerOnlyConsumersDocUrl"
-						:accessible-label="learnMoreOwnerOnlyAriaLabel"
-					>
-						{{ learnMoreOwnerOnlyLabel }}
-					</AccountExternalMetaLink>{{ developerTokensHelpAfter }}
-				</p>
-			</div>
+			<p class="account-page__learn-more">
+				{{ learnMoreAboutBefore }}
+				<AccountExternalMetaLink
+					:href="ownerOnlyConsumersDocUrl"
+					:accessible-label="learnMoreOwnerOnlyAriaLabel"
+				>
+					{{ learnMoreOwnerOnlyLabel }}
+				</AccountExternalMetaLink>
+			</p>
 		</section>
 
 		<section
 			class="account-page__section"
-			aria-labelledby="account-oauth-tokens-heading"
+			aria-labelledby="account-application-keys-heading"
 		>
-			<h2
-				id="account-oauth-tokens-heading"
-				class="account-page__section-heading"
-			>
-				{{ oauthTokensSectionTitle }}
-			</h2>
-			<p class="account-page__prose account-page__section-description">
-				{{ oauthTokensDescription }}
-			</p>
+			<div class="account-page__section-intro">
+				<h2
+					id="account-application-keys-heading"
+					class="account-page__section-heading"
+				>
+					{{ oauthTokensSectionTitle }}
+				</h2>
+				<p class="account-page__prose account-page__section-description">
+					{{ oauthTokensDescription }}
+				</p>
+				<p class="account-page__learn-more">
+					{{ learnMoreAboutBefore }}
+					<AccountExternalMetaLink
+						:href="oauthForDevelopersDocUrl"
+						:accessible-label="learnMoreOAuthAriaLabel"
+					>
+						{{ learnMoreOAuthLabel }}
+					</AccountExternalMetaLink>
+				</p>
+			</div>
 
 			<AccountOAuthConsumerList
 				v-if="hasOAuthConsumers"
 				:list-aria-label="oauthConsumersListAriaLabel"
 				:items="oauthConsumerListItems"
-				:registered-meta-prefix="registeredMetaPrefix"
-				:grants-meta-prefix="grantsMetaPrefix"
+				:client-id-label="clientIdLabel"
+				:client-secret-label="clientSecretLabel"
+				:issued-meta-prefix="issuedMetaPrefix"
+				:status-meta-prefix="statusMetaPrefix"
+				:permissions-meta-prefix="permissionsMetaPrefix"
+				:reset-button-label="resetTokenLabel"
 				:delete-button-label="deleteTokenLabel"
-				:manage-on-meta-button-label="adjustScopeLabel"
-				:row-actions-menu-aria-label="rowActionsMenuAriaLabel"
-				:show-manage-on-meta="true"
-				:reveal-secret-aria-label="revealSecretAriaLabel"
-				:hide-secret-aria-label="hideSecretAriaLabel"
-				:copy-secret-aria-label="copySecretAriaLabel"
-				:token-secret-actions-aria-label="tokenSecretActionsAriaLabel"
+				:write-token-notice="writeTokenNotice"
+				@reset="onResetOAuthConsumer"
 				@delete="onDeleteOAuthConsumer"
-				@manage-on-meta="onOpenManageConsumersOnMeta"
 			/>
 			<CdxMessage
 				v-else
@@ -175,29 +159,17 @@ onMounted( () => {
 			>
 				{{ oauthConsumersEmptyMessage }}
 			</CdxMessage>
-
-			<div class="account-page__section-request">
-				<p class="account-page__section-action">
-					<AccountExternalMetaLink
-						:href="requestOAuthApplicationUrl"
-						:accessible-label="requestOAuthApplicationAriaLabel"
-					>
-						{{ requestOAuthApplicationLabel }}
-					</AccountExternalMetaLink>
-				</p>
-				<p class="account-page__prose account-page__request-guidance account-page__request-guidance--subtle">
-					{{ requestOAuthApplicationGuidance }}
-					<br>
-					{{ oauthTokensHelpBefore }}
-					<AccountExternalMetaLink
-						:href="oauthForDevelopersDocUrl"
-						:accessible-label="learnMoreOAuthAriaLabel"
-					>
-						{{ learnMoreOAuthLabel }}
-					</AccountExternalMetaLink>{{ oauthTokensHelpAfter }}
-				</p>
-			</div>
 		</section>
+
+		<div class="account-page__request">
+			<CdxButton
+				action="progressive"
+				weight="normal"
+				@click="onRequestNewAuthenticationToken"
+			>
+				{{ requestNewTokenLabel }}
+			</CdxButton>
+		</div>
 
 		<footer class="account-page__footer">
 			<CdxButton
@@ -212,16 +184,27 @@ onMounted( () => {
 </template>
 
 <style scoped>
+.account-page {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-200 );
+	max-inline-size: 57rem;
+}
+
 .account-page__prose {
 	max-inline-size: var( --size-4000 );
 }
 
 .account-page__header {
-	padding-block-end: var( --spacing-200 );
+	padding-block-end: 0;
 }
 
 .account-page__title {
 	margin: 0;
+	font-family: var( --font-family-heading-main, var( --font-family-serif ) );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xxx-large );
 }
 
 /*
@@ -241,39 +224,43 @@ onMounted( () => {
 }
 
 .account-page__section {
-	padding-block-end: var( --spacing-200 );
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-150 );
+	padding-block-end: 0;
+}
+
+.account-page__section-intro {
+	display: flex;
+	flex-direction: column;
+	gap: var( --spacing-75 );
 }
 
 .account-page__section-heading {
-	margin-block: 0 var( --spacing-100 );
-	margin-inline: 0;
-	font-size: var( --font-size-x-large );
-	font-weight: var( --font-weight-bold );
+	margin: 0;
+	font-family: var( --font-family-heading-main, var( --font-family-serif ) );
+	font-size: var( --font-size-xx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xx-large );
 }
 
 .account-page__section-description {
-	margin-block: 0 var( --spacing-100 );
-	margin-inline: 0;
+	margin: 0;
 }
 
-.account-page__section-request {
-	margin-block: var( --spacing-100 ) 0;
-	margin-inline: 0;
-}
-
-.account-page__section-action {
-	margin-block: 0;
-	margin-inline: 0;
-}
-
-.account-page__request-guidance {
-	margin-block: var( --spacing-75 ) 0;
-	margin-inline: 0;
+.account-page__learn-more {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-50 );
+	margin: 0;
 	font-size: var( --font-size-medium );
+	line-height: var( --line-height-medium );
 }
 
-.account-page__request-guidance--subtle {
-	color: var( --color-subtle );
+.account-page__request {
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .account-page__footer {

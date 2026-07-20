@@ -8,6 +8,7 @@ import {
 import { storeToRefs } from 'pinia'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { openUrlInNewTab } from '../utils/openUrlInNewTab'
+import { maskSecretValue } from '../utils/accountTokenSecret'
 import type {
 	AccountDeveloperTokenListItem,
 	AccountOAuthConsumerListItem
@@ -17,6 +18,7 @@ import type {
  * Wikimedia Meta-Wiki links, token list state, and list view-models for the account dashboard.
  *
  * Wraps `prototypeDeveloperTokens` Pinia store; URLs come from `config/auth.ts`.
+ * Masked secrets are computed here (`maskSecretValue`) so list-item components stay presentational.
  *
  * @returns {{
  *   hasDeveloperJwts: import('vue').ComputedRef<boolean>,
@@ -24,15 +26,17 @@ import type {
  *   developerJwtListItems: import('vue').ComputedRef<import('../types/accountTokenList').AccountDeveloperTokenListItem[]>,
  *   oauthConsumerListItems: import('vue').ComputedRef<import('../types/accountTokenList').AccountOAuthConsumerListItem[]>,
  *   issuedMetaPrefix: import('vue').ComputedRef<string>,
- *   lastUsedMetaPrefix: import('vue').ComputedRef<string>,
- *   registeredMetaPrefix: import('vue').ComputedRef<string>,
- *   grantsMetaPrefix: import('vue').ComputedRef<string>,
- *   neverUsedLabel: import('vue').ComputedRef<string>,
+ *   statusMetaPrefix: import('vue').ComputedRef<string>,
+ *   permissionsMetaPrefix: import('vue').ComputedRef<string>,
+ *   clientIdLabel: import('vue').ComputedRef<string>,
+ *   clientSecretLabel: import('vue').ComputedRef<string>,
  *   onDeleteDeveloperJwt: (tokenId: string) => void,
  *   onDeleteOAuthConsumer: (consumerId: string) => void,
- *   onOpenManageConsumersOnMeta: () => void,
+ *   onResetDeveloperJwt: (tokenId: string) => void,
+ *   onResetOAuthConsumer: (consumerId: string) => void,
+ *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
- * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata prefixes, and row action handlers.
+ * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, and row action handlers.
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
@@ -51,10 +55,10 @@ export function useDeveloperTokenDashboard() {
 	const wikimediaApiAuthenticationDocUrl = MEDIAWIKI_WIKIMEDIA_API_AUTHENTICATION_DOC_URL
 
 	const issuedMetaPrefix = computed( () => $bananaI18n( 'account-meta-issued' ) )
-	const lastUsedMetaPrefix = computed( () => $bananaI18n( 'account-meta-last-used' ) )
-	const registeredMetaPrefix = computed( () => $bananaI18n( 'account-meta-registered' ) )
-	const grantsMetaPrefix = computed( () => $bananaI18n( 'account-meta-grants' ) )
-	const neverUsedLabel = computed( () => $bananaI18n( 'account-col-never-used' ) )
+	const statusMetaPrefix = computed( () => $bananaI18n( 'account-meta-status' ) )
+	const permissionsMetaPrefix = computed( () => $bananaI18n( 'account-meta-permissions' ) )
+	const clientIdLabel = computed( () => $bananaI18n( 'account-client-id-label' ) )
+	const clientSecretLabel = computed( () => $bananaI18n( 'account-client-secret-label' ) )
 
 	/**
 	 * Builds an accessible label for an external Meta-Wiki or MediaWiki link.
@@ -70,9 +74,9 @@ export function useDeveloperTokenDashboard() {
 		developerJwts.value.map( ( token ) => ( {
 			id: token.id,
 			title: token.label,
-			accessToken: token.accessToken,
 			issuedOn: token.issuedOn,
-			lastUsedOn: token.lastUsedOn
+			status: token.status,
+			permissions: token.permissions
 		} ) )
 	)
 
@@ -80,14 +84,18 @@ export function useDeveloperTokenDashboard() {
 		oauthConsumers.value.map( ( consumer ) => ( {
 			id: consumer.id,
 			applicationName: consumer.applicationName,
+			description: consumer.description,
 			consumerKey: consumer.consumerKey,
-			grantSummary: consumer.grantSummary,
+			clientSecret: consumer.clientSecret,
+			maskedClientSecret: maskSecretValue( consumer.clientSecret ),
+			status: consumer.status,
+			permissions: consumer.permissions,
 			registeredOn: consumer.registeredOn
 		} ) )
 	)
 
 	/**
-	 * Removes a developer JWT from the prototype list.
+	 * Removes a personal API key from the prototype list.
 	 *
 	 * @param tokenId - Token row id.
 	 * @returns Nothing.
@@ -97,7 +105,7 @@ export function useDeveloperTokenDashboard() {
 	}
 
 	/**
-	 * Removes an OAuth consumer from the prototype list.
+	 * Removes an application OAuth key from the prototype list.
 	 *
 	 * @param consumerId - Consumer row id.
 	 * @returns Nothing.
@@ -107,12 +115,32 @@ export function useDeveloperTokenDashboard() {
 	}
 
 	/**
-	 * Opens the Meta-Wiki OAuth consumer list in a new tab (adjust scope / manage).
+	 * Opens Meta-Wiki consumer registration to reset / re-issue a personal token (prototype).
+	 *
+	 * @param _tokenId - Token row id (unused; Meta owns real reset).
+	 * @returns Nothing.
+	 */
+	function onResetDeveloperJwt( _tokenId: string ): void {
+		openUrlInNewTab( requestDeveloperJwtUrl )
+	}
+
+	/**
+	 * Opens Meta-Wiki consumer list to manage / reset an application key (prototype).
+	 *
+	 * @param _consumerId - Consumer row id (unused; Meta owns real reset).
+	 * @returns Nothing.
+	 */
+	function onResetOAuthConsumer( _consumerId: string ): void {
+		openUrlInNewTab( manageConsumersOnMetaUrl )
+	}
+
+	/**
+	 * Opens Meta-Wiki OAuth consumer registration to request a new authentication token.
 	 *
 	 * @returns Nothing.
 	 */
-	function onOpenManageConsumersOnMeta(): void {
-		openUrlInNewTab( manageConsumersOnMetaUrl )
+	function onRequestNewAuthenticationToken(): void {
+		openUrlInNewTab( requestOAuthApplicationUrl )
 	}
 
 	return {
@@ -127,13 +155,15 @@ export function useDeveloperTokenDashboard() {
 		developerJwtListItems,
 		oauthConsumerListItems,
 		issuedMetaPrefix,
-		lastUsedMetaPrefix,
-		registeredMetaPrefix,
-		grantsMetaPrefix,
-		neverUsedLabel,
+		statusMetaPrefix,
+		permissionsMetaPrefix,
+		clientIdLabel,
+		clientSecretLabel,
 		externalLinkAccessibleLabel,
 		onDeleteDeveloperJwt,
 		onDeleteOAuthConsumer,
-		onOpenManageConsumersOnMeta
+		onResetDeveloperJwt,
+		onResetOAuthConsumer,
+		onRequestNewAuthenticationToken
 	}
 }

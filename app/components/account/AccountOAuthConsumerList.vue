@@ -3,26 +3,24 @@ import AccountOAuthConsumerListItem from './AccountOAuthConsumerListItem.vue'
 import type { AccountOAuthConsumerListItem as AccountOAuthConsumerListItemModel } from '../../types/accountTokenList'
 
 /**
- * List of OAuth consumer cards for the account dashboard section.
+ * List of application API key cards for the account dashboard section.
  */
 const properties = defineProps<{
 	listAriaLabel: string
 	items: AccountOAuthConsumerListItemModel[]
-	registeredMetaPrefix: string
-	grantsMetaPrefix: string
+	clientIdLabel: string
+	clientSecretLabel: string
+	issuedMetaPrefix: string
+	statusMetaPrefix: string
+	permissionsMetaPrefix: string
+	resetButtonLabel: string
 	deleteButtonLabel: string
-	manageOnMetaButtonLabel: string
-	rowActionsMenuAriaLabel: string
-	showManageOnMeta: boolean
-	revealSecretAriaLabel: string
-	hideSecretAriaLabel: string
-	copySecretAriaLabel: string
-	tokenSecretActionsAriaLabel: string
+	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
+	reset: [ consumerId: string ]
 	delete: [ consumerId: string ]
-	'manage-on-meta': []
 }>()
 </script>
 
@@ -35,18 +33,16 @@ const emit = defineEmits<{
 			v-for="item in properties.items"
 			:key="item.id"
 			:item="item"
-			:registered-meta-prefix="properties.registeredMetaPrefix"
-			:grants-meta-prefix="properties.grantsMetaPrefix"
+			:client-id-label="properties.clientIdLabel"
+			:client-secret-label="properties.clientSecretLabel"
+			:issued-meta-prefix="properties.issuedMetaPrefix"
+			:status-meta-prefix="properties.statusMetaPrefix"
+			:permissions-meta-prefix="properties.permissionsMetaPrefix"
+			:reset-button-label="properties.resetButtonLabel"
 			:delete-button-label="properties.deleteButtonLabel"
-			:manage-on-meta-button-label="properties.manageOnMetaButtonLabel"
-			:row-actions-menu-aria-label="properties.rowActionsMenuAriaLabel"
-			:show-manage-on-meta="properties.showManageOnMeta"
-			:reveal-secret-aria-label="properties.revealSecretAriaLabel"
-			:hide-secret-aria-label="properties.hideSecretAriaLabel"
-			:copy-secret-aria-label="properties.copySecretAriaLabel"
-			:token-secret-actions-aria-label="properties.tokenSecretActionsAriaLabel"
+			:write-token-notice="properties.writeTokenNotice"
+			@reset="emit( 'reset', $event )"
 			@delete="emit( 'delete', $event )"
-			@manage-on-meta="emit( 'manage-on-meta' )"
 		/>
 	</ul>
 </template>
