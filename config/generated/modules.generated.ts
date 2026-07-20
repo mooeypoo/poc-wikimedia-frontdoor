@@ -40,7 +40,7 @@ export interface GeneratedModulesMeta {
 }
 
 export const GENERATED_MODULES_META: GeneratedModulesMeta = {
-	"generatedAt": "2026-07-20T16:19:37.884Z",
+	"generatedAt": "2026-07-20T18:54:10.300Z",
 	"sitematrixSource": "https://meta.wikimedia.org/w/api.php",
 	"instancesSwept": 841,
 	"instancesSucceeded": 840,

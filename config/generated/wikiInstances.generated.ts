@@ -31,7 +31,7 @@ export interface GeneratedWikiInstancesMeta {
 }
 
 export const GENERATED_WIKI_INSTANCES_META: GeneratedWikiInstancesMeta = {
-	"generatedAt": "2026-07-20T16:19:37.884Z",
+	"generatedAt": "2026-07-20T18:54:10.300Z",
 	"source": "https://meta.wikimedia.org/w/api.php",
 	"instanceCount": 841,
 	"limited": false
@@ -3376,7 +3376,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "labswiki",
-		"displayName": "Wikipedia",
+		"displayName": "Labs",
 		"baseUrl": "https://wikitech.wikimedia.org",
 		"dir": "ltr",
 		"language": "labs",
@@ -5800,7 +5800,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "test2wiki",
-		"displayName": "Wikipedia",
+		"displayName": "Test2",
 		"baseUrl": "https://test2.wikipedia.org",
 		"dir": "ltr",
 		"language": "en",
@@ -5816,7 +5816,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "testwiki",
-		"displayName": "Wikipedia",
+		"displayName": "Test",
 		"baseUrl": "https://test.wikipedia.org",
 		"dir": "ltr",
 		"language": "en",
@@ -5824,7 +5824,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "testwikidatawiki",
-		"displayName": "Wikipedia",
+		"displayName": "Testwikidata",
 		"baseUrl": "https://test.wikidata.org",
 		"dir": "ltr",
 		"language": "testwikidata",
@@ -6512,7 +6512,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "wikidatawiki",
-		"displayName": "Wikipedia",
+		"displayName": "Wikidata",
 		"baseUrl": "https://www.wikidata.org",
 		"dir": "ltr",
 		"language": "wikidata",
@@ -6528,7 +6528,7 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 	},
 	{
 		"id": "wikimaniawiki",
-		"displayName": "Wikipedia",
+		"displayName": "Wikimania",
 		"baseUrl": "https://wikimania.wikimedia.org",
 		"dir": "ltr",
 		"language": "wikimania",

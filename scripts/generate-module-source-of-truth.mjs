@@ -168,6 +168,25 @@ function isPublicOpenSite( site ) {
 }
 
 /**
+ * Human-readable name for a sitematrix `specials` entry. Their `sitename` is
+ * usually good ("Wikimedia Commons"), but sitematrix returns a generic
+ * "Wikipedia" placeholder for several non-Wikipedia specials (Wikidata, the
+ * test wikis, Wikimania, labs). Real Wikipedias live in the language groups,
+ * never in `specials`, so a `specials` sitename of "Wikipedia" is always the
+ * placeholder — fall back to the (accurate) project code, capitalized.
+ *
+ * @param {object} site - A sitematrix specials entry.
+ * @returns {string} Display name.
+ */
+function specialDisplayName( site ) {
+	if ( site.sitename && site.sitename !== 'Wikipedia' ) {
+		return site.sitename
+	}
+	const code = site.code ?? site.dbname
+	return code.charAt( 0 ).toUpperCase() + code.slice( 1 )
+}
+
+/**
  * Flattens the sitematrix response into the fleet registry of public, open
  * wikis, sorted by instance id (dbname).
  *
@@ -189,7 +208,7 @@ function buildInstanceRegistry( sitematrix ) {
 				}
 				instances.push( {
 					id: site.dbname,
-					displayName: site.sitename ?? site.dbname,
+					displayName: specialDisplayName( site ),
 					baseUrl: site.url,
 					dir: site.dir === 'rtl' ? 'rtl' : 'ltr',
 					language: site.lang ?? 'en',

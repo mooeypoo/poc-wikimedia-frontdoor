@@ -1,6 +1,6 @@
 # ADR: Module Source of Truth
 
-**Status:** Decided — implementation not started
+**Status:** Implemented — `scripts/generate-module-source-of-truth.mjs` (phases 1 & 2), generated data under `config/generated/`, accessor `config/moduleSourceOfTruth.ts`
 **Scope:** A generated, fleet-wide picture of the REST API modules Wikimedia exposes: which unique modules exist, which wiki instances each is present on, and the full OpenAPI spec of each module. Produced by a standalone, occasionally-run maintenance script and committed as reviewed data.
 
 **Related:**
@@ -202,14 +202,18 @@ Add the npm script; apply the documentation corrections above; document the rege
 
 ---
 
+## Results (first full run, 2026-07-20)
+
+The premise held: **841** public/open instances swept, **840** succeeded, **1** failed (`sourceswiki` / wikisource.org — its discovery endpoint hangs; `curl` also gets no response). **10** unique modules found, with genuinely differentiated coverage — core modules on ~840 wikis, but `growthexperiments/v0` on 352, `wikifunctions/v0` on 163, `wikibase/v1` on just 4. `modules.generated.ts` is ~108K; the 10 committed specs total ~600K (largest: the root `-` module at 221K, 44 paths). The one failure is recorded in metadata, never as module-absence — the §6 correctness property, observed working.
+
 ## Open questions / risks
 
-- **`modules.generated.ts` size.** The full-list decision means ubiquitous modules carry ~900-id arrays. Normalization to ids is the mitigation; the "present-on-N + exceptions" representation is the documented fallback if the file becomes unreviewable. Revisit after the first real run shows the actual size.
-- **Do all in-scope wikis expose `/w/rest.php/specs/v0/discovery`?** Some may 404 even when public/open. These must land in the failure set (§6), not be read as "no modules." First run will reveal the true failure rate.
-- **Spec-identical-across-instances assumption (§8).** If any module's spec genuinely differs between instances that share its versioned name, the single representative fetch is wrong for those instances. Consider a cheap validation pass (sample a second instance and diff) before trusting it broadly.
-- **Committed spec size.** ~20 full specs is a few MB of JSON. Per-module files + stable key order keep diffs sane, but confirm the real total after the first run and revisit if the repo weight is a problem.
+- **`modules.generated.ts` size — settled for now.** ~108K / ~6.5K lines with full id lists; large but reviewable. The "present-on-N + exceptions" representation remains the documented fallback if it grows unwieldy as the fleet does.
+- **Discovery availability — measured.** 840/841 expose `/w/rest.php/specs/v0/discovery`; the lone failure is an unresponsive endpoint (not a 404). The failure set (§6) handled it correctly. No wiki returned 404 in the first run.
+- **Spec-identical-across-instances assumption (§8).** If any module's spec genuinely differs between instances that share its versioned name, the single representative fetch is wrong for those instances. Consider a cheap validation pass (sample a second instance and diff) before trusting it broadly. *Not yet validated.*
+- **Committed spec size — measured.** ~600K across 10 files; comfortable. Revisit only if the module count or spec sizes grow substantially.
 - **Derived index, deferred not rejected.** Consumers parse the committed specs for endpoint data. If a runtime consumer (e.g. portal search) needs a fast small index, generate it *from the committed specs* then — no re-sweep needed. Not built speculatively now.
 - **Beta / internal operations.** Specs are stored verbatim, so beta/internal operations are captured as-is; visibility gating stays a consumer concern (the explorer already handles it via `config/explorerOptIn.ts`). No filtering at generation time.
 - **Regeneration cadence and drift.** No automation is proposed; regen is manual. If the fleet or module set drifts faster than manual regens, consider a scheduled job that opens a diff for review (out of scope here).
-- **Cross-file joins for consumers.** Three normalized files mean consumers join on instance id / module name. Provide a small typed accessor layer (like `getLanguageByCode`) so consumers don't re-implement the joins ad hoc.
+- **Cross-file joins for consumers.** *Done:* `config/moduleSourceOfTruth.ts` provides `getWikiInstanceById`, `getModuleByName`, `getModuleInstances` (the FK join), and `getModulesForInstance`. Spec JSON is loaded by consumers directly (load strategy differs between build-time and runtime), so no spec accessor is provided yet.
 - **sitematrix vs siteinfo enrichment.** sitematrix gives base URL, dbname, language, dir, sitename. If pickers need more (e.g. per-wiki logo, project family), a second enrichment call per instance may be needed — deferred until a consumer requires it.
