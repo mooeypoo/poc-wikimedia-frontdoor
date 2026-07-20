@@ -84,3 +84,26 @@
 .explorer-page .scalar-app :where( .markdown a:hover ) {
 	color: var( --color-progressive--hover );
 }
+
+/*
+ * Hide Scalar's built-in Authentication panel unconditionally.
+ *
+ * Rationale (docs/adr-wikimedia-oauth-authentication.md §5.9): the auth panel
+ * lists cookie-based CentralAuth schemes from the MediaWiki OpenAPI spec that
+ * cannot be used cross-origin from Front Door (browsers strip Cookie headers
+ * from cross-origin fetches and refuse to set third-party cookies). Surfacing
+ * them is misleading and encourages a broken auth path, so the panel stays
+ * hidden. This is independent of OAuth: the MVP does not inject credentials
+ * into Scalar at all (§5.5), so there is no reveal toggle either.
+ *
+ * The selector targets a stable, semantic Scalar class (Content.vue.js
+ * assigns `scalar-reference-intro-auth` directly, not a hashed utility).
+ *
+ * FRAGILITY WARNING (ADR §12): if a Scalar upgrade renames or removes this
+ * class, the panel will silently reappear. When bumping @scalar/api-reference,
+ * re-verify that the auth panel is hidden in the browser and, if broken,
+ * update this selector against the new DOM.
+ */
+.explorer-page .scalar-reference-intro-auth {
+	display: none;
+}

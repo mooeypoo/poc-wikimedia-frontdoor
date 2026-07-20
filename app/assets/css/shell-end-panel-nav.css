@@ -21,7 +21,7 @@
 		var( --fd-explorer-rail-offset )
 	);
 	max-block-size: calc(
-		100vh - var(
+		var( --fd-layout-shell-body-block-size-estimate ) - var(
 			--frontdoor-end-panel-nav-sticky-inset,
 			var( --fd-explorer-rail-offset )
 		)

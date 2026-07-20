@@ -1,13 +1,49 @@
-# Welcome to Front Door
+---
+sidebar: false
+status: mockup
+---
 
-This page is the English source for the localized markdown flow.
+# Open access to free knowledge
 
-Move to [about](about).
+Find technical documentation, and connect with the developer community behind [Wikipedia](https://www.wikipedia.org/) and other [Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/).
 
-## Markdown Locale Loading
+::app-button{href="/get-started" label="Get started"}
+::
 
-When a locale-specific markdown file is missing, the site silently falls back to English.
+---
 
-## About this portal
+## For communities
 
-The Wikimedia Developer Portal is the central resource for building applications with Wikimedia REST APIs. It covers all Wikimedia projects — Wikipedia, Wikidata, Wikimedia Commons, and more. Whether you are creating a data analysis pipeline, an interactive visualization, or a browser extension, you will find endpoint documentation, authentication guides, and live API sandboxes here.
+### Access wiki content and data with Wikimedia APIs
+
+Fetch articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
+
+[Learn more]()
+
+### Build tools for readers and editors
+
+Tools and bots make it easier to edit and maintain Wikimedia projects.
+
+[Learn more]()
+
+---
+
+## High-volume and commercial access
+
+Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data.
+
+[Learn more]()
+
+---
+
+## Contribute to Wikimedia open source
+
+Help build the Wikimedia ecosystem with open source software.
+
+[Learn more]()
+
+## Connect with the community
+
+Get involved with the Wikimedia technical community, and find opportunities for support and learning.
+
+[Learn more]()

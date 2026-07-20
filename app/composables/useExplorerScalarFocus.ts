@@ -14,6 +14,7 @@ const SCALAR_FOCUS_RETRY_INTERVAL_MS = 100
 export interface ScalarInterfaceHandle {
 	eventBus?: {
 		emit: ( eventName: string, payload: { id: string } ) => void
+		on?: ( eventName: string, listener: ( payload?: unknown ) => void ) => () => void
 	}
 	workspaceStore?: {
 		workspace?: Record<string, unknown>

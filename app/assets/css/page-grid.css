@@ -1,24 +1,50 @@
 /**
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
- * Desktop (≥ 1120px, Codex --min-width-breakpoint-desktop): 2-panel layout — 4 | 16 | 4
- * with both side columns always reserved on every route.
+ * Desktop (≥ 1120px): fixed 281px start panel + body band (main:end 16:4 inside
+ * `default.vue`). Tablet (≥ 640px): fixed 281px start + fluid body. Mobile: stacked.
+ *
+ * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
+ * `default.vue` (main column only — matches central page content, not main + end).
+ *
+ * Scroll: shell locks to `100dvh`; start nav scrolls independently (scrollport rules +
+ * scroll-end `::after` spacers in `shell-start-nav-scroll.css`); main + end share `.frontdoor-shell__body-scroll` with
+ * the scrollbar at the **viewport inline-end** (body track is full-bleed inline-end;
+ * content stays aligned). See DESIGN_REQUIREMENTS.md.
  *
  * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
- * future commit). Tablet uses 2 + 6 without a stacked end row; mobile stacks main first.
+ * future commit). The start column width is locked until collapse-into-header work.
  *
  * @media uses px literals matching Codex breakpoint tokens — CSS variables are unreliable
  * inside media query conditions in many browsers.
  * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
  *
  * Page margins: --spacing-100 (mobile), --spacing-150 (tablet), --spacing-200 (desktop).
+ * Applied at the viewport edge on `.frontdoor-shell__chrome-inner` (symmetric
+ * `--fd-layout-page-margin-inline-start` on both inline edges), `.fd-page-grid`
+ * (inline-start), and `.frontdoor-shell__body-scroll` (inline-end: `--fd-layout-page-margin`).
+ * Header brand/tabs share the start-panel grid column (tablet+); inner chrome and
+ * start-column panels must not repeat viewport insets.
+ *
+ * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
+ * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
+ * caps at Codex desktop max (1679px) at ≥ 1680px — see ARCHITECTURE.md → Shell layout.
+ *
+ * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
+ * legacy exploratory value — superseded by transparent panel + inline-end border.
+ * Token retained unused in :root for possible revert. See DESIGN_REQUIREMENTS.md.
  */
 
 :root {
 	/* Locked shell width at desktop wide (Codex max-width-breakpoint-desktop, 1679px) */
 	--fd-layout-grid-max-inline-size: var( --max-width-breakpoint-desktop );
 
-	/* Column spans on 24-column desktop */
+	/* Fixed start (left) side panel width — Figma side panel + one grid column */
+	--fd-layout-start-panel-inline-size: calc(
+		15.0625rem + var( --fd-layout-desktop-wide-column-width )
+	); /* 281px */
+
+	/* Column spans on 24-column desktop (main:end ratio = 16:4) */
 	--fd-layout-grid-columns: 24;
 	--fd-layout-side-span: 4;
 	--fd-layout-main-span: 16;
@@ -33,7 +59,47 @@
 
 	/* Mobile defaults */
 	--fd-layout-page-margin: var( --spacing-100 );
+	--fd-layout-page-margin-inline-start: var( --fd-layout-page-margin );
 	--fd-layout-grid-gutter: var( --spacing-100 );
+
+	/*
+	 * Header chrome locks at this viewport width; wider viewports grow outer margins only.
+	 * Not a Codex breakpoint — Figma shell chrome specification.
+	 */
+	--fd-layout-chrome-lock-viewport-inline-size: 90rem; /* 1440px */
+
+	/*
+	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
+	 * border-inline-end on .frontdoor-shell__side-panel--start (default.vue).
+	 * Retained unused for possible revert.
+	 */
+	--fd-layout-start-panel-background-color: #f3f3f3;
+
+	/*
+	 * Header utility row — search field minimum inline size when expanded (256px).
+	 * Collapse threshold is computed in config/headerChrome.ts and applied via
+	 * ResizeObserver in useHeaderUtilityCollapse.
+	 */
+	--fd-header-search-input-min-inline-size: 16rem;
+
+	/*
+	 * Full shell inner width at the chrome lock viewport (start + gutter + main + end),
+	 * using desktop page margins. Used by the full-bleed header band inner wrapper.
+	 */
+	--fd-layout-grid-content-max-inline-size: calc(
+		var( --fd-layout-chrome-lock-viewport-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+	);
+
+	/*
+	 * Legacy: content-band chrome max (main + end only, excluding start panel).
+	 * Superseded by full-width header + --fd-layout-grid-content-max-inline-size.
+	 */
+	--fd-layout-chrome-max-inline-size: calc(
+		var( --fd-layout-chrome-lock-viewport-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+		- var( --fd-layout-start-panel-inline-size )
+	);
 
 	/*
 	 * Fallback sticky offset for the explorer module rail (project controls block).
@@ -50,39 +116,86 @@
 		+ var( --spacing-100 )
 		+ 5.5rem
 	);
+
+	/*
+	 * Estimate of the chrome band block-size (utility row + primary nav + padding).
+	 * Used by sticky explorer panels and end-column nav max-height until runtime
+	 * measurement replaces it. See DESIGN_REQUIREMENTS.md → Shell scroll regions.
+	 */
+	--fd-layout-shell-chrome-block-size-estimate: 11rem;
+
+	/* Visible shell body below the chrome band (viewport minus chrome estimate). */
+	--fd-layout-shell-body-block-size-estimate: calc(
+		100dvh - var( --fd-layout-shell-chrome-block-size-estimate )
+	);
+
+	/*
+	 * Max inline size of the main:end sub-grid inside the body scrollport at desktop wide.
+	 * Keeps content width locked when the scroll track extends to the viewport edge.
+	 */
+	--fd-layout-body-columns-max-inline-size: calc(
+		var( --fd-layout-grid-max-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+		- var( --fd-layout-start-panel-inline-size )
+		- var( --fd-layout-grid-gutter )
+	);
+
+	/*
+	 * Desktop-wide cap when the start panel is collapsed — main band uses the freed
+	 * start-panel track and gutter (see `.frontdoor-shell--nav-collapsed`).
+	 */
+	--fd-layout-body-columns-collapsed-max-inline-size: calc(
+		var( --fd-layout-grid-max-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+	);
 }
 
 .fd-page-grid {
 	inline-size: 100%;
-	margin-inline: auto;
-	padding-inline: var( --fd-layout-page-margin );
+	margin-inline: 0;
+	padding-inline-start: var( --fd-layout-page-margin-inline-start );
+	/* Body scrollport extends to the viewport inline-end; inset lives on inner content. */
+	padding-inline-end: 0;
 	box-sizing: border-box;
 }
 
 .fd-page-grid__start,
-.fd-page-grid__end,
-.fd-page-grid__main {
+.fd-page-grid__body {
 	min-inline-size: 0;
 }
 
 /* --- Below desktop: interim layouts (full panel responsive deferred) --- */
 
-/* Mobile (< 640px): main first, start column visible, end hidden */
+/* Mobile (< 640px): start column (section nav) then body band; end inside body at desktop only */
 .fd-page-grid {
 	display: flex;
 	flex-direction: column;
 	gap: var( --fd-layout-grid-gutter );
 }
 
-.fd-page-grid__main {
-	order: -1;
-}
+/* Mobile: grow body; cap start nav height so the body band can scroll independently. */
+@media screen and ( max-width: 639px ) {
+	.fd-page-grid {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		overflow: hidden;
+	}
 
-.fd-page-grid__end {
-	display: none;
-}
+	.fd-page-grid__start {
+		flex: 0 1 auto;
+		max-block-size: 40dvh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
 
-/* Tablet (640px–1119px): 8-column 2 | 6; end panel hidden until desktop */
+	.fd-page-grid__body {
+		flex: 1 1 0;
+		min-block-size: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+}
 @media screen and ( min-width: 640px ) {
 	:root {
 		--fd-layout-page-margin: var( --spacing-150 );
@@ -91,61 +204,88 @@
 
 	.fd-page-grid {
 		display: grid;
-		grid-template-columns: repeat( var( --fd-layout-tablet-columns ), minmax( 0, 1fr ) );
-		gap: var( --fd-layout-grid-gutter );
+		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
+		grid-template-rows: minmax( 0, 1fr );
+		column-gap: var( --fd-layout-grid-gutter );
+		row-gap: 0;
 	}
 
-	.fd-page-grid__main {
-		order: unset;
-		grid-column: calc( var( --fd-layout-tablet-side-span ) + 1 ) / span var( --fd-layout-tablet-main-span );
+	.fd-page-grid__body {
+		grid-column: 2;
+		grid-row: 1;
+		min-block-size: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.fd-page-grid__start {
-		grid-column: 1 / span var( --fd-layout-tablet-side-span );
+		grid-column: 1;
+		grid-row: 1;
+		/*
+		 * Clipping track for the start drawer — inline size comes from
+		 * `grid-template-columns`, not a fixed min on this cell.
+		 */
+		min-inline-size: 0;
+		max-inline-size: none;
+		min-block-size: 0;
+		overflow: hidden;
 	}
 }
 
-/* --- Desktop (≥ 1120px): 24-column 4 | 16 | 4, both side panels on sides --- */
+/*
+ * Start nav collapsed (`.frontdoor-shell--nav-collapsed` on shell): zero-width
+ * grid track; body fills the row. Drawer expand is in `shell-start-nav-reveal.css`.
+ */
+.frontdoor-shell--nav-collapsed .fd-page-grid__start {
+	border-inline-end-width: 0;
+	pointer-events: none;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell--nav-collapsed .fd-page-grid {
+		grid-template-columns: 0 minmax( 0, 1fr );
+		column-gap: 0;
+	}
+}
+
+/*
+ * Sidebar hidden (`.frontdoor-shell--sidebar-hidden` on shell): a content page
+ * opts out of the section menu via `sidebar: false` frontmatter (see
+ * `usePageSectionNav`). The start track is removed at every breakpoint so the
+ * main content spans full width — no reserved empty column. Distinct from
+ * `--nav-collapsed` (driven by the responsive hamburger). Mobile is a flex
+ * column, so `display: none` drops the track; tablet+ keeps the two grid tracks
+ * with a zero-width first track so the body (grid-column 2) still resolves.
+ */
+.frontdoor-shell--sidebar-hidden .fd-page-grid__start {
+	display: none;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell--sidebar-hidden .fd-page-grid {
+		grid-template-columns: 0 minmax( 0, 1fr );
+		column-gap: 0;
+	}
+}
+
+/* --- Desktop (≥ 1120px): body band holds main:end 16:4 sub-grid in default.vue --- */
 @media screen and ( min-width: 1120px ) {
 	:root {
 		--fd-layout-page-margin: var( --spacing-200 );
 		--fd-layout-grid-gutter: var( --spacing-150 );
 	}
-
-	.fd-page-grid {
-		display: grid;
-		grid-template-columns: repeat( var( --fd-layout-grid-columns ), minmax( 0, 1fr ) );
-		gap: var( --fd-layout-grid-gutter );
-	}
-
-	.fd-page-grid__start,
-	.fd-page-grid__end {
-		display: block;
-	}
-
-	.fd-page-grid__start {
-		grid-column: 1 / span var( --fd-layout-side-span );
-		grid-row: 1;
-	}
-
-	.fd-page-grid__main {
-		grid-column: calc( var( --fd-layout-side-span ) + 1 ) / span var( --fd-layout-main-span );
-		grid-row: 1;
-	}
-
-	.fd-page-grid__end {
-		grid-column: calc( var( --fd-layout-side-span ) + var( --fd-layout-main-span ) + 1 ) / span var( --fd-layout-side-span );
-		grid-row: 1;
-	}
 }
 
-/* --- Desktop wide (≥ 1680px): lock shell width; 24 × 40px column tracks --- */
+/* Desktop wide (≥ 1680px): grow inline-start margin only — body track stays viewport-bleed inline-end */
 @media screen and ( min-width: 1680px ) {
-	.fd-page-grid {
-		max-inline-size: var( --fd-layout-grid-max-inline-size );
-		grid-template-columns: repeat(
-			var( --fd-layout-grid-columns ),
-			var( --fd-layout-desktop-wide-column-width )
+	:root {
+		--fd-layout-page-margin-inline-start: max(
+			var( --fd-layout-page-margin ),
+			calc(
+				( 100vw - var( --fd-layout-grid-max-inline-size ) ) / 2
+				+ var( --fd-layout-page-margin )
+			)
 		);
 	}
 }

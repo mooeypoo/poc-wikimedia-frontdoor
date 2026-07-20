@@ -1,6 +1,7 @@
 import { reactive, watch } from 'vue'
 import type { Ref } from 'vue'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../config/scalar'
+import { useColorMode } from './useColorMode'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 
 interface ScalarConfigOptions {
@@ -16,8 +17,11 @@ interface ScalarConfigOptions {
  */
 export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: ScalarConfigOptions = {} ) {
 	const { logEvent } = useExplorerDiagnostics()
+	const { resolvedMode } = useColorMode()
+
 	const scalarConfiguration = reactive( {
 		...SCALAR_DEFAULT_CONFIGURATION,
+		darkMode: resolvedMode.value === 'dark',
 		onLoaded: ( slug: string ) => {
 			options.onLoaded?.( slug )
 		},
@@ -47,6 +51,17 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 			specUrl: nextOpenApiSpecUrl
 		} )
 	}, { immediate: true, flush: 'post' } )
+
+	watch( resolvedMode, ( nextResolvedMode ) => {
+		Object.assign( scalarConfiguration, {
+			darkMode: nextResolvedMode === 'dark'
+		} )
+
+		logEvent( 'scalar.config_updated', {
+			updateStrategy: 'object_assign',
+			darkMode: nextResolvedMode
+		} )
+	}, { flush: 'post' } )
 
 	return {
 		scalarConfiguration

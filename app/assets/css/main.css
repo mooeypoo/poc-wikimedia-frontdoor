@@ -14,11 +14,23 @@
 @import '@wikimedia/codex-design-tokens/theme-wikimedia-ui.css';
 @import './page-grid.css';
 @import './shell-end-panel-nav.css';
+@import './shell-start-nav-reveal.css';
+@import './shell-start-nav-scroll.css';
+@import './shell-collapsed-nav-menu.css';
+@import './shell-primary-nav-overrides.css';
 @import './explorer-codex-overrides.css';
 
 :root {
 	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
 	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
+	/* Figma brand wordmark — Montserrat loaded via nuxt.config.ts (config/brandTypography.ts). */
+	--font-family-brand-wordmark: 'Montserrat', sans-serif;
+}
+
+html,
+body,
+#__nuxt {
+	block-size: 100%;
 }
 
 html,
@@ -30,6 +42,14 @@ body {
 	font-family: var( --font-family-sans-stack );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-medium );
+}
+
+/*
+ * Shell scroll regions: the default layout locks to the viewport; column scroll
+ * happens inside `.frontdoor-shell` — not on `body`. See DESIGN_REQUIREMENTS.md.
+ */
+body {
+	overflow: hidden;
 }
 
 *,
@@ -53,7 +73,6 @@ body {
 .frontdoor-shell :where(
 	.frontdoor-description,
 	.frontdoor-help-text,
-	.frontdoor-shell__footer,
 	.explorer-page__header > p,
 	.explorer-page__reference-header > p,
 	.explorer-page__bootstrap-loading > p,
@@ -68,26 +87,10 @@ body {
 /* Shell chrome navigation (Home / About / API Explorer) has no font rule in the
  * layout; re-assert the Codex sans stack so links do not pick up generic sans-serif
  * (often computed as Arial on Windows). */
-.frontdoor-shell__main-nav,
-.frontdoor-shell__main-nav :where( a ),
-.frontdoor-shell__side-nav,
-.frontdoor-shell__side-nav :where( a ) {
+.shell-side-panel,
+.shell-side-panel-nav,
+.shell-primary-nav {
 	font-family: var( --font-family-sans-stack );
-}
-
-/* Navigation menus: base text, not progressive links. */
-.frontdoor-shell__main-nav :where( a ) {
-	color: var( --color-base );
-	text-decoration: none;
-}
-
-.frontdoor-shell__main-nav :where( a:hover ) {
-	text-decoration: underline;
-}
-
-.frontdoor-shell__main-nav :where( a.router-link-active ) {
-	color: var( --color-emphasized );
-	font-weight: var( --font-weight-bold );
 }
 
 .frontdoor-shell__brand {
@@ -300,4 +303,36 @@ pre.has-line-numbers .line::before {
 	content: '-';
 	color: var( --color-error );
 	padding-inline-end: var( --spacing-50 );
+}
+
+/*
+ * Dark-mode code blocks. The dual Shiki theme (nuxt.config.ts) runs with
+ * `defaultColor: false`, so @nuxtjs/mdc sets each token's light + dark palette
+ * as `--shiki-default*` / `--shiki-dark*` custom properties and injects a base
+ * rule `html .shiki span { color: var(--shiki-default) }`. MDC's own dark rule
+ * keys on a `.dark` class, which we don't use, so we re-assert the dark vars
+ * under our theme classes instead.
+ *
+ * Selectors are intentionally NOT wrapped in :where() — they must out-specify
+ * MDC's `html .shiki span` (0,1,2); `html.fd-theme--dark .shiki span` is (0,2,2).
+ * Property list mirrors MDC's exactly (note `background`, not background-color).
+ * Mirrors the fd-theme--dark / prefers-color-scheme→fd-theme--auto split used
+ * for tokens in color-modes.css.
+ */
+html.fd-theme--dark .shiki span {
+	color: var( --shiki-dark );
+	background: var( --shiki-dark-bg );
+	font-style: var( --shiki-dark-font-style );
+	font-weight: var( --shiki-dark-font-weight );
+	text-decoration: var( --shiki-dark-text-decoration );
+}
+
+@media ( prefers-color-scheme: dark ) {
+	html.fd-theme--auto .shiki span {
+		color: var( --shiki-dark );
+		background: var( --shiki-dark-bg );
+		font-style: var( --shiki-dark-font-style );
+		font-weight: var( --shiki-dark-font-weight );
+		text-decoration: var( --shiki-dark-text-decoration );
+	}
 }

@@ -44,23 +44,23 @@ function buildLocaleCandidates( requestedLocaleCode, languageFallbackChain ) {
 }
 
 /**
- * Validates silent markdown fallback behavior for a missing French page.
+ * Validates silent markdown fallback behavior for a missing French get-help page.
  */
 function runFallbackAssertions() {
 	const localeCandidates = buildLocaleCandidates( 'fr', [ 'fr', 'en' ] )
 	assert.deepEqual( localeCandidates, [ 'fr', 'en' ] )
 
-	const frenchAboutCandidates = buildLocaleContentPaths( 'fr', 'about' )
-	assert.deepEqual( frenchAboutCandidates, [ '/fr/about' ] )
+	const frenchGetHelpCandidates = buildLocaleContentPaths( 'fr', 'get-help' )
+	assert.deepEqual( frenchGetHelpCandidates, [ '/fr/get-help' ] )
 
-	const englishAboutCandidates = buildLocaleContentPaths( 'en', 'about' )
-	assert.deepEqual( englishAboutCandidates, [ '/en/about' ] )
+	const englishGetHelpCandidates = buildLocaleContentPaths( 'en', 'get-help' )
+	assert.deepEqual( englishGetHelpCandidates, [ '/en/get-help' ] )
 
-	const frenchAboutFile = resolve( process.cwd(), 'content/fr/about.md' )
-	const englishAboutFile = resolve( process.cwd(), 'content/en/about.md' )
+	const frenchGetHelpFile = resolve( process.cwd(), 'content/fr/get-help.md' )
+	const englishGetHelpFile = resolve( process.cwd(), 'content/en/get-help.md' )
 
-	assert.equal( existsSync( frenchAboutFile ), false, 'Expected French about markdown file to be intentionally missing.' )
-	assert.equal( existsSync( englishAboutFile ), true, 'Expected English about markdown file to exist for fallback.' )
+	assert.equal( existsSync( frenchGetHelpFile ), false, 'Expected French get-help markdown file to be intentionally missing.' )
+	assert.equal( existsSync( englishGetHelpFile ), true, 'Expected English get-help markdown file to exist for fallback.' )
 }
 
 runFallbackAssertions()
