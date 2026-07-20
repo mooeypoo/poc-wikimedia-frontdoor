@@ -66,8 +66,8 @@ git diff config/*.generated.ts
 
 | Artifact | Keyed by | Holds | Produced by |
 |---|---|---|---|
-| `config/generated/wikiInstances.generated.ts` | instance id (dbname) | fleet metadata: `displayName`/sitename, `baseUrl`, `dir`, `language`, `family`, `dbname` | sitematrix sweep |
-| `config/generated/modules.generated.ts` | full discovery name (`site/v1`) | `base`, `version`, `title`, `specSourceInstance`, `specFile` (pointer into the specs dir), `instances: string[]` (sorted instance ids) | phase 1 (discovery sweep) |
+| `config/generated/wikiInstances.generated.ts` | instance `id` (the dbname) | fleet metadata: `displayName`, `baseUrl`, `dir`, `language`, `family` | sitematrix sweep |
+| `config/generated/modules.generated.ts` | full discovery name (`site/v1`) | `base`, `version`, `title`, `specSourceInstance`, `specUrl`, `specFile` (pointer into the specs dir), `instances: string[]` (sorted instance ids) | phase 1 (discovery sweep) |
 | `config/generated/module-specs/<name>.generated.json` | one file per module | the **full OpenAPI spec, verbatim** (paths, operations, params, request/response schemas, summaries, descriptions, `components`) | phase 2 (one spec per module) |
 
 **Generated output lives under `config/generated/`.** A dedicated subfolder makes the manual-vs-generated boundary obvious at a glance and gives regenerated data one home. The `.generated` suffix is kept even inside the folder — redundant but cheap insurance: a file self-identifies in an import line, diff, or search result regardless of location, and tooling can glob `**/*.generated.*`. Existing generated files (`config/languages.generated.ts`) are **not** moved as part of this ADR; relocating them into `config/generated/` is a clean mechanical follow-up when desired.
@@ -95,6 +95,8 @@ git diff config/*.generated.ts
 **Decision:** Modules are keyed by the **full, versioned discovery name exactly as `/discovery` reports it** — `site/v1`, `readinglists/v0`, `attribution/v0-beta`. `base` (`site`) and `version` (`v1`) are stored as **derived** fields for grouping, not used as the key.
 
 **Rationale:** The versioned name is the identity the explorer, spec URLs, and beta/internal opt-in rules already use (`config/explorerOptIn.ts` matches on `attribution/`; `config/explorerModuleDescriptions.ts` keys on `site/v1`). Keying by base name would collapse `v0` / `v1` / `v0-beta` — distinctions that map to different specs and different endpoints. A base grouping is cheap to derive; the reverse is lossy.
+
+**Root module (empty id).** Discovery reports one module — "REST endpoints not associated with a module" (title *MediaWiki REST API*) — with an **empty** `moduleId`. An empty key is fragile and yields an empty spec filename, so the generator adopts the identifier Wikimedia itself uses for it: its spec path is `/module/-`, so it is keyed `-`. This is done in the generator, not the shared `normalizeDiscoveryModules` helper, to avoid changing the runtime explorer's handling of that entry.
 
 ---
 
