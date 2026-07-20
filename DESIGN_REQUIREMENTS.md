@@ -350,7 +350,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | Title | banana `account-logged-out-title` — “Account dashboard” |
 | Body | banana `account-logged-out-description` |
 | Log in | Progressive primary `CdxButton` — same Meta OAuth + PKCE flow as the header Log in link; `returnTo` = locale-aware `/account` |
-| Footer | Shell `ShellSiteFooter` at the **bottom of the viewport**; main content fills remaining vertical space (`account-page` / `AccountLoggedOutGate` flex + `min-block-size: 100%`). Do **not** duplicate the Figma-embedded footer inside the page |
+| Footer | Shell `ShellSiteFooter` at the **bottom of the viewport**; **logged-out gate only** fills remaining vertical space (`AccountLoggedOutGate` flex + `min-block-size: 100%`). Logged-in dashboard is a separate root with Figma Content gaps (`--spacing-200` between title / sections / request / logout; `--spacing-150` inside sections) — never toggle fill styles on the dashboard container. Route is **`ssr: false`** (OAuth memory + handoff). Do **not** duplicate the Figma-embedded footer inside the page |
 
 **Prototype data — not real API keys:** Personal and application key cards, masked secrets, and credentials shown after **Reset** are **placeholders for usability testing**. They are not retrieved from Meta-Wiki or any live token backend. Reset “regenerates” new placeholder Client secret / Refresh token strings only. **Backend work to list, reset, and revoke real API keys is pending.** See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders. OAuth login (header username / gate Log in) is a real session; that does not make the key tables real. Placeholder rows are seeded only after OAuth login.
 

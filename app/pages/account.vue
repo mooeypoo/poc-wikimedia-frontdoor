@@ -9,8 +9,13 @@ import AccountResetApiKeyDialog from '../components/account/AccountResetApiKeyDi
 /**
  * Account route — logged-out gate (Figma 1001:18723) or dashboard (Figma 966:21207).
  *
- * Access and labels: {@link useAccountDashboardPage}. Footer is the shell site footer;
- * this page grows to fill the main column so the footer stays at the viewport bottom.
+ * OAuth session is memory-only (plus a one-shot sessionStorage handoff after login).
+ * This page is `ssr: false` so the first paint already sees the hydrated session and
+ * never SSR-renders the gated (viewport-fill) layout into the dashboard tree — that
+ * mismatch collapsed Figma vertical gaps (`--spacing-200` / `--spacing-150`).
+ *
+ * Access and labels: {@link useAccountDashboardPage}. Footer is the shell site footer.
+ * Viewport-height fill lives only on {@link AccountLoggedOutGate}, not the dashboard.
  */
 const {
 	isAccountDashboardAccessible,
@@ -86,178 +91,172 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 </script>
 
 <template>
+	<!--
+		Separate roots: never toggle viewport-fill / gap:0 on the dashboard container.
+		Gate owns fill styles; dashboard always keeps Figma Content gap (--spacing-200).
+	-->
+	<AccountLoggedOutGate
+		v-if="!isAccountDashboardAccessible"
+		:title="loggedOutPageTitle"
+		:description="loggedOutDescription"
+		:login-button-label="loginButtonLabel"
+		@login="onAccountPageLogin"
+	/>
+
 	<div
+		v-else
 		class="account-page"
-		:class="{ 'account-page--logged-out': !isAccountDashboardAccessible }"
 	>
-		<AccountLoggedOutGate
-			v-if="!isAccountDashboardAccessible"
-			:title="loggedOutPageTitle"
-			:description="loggedOutDescription"
-			:login-button-label="loginButtonLabel"
-			@login="onAccountPageLogin"
-		/>
+		<header class="account-page__header">
+			<h1 class="account-page__title">
+				<span
+					v-if="pageTitleBefore"
+					:class="{ 'account-page__title-before': pageTitleAfter }"
+				>{{ pageTitleBefore }}</span><bdi>{{ username }}</bdi><span v-if="pageTitleAfter">{{ pageTitleAfter }}</span>
+			</h1>
+		</header>
 
-		<template v-else>
-			<header class="account-page__header">
-				<h1 class="account-page__title">
-					<span
-						v-if="pageTitleBefore"
-						:class="{ 'account-page__title-before': pageTitleAfter }"
-					>{{ pageTitleBefore }}</span><bdi>{{ username }}</bdi><span v-if="pageTitleAfter">{{ pageTitleAfter }}</span>
-				</h1>
-			</header>
-
-			<section
-				class="account-page__section"
-				aria-labelledby="account-personal-keys-heading"
-			>
-				<div class="account-page__section-intro">
-					<h2
-						id="account-personal-keys-heading"
-						class="account-page__section-heading"
-					>
-						{{ developerTokensSectionTitle }}
-					</h2>
-					<p class="account-page__prose account-page__section-description">
-						{{ developerTokensDescription }}
-					</p>
-				</div>
-
-				<AccountDeveloperTokenList
-					v-if="hasDeveloperJwts"
-					:list-aria-label="developerJwtListAriaLabel"
-					:items="developerJwtListItems"
-					:issued-meta-prefix="issuedMetaPrefix"
-					:status-meta-prefix="statusMetaPrefix"
-					:permissions-meta-prefix="permissionsMetaPrefix"
-					:reset-button-label="resetTokenLabel"
-					:delete-button-label="deleteTokenLabel"
-					@reset="openResetPersonalApiKeyDialog"
-					@delete="onDeleteDeveloperJwt"
-				/>
-				<CdxMessage
-					v-else
-					type="notice"
+		<section
+			class="account-page__section"
+			aria-labelledby="account-personal-keys-heading"
+		>
+			<div class="account-page__section-intro">
+				<h2
+					id="account-personal-keys-heading"
+					class="account-page__section-heading"
 				>
-					{{ developerJwtEmptyMessage }}
-				</CdxMessage>
+					{{ developerTokensSectionTitle }}
+				</h2>
+				<p class="account-page__prose account-page__section-description">
+					{{ developerTokensDescription }}
+				</p>
+			</div>
 
+			<AccountDeveloperTokenList
+				v-if="hasDeveloperJwts"
+				:list-aria-label="developerJwtListAriaLabel"
+				:items="developerJwtListItems"
+				:issued-meta-prefix="issuedMetaPrefix"
+				:status-meta-prefix="statusMetaPrefix"
+				:permissions-meta-prefix="permissionsMetaPrefix"
+				:reset-button-label="resetTokenLabel"
+				:delete-button-label="deleteTokenLabel"
+				@reset="openResetPersonalApiKeyDialog"
+				@delete="onDeleteDeveloperJwt"
+			/>
+			<CdxMessage
+				v-else
+				type="notice"
+			>
+				{{ developerJwtEmptyMessage }}
+			</CdxMessage>
+
+			<p class="account-page__learn-more">
+				{{ learnMoreAboutBefore }}
+				<AccountExternalMetaLink
+					:href="ownerOnlyConsumersDocUrl"
+					:accessible-label="learnMoreOwnerOnlyAriaLabel"
+				>
+					{{ learnMoreOwnerOnlyLabel }}
+				</AccountExternalMetaLink>
+			</p>
+		</section>
+
+		<section
+			class="account-page__section"
+			aria-labelledby="account-application-keys-heading"
+		>
+			<div class="account-page__section-intro">
+				<h2
+					id="account-application-keys-heading"
+					class="account-page__section-heading"
+				>
+					{{ oauthTokensSectionTitle }}
+				</h2>
+				<p class="account-page__prose account-page__section-description">
+					{{ oauthTokensDescription }}
+				</p>
 				<p class="account-page__learn-more">
 					{{ learnMoreAboutBefore }}
 					<AccountExternalMetaLink
-						:href="ownerOnlyConsumersDocUrl"
-						:accessible-label="learnMoreOwnerOnlyAriaLabel"
+						:href="oauthForDevelopersDocUrl"
+						:accessible-label="learnMoreOAuthAriaLabel"
 					>
-						{{ learnMoreOwnerOnlyLabel }}
+						{{ learnMoreOAuthLabel }}
 					</AccountExternalMetaLink>
 				</p>
-			</section>
-
-			<section
-				class="account-page__section"
-				aria-labelledby="account-application-keys-heading"
-			>
-				<div class="account-page__section-intro">
-					<h2
-						id="account-application-keys-heading"
-						class="account-page__section-heading"
-					>
-						{{ oauthTokensSectionTitle }}
-					</h2>
-					<p class="account-page__prose account-page__section-description">
-						{{ oauthTokensDescription }}
-					</p>
-					<p class="account-page__learn-more">
-						{{ learnMoreAboutBefore }}
-						<AccountExternalMetaLink
-							:href="oauthForDevelopersDocUrl"
-							:accessible-label="learnMoreOAuthAriaLabel"
-						>
-							{{ learnMoreOAuthLabel }}
-						</AccountExternalMetaLink>
-					</p>
-				</div>
-
-				<AccountOAuthConsumerList
-					v-if="hasOAuthConsumers"
-					:list-aria-label="oauthConsumersListAriaLabel"
-					:items="oauthConsumerListItems"
-					:client-id-label="clientIdLabel"
-					:client-secret-label="clientSecretLabel"
-					:issued-meta-prefix="issuedMetaPrefix"
-					:status-meta-prefix="statusMetaPrefix"
-					:permissions-meta-prefix="permissionsMetaPrefix"
-					:reset-button-label="resetTokenLabel"
-					:delete-button-label="deleteTokenLabel"
-					:write-token-notice="writeTokenNotice"
-					@reset="openResetApplicationApiKeyDialog"
-					@delete="onDeleteOAuthConsumer"
-				/>
-				<CdxMessage
-					v-else
-					type="notice"
-				>
-					{{ oauthConsumersEmptyMessage }}
-				</CdxMessage>
-			</section>
-
-			<div class="account-page__request">
-				<CdxButton
-					action="progressive"
-					weight="normal"
-					@click="onRequestNewAuthenticationToken"
-				>
-					{{ requestNewTokenLabel }}
-				</CdxButton>
 			</div>
 
-			<footer class="account-page__footer">
-				<CdxButton
-					action="destructive"
-					weight="normal"
-					@click="resetPrototypeAccountSession"
-				>
-					{{ signOutButtonLabel }}
-				</CdxButton>
-			</footer>
-
-			<AccountResetApiKeyDialog
-				v-model:open="isResetDialogOpen"
-				:is-success-step="isResetDialogSuccessStep"
-				:title="resetDialogTitle"
-				:body="resetDialogBody"
-				:success-intro="resetDialogSuccessIntro"
-				:warning="resetDialogWarning"
-				:credential-rows="revealedCredentialRows"
-				:credentials-list-aria-label="resetDialogCredentialsListAriaLabel"
-				:copy-aria-label="resetDialogCopyAriaLabel"
-				:copied-tooltip-label="resetDialogCopiedTooltipLabel"
-				:close-button-label="resetDialogCloseLabel"
-				:primary-action="resetDialogPrimaryAction"
-				:default-action="resetDialogDefaultAction"
-				@primary="onResetDialogPrimaryAction"
-				@cancel="closeResetApiKeyDialog"
+			<AccountOAuthConsumerList
+				v-if="hasOAuthConsumers"
+				:list-aria-label="oauthConsumersListAriaLabel"
+				:items="oauthConsumerListItems"
+				:client-id-label="clientIdLabel"
+				:client-secret-label="clientSecretLabel"
+				:issued-meta-prefix="issuedMetaPrefix"
+				:status-meta-prefix="statusMetaPrefix"
+				:permissions-meta-prefix="permissionsMetaPrefix"
+				:reset-button-label="resetTokenLabel"
+				:delete-button-label="deleteTokenLabel"
+				:write-token-notice="writeTokenNotice"
+				@reset="openResetApplicationApiKeyDialog"
+				@delete="onDeleteOAuthConsumer"
 			/>
-		</template>
+			<CdxMessage
+				v-else
+				type="notice"
+			>
+				{{ oauthConsumersEmptyMessage }}
+			</CdxMessage>
+		</section>
+
+		<div class="account-page__request">
+			<CdxButton
+				action="progressive"
+				weight="normal"
+				@click="onRequestNewAuthenticationToken"
+			>
+				{{ requestNewTokenLabel }}
+			</CdxButton>
+		</div>
+
+		<footer class="account-page__footer">
+			<CdxButton
+				action="destructive"
+				weight="normal"
+				@click="resetPrototypeAccountSession"
+			>
+				{{ signOutButtonLabel }}
+			</CdxButton>
+		</footer>
+
+		<AccountResetApiKeyDialog
+			v-model:open="isResetDialogOpen"
+			:is-success-step="isResetDialogSuccessStep"
+			:title="resetDialogTitle"
+			:body="resetDialogBody"
+			:success-intro="resetDialogSuccessIntro"
+			:warning="resetDialogWarning"
+			:credential-rows="revealedCredentialRows"
+			:credentials-list-aria-label="resetDialogCredentialsListAriaLabel"
+			:copy-aria-label="resetDialogCopyAriaLabel"
+			:copied-tooltip-label="resetDialogCopiedTooltipLabel"
+			:close-button-label="resetDialogCloseLabel"
+			:primary-action="resetDialogPrimaryAction"
+			:default-action="resetDialogDefaultAction"
+			@primary="onResetDialogPrimaryAction"
+			@cancel="closeResetApiKeyDialog"
+		/>
 	</div>
 </template>
 
 <style scoped>
+/* Figma 966:21207 Content — column gap --spacing-200 between title, sections, request, logout. */
 .account-page {
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-200 );
 	max-inline-size: 57rem;
-	/* Fill the main column so the shell footer sits at the viewport bottom on short pages. */
-	flex: 1 1 auto;
-	min-block-size: 100%;
-	box-sizing: border-box;
-}
-
-.account-page--logged-out {
-	max-inline-size: none;
-	gap: 0;
 }
 
 .account-page__prose {
@@ -332,13 +331,14 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 	flex-wrap: wrap;
 }
 
+/* Figma: divider then Log out as Content siblings (--spacing-200). Border acts as divider. */
 .account-page__footer {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: flex-start;
 	gap: var( --spacing-75 );
-	padding-block-start: var( --spacing-150 );
+	padding-block-start: var( --spacing-200 );
 	border-block-start: 1px solid var( --border-color-subtle );
 }
 </style>

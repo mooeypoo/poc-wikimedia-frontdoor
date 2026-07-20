@@ -138,6 +138,10 @@ export default defineNuxtConfig( {
 	routeRules: {
 		'/explorer': { ssr: false },
 		'/explorer/**': { ssr: false },
+		// OAuth session is memory-only (+ handoff); SSR would paint the logged-out gate
+		// then hydrate the dashboard and collapse Figma vertical spacing.
+		'/account': { ssr: false },
+		'/*/account': { ssr: false },
 		...buildLegacyContentRedirectRouteRules()
 	},
 

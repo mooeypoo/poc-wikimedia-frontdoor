@@ -6,6 +6,9 @@ import { CdxButton } from '@wikimedia/codex'
  *
  * Presentational: title, prompt, and progressive Log in. Login action is provided
  * by the parent via {@link useAccountDashboardPage} → real OAuth (`useOAuthSession.login`).
+ *
+ * Owns viewport-height fill so the shell footer stays at the bottom — do not put
+ * those styles on the logged-in dashboard container.
  */
 defineProps<{
 	/** Page title (banana-i18n). */
@@ -58,9 +61,13 @@ function onLogin(): void {
 	align-items: flex-start;
 	/* Figma 1001:18723 — title / body / button stack uses --spacing-200. */
 	gap: var( --spacing-200 );
-	/* Grow so short logged-out content still fills the main column (footer stays at viewport bottom). */
+	/*
+	 * Fill the main column so the shell footer stays at the viewport bottom.
+	 * Logged-in dashboard must not share this — it collapses section gaps.
+	 */
 	flex: 1 1 auto;
 	min-block-size: 100%;
+	box-sizing: border-box;
 }
 
 .account-logged-out__header {

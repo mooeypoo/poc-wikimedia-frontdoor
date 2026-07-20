@@ -36,7 +36,7 @@ Front Door
     └── Scalar plugin layer                     ← Vue components injected into explorer UI
 ```
 
-The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.config.ts`. It is never pre-rendered. Everything else is pre-rendered via `nuxt generate`.
+The explorer route (`/explorer/**`) and the account route (`/account`, `/*/account`) are configured as `ssr: false` in `nuxt.config.ts`. They are never pre-rendered. Everything else is pre-rendered via `nuxt generate`.
 
 ---
 
@@ -47,7 +47,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 ├── app/                        # Nuxt 4 app directory
 │   ├── pages/
 │   │   ├── index.vue           # Landing page (static, pre-rendered)
-│   │   ├── account.vue         # Account: logged-out gate or OAuth dashboard (+ placeholder keys)
+│   │   ├── account.vue         # Account: client-only gate or dashboard (ssr: false)
 │   │   ├── oauth/
 │   │   │   └── callback.vue    # OAuth callback page (exchange + sessionStorage handoff)
 │   │   ├── explorer/
@@ -221,7 +221,7 @@ Unauthenticated visits to `/account` (including manually appending `/account` to
 | Title | banana `account-logged-out-title` — “Account dashboard” |
 | Body | banana `account-logged-out-description` — prompt to log in for credentials / API keys |
 | Log in | Progressive primary `CdxButton`; starts the **same** Meta OAuth + PKCE flow as the header Log in link (`useShellAuthNavigation` / `useOAuthSession.login`), with `returnTo` = locale-aware account path (`useAccountPath`) so post-auth lands on the dashboard |
-| Footer | **Shell** `ShellSiteFooter` (not a page-local footer). Main column grows (`min-block-size: 100%` / flex) so short gate content still pins the footer to the viewport bottom |
+| Footer | **Shell** `ShellSiteFooter` (not a page-local footer). **Logged-out gate only:** `AccountLoggedOutGate` grows (`min-block-size: 100%` / flex) so short gate content pins the footer to the viewport bottom. Logged-in dashboard is a **separate root** with Figma Content gaps (`--spacing-200` / section `--spacing-150`) — never shares the gate’s fill / `gap: 0` styles. `/account` is **`ssr: false`** so post-login handoff does not SSR the gate into the dashboard tree |
 | Access rule | Dashboard (placeholder key cards) only when `useOAuthSession().isLoggedIn` is true |
 
 UI: `AccountLoggedOutGate.vue`. Gate labels and `onAccountPageLogin` live in `useAccountDashboardPage`.
