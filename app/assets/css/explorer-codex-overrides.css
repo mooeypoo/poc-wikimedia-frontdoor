@@ -1,10 +1,87 @@
 /**
+ * Scalar API client modal write-endpoint warnings (DOM injection + ClientPlugin).
+ */
+.scalar-client-write-endpoint-warning,
+.scalar-client-write-endpoint-warning-mount,
+.scalar-client-write-endpoint-controls {
+	position: relative;
+	z-index: 1;
+}
+
+.scalar-client-write-endpoint-warning-mount {
+	margin-block: var( --spacing-100 );
+	margin-inline: var( --spacing-100 );
+}
+
+.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount {
+	/* Scalar sets order-last (9999) on the address bar below lg; beat it so controls stay under the URL. */
+	order: 10000;
+	flex-basis: 100%;
+	box-sizing: border-box;
+	margin-block-start: var( --spacing-100 );
+	margin-inline: 0;
+	padding-inline-start: var( --fd-scalar-address-bar-inline-align-offset, 0 );
+	inline-size: 100%;
+}
+
+.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount .scalar-client-write-endpoint-controls--address-bar {
+	margin: 0;
+}
+
+@media ( min-width: 1024px ) {
+	.scalar-client .scalar-address-bar + .scalar-client-write-endpoint-warning-mount {
+		order: unset;
+		flex-basis: 100%;
+	}
+}
+
+/**
+ * Plain HTML probe for Scalar modal slot injection (no Codex).
+ * Toggle via SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE in config/scalarClientWriteWarnings.ts.
+ */
+.scalar-client-write-endpoint-warning-probe {
+	background-color: #fdf2d5;
+	border: 1px solid #ab7f2a;
+	border-radius: 2px;
+	color: #202122;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	padding-block: 12px;
+	padding-inline: 12px;
+}
+
+.scalar-client-write-endpoint-warning-probe__slot {
+	font-weight: 600;
+	margin-block: 0 4px;
+	margin-inline: 0;
+}
+
+.scalar-client-write-endpoint-warning-probe__text {
+	margin-block: 0;
+	margin-inline: 0;
+}
+
+/**
  * explorer-codex-overrides.css — Codex fixes on the API explorer page.
  *
  * Scalar’s Tailwind preflight can reset ::before margin/border on shell controls.
  * These rules re-assert Codex checkbox checkmark layout and load after Scalar CSS
  * (see ExplorerScalarReference.client.vue).
  */
+
+/*
+ * Opt-in help popover (ExplorerProjectControls): merge arrow with panel.
+ *
+ * Codex uses a separate .cdx-popover__arrow (placement bottom-start → top: -9px).
+ * More negative top moves the arrow away from the panel and widens the seam; nudge
+ * down (less negative top) plus drop the arrow shadow so the junction matches the demo.
+ * Physical `top` overrides Codex inline coordinates from Floating UI (not logical props).
+ */
+.cdx-popover.explorer-project-controls__opt-in-help-popover .cdx-popover__arrow {
+	box-shadow: none !important;
+	/* Between Codex -9px (hairline gap) and -7px (arrow bites into body). */
+	top: -8px !important;
+}
 
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
 	display: flex;
@@ -13,6 +90,37 @@
 }
 
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
+	content: ' ' !important;
+	display: block !important;
+	box-sizing: border-box !important;
+	position: relative !important;
+	inset: auto !important;
+	margin: 0 !important;
+	inline-size: 0.25rem !important;
+	block-size: calc( 100% - 6px ) !important;
+	max-block-size: calc( 100% - 6px ) !important;
+	border-block-start-width: 0 !important;
+	border-inline-start-width: 0 !important;
+	border-inline-end-width: 2px !important;
+	border-inline-end-style: solid !important;
+	border-block-end-width: 2px !important;
+	border-block-end-style: solid !important;
+	border-inline-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	border-block-end-color: var( --border-color-inverted-fixed, #fff ) !important;
+	transform: rotate( 45deg ) !important;
+}
+
+/*
+ * Test Request modal write-request checkbox (teleported Scalar client).
+ * Same Scalar preflight checkmark fix as explorer-project-controls above.
+ */
+.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
 	content: ' ' !important;
 	display: block !important;
 	box-sizing: border-box !important;
@@ -48,6 +156,35 @@
 	--scalar-link-color: var( --color-progressive );
 	--scalar-link-color-hover: var( --color-progressive--hover );
 	--scalar-link-color-visited: var( --color-visited );
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+/*
+ * Scalar sample <pre> blocks use w-fit + nowrap and can exceed the shell after resize,
+ * clipping bordered cards and painting over the shell border on the inline-end edge.
+ * Cap width and scroll inside the sample instead of widening the shell scrollport.
+ */
+.explorer-page .scalar-app :where( pre ) {
+	display: block;
+	max-inline-size: 100%;
+	overflow-inline: auto;
+	box-sizing: border-box;
+}
+
+.explorer-page .scalar-app :where( pre code ) {
+	display: block;
+	max-inline-size: 100%;
+	overflow-inline: auto;
+	white-space: pre;
+	box-sizing: border-box;
+}
+
+/* Introduction Server / Client Libraries rows share a fixed inline size from Scalar. */
+.explorer-page .scalar-app :where( .introduction-card-item ) {
+	box-sizing: border-box;
+	max-inline-size: 100%;
 }
 
 /* Mirror Scalar’s display-p3 @supports block so accent/link tokens stay progressive. */

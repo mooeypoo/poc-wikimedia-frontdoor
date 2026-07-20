@@ -7,6 +7,20 @@ export interface ExplorerModuleRailHeading {
 	showBetaChip: boolean
 }
 
+/** Trailing prerelease tag stripped from version chip labels (beta is shown separately). */
+const MODULE_VERSION_BETA_SUFFIX_PATTERN = /-beta$/i
+
+/**
+ * Normalizes a raw module version string for chip display.
+ *
+ * @param moduleVersion - Raw version from discovery or the module spec.
+ * @returns Version without a leading `v` or trailing `-beta` tag.
+ */
+function normalizeModuleVersionForChip( moduleVersion: string ): string {
+	const withoutLeadingV = moduleVersion.trim().replace( /^v/i, '' )
+	return withoutLeadingV.replace( MODULE_VERSION_BETA_SUFFIX_PATTERN, '' ).trim()
+}
+
 /**
  * Normalizes an OpenAPI module version for display in a success InfoChip.
  *
@@ -19,7 +33,12 @@ export function formatModuleVersionChipLabel( moduleVersion?: string ): string |
 		return undefined
 	}
 
-	return trimmedVersion.startsWith( 'v' ) ? trimmedVersion : `v${ trimmedVersion }`
+	const normalizedVersion = normalizeModuleVersionForChip( trimmedVersion )
+	if ( !normalizedVersion ) {
+		return undefined
+	}
+
+	return `v${ normalizedVersion }`
 }
 
 /**
@@ -75,4 +94,33 @@ export function formatModuleRailHeadingAriaLabel(
 	}
 
 	return segments.join( ', ' )
+}
+
+/**
+ * Builds supporting text for REST API module select menu items.
+ *
+ * Mirrors beta and version chip metadata from the module rail using Codex
+ * MenuItem `supportingText` (subtle text after the label).
+ *
+ * @param railHeading - Parsed heading parts for the module.
+ * @param betaChipLabel - Localized label for the beta chip.
+ * @param versionChipLabel - Optional isolated version label for display.
+ * @returns Supporting text, or an empty string when no chips apply.
+ */
+export function formatExplorerModuleSelectSupportingText(
+	railHeading: Pick<ExplorerModuleRailHeading, 'showBetaChip' | 'versionChipLabel'>,
+	betaChipLabel: string,
+	versionChipLabel?: string
+): string {
+	const segments: string[] = []
+
+	if ( railHeading.showBetaChip ) {
+		segments.push( betaChipLabel )
+	}
+
+	if ( versionChipLabel ) {
+		segments.push( versionChipLabel )
+	}
+
+	return segments.join( ' · ' )
 }

@@ -2,7 +2,7 @@
  * shell-end-panel-nav.css — end-column page navigation (2-panel desktop layout).
  *
  * Used by the API Explorer module rail and future section page menus in the grid end column.
- * Vertical alignment with main-column controls is driven by useEndPanelNavAlign (CSS variables).
+ * Vertical alignment with main-column anchors is driven by useEndPanelNavAlign (CSS variables).
  */
 
 .frontdoor-end-panel-nav {
@@ -20,14 +20,47 @@
 		--frontdoor-end-panel-nav-sticky-inset,
 		var( --fd-explorer-rail-offset )
 	);
-	max-block-size: calc(
-		var( --fd-layout-shell-body-block-size-estimate ) - var(
-			--frontdoor-end-panel-nav-sticky-inset,
-			var( --fd-explorer-rail-offset )
+	max-block-size: var(
+		--frontdoor-end-panel-nav-max-block-size,
+		calc(
+			var( --fd-layout-shell-body-block-size-estimate ) - var(
+				--frontdoor-end-panel-nav-sticky-inset,
+				var( --fd-explorer-rail-offset )
+			)
 		)
 	);
 	overflow-y: auto;
 	overscroll-behavior: contain;
+}
+
+/*
+ * Module rail: content-sized by default; max-block-size matches Scalar shell.
+ * Internal endpoint scroll is handled in ExplorerModuleRail — not this wrapper.
+ */
+.frontdoor-end-panel-nav.explorer-module-rail {
+	overflow: hidden;
+}
+
+/*
+ * Module rail endpoint scrollport — thin visible scrollbar when content overflows.
+ * WebKit scrollbar pseudos require physical width (same exception as shell-start-nav-scroll.css).
+ */
+.explorer-module-rail__endpoint-scrollport {
+	scrollbar-width: thin;
+	scrollbar-color: var( --color-placeholder ) transparent;
+}
+
+.explorer-module-rail__endpoint-scrollport::-webkit-scrollbar {
+	width: 6px;
+}
+
+.explorer-module-rail__endpoint-scrollport::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.explorer-module-rail__endpoint-scrollport::-webkit-scrollbar-thumb {
+	background-color: var( --color-placeholder );
+	border-radius: 999px;
 }
 
 @media screen and ( max-width: 1119px ) {
