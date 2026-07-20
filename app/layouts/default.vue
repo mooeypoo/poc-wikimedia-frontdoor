@@ -655,6 +655,8 @@ useHead( {
 }
 
 .frontdoor-shell__main {
+	display: flex;
+	flex-direction: column;
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	padding-block: var( --spacing-200 );

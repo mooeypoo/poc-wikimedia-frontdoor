@@ -97,12 +97,12 @@ body {
 	text-decoration: none;
 }
 
-.frontdoor-shell__login-link {
+.frontdoor-shell__account-link {
 	color: var( --color-progressive );
 	text-decoration: none;
 }
 
-.frontdoor-shell__login-link:hover {
+.frontdoor-shell__account-link:hover {
 	text-decoration: underline;
 }
 

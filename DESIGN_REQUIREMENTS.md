@@ -17,7 +17,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 **In scope (implemented as design exploration):**
 
 - **Layout system** — Codex responsive grid (mobile 4-col, tablet 8-col, desktop / desktop-wide 24-col), 2-panel desktop pattern, and shell column split; see **Layout system** below for full specification and prototype status
-- Shell header with search, settings, language, and login placeholders
+- Shell header with search, settings, language, and account link
 - Primary site navigation below the header
 - API Explorer page layout, module rail, project controls, loading states
 - Scalar visual alignment with Codex tokens
@@ -29,7 +29,8 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - The site needs to be tested for compliance with an AA level of accessibility. It should be fully actionable via screen reader technology.
 - Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
 - Default Nuxt elements such as skeletons need to be replaced by Codex components
-- Search, settings, and login controls are present but **disabled** or non-functional
+- Search and settings controls are present but **disabled** or non-functional
+- Account dashboard at `/account` (no start-column section nav); unauthenticated visits show the logged-out gate (Figma 1001:18723) with real OAuth Log in; after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
@@ -262,7 +263,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), Log in link |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`) plus separate **API Explorer** progressive link (`cdxIconArrowNext`) |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -275,9 +276,9 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps within the row are **`--spacing-100` (16px)**. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
-**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in**. Search button activation is **deferred**.
+**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in** (or username → account + **Log out** when authenticated). Search button activation is **deferred**.
 
-**Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link.
+**Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link — or authenticated **username** link to `/account`.
 
 **Language control is compact at all widths.** With ~575 languages to choose from (and further utilities coming, e.g. a dark-mode toggle), an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
 
@@ -311,8 +312,8 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Search icon button | Shown in collapsed mode; **activation deferred** (no overlay yet) |
 | Settings (`CdxButton` + configure icon) | **Disabled** prototype; inline when expanded; overflow menu when collapsed |
 | Interface language (`CdxLookup`) | **Globe + uppercase code** `CdxButton` at all widths; click opens the searchable lookup in a popover. Keeps the bar compact. |
-| Log in | Text link when expanded; overflow menu item when collapsed — **non-functional** prototype |
-| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in only when collapsed |
+| Log in / account | **Log in** text link when signed out (starts Meta OAuth + PKCE, returns to the current page). When signed in: **username only** (no “Logged in as” prefix) as a Codex progressive link (`NuxtLink` → locale-aware `/account`); `aria-label` from `header-auth-link-aria`. Collapsed overflow menu: username → account, plus **Log out** |
+| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in when signed out; settings + username → account + log out when signed in |
 
 **Interface language picker:** The portal supports the **full Wikimedia language catalog** (~575 locales; `config/languages.ts`), not a curated few — so the picker is a **searchable `CdxLookup`**, not a `CdxSelect`. There is one language list for both content and interface; locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`). Implementation:
 
@@ -332,6 +333,40 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
 **Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `config/shellNavigation.ts`.
+
+### Account dashboard (`/account`)
+
+**Decision:** Account route follows two Figma states:
+- **Logged out:** [Figma 1001:18723](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1001-18723) — gate prompting Log in
+- **Logged in:** [Figma 966:21207](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=966-21207) — `{username}’s dashboard` with API key cards
+
+This is the **product end decision** (not a temporary experiment): manually opening `/account` without a Meta OAuth session always shows the gate.
+
+**Logged-out gate**
+
+| Element | Behaviour |
+|---------|-----------|
+| Start column | **Hidden** (same as logged-in `/account`) |
+| Title | banana `account-logged-out-title` — “Account dashboard” |
+| Body | banana `account-logged-out-description` |
+| Log in | Progressive primary `CdxButton` — same Meta OAuth + PKCE flow as the header Log in link; `returnTo` = locale-aware `/account` |
+| Footer | Shell `ShellSiteFooter` at the **bottom of the viewport**; **logged-out gate only** fills remaining vertical space (`AccountLoggedOutGate` flex + `min-block-size: 100%`). Logged-in dashboard is a separate root with Figma Content gaps (`--spacing-200` between title / sections / request / logout; `--spacing-150` inside sections) — never toggle fill styles on the dashboard container. Route is **`ssr: false`** (OAuth memory + handoff). Do **not** duplicate the Figma-embedded footer inside the page |
+
+**Prototype data — not real API keys:** Personal and application key cards, masked secrets, and credentials shown after **Reset** are **placeholders for usability testing**. They are not retrieved from Meta-Wiki or any live token backend. Reset “regenerates” new placeholder Client secret / Refresh token strings only. **Backend work to list, reset, and revoke real API keys is pending.** See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders. OAuth login (header username / gate Log in) is a real session; that does not make the key tables real. Placeholder rows are seeded only after OAuth login.
+
+| Element | Behaviour |
+|---------|-----------|
+| Start column | **Hidden** (`sidebar: false` via `content-sidebar.global` for `/account`) — full-width main column; no empty section nav |
+| Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Meta OAuth username only |
+| Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete — **idle** / no-op, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link. **Row data = placeholders** |
+| Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, quiet Reset, destructive quiet Delete (**idle** / no-op), write-token `CdxMessage` notice. **Row data = placeholders** |
+| Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([confirm](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921) → [success](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=633-7695)): warn → regenerate **placeholder** credentials → show **Client ID**, **Client secret**, **Refresh token** (bold labels `--font-weight-bold`; label/value gap `--spacing-25`; intro/list/warning stack `--spacing-100`) with quiet copy (`CdxTooltip` “Copied!”; button stays mounted) and inline warning `CdxMessage`; **Done** closes. Banana keys: `account-reset-dialog-*`. **Success credentials are not real** |
+| Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration; does not insert a real key into the local placeholder list) |
+| Log out | Destructive `CdxButton` below a subtle border divider — clears OAuth and navigates home |
+
+**i18n:** Interface strings in `i18n/*.json` (`account-*` keys, including `account-logged-out-*`; Log in button reuses `header-login-label`). Placeholder row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
+
+**Source:** `app/pages/account.vue`, `app/components/account/*` (incl. `AccountLoggedOutGate.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
 
 ### Primary navigation row (superseded)
 
@@ -723,7 +758,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 13. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. `codex.style-bidi.css`, disabling LTR base when RTL is active) before production. **Blocks:** header language `CdxSelect` expand chevron in RTL (see `ARCHITECTURE.md` → RTL and BiDi).
 14. **Header language select RTL chevron** — resolve without per-component Codex CSS overrides; options include bidi stylesheet, Codex-native trigger icon pattern, or relaxed header width.
 15. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
-16. **Settings and login** — Prototype the user's dashboard and token management flows.
+16. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
 17. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
 18. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
 19. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.

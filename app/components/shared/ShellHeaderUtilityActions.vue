@@ -24,15 +24,17 @@ import { useColorMode } from '../../composables/useColorMode'
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
-import { useOAuthSession } from '../../composables/useOAuthSession'
+import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
 import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtilityMenu'
 
 /**
- * Header utility row — search, settings, interface language, and log in.
+ * Header utility row — search, settings, interface language, and session control.
  *
  * Compact mode when the allocated actions track is narrower than the expanded minimum
  * (256px search + siblings). Search becomes an icon button; settings and log in move
  * into a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
+ * When logged in, the expanded row shows only the Meta username as a progressive
+ * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
  */
@@ -68,7 +70,13 @@ watch( hasQuery, ( newHasQuery ) => {
 } )
 
 const { menuSelection, menuItems, handleMenuSelection } = useShellHeaderUtilityMenu()
-const { isLoggedIn, username, login, logout } = useOAuthSession()
+const {
+	isLoggedIn,
+	username,
+	accountPath,
+	headerAuthLinkAccessibleLabel,
+	login
+} = useShellAuthNavigation()
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const colorModeGroupLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
@@ -115,10 +123,6 @@ const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-place
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
-const logoutLinkLabel = computed( () => $bananaI18n( 'header-logout-label' ) )
-const loggedInAsLabel = computed(
-	() => $bananaI18n( 'header-logged-in-as', { $1: username.value ?? '' } )
-)
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
@@ -420,18 +424,14 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			v-show="!isUtilityCollapsed"
 			class="shell-header-utility-actions__session"
 		>
-			<template v-if="isLoggedIn">
-				<span class="shell-header-utility-actions__logged-in-as">
-					{{ loggedInAsLabel }}
-				</span>
-				<a
-					href="#"
-					class="shell-header-utility-actions__login-link"
-					@click.prevent="logout()"
-				>
-					{{ logoutLinkLabel }}
-				</a>
-			</template>
+			<NuxtLink
+				v-if="isLoggedIn && username"
+				:to="accountPath"
+				class="shell-header-utility-actions__account-link"
+				:aria-label="headerAuthLinkAccessibleLabel"
+			>
+				<bdi>{{ username }}</bdi>
+			</NuxtLink>
 			<a
 				v-else
 				href="#"
@@ -556,17 +556,12 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	flex: 0 0 auto;
 	display: inline-flex;
 	align-items: center;
-	gap: var( --spacing-50 );
 	white-space: nowrap;
 }
 
-.shell-header-utility-actions__logged-in-as {
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-	color: var( --color-subtle );
-}
-
-.shell-header-utility-actions__login-link {
+/* Codex progressive link pattern — navigation uses NuxtLink, not CdxButton. */
+.shell-header-utility-actions__login-link,
+.shell-header-utility-actions__account-link {
 	flex: 0 0 auto;
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
@@ -575,7 +570,8 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	white-space: nowrap;
 }
 
-.shell-header-utility-actions__login-link:hover {
+.shell-header-utility-actions__login-link:hover,
+.shell-header-utility-actions__account-link:hover {
 	text-decoration: underline;
 }
 </style>

@@ -185,6 +185,16 @@ Composables live in `composables/` and are named with the `use` prefix describin
 - `useWikiModules(instance)` — fetches and caches modules for a given instance
 - `useLocaleWithFallback(requestedLocale)` — resolves the best available locale
 - `useOAuthSession()` — provides token state and auth actions
+- `useShellAuthNavigation()` — header Log in / username→`/account` over OAuth session
+- `useAccountDashboardPage()` — account access gate (OAuth-only), logged-out / dashboard labels, sign-out; composes token dashboard + Reset dialog
+- `usePrototypeAuthSession()` — placeholder key seeding after OAuth login (does not grant `/account` access)
+- `useDeveloperTokenDashboard()` — **placeholder** API key lists (not real Meta data), Meta-Wiki request links, idle Delete handlers, confirm-reset placeholder regenerate
+- `useAccountResetApiKeyDialog()` — Reset API key `CdxDialog` confirm→success flow; success credentials are **placeholders** (Figma 626:7921 / 633:7695)
+- `useCopyWithCopiedTooltip()` — clipboard copy + brief `CdxTooltip` “Copied!” feedback (Reset success quiet copy)
+
+**Account API keys are not real.** `/account` list rows and Reset success Client ID / Client secret / Refresh token values are usability-testing placeholders from `config/tokenManagement.ts` / `stores/prototypeDeveloperTokens.ts`. Front Door does not retrieve or reset live Meta credentials yet — backend work is **pending**. See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders.
+
+**Logged-out `/account` (product decision):** Visiting `/account` without a Meta OAuth session shows the logged-out gate (Figma 1001:18723) — title, prompt, and progressive **Log in** that starts the same OAuth + PKCE flow as the header link (`returnTo` = locale-aware account path). The shell site footer stays at the viewport bottom; the gate (not the dashboard) fills remaining vertical space. The dashboard (placeholder keys) appears only after real OAuth login. `/account` is **`ssr: false`** so the memory-only OAuth handoff does not SSR the gate layout into the dashboard.
 - `useDiscovery(instance)` — fetches and parses the /discovery endpoint
 - `useExplorerModuleRailPlacement()` — module rail Teleport target and layout mode (end column vs inline)
 - `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` — inline rail endpoint scrollport cap (`config/explorerModuleRail.ts`)
@@ -260,6 +270,9 @@ Before marking any component complete, verify:
 - [ ] The component works correctly when the interface is LTR but the displayed wiki instance is an RTL-language wiki
 - [ ] Search inputs use `dir="auto"` or equivalent dynamic direction binding
 - [ ] Start nav / collapsed overlay scroll-end inset uses **`::after` spacer on the scrollport** (`shell-start-nav-scroll.css`, `ShellCollapsedNavMenuOverlay.vue`) — not `padding-block-end` on nested wrappers
+- [ ] Account dashboard: username and seed/API key fields in `<bdi>`; Client ID / secrets use intentional `dir="ltr"` with a comment; interface labels via banana-i18n; **treat key rows as placeholders** (not live Meta credentials — see `ARCHITECTURE.md`); logged-out gate uses banana strings and real OAuth Log in
+- [ ] Account Reset confirmation dialog (`AccountResetApiKeyDialog` / `CdxDialog`): confirm + success copy via banana (`account-reset-dialog-*`); success rows are **placeholder** **Client ID**, **Client secret**, **Refresh token** (not real credentials); bold labels (`--font-weight-bold`); credential values in `<bdi dir="ltr">` with monospace; quiet copy stays mounted and uses `CdxTooltip` “Copied!” via `useCopyWithCopiedTooltip`; intro / credential list / warning separated by `--spacing-100`; inherits interface `dir` from the shell
+- [ ] Header logged-in username is a progressive link to locale-aware `/account` (no “Logged in as” prefix); `aria-label` from `header-auth-link-aria`
 - [ ] Explorer **`CdxSelect`** / **`CdxCombobox`** floating menus use native Codex MenuItem interaction states — no custom hover / highlighted / selected CSS on `.explorer-page` (`main.css` z-index + list-style only)
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: path uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)

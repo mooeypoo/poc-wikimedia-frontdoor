@@ -1,8 +1,6 @@
 import { MAIN_NAVIGATION_ITEMS, type MainNavigationItem } from '../../config/mainNavigation'
 import { REMOTE_CONTENT_SOURCES, type RemoteContentSource } from '../../config/remoteContentSources'
-
-/** Default locale; must match `defaultLocale` in `nuxt.config.ts` (`prefix_except_default`). */
-const DEFAULT_CONTENT_LOCALE = 'en'
+import { buildLocaleAwarePath, DEFAULT_CONTENT_LOCALE } from '../utils/localeAwarePath'
 
 export interface MainNavigationLink extends MainNavigationItem {
 	label: string
@@ -21,9 +19,7 @@ function buildContentRoutePath( navigationItem: MainNavigationItem, localeCode: 
 		return localeCode === DEFAULT_CONTENT_LOCALE ? '/' : `/${ localeCode }`
 	}
 
-	return localeCode === DEFAULT_CONTENT_LOCALE
-		? navigationItem.path
-		: `/${ localeCode }${ navigationItem.path }`
+	return buildLocaleAwarePath( navigationItem.path, localeCode )
 }
 
 /**
