@@ -6,6 +6,28 @@ import { isExplorerRoutePath } from './explorerRoute'
 const NON_DEFAULT_CONTENT_LOCALE_PREFIXES = [ 'es', 'fr', 'he', 'fa' ] as const
 
 /**
+ * Resolves the content locale a route path belongs to.
+ *
+ * Mirrors the `prefix_except_default` i18n strategy: a non-default locale prefix
+ * (e.g. `/fr/...`) resolves to that locale; anything else is the default (`en`).
+ *
+ * @param path - Vue Router path.
+ * @returns Content locale code (`en` when no non-default prefix is present).
+ */
+export function contentLocaleFromPath( path: string ): string {
+	const normalizedPath = path.replace( /\/+$/, '' ) || '/'
+
+	for ( const localeCode of NON_DEFAULT_CONTENT_LOCALE_PREFIXES ) {
+		if ( normalizedPath === `/${ localeCode }`
+			|| normalizedPath.startsWith( `/${ localeCode }/` ) ) {
+			return localeCode
+		}
+	}
+
+	return 'en'
+}
+
+/**
  * Strips a non-default content locale prefix from a route path.
  *
  * @param path - Vue Router path.

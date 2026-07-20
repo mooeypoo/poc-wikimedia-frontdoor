@@ -121,8 +121,9 @@ function mergeRemoteNavSources(
  * Explorer uses an explicit `/explorer` path because `localePath()` can return an
  * empty string when invoked from the `i18n: false` explorer route.
  *
- * @returns {{ mainNavigationLinks: import('vue').ComputedRef<MainNavigationLink[]>, getStartedPath: import('vue').ComputedRef<string> }}
- *   Shell navigation links with banana labels and locale-aware `to` paths.
+ * @returns {{ mainNavigationLinks: import('vue').ComputedRef<MainNavigationLink[]>, homePath: import('vue').ComputedRef<string> }}
+ *   Shell navigation links with banana labels and locale-aware `to` paths, plus
+ *   the locale-aware site-root path for the brand link.
  */
 export function useMainNavigationLinks() {
 	const { $bananaI18n, $interfaceLocale } = useNuxtApp()
@@ -132,13 +133,14 @@ export function useMainNavigationLinks() {
 		return mergeRemoteNavSources( MAIN_NAVIGATION_ITEMS, localeCode, $bananaI18n )
 	} )
 
-	const getStartedPath = computed( () => {
-		const getStartedItem = MAIN_NAVIGATION_ITEMS[ 0 ]
-		return buildContentRoutePath( getStartedItem, $interfaceLocale.value )
+	// Site root (front page) — always `/`, independent of any nav item's path.
+	// The brand lockup links here; keep it decoupled from MAIN_NAVIGATION_ITEMS[0].
+	const homePath = computed( () => {
+		return buildContentRoutePath( { path: '/', messageKey: '', id: 'home' }, $interfaceLocale.value )
 	} )
 
 	return {
 		mainNavigationLinks,
-		getStartedPath
+		homePath
 	}
 }

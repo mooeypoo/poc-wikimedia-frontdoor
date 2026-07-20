@@ -210,18 +210,19 @@ All planned markdown features are achievable with packages already installed:
 
 | Feature | Status | What is needed |
 |---|---|---|
-| Syntax highlighting | ✅ Works today | Nothing |
-| Heading anchors + link icon | Needs component | `app/components/content/ProseH2.vue` … `ProseH6.vue` using `CdxIcon` + `cdxIconLink`. Default `@nuxtjs/mdc` wraps the full heading text in `<a>`; these components replace that with plain heading text + icon on hover |
-| External link icons | Needs component | `app/components/content/ProseA.vue` using `CdxIcon` + `cdxIconLinkExternal` |
-| Line numbers | Needs config | Add `transformerMetaLineNumbers()` to `content.highlight.transformers` |
-| Line highlighting | Needs config | Add `transformerMetaHighlight()` to `content.highlight.transformers` |
-| Diff annotations | Needs config | Add `transformerNotationDiff()` to `content.highlight.transformers` |
-| External link icons | Needs component | `app/components/content/ProseA.vue` using `CdxIcon` + `cdxIconLinkExternal` |
-| Callouts (info / warning) | Needs component | `app/components/content/Callout.vue` using `CdxMessage` |
-| Code tabs | Needs component | `app/components/content/CodeTabs.vue` + `CodeTab.vue` using `CdxTabs` + `CdxTab` |
-| Buttons | Needs component | `app/components/content/AppButton.vue` using `CdxButton` |
-| Next / Previous navigation | Needs page change | Read `prev` / `next` frontmatter in `[...slug].vue`; render with `CdxButton` + arrow icons |
-| File inclusion | Needs verification | MDC `::include` built-in; test against `content/[locale]/` path structure |
+| Syntax highlighting | ✅ Works today | Shiki via `@nuxt/content` |
+| Heading anchors + link icon | ✅ Implemented | `ProseH2.vue` … `ProseH6.vue` + `ProseHeading.vue` |
+| External link icons | ✅ Implemented | `ProseA.vue` |
+| Line numbers | ✅ Configured | Custom inline Shiki transformer + CSS counters |
+| Line highlighting | ✅ Configured | `transformerMetaHighlight()` |
+| Diff annotations | ✅ Configured | `transformerNotationDiff()` |
+| Callouts (info / warning / error / success) | ✅ Implemented | `Callout.vue` + `CdxMessage` — see **Callout title / icon alignment** below |
+| Code tabs | ✅ Implemented | `CodeTabs.vue` + `CodeTab.vue` with **`CdxTabs` (`framed`)** — see **Framed code tabs** below |
+| Buttons | ✅ Implemented | `AppButton.vue` |
+| Next / Previous navigation | ✅ Implemented | `[...slug].vue` frontmatter `prev` / `next` |
+| File inclusion (locale-relative) | ✅ Implemented | `Include.vue` |
+| Shared partials | ✅ Implemented | `Partial.vue` + `config/sharedPartials.ts` (remote-content ADR §11) |
+| Wiki attribution footer | ✅ Implemented | `Attribution.vue` |
 
 ### MDC component conventions
 
@@ -229,6 +230,30 @@ All planned markdown features are achievable with packages already installed:
 - Block components use `::component-name{props}\ncontent\n::` syntax in Markdown.
 - All new content components follow the same RTL/BiDi and logical-property rules as the rest of the codebase.
 - Interface labels within content components go through banana-i18n.
+
+### Callout title / icon alignment
+
+**Decision:** Titled callouts pass the `#title` slot through without an extra `<p>` / `<strong>` wrapper, bold the first `.cdx-message__content > p` via CSS, and set `align-self: flex-start` on `.cdx-message__content`.
+
+**Rationale:** MDC already wraps `#title` Markdown in a `<p>`. Nesting `<p><strong><p>…</p></strong></p>` is invalid HTML and caused the Codex status icon to sit above the title. Codex multiline messages use a bold first paragraph; icon alignment with multi-line content requires overriding Codex’s single-line `align-self: center` on the content column.
+
+### Framed code tabs
+
+**Decision:** Tabbed code blocks in Markdown use Codex `CdxTabs` with **`framed`**, not quiet tabs.
+
+**Rationale:**
+
+- Codex [Tabs guidance](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html) reserves **framed** tabs for content inside a bordered module; **quiet** tabs are for in-page navigation (the shell primary nav already uses quiet `CdxTabs` via `ShellPrimaryNav`).
+- A tabbed code sample is a bounded module on a prose page — same visual role as Codex’s framed demo (header strip + white content panel), not a site nav strip.
+- Framed tabs provide correct header interaction (hover, selected, keyboard) without custom `.cdx-tabs__list__item` overrides; code tabs inherit native Codex tab styles.
+
+**Implementation notes:**
+
+- Outer module: `border: 1px solid var(--border-color-muted)`, `border-radius: var(--border-radius-base)`, `overflow: hidden`.
+- Code panels: `pre` padding `var(--spacing-75)` (12px) via logical properties; margins reset so the panel connects to the selected tab label.
+- MDC nesting is bridged with `CodeTab` → `provide`/`inject` registration during `setup()` (SSR-safe) because `CdxTabs` only accepts direct `CdxTab` slot children.
+
+**Alternatives considered:** Custom tab buttons styled with Codex tokens (rejected — duplicates `CdxTabs` and diverges from the design system); quiet `CdxTabs` (rejected — wrong semantic/visual role for a code module).
 
 ---
 

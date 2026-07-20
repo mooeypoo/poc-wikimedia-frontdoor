@@ -260,6 +260,26 @@
 	}
 }
 
+/*
+ * Sidebar hidden (`.frontdoor-shell--sidebar-hidden` on shell): a content page
+ * opts out of the section menu via `sidebar: false` frontmatter (see
+ * `usePageSectionNav`). The start track is removed at every breakpoint so the
+ * main content spans full width — no reserved empty column. Distinct from
+ * `--nav-collapsed` (driven by the responsive hamburger). Mobile is a flex
+ * column, so `display: none` drops the track; tablet+ keeps the two grid tracks
+ * with a zero-width first track so the body (grid-column 2) still resolves.
+ */
+.frontdoor-shell--sidebar-hidden .fd-page-grid__start {
+	display: none;
+}
+
+@media screen and ( min-width: 640px ) {
+	.frontdoor-shell--sidebar-hidden .fd-page-grid {
+		grid-template-columns: 0 minmax( 0, 1fr );
+		column-gap: 0;
+	}
+}
+
 /* --- Desktop (≥ 1120px): body band holds main:end 16:4 sub-grid in default.vue --- */
 @media screen and ( min-width: 1120px ) {
 	:root {

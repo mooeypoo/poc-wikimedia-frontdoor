@@ -1,3 +1,7 @@
+---
+sidebar: false
+---
+
 # Bienvenido a Front Door
 
 Esta pagina usa markdown localizado para espanol.
