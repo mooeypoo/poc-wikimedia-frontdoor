@@ -1,0 +1,738 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "mediawikiwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "mediawikiwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "mediawikiwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"externalDocs": {
+		"description": "CheckUser extension documentation",
+		"url": "https://www.mediawiki.org/wiki/Extension:CheckUser"
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "REST API for CheckUser tools. See [CheckUser extension documentation](https://www.mediawiki.org/wiki/Extension:CheckUser).",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "CheckUser API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/batch-temporaryaccount": {
+			"post": {
+				"description": "Batch retrieve IP addresses mapped to temporary accounts and their revision/log/abuse filter IDs.",
+				"operationId": "postBatchRetrieveIpAddressesForTemporaryAccounts",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example",
+								"users": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									},
+									"users": {
+										"additionalProperties": {
+											"additionalProperties": false,
+											"properties": {
+												"abuseLogIds": {
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"lastUsedIp": {
+													"type": "boolean"
+												},
+												"logIds": {
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"revIds": {
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												}
+											},
+											"required": [
+												"revIds",
+												"logIds",
+												"lastUsedIp"
+											],
+											"type": "object"
+										},
+										"description": "users parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"users"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Batch retrieve IP addresses for temporary accounts"
+			}
+		},
+		"/connectedtemporaryaccounts/{name}": {
+			"post": {
+				"description": "Get other temporary accounts editing from the same IPs as the target temporary account.",
+				"operationId": "postRetrieveConnectedTemporaryAccounts",
+				"parameters": [
+					{
+						"description": "name parameter",
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve connected temporary accounts"
+			}
+		},
+		"/suggestedinvestigations/case/{caseId}/update": {
+			"post": {
+				"description": "Update the status and reason of a suggested investigation case.",
+				"operationId": "postUpdateASuggestedInvestigationCaseStatusAndReason",
+				"parameters": [
+					{
+						"description": "caseId parameter",
+						"in": "path",
+						"name": "caseId",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"reason": "missing_example",
+								"status": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"reason": {
+										"default": "",
+										"description": "reason parameter",
+										"type": "string"
+									},
+									"status": {
+										"description": "status parameter",
+										"enum": [
+											"open",
+											"resolved",
+											"invalid"
+										],
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"status"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Update a suggested investigation case status and reason"
+			}
+		},
+		"/temporaryaccount/{name}": {
+			"post": {
+				"description": "Get the IP addresses associated with a temporary account name.",
+				"operationId": "postRevealIpAddressesForATemporaryAccount",
+				"parameters": [
+					{
+						"description": "name parameter",
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 5000,
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Reveal IP addresses for a temporary account"
+			}
+		},
+		"/temporaryaccount/ip/{ip}": {
+			"post": {
+				"description": "Get every known temporary account that has edited from a given IP address.",
+				"operationId": "postRevealTemporaryAccountsForAnIpAddress",
+				"parameters": [
+					{
+						"description": "ip parameter",
+						"in": "path",
+						"name": "ip",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 5000,
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Reveal temporary accounts for an IP address"
+			}
+		},
+		"/useragent-clienthints/{type}/{id}": {
+			"post": {
+				"description": "Store client hints data for a revision or private log event.",
+				"operationId": "postStoreUserAgentClientHints",
+				"parameters": [
+					{
+						"description": "type parameter",
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"enum": [
+								"revision",
+								"privatelog"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"architecture": "missing_example",
+								"bitness": "missing_example",
+								"brands": "missing_example",
+								"fullVersionList": "missing_example",
+								"mobile": "missing_example",
+								"model": "missing_example",
+								"platform": "missing_example",
+								"platformVersion": "missing_example",
+								"token": "missing_example",
+								"uaFullVersion": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"architecture": {
+										"description": "architecture parameter",
+										"type": "string"
+									},
+									"bitness": {
+										"description": "bitness parameter",
+										"type": "string"
+									},
+									"brands": {
+										"description": "brands parameter",
+										"type": "object"
+									},
+									"fullVersionList": {
+										"description": "fullVersionList parameter",
+										"type": "object"
+									},
+									"mobile": {
+										"description": "mobile parameter",
+										"type": "boolean"
+									},
+									"model": {
+										"description": "model parameter",
+										"type": "string"
+									},
+									"platform": {
+										"description": "platform parameter",
+										"type": "string"
+									},
+									"platformVersion": {
+										"description": "platformVersion parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									},
+									"uaFullVersion": {
+										"description": "uaFullVersion parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Store user agent client hints"
+			}
+		},
+		"/userinfo": {
+			"post": {
+				"description": "Get public and restricted user data for a given user.",
+				"operationId": "postRetrieveDetailedUserInfoForTheUserinfocard",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example",
+								"username": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									},
+									"username": {
+										"description": "username parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"username"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve detailed user info for the UserInfoCard"
+			}
+		},
+		"/userinfo/blocked/{name}": {
+			"get": {
+				"description": "Retrieve local/global block and lock status for a username.",
+				"operationId": "getGetUserBlockStatus",
+				"parameters": [
+					{
+						"description": "name parameter",
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get user block status"
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://www.mediawiki.org/w/rest.php/checkuser/v0"
+		}
+	]
+}

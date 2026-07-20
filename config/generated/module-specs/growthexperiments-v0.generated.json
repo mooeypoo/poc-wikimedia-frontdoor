@@ -1,0 +1,775 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "enwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "enwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "enwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "Experimental editing suggestions and editor feedback regarding such suggestions",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
+		},
+		"title": "Growth experiments API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/mentees": {
+			"get": {
+				"description": "Returns info about the mentees being mentored by a given user.",
+				"operationId": "getMentees",
+				"parameters": [
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "offset parameter",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "prefix parameter",
+						"in": "query",
+						"name": "prefix",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "activedaysago parameter",
+						"in": "query",
+						"name": "activedaysago",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "minedits parameter",
+						"in": "query",
+						"name": "minedits",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "maxedits parameter",
+						"in": "query",
+						"name": "maxedits",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "onlystarred parameter",
+						"in": "query",
+						"name": "onlystarred",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"description": "sortby parameter",
+						"in": "query",
+						"name": "sortby",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "order parameter",
+						"in": "query",
+						"name": "order",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/mentees/prefixsearch/{prefix}": {
+			"get": {
+				"description": "Returns info about the mentees being mentored by a given user, filtered by mentee name prefix.",
+				"operationId": "getMenteesPrefixsearchByPrefix",
+				"parameters": [
+					{
+						"description": "prefix parameter",
+						"in": "path",
+						"name": "prefix",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/newcomertask/complete": {
+			"post": {
+				"description": "Records completion of editing suggestions by the current user.",
+				"operationId": "postNewcomertaskComplete",
+				"parameters": [
+					{
+						"description": "taskTypeId parameter",
+						"in": "query",
+						"name": "taskTypeId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "revId parameter",
+						"in": "query",
+						"name": "revId",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/quickstarttips/{skin}/{editor}/{tasktypeid}/{uselang}": {
+			"get": {
+				"description": "Returns tips, relevant to the given user, that help new users engage with editing content.",
+				"operationId": "getQuickstarttipsBySkinByEditorByTasktypeidByUselang",
+				"parameters": [
+					{
+						"description": "skin parameter",
+						"in": "path",
+						"name": "skin",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "editor parameter",
+						"in": "path",
+						"name": "editor",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "tasktypeid parameter",
+						"in": "path",
+						"name": "tasktypeid",
+						"required": true,
+						"schema": {
+							"enum": [
+								"copyedit",
+								"expand",
+								"links",
+								"references",
+								"update",
+								"link-recommendation",
+								"revise-tone"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "uselang parameter",
+						"in": "path",
+						"name": "uselang",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/suggestions/addimage/feedback/{title}": {
+			"put": {
+				"description": "Records feedback, by the current user, on image suggestions for page content.",
+				"operationId": "putSuggestionsAddimageFeedbackByTitle",
+				"parameters": [
+					{
+						"description": "title parameter",
+						"in": "path",
+						"name": "title",
+						"required": true,
+						"schema": {
+							"format": "mw-title",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"accepted": "missing_example",
+								"caption": "missing_example",
+								"editRevId": "missing_example",
+								"filename": "missing_example",
+								"reasons": "missing_example",
+								"sectionNumber": "missing_example",
+								"sectionTitle": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"accepted": {
+										"description": "accepted parameter",
+										"type": "boolean"
+									},
+									"caption": {
+										"description": "caption parameter",
+										"type": "string"
+									},
+									"editRevId": {
+										"description": "editRevId parameter",
+										"type": "integer"
+									},
+									"filename": {
+										"description": "filename parameter",
+										"type": "string"
+									},
+									"reasons": {
+										"description": "reasons parameter",
+										"enum": [
+											"notrelevant",
+											"sectionnotappropriate",
+											"noinfo",
+											"offensive",
+											"lowquality",
+											"unfamiliar",
+											"foreignlanguage",
+											"other"
+										],
+										"type": "string"
+									},
+									"sectionNumber": {
+										"description": "sectionNumber parameter",
+										"type": "integer"
+									},
+									"sectionTitle": {
+										"description": "sectionTitle parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"filename",
+									"accepted"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/suggestions/addlink/{title}": {
+			"get": {
+				"description": "Provides link suggestions for page content.",
+				"operationId": "getSuggestionsAddlinkByTitle",
+				"parameters": [
+					{
+						"description": "title parameter",
+						"in": "path",
+						"name": "title",
+						"required": true,
+						"schema": {
+							"format": "mw-title",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/suggestions/info": {
+			"get": {
+				"description": "Shows information useful for monitoring link and image suggestions, broken down by topic.",
+				"operationId": "getSuggestionsInfo",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/user-impact/{user}": {
+			"get": {
+				"description": "Returns data about the impact of a user on the wiki.",
+				"operationId": "getUserImpactByUser",
+				"parameters": [
+					{
+						"description": "user parameter",
+						"in": "path",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"format": "mw-user",
+							"type": "string"
+						}
+					},
+					{
+						"description": "lang parameter",
+						"in": "query",
+						"name": "lang",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "regenerate parameter",
+						"in": "query",
+						"name": "regenerate",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"description": "Returns data about the impact of a user on the wiki.",
+				"operationId": "postUserImpactByUser",
+				"parameters": [
+					{
+						"description": "user parameter",
+						"in": "path",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"format": "mw-user",
+							"type": "string"
+						}
+					},
+					{
+						"description": "lang parameter",
+						"in": "query",
+						"name": "lang",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "regenerate parameter",
+						"in": "query",
+						"name": "regenerate",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/welcomesurvey/skip": {
+			"post": {
+				"description": "Prevents newcomer editing suggestions for the current user.",
+				"operationId": "postWelcomesurveySkip",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"token": {
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"token"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://en.wikipedia.org/w/rest.php/growthexperiments/v0"
+		}
+	]
+}

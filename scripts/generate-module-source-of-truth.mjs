@@ -10,15 +10,22 @@
  *   npm run generate-module-source-of-truth
  *   git diff config/generated/
  *
- * Phase 1 (this file): enumerate the fleet from `action=sitematrix`, filter to
- * public + open wikis, sweep each wiki's `/w/rest.php/specs/v0/discovery`
- * endpoint, and invert the results into:
+ * Phase 1: enumerate the fleet from `action=sitematrix`, filter to public +
+ * open wikis, sweep each wiki's `/w/rest.php/specs/v0/discovery` endpoint, and
+ * invert the results into:
  *
  *   config/generated/wikiInstances.generated.ts — the fleet registry (metadata)
  *   config/generated/modules.generated.ts       — modules → instance-id lists
  *
- * Phase 2 (spec capture into config/generated/module-specs/) lands in a
- * follow-up; this script currently produces the phase-1 artifacts only.
+ * Phase 2: for each unique module, fetch the full OpenAPI spec from its
+ * representative instance and write it verbatim to:
+ *
+ *   config/generated/module-specs/<name>.generated.json
+ *
+ * Both phases run by default. Phases are independently runnable so refreshing
+ * specs never requires re-sweeping the fleet (ADR §5):
+ *   --skip-specs   phase 1 only
+ *   --specs-only   phase 2 only, against the existing module registry
  *
  * Correctness (ADR §6): a discovery fetch that FAILS is never recorded as
  * "this instance has no modules". Failures are retried with backoff and, if
@@ -31,7 +38,7 @@
  *   MODULE_SOT_LIMIT        cap instances swept — for fast local testing
  */
 
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 import { promises as fs } from 'node:fs'
 import { normalizeDiscoveryModules } from '../app/utils/normalizeDiscoveryModules.ts'
@@ -80,6 +87,7 @@ const REPRESENTATIVE_PREFERENCE = [ 'mediawikiwiki', 'enwiki', 'commonswiki', 'm
 const OUTPUT_DIR = join( projectRoot, 'config', 'generated' )
 const INSTANCES_OUTPUT = join( OUTPUT_DIR, 'wikiInstances.generated.ts' )
 const MODULES_OUTPUT = join( OUTPUT_DIR, 'modules.generated.ts' )
+const SPECS_OUTPUT_DIR = join( OUTPUT_DIR, 'module-specs' )
 
 /**
  * Fetches a URL as JSON with the required User-Agent.
@@ -214,20 +222,19 @@ function buildInstanceRegistry( sitematrix ) {
 }
 
 /**
- * Fetches an instance's discovery modules, retrying transient failures.
+ * Fetches a URL as JSON, retrying transient failures and honoring a 429
+ * Retry-After cooldown.
  *
- * @param {object} instance - Instance registry entry.
- * @returns {Promise<import('../app/utils/normalizeDiscoveryModules.ts').DiscoveryModule[]>}
- * @throws {Error} When all attempts fail.
+ * @param {string} url - URL to fetch.
+ * @returns {Promise<object>} Parsed JSON response.
+ * @throws {Error} When all attempts fail (the last error, carrying `.status`).
  */
-async function fetchInstanceModules( instance ) {
-	const discoveryUrl = `${ instance.baseUrl }${ DISCOVERY_PATH }`
+async function fetchJsonWithRetry( url ) {
 	let lastError
 
 	for ( let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++ ) {
 		try {
-			const response = await fetchJson( discoveryUrl )
-			return normalizeDiscoveryModules( response.modules, instance.baseUrl )
+			return await fetchJson( url )
 		} catch ( error ) {
 			lastError = error
 			if ( attempt >= MAX_ATTEMPTS ) {
@@ -243,6 +250,18 @@ async function fetchInstanceModules( instance ) {
 	}
 
 	throw lastError
+}
+
+/**
+ * Fetches an instance's discovery modules, retrying transient failures.
+ *
+ * @param {object} instance - Instance registry entry.
+ * @returns {Promise<import('../app/utils/normalizeDiscoveryModules.ts').DiscoveryModule[]>}
+ * @throws {Error} When all attempts fail.
+ */
+async function fetchInstanceModules( instance ) {
+	const response = await fetchJsonWithRetry( `${ instance.baseUrl }${ DISCOVERY_PATH }` )
+	return normalizeDiscoveryModules( response.modules, instance.baseUrl )
 }
 
 /**
@@ -391,6 +410,60 @@ function buildModuleRegistry( modulesByInstance ) {
 }
 
 /**
+ * Recursively sorts object keys for a stable, diff-friendly serialization.
+ * Arrays keep their order (order is significant in OpenAPI — parameters, enums,
+ * `required`, `security`); only object keys are reordered.
+ *
+ * @param {*} value - Any JSON value.
+ * @returns {*} The value with all nested object keys sorted.
+ */
+function sortObjectKeysDeep( value ) {
+	if ( Array.isArray( value ) ) {
+		return value.map( sortObjectKeysDeep )
+	}
+	if ( value && typeof value === 'object' ) {
+		const sorted = {}
+		for ( const key of Object.keys( value ).sort( ( a, b ) => a.localeCompare( b ) ) ) {
+			sorted[ key ] = sortObjectKeysDeep( value[ key ] )
+		}
+		return sorted
+	}
+	return value
+}
+
+/**
+ * Phase 2 (ADR §5): captures each module's full OpenAPI spec, verbatim, from its
+ * representative instance and writes it to config/generated/module-specs/. Specs
+ * are stored with `$ref`s unresolved and keys recursively sorted (ADR §3, §8).
+ *
+ * @param {Array<object>} modules - Module registry entries (need specUrl, specFile).
+ * @returns {Promise<{ succeeded: number, failed: Array<{ name: string, reason: string }> }>}
+ */
+async function captureModuleSpecs( modules ) {
+	await fs.mkdir( SPECS_OUTPUT_DIR, { recursive: true } )
+	console.log( `[module-sot] capturing ${ modules.length } module specs` )
+
+	const outcomes = await mapWithConcurrency( modules, CONCURRENCY, async ( module ) => {
+		try {
+			const spec = await fetchJsonWithRetry( module.specUrl )
+			const outputPath = join( SPECS_OUTPUT_DIR, `${ module.specFile }.generated.json` )
+			await fs.writeFile( outputPath, `${ JSON.stringify( sortObjectKeysDeep( spec ), null, '\t' ) }\n`, 'utf-8' )
+			return { name: module.name, ok: true }
+		} catch ( error ) {
+			const reason = error.status ? `HTTP ${ error.status }` : ( error.name || 'Error' )
+			return { name: module.name, ok: false, reason }
+		}
+	} )
+
+	const failed = outcomes
+		.filter( ( outcome ) => !outcome.ok )
+		.map( ( outcome ) => ( { name: outcome.name, reason: outcome.reason } ) )
+		.sort( ( a, b ) => a.name.localeCompare( b.name ) )
+
+	return { succeeded: outcomes.length - failed.length, failed }
+}
+
+/**
  * Builds the shared "DO NOT EDIT" header for a generated file.
  *
  * @param {string} description - One-line description of the file's contents.
@@ -507,7 +580,7 @@ export const GENERATED_MODULES: GeneratedModule[] = ${
  *
  * @returns {Promise<void>}
  */
-async function main() {
+async function runPhase1() {
 	const generatedAt = new Date().toISOString()
 
 	console.log( `[module-sot] sitematrix: ${ SITEMATRIX_API }` )
@@ -556,6 +629,57 @@ async function main() {
 	}
 	if ( limited ) {
 		console.warn( '[module-sot] LIMITED run — output is a subset, do not commit as the full source of truth' )
+	}
+
+	return modules
+}
+
+/**
+ * Loads the module registry from the committed phase-1 output (for --specs-only).
+ *
+ * @returns {Promise<Array<object>>} Module registry entries.
+ * @throws {Error} When the file is missing or has no modules.
+ */
+async function loadExistingModules() {
+	let generated
+	try {
+		generated = await import( pathToFileURL( MODULES_OUTPUT ).href )
+	} catch {
+		throw new Error( `cannot read ${ MODULES_OUTPUT } — run phase 1 first (without --specs-only)` )
+	}
+	const modules = generated.GENERATED_MODULES
+	if ( !Array.isArray( modules ) || modules.length === 0 ) {
+		throw new Error( `no modules in ${ MODULES_OUTPUT } — run phase 1 first` )
+	}
+	console.log( `[module-sot] --specs-only: ${ modules.length } modules from ${ MODULES_OUTPUT }` )
+	return modules
+}
+
+/**
+ * Main entrypoint. Runs phase 1 (fleet sweep) and phase 2 (spec capture) by
+ * default; --skip-specs runs phase 1 only, --specs-only runs phase 2 only
+ * against the existing module registry (ADR §5).
+ *
+ * @returns {Promise<void>}
+ */
+async function main() {
+	const args = process.argv.slice( 2 )
+	const skipSpecs = args.includes( '--skip-specs' )
+	const specsOnly = args.includes( '--specs-only' )
+	if ( skipSpecs && specsOnly ) {
+		throw new Error( '--skip-specs and --specs-only are mutually exclusive' )
+	}
+
+	const modules = specsOnly ? await loadExistingModules() : await runPhase1()
+
+	if ( !skipSpecs ) {
+		const { succeeded, failed } = await captureModuleSpecs( modules )
+		console.log( `[module-sot] wrote ${ succeeded } specs → ${ SPECS_OUTPUT_DIR }` )
+		if ( failed.length > 0 ) {
+			console.warn( `[module-sot] ${ failed.length } spec(s) failed: ${
+				failed.map( ( entry ) => `${ entry.name } (${ entry.reason })` ).join( ', ' )
+			}` )
+		}
 	}
 }
 
