@@ -47,14 +47,14 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 ├── app/                        # Nuxt 4 app directory
 │   ├── pages/
 │   │   ├── index.vue           # Landing page (static, pre-rendered)
-│   │   ├── account.vue         # Account dashboard (OAuth username + prototype API key lists)
+│   │   ├── account.vue         # Account: logged-out gate or OAuth dashboard (+ placeholder keys)
 │   │   ├── oauth/
 │   │   │   └── callback.vue    # OAuth callback page (exchange + sessionStorage handoff)
 │   │   ├── explorer/
 │   │   │   └── [[view]].vue    # Explorer page (client-only, enterprise sub-routes)
 │   │   └── [...slug].vue       # Catch-all for Markdown content pages
 │   ├── components/
-│   │   ├── account/            # Account dashboard UI (API key cards, Reset CdxDialog, Meta links)
+│   │   ├── account/            # Account UI (logged-out gate, API key cards, Reset CdxDialog, Meta links)
 │   │   ├── explorer/           # Components used only in the explorer
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
@@ -116,7 +116,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   └── generate-language-catalog.mjs  # Regenerates config/languages.generated.ts
 │
 ├── stores/                     # Pinia stores
-│   ├── prototypeAuthSession.ts # Prototype username seed for direct `/account` visits
+│   ├── prototypeAuthSession.ts # Placeholder key-table owner seed (after OAuth; not access control)
 │   ├── prototypeDeveloperTokens.ts  # In-memory placeholder API key lists; Reset regenerates fakes
 │   └── oauthSession.js         # In-memory OAuth session (username, accessToken, expiresAt)
 │
@@ -199,8 +199,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 | `useAccountPath()` | Locale-aware path for the account dashboard (`buildLocaleAwarePath` in `app/utils/localeAwarePath.ts`) |
-| `usePrototypeAuthSession()` | Prototype account session seeding for direct `/account` visits; wraps `prototypeAuthSession` store (**key tables remain placeholders** until Meta list APIs land) |
-| `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes token dashboard + Reset dialog |
+| `usePrototypeAuthSession()` | Placeholder key seeding after OAuth login; wraps `prototypeAuthSession` store (**does not grant `/account` access**; key tables remain placeholders until Meta list APIs land) |
+| `useAccountDashboardPage()` | Account access gate (OAuth-only), logged-out gate + dashboard banana labels, sign-out; composes token dashboard + Reset dialog |
 | `useDeveloperTokenDashboard()` | **Placeholder** API key list state/view-models (not live Meta data), Meta-Wiki request URLs from `config/auth.ts`, idle Delete handlers; confirm-reset regenerates placeholders via Pinia |
 | `useAccountResetApiKeyDialog()` | Reset dialog state (`CdxDialog`): confirm → success (Figma `626:7921` / `633:7695`); success Client ID / secret / refresh token are **placeholders**; real reset backend pending |
 | `useCopyWithCopiedTooltip()` | Clipboard copy + brief focus/blur so `CdxTooltip` shows “Copied!” (Reset success quiet copy; keeps trigger mounted) |
@@ -210,7 +210,23 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useScalarWriteRequestTestWiki(scalarConfiguration)` | Registers Scalar `onBeforeRequest` to rewrite write HTTP methods to the mapped test wiki when the modal checkbox is checked (`config/wikiInstanceTestWikis.ts`) |
 | `useScalarWriteRequestAddressBarSync(scalarInterface, selectedWikiInstanceId)` | Debounced sync of the modal address bar server URL with checkbox state via Scalar `server:update:server` events |
 
-**Account dashboard** (`app/pages/account.vue`, Figma node `966:21207`):
+**Account dashboard** (`app/pages/account.vue`):
+
+#### Access — logged-out gate (product decision)
+
+Unauthenticated visits to `/account` (including manually appending `/account` to the URL) show the **logged-out gate** ([Figma 1001:18723](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1001-18723)), not the dashboard. This is the **end-state product decision**, not a temporary experiment.
+
+| Element | Behaviour |
+|---------|-----------|
+| Title | banana `account-logged-out-title` — “Account dashboard” |
+| Body | banana `account-logged-out-description` — prompt to log in for credentials / API keys |
+| Log in | Progressive primary `CdxButton`; starts the **same** Meta OAuth + PKCE flow as the header Log in link (`useShellAuthNavigation` / `useOAuthSession.login`), with `returnTo` = locale-aware account path (`useAccountPath`) so post-auth lands on the dashboard |
+| Footer | **Shell** `ShellSiteFooter` (not a page-local footer). Main column grows (`min-block-size: 100%` / flex) so short gate content still pins the footer to the viewport bottom |
+| Access rule | Dashboard (placeholder key cards) only when `useOAuthSession().isLoggedIn` is true |
+
+UI: `AccountLoggedOutGate.vue`. Gate labels and `onAccountPageLogin` live in `useAccountDashboardPage`.
+
+#### Logged-in dashboard (Figma node `966:21207`)
 
 #### Prototype placeholders — not real API keys (pending backend)
 
@@ -223,13 +239,13 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | Delete | **Idle** (no-op) | Backend to **revoke / delete** real keys |
 | “Request new API key” | Opens Meta registration URL (outbound link only); does not populate the local list with a real key | Wire approval / list sync after Meta registration |
 
-Do **not** treat copied “secrets” from the Reset success dialog as usable against production or test wikis. OAuth **login** (username in the header) may be a real Meta session; that is separate from these fake key tables.
+Do **not** treat copied “secrets” from the Reset success dialog as usable against production or test wikis. OAuth **login** (username in the header) is a real Meta session; that is separate from these fake key tables. Placeholder rows are seeded only after OAuth login via `usePrototypeAuthSession` — they are not shown on the logged-out gate.
 
 - **Start column:** Hidden via `content-sidebar.global` middleware publishing `sidebar: false` for `/account` (and locale-prefixed equivalents) so `isSidebarHidden` collapses the grid track — no empty section nav.
-- **Title:** banana `account-page-title-before` + `<bdi>` username + `account-page-title-after` (English: `{username}’s dashboard`). Username prefers OAuth session; falls back to prototype seed only for direct visits without OAuth.
+- **Title:** banana `account-page-title-before` + `<bdi>` username + `account-page-title-after` (English: `{username}’s dashboard`). Username is the Meta OAuth username only.
 - **Sections:** Personal API keys and Application API keys — Codex `CdxButton` (quiet Reset / destructive quiet Delete — **idle**, no-op click; progressive “Request new API key”), `CdxMessage` write-token notice on application cards. Interface copy from banana; **placeholder** row fields from `config/tokenManagement.ts` are external (BiDi-isolated).
 - **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`). Confirm step (Figma `626:7921`) warns; primary Reset regenerates **placeholder** secrets via `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (`createPrototypeClientSecret` / `createPrototypeRefreshToken` in `config/tokenManagement.ts`; client id preserved) and advances to the success step (Figma `633:7695`). Success UI: intro + three rows (**Client ID**, **Client secret**, **Refresh token**) with bold banana labels (`--font-weight-bold`), BiDi-isolated monospace values (`dir="ltr"`), quiet copy (`AccountResetCredentialCopyButton` → `useCopyWithCopiedTooltip` + `CdxTooltip` “Copied!”; button must not remount after click), and inline warning `CdxMessage`. Section stack uses `--spacing-100` (16px) between intro, credential list, and warning. **Done** / close dismisses. Open/step/credential state lives in `useAccountResetApiKeyDialog`. **Credentials shown after Reset are not real.**
-- **Sign out:** Destructive `CdxButton` — clears OAuth and navigates home when logged in; otherwise resets prototype session.
+- **Sign out:** Destructive `CdxButton` — clears OAuth + placeholder session and navigates home.
 
 **Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component. `AccountResetApiKeyDialog` wraps Codex `CdxDialog` (confirm then success); success rows use `AccountResetCredentialCopyButton` (quiet `cdxIconCopy` + stable mount + `CdxTooltip`).
 
@@ -819,8 +835,8 @@ isTestWikiEnabledForWriteRequests (shared ref in explorerScalarWriteRequestConte
 Wikimedia OAuth 2.0 uses Authorization Code flow with PKCE (public client). Full sequence: `docs/adr-wikimedia-oauth-authentication.md`.
 
 The flow:
-1. User clicks **Log in** in `ShellHeaderUtilityActions` (or the collapsed utility menu)
-2. `useOAuthSession().login(returnTo)` navigates to `GET /api/auth/oauth/login?returnTo=…` (defaults to the current route)
+1. User clicks **Log in** in `ShellHeaderUtilityActions` (or the collapsed utility menu), or the progressive **Log in** button on the logged-out `/account` gate (`AccountLoggedOutGate` → `useAccountDashboardPage.onAccountPageLogin`)
+2. `useOAuthSession().login(returnTo)` navigates to `GET /api/auth/oauth/login?returnTo=…` (header defaults to the current route; account gate passes the locale-aware account path)
 3. Nitro stores PKCE verifier + state in an encrypted HttpOnly session cookie, then 302s to Meta’s authorize endpoint with `code_challenge`
 4. Meta redirects to `/oauth/callback?code=…&state=…` (Vue page — not a Nitro route)
 5. The page `POST`s to `/api/auth/oauth/exchange`; Nitro validates state, exchanges the code (PKCE verifier from the cookie), fetches the profile, and returns `{ username, accessToken, expiresAt, returnTo }`
@@ -1131,12 +1147,12 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Header auth (Log in / username→account) | `app/composables/useShellAuthNavigation.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `app/composables/useOAuthSession.ts`, `app/stores/oauthSession.js` |
 | OAuth PKCE flow | `server/api/auth/oauth/login.get.ts`, `server/api/auth/oauth/exchange.post.ts`, `app/pages/oauth/callback.vue`, `app/plugins/oauth-handoff.client.ts`, `app/utils/oauthHandoff.ts`, `docs/adr-wikimedia-oauth-authentication.md` |
-| Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountResetApiKeyDialog.vue`, `AccountResetCredentialCopyButton.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
+| Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountLoggedOutGate.vue`, `AccountResetApiKeyDialog.vue`, `AccountResetCredentialCopyButton.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/usePrototypeAuthSession.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 | Interface strings (collapsed nav overlay) | `i18n/*` (`shell-collapsed-nav-menu-*`, `shell-collapsed-nav-label`) |
-| Interface strings (account / header auth) | `i18n/*` (`account-*`, `header-account-label`, `header-auth-link-aria`, `header-login-label`, `header-logout-label`) |
+| Interface strings (account / header auth) | `i18n/*` (`account-*` incl. `account-logged-out-*`, `header-account-label`, `header-auth-link-aria`, `header-login-label`, `header-logout-label`) |
 
 ---
 

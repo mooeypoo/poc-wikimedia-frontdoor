@@ -4,19 +4,22 @@ import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDevelope
 import { useAccountPath } from './useAccountPath'
 
 /**
- * Prototype account dashboard session state.
+ * Placeholder API key session helpers for the account dashboard.
  *
- * Wraps `prototypeAuthSession` and `prototypeDeveloperTokens` stores (Experiment 2 → `useOAuthSession`).
- * The account page is opened directly at `/account`; no separate login route.
+ * Used only after a real Meta OAuth login to seed usability-testing key tables
+ * (`prototypeDeveloperTokens`). Does **not** grant access to `/account` — that
+ * requires `useOAuthSession`. Unauthenticated `/account` visits show the
+ * logged-out gate (Figma 1001:18723).
  *
  * @returns {{
  *   isAuthenticated: import('vue').ComputedRef<boolean>,
  *   username: import('vue').ComputedRef<string>,
  *   accountPath: import('vue').ComputedRef<string>,
  *   initializePrototypeAccountSession: () => void,
+ *   clearPrototypeAccountSession: () => void,
  *   resetPrototypeAccountSession: () => void,
  *   ensureDashboardSeedData: () => void
- * }} Session state, locale-aware account path, and dashboard helpers.
+ * }} Placeholder session helpers and locale-aware account path.
  */
 export function usePrototypeAuthSession() {
 	const prototypeAuthSessionStore = usePrototypeAuthSessionStore()
@@ -27,9 +30,10 @@ export function usePrototypeAuthSession() {
 	const username = computed( () => prototypeAuthSessionStore.username )
 
 	/**
-	 * Ensures a prototype session exists for the account dashboard (client-only).
+	 * Ensures placeholder key rows exist for the logged-in dashboard (client-only).
 	 *
-	 * Seeds the default wiki username when `/account` is opened without an active session.
+	 * Call only when a real OAuth session is active. Seeds the default wiki username
+	 * into the prototype store solely so token tables have a session owner for fixtures.
 	 *
 	 * @returns Nothing.
 	 */
@@ -47,13 +51,26 @@ export function usePrototypeAuthSession() {
 	}
 
 	/**
-	 * Clears the prototype session and restores default dashboard seed data in place.
+	 * Clears the prototype session and restores default seed rows without re-signing in.
+	 *
+	 * Used on real OAuth logout from the account dashboard.
+	 *
+	 * @returns Nothing.
+	 */
+	function clearPrototypeAccountSession(): void {
+		prototypeAuthSessionStore.signOut()
+		prototypeDeveloperTokensStore.resetToSeedData()
+	}
+
+	/**
+	 * Clears then re-seeds the prototype session (legacy helper for in-place reset).
+	 *
+	 * Prefer {@link clearPrototypeAccountSession} on OAuth logout.
 	 *
 	 * @returns Nothing.
 	 */
 	function resetPrototypeAccountSession(): void {
-		prototypeAuthSessionStore.signOut()
-		prototypeDeveloperTokensStore.resetToSeedData()
+		clearPrototypeAccountSession()
 		prototypeAuthSessionStore.signIn( PROTOTYPE_DEFAULT_WIKI_USERNAME )
 	}
 
@@ -81,6 +98,7 @@ export function usePrototypeAuthSession() {
 		username,
 		accountPath,
 		initializePrototypeAccountSession,
+		clearPrototypeAccountSession,
 		resetPrototypeAccountSession,
 		ensureDashboardSeedData
 	}

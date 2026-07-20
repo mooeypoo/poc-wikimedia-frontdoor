@@ -1,59 +1,92 @@
 import { useAccountResetApiKeyDialog } from './useAccountResetApiKeyDialog'
 import { useDeveloperTokenDashboard } from './useDeveloperTokenDashboard'
-import { useOAuthSession } from './useOAuthSession'
+import { useAccountPath } from './useAccountPath'
 import { usePrototypeAuthSession } from './usePrototypeAuthSession'
+import { useShellAuthNavigation } from './useShellAuthNavigation'
 
 /**
  * Interface labels and view-models for the account dashboard page (UI layer).
  *
- * Composes {@link usePrototypeAuthSession}, {@link useDeveloperTokenDashboard},
- * and {@link useAccountResetApiKeyDialog}; spreads token dashboard and Reset
- * dialog fields at the root for correct Vue template unwrapping. When a real
- * OAuth session is active, the displayed username comes from OAuth rather than
- * the prototype seed user.
+ * **Access (product decision):** The dashboard is shown only when a real Meta OAuth
+ * session is active (`useOAuthSession` via {@link useShellAuthNavigation}).
+ * Unauthenticated visits to `/account` show the logged-out gate (Figma 1001:18723).
+ * Log in starts the same OAuth + PKCE flow as the header link, with `returnTo` set
+ * to the locale-aware account path so users land back on the dashboard after auth.
  *
- * @returns Merged account dashboard fields for `app/pages/account.vue`: OAuth-preferred
- *   username, banana section/action labels, token list view-models and handlers from
- *   {@link useDeveloperTokenDashboard}, and Reset dialog state/handlers from
- *   {@link useAccountResetApiKeyDialog}.
+ * Composes {@link usePrototypeAuthSession} (placeholder key seeding when logged in),
+ * {@link useDeveloperTokenDashboard}, and {@link useAccountResetApiKeyDialog}.
+ *
+ * @returns Account access flag, logged-out gate labels/handlers, and logged-in
+ *   dashboard fields for `app/pages/account.vue`.
  */
 export function useAccountDashboardPage() {
 	const { $bananaI18n } = useNuxtApp()
 	const {
-		username: prototypeUsername,
 		initializePrototypeAccountSession,
-		resetPrototypeAccountSession
+		clearPrototypeAccountSession
 	} = usePrototypeAuthSession()
-	const { isLoggedIn: isOAuthLoggedIn, username: oauthUsername, logout: oauthLogout } = useOAuthSession()
+	const {
+		isLoggedIn: isOAuthLoggedIn,
+		username: oauthUsername,
+		login: startOAuthLogin,
+		logout: oauthLogout
+	} = useShellAuthNavigation()
+	const { accountPath } = useAccountPath()
 	const tokenDashboard = useDeveloperTokenDashboard()
 	const resetApiKeyDialog = useAccountResetApiKeyDialog()
 
 	/**
-	 * Prefer the Meta OAuth username when the user arrived via header login;
-	 * fall back to the prototype dashboard seed for direct `/account` visits.
+	 * Real OAuth session required to view the dashboard (not the prototype seed alone).
+	 */
+	const isAccountDashboardAccessible = computed( () => isOAuthLoggedIn.value )
+
+	/**
+	 * Meta OAuth username when logged in (dashboard title). Empty when logged out.
 	 */
 	const username = computed( () => {
 		if ( isOAuthLoggedIn.value && oauthUsername.value ) {
 			return oauthUsername.value
 		}
 
-		return prototypeUsername.value
+		return ''
 	} )
 
+	const loggedOutPageTitle = computed( () => $bananaI18n( 'account-logged-out-title' ) )
+	const loggedOutDescription = computed( () => $bananaI18n( 'account-logged-out-description' ) )
+	const loginButtonLabel = computed( () => $bananaI18n( 'header-login-label' ) )
+
 	/**
-	 * Signs out of OAuth when active (then returns to the site root); otherwise
-	 * resets the prototype dashboard session in place.
+	 * Starts Meta OAuth + PKCE with return to the locale-aware `/account` path
+	 * (same flow as the header Log in link).
+	 *
+	 * @returns Nothing.
+	 */
+	function onAccountPageLogin(): void {
+		startOAuthLogin( accountPath.value )
+	}
+
+	/**
+	 * Seeds placeholder API key rows after a real OAuth login (usability fixtures only).
+	 *
+	 * @returns Nothing.
+	 */
+	function initializeAccountDashboardPlaceholders(): void {
+		if ( !isOAuthLoggedIn.value ) {
+			return
+		}
+
+		initializePrototypeAccountSession()
+	}
+
+	/**
+	 * Signs out of OAuth, clears placeholder key session state, and returns home.
 	 *
 	 * @returns Nothing.
 	 */
 	async function signOutFromAccountDashboard(): Promise<void> {
-		if ( isOAuthLoggedIn.value ) {
-			oauthLogout()
-			await navigateTo( '/' )
-			return
-		}
-
-		resetPrototypeAccountSession()
+		oauthLogout()
+		clearPrototypeAccountSession()
+		await navigateTo( '/' )
 	}
 
 	const pageTitleBefore = computed( () => $bananaI18n( 'account-page-title-before' ) )
@@ -88,8 +121,13 @@ export function useAccountDashboardPage() {
 	)
 
 	return {
+		isAccountDashboardAccessible,
 		username,
-		initializePrototypeAccountSession,
+		loggedOutPageTitle,
+		loggedOutDescription,
+		loginButtonLabel,
+		onAccountPageLogin,
+		initializeAccountDashboardPlaceholders,
 		resetPrototypeAccountSession: signOutFromAccountDashboard,
 		...tokenDashboard,
 		...resetApiKeyDialog,

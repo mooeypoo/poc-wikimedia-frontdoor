@@ -2,17 +2,24 @@
 import { CdxButton, CdxMessage } from '@wikimedia/codex'
 import AccountDeveloperTokenList from '../components/account/AccountDeveloperTokenList.vue'
 import AccountExternalMetaLink from '../components/account/AccountExternalMetaLink.vue'
+import AccountLoggedOutGate from '../components/account/AccountLoggedOutGate.vue'
 import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumerList.vue'
 import AccountResetApiKeyDialog from '../components/account/AccountResetApiKeyDialog.vue'
 
 /**
- * Developer account dashboard — personal and application API keys (Figma `/account`).
+ * Account route — logged-out gate (Figma 1001:18723) or dashboard (Figma 966:21207).
  *
- * Labels and list data: {@link useAccountDashboardPage}.
+ * Access and labels: {@link useAccountDashboardPage}. Footer is the shell site footer;
+ * this page grows to fill the main column so the footer stays at the viewport bottom.
  */
 const {
+	isAccountDashboardAccessible,
 	username,
-	initializePrototypeAccountSession,
+	loggedOutPageTitle,
+	loggedOutDescription,
+	loginButtonLabel,
+	onAccountPageLogin,
+	initializeAccountDashboardPlaceholders,
 	resetPrototypeAccountSession,
 	hasDeveloperJwts,
 	hasOAuthConsumers,
@@ -68,152 +75,171 @@ const {
 } = useAccountDashboardPage()
 
 onMounted( () => {
-	initializePrototypeAccountSession()
+	initializeAccountDashboardPlaceholders()
+} )
+
+watch( isAccountDashboardAccessible, ( isAccessible ) => {
+	if ( isAccessible ) {
+		initializeAccountDashboardPlaceholders()
+	}
 } )
 </script>
 
 <template>
-	<div class="account-page">
-		<header class="account-page__header">
-			<h1 class="account-page__title">
-				<span
-					v-if="pageTitleBefore"
-					:class="{ 'account-page__title-before': pageTitleAfter }"
-				>{{ pageTitleBefore }}</span><bdi>{{ username }}</bdi><span v-if="pageTitleAfter">{{ pageTitleAfter }}</span>
-			</h1>
-		</header>
+	<div
+		class="account-page"
+		:class="{ 'account-page--logged-out': !isAccountDashboardAccessible }"
+	>
+		<AccountLoggedOutGate
+			v-if="!isAccountDashboardAccessible"
+			:title="loggedOutPageTitle"
+			:description="loggedOutDescription"
+			:login-button-label="loginButtonLabel"
+			@login="onAccountPageLogin"
+		/>
 
-		<section
-			class="account-page__section"
-			aria-labelledby="account-personal-keys-heading"
-		>
-			<div class="account-page__section-intro">
-				<h2
-					id="account-personal-keys-heading"
-					class="account-page__section-heading"
-				>
-					{{ developerTokensSectionTitle }}
-				</h2>
-				<p class="account-page__prose account-page__section-description">
-					{{ developerTokensDescription }}
-				</p>
-			</div>
+		<template v-else>
+			<header class="account-page__header">
+				<h1 class="account-page__title">
+					<span
+						v-if="pageTitleBefore"
+						:class="{ 'account-page__title-before': pageTitleAfter }"
+					>{{ pageTitleBefore }}</span><bdi>{{ username }}</bdi><span v-if="pageTitleAfter">{{ pageTitleAfter }}</span>
+				</h1>
+			</header>
 
-			<AccountDeveloperTokenList
-				v-if="hasDeveloperJwts"
-				:list-aria-label="developerJwtListAriaLabel"
-				:items="developerJwtListItems"
-				:issued-meta-prefix="issuedMetaPrefix"
-				:status-meta-prefix="statusMetaPrefix"
-				:permissions-meta-prefix="permissionsMetaPrefix"
-				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
-				@reset="openResetPersonalApiKeyDialog"
-				@delete="onDeleteDeveloperJwt"
-			/>
-			<CdxMessage
-				v-else
-				type="notice"
+			<section
+				class="account-page__section"
+				aria-labelledby="account-personal-keys-heading"
 			>
-				{{ developerJwtEmptyMessage }}
-			</CdxMessage>
+				<div class="account-page__section-intro">
+					<h2
+						id="account-personal-keys-heading"
+						class="account-page__section-heading"
+					>
+						{{ developerTokensSectionTitle }}
+					</h2>
+					<p class="account-page__prose account-page__section-description">
+						{{ developerTokensDescription }}
+					</p>
+				</div>
 
-			<p class="account-page__learn-more">
-				{{ learnMoreAboutBefore }}
-				<AccountExternalMetaLink
-					:href="ownerOnlyConsumersDocUrl"
-					:accessible-label="learnMoreOwnerOnlyAriaLabel"
+				<AccountDeveloperTokenList
+					v-if="hasDeveloperJwts"
+					:list-aria-label="developerJwtListAriaLabel"
+					:items="developerJwtListItems"
+					:issued-meta-prefix="issuedMetaPrefix"
+					:status-meta-prefix="statusMetaPrefix"
+					:permissions-meta-prefix="permissionsMetaPrefix"
+					:reset-button-label="resetTokenLabel"
+					:delete-button-label="deleteTokenLabel"
+					@reset="openResetPersonalApiKeyDialog"
+					@delete="onDeleteDeveloperJwt"
+				/>
+				<CdxMessage
+					v-else
+					type="notice"
 				>
-					{{ learnMoreOwnerOnlyLabel }}
-				</AccountExternalMetaLink>
-			</p>
-		</section>
+					{{ developerJwtEmptyMessage }}
+				</CdxMessage>
 
-		<section
-			class="account-page__section"
-			aria-labelledby="account-application-keys-heading"
-		>
-			<div class="account-page__section-intro">
-				<h2
-					id="account-application-keys-heading"
-					class="account-page__section-heading"
-				>
-					{{ oauthTokensSectionTitle }}
-				</h2>
-				<p class="account-page__prose account-page__section-description">
-					{{ oauthTokensDescription }}
-				</p>
 				<p class="account-page__learn-more">
 					{{ learnMoreAboutBefore }}
 					<AccountExternalMetaLink
-						:href="oauthForDevelopersDocUrl"
-						:accessible-label="learnMoreOAuthAriaLabel"
+						:href="ownerOnlyConsumersDocUrl"
+						:accessible-label="learnMoreOwnerOnlyAriaLabel"
 					>
-						{{ learnMoreOAuthLabel }}
+						{{ learnMoreOwnerOnlyLabel }}
 					</AccountExternalMetaLink>
 				</p>
+			</section>
+
+			<section
+				class="account-page__section"
+				aria-labelledby="account-application-keys-heading"
+			>
+				<div class="account-page__section-intro">
+					<h2
+						id="account-application-keys-heading"
+						class="account-page__section-heading"
+					>
+						{{ oauthTokensSectionTitle }}
+					</h2>
+					<p class="account-page__prose account-page__section-description">
+						{{ oauthTokensDescription }}
+					</p>
+					<p class="account-page__learn-more">
+						{{ learnMoreAboutBefore }}
+						<AccountExternalMetaLink
+							:href="oauthForDevelopersDocUrl"
+							:accessible-label="learnMoreOAuthAriaLabel"
+						>
+							{{ learnMoreOAuthLabel }}
+						</AccountExternalMetaLink>
+					</p>
+				</div>
+
+				<AccountOAuthConsumerList
+					v-if="hasOAuthConsumers"
+					:list-aria-label="oauthConsumersListAriaLabel"
+					:items="oauthConsumerListItems"
+					:client-id-label="clientIdLabel"
+					:client-secret-label="clientSecretLabel"
+					:issued-meta-prefix="issuedMetaPrefix"
+					:status-meta-prefix="statusMetaPrefix"
+					:permissions-meta-prefix="permissionsMetaPrefix"
+					:reset-button-label="resetTokenLabel"
+					:delete-button-label="deleteTokenLabel"
+					:write-token-notice="writeTokenNotice"
+					@reset="openResetApplicationApiKeyDialog"
+					@delete="onDeleteOAuthConsumer"
+				/>
+				<CdxMessage
+					v-else
+					type="notice"
+				>
+					{{ oauthConsumersEmptyMessage }}
+				</CdxMessage>
+			</section>
+
+			<div class="account-page__request">
+				<CdxButton
+					action="progressive"
+					weight="normal"
+					@click="onRequestNewAuthenticationToken"
+				>
+					{{ requestNewTokenLabel }}
+				</CdxButton>
 			</div>
 
-			<AccountOAuthConsumerList
-				v-if="hasOAuthConsumers"
-				:list-aria-label="oauthConsumersListAriaLabel"
-				:items="oauthConsumerListItems"
-				:client-id-label="clientIdLabel"
-				:client-secret-label="clientSecretLabel"
-				:issued-meta-prefix="issuedMetaPrefix"
-				:status-meta-prefix="statusMetaPrefix"
-				:permissions-meta-prefix="permissionsMetaPrefix"
-				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
-				:write-token-notice="writeTokenNotice"
-				@reset="openResetApplicationApiKeyDialog"
-				@delete="onDeleteOAuthConsumer"
+			<footer class="account-page__footer">
+				<CdxButton
+					action="destructive"
+					weight="normal"
+					@click="resetPrototypeAccountSession"
+				>
+					{{ signOutButtonLabel }}
+				</CdxButton>
+			</footer>
+
+			<AccountResetApiKeyDialog
+				v-model:open="isResetDialogOpen"
+				:is-success-step="isResetDialogSuccessStep"
+				:title="resetDialogTitle"
+				:body="resetDialogBody"
+				:success-intro="resetDialogSuccessIntro"
+				:warning="resetDialogWarning"
+				:credential-rows="revealedCredentialRows"
+				:credentials-list-aria-label="resetDialogCredentialsListAriaLabel"
+				:copy-aria-label="resetDialogCopyAriaLabel"
+				:copied-tooltip-label="resetDialogCopiedTooltipLabel"
+				:close-button-label="resetDialogCloseLabel"
+				:primary-action="resetDialogPrimaryAction"
+				:default-action="resetDialogDefaultAction"
+				@primary="onResetDialogPrimaryAction"
+				@cancel="closeResetApiKeyDialog"
 			/>
-			<CdxMessage
-				v-else
-				type="notice"
-			>
-				{{ oauthConsumersEmptyMessage }}
-			</CdxMessage>
-		</section>
-
-		<div class="account-page__request">
-			<CdxButton
-				action="progressive"
-				weight="normal"
-				@click="onRequestNewAuthenticationToken"
-			>
-				{{ requestNewTokenLabel }}
-			</CdxButton>
-		</div>
-
-		<footer class="account-page__footer">
-			<CdxButton
-				action="destructive"
-				weight="normal"
-				@click="resetPrototypeAccountSession"
-			>
-				{{ signOutButtonLabel }}
-			</CdxButton>
-		</footer>
-
-		<AccountResetApiKeyDialog
-			v-model:open="isResetDialogOpen"
-			:is-success-step="isResetDialogSuccessStep"
-			:title="resetDialogTitle"
-			:body="resetDialogBody"
-			:success-intro="resetDialogSuccessIntro"
-			:warning="resetDialogWarning"
-			:credential-rows="revealedCredentialRows"
-			:credentials-list-aria-label="resetDialogCredentialsListAriaLabel"
-			:copy-aria-label="resetDialogCopyAriaLabel"
-			:copied-tooltip-label="resetDialogCopiedTooltipLabel"
-			:close-button-label="resetDialogCloseLabel"
-			:primary-action="resetDialogPrimaryAction"
-			:default-action="resetDialogDefaultAction"
-			@primary="onResetDialogPrimaryAction"
-			@cancel="closeResetApiKeyDialog"
-		/>
+		</template>
 	</div>
 </template>
 
@@ -223,6 +249,15 @@ onMounted( () => {
 	flex-direction: column;
 	gap: var( --spacing-200 );
 	max-inline-size: 57rem;
+	/* Fill the main column so the shell footer sits at the viewport bottom on short pages. */
+	flex: 1 1 auto;
+	min-block-size: 100%;
+	box-sizing: border-box;
+}
+
+.account-page--logged-out {
+	max-inline-size: none;
+	gap: 0;
 }
 
 .account-page__prose {

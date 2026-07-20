@@ -26,6 +26,8 @@
   "account-learn-more-about-before": "מידע נוסף על ",
   "account-learn-more-oauth-link": "OAuth למפתחים",
   "account-learn-more-owner-only-link": "צרכנים לבעלים בלבד (אסימונים אישיים)",
+  "account-logged-out-description": "היכנסו כדי לגשת לפרטי הכניסה שלכם ולנהל את מפתחות ה-API.",
+  "account-logged-out-title": "לוח בקרה של החשבון",
   "account-meta-grants": "הרשאות:",
   "account-meta-issued": "הונפק:",
   "account-meta-last-used": "שימוש אחרון:",

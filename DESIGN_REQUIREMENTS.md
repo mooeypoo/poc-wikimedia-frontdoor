@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
 - Default Nuxt elements such as skeletons need to be replaced by Codex components
 - Search and settings controls are present but **disabled** or non-functional
-- Account dashboard at `/account` (no start-column section nav); after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
+- Account dashboard at `/account` (no start-column section nav); unauthenticated visits show the logged-out gate (Figma 1001:18723) with real OAuth Log in; after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
@@ -336,23 +336,37 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 ### Account dashboard (`/account`)
 
-**Decision:** Account dashboard layout and copy follow [Unified Developer Front Door — `/account` (Figma node 966:21207)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=966-21207).
+**Decision:** Account route follows two Figma states:
+- **Logged out:** [Figma 1001:18723](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1001-18723) — gate prompting Log in
+- **Logged in:** [Figma 966:21207](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=966-21207) — `{username}’s dashboard` with API key cards
 
-**Prototype data — not real API keys:** Personal and application key cards, masked secrets, and credentials shown after **Reset** are **placeholders for usability testing**. They are not retrieved from Meta-Wiki or any live token backend. Reset “regenerates” new placeholder Client secret / Refresh token strings only. **Backend work to list, reset, and revoke real API keys is pending.** See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders. OAuth login (header username) may still be a real session; that does not make the key tables real.
+This is the **product end decision** (not a temporary experiment): manually opening `/account` without a Meta OAuth session always shows the gate.
+
+**Logged-out gate**
+
+| Element | Behaviour |
+|---------|-----------|
+| Start column | **Hidden** (same as logged-in `/account`) |
+| Title | banana `account-logged-out-title` — “Account dashboard” |
+| Body | banana `account-logged-out-description` |
+| Log in | Progressive primary `CdxButton` — same Meta OAuth + PKCE flow as the header Log in link; `returnTo` = locale-aware `/account` |
+| Footer | Shell `ShellSiteFooter` at the **bottom of the viewport**; main content fills remaining vertical space (`account-page` / `AccountLoggedOutGate` flex + `min-block-size: 100%`). Do **not** duplicate the Figma-embedded footer inside the page |
+
+**Prototype data — not real API keys:** Personal and application key cards, masked secrets, and credentials shown after **Reset** are **placeholders for usability testing**. They are not retrieved from Meta-Wiki or any live token backend. Reset “regenerates” new placeholder Client secret / Refresh token strings only. **Backend work to list, reset, and revoke real API keys is pending.** See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders. OAuth login (header username / gate Log in) is a real session; that does not make the key tables real. Placeholder rows are seeded only after OAuth login.
 
 | Element | Behaviour |
 |---------|-----------|
 | Start column | **Hidden** (`sidebar: false` via `content-sidebar.global` for `/account`) — full-width main column; no empty section nav |
-| Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Prefer OAuth username when logged in |
+| Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Meta OAuth username only |
 | Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete — **idle** / no-op, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link. **Row data = placeholders** |
 | Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, quiet Reset, destructive quiet Delete (**idle** / no-op), write-token `CdxMessage` notice. **Row data = placeholders** |
 | Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([confirm](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921) → [success](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=633-7695)): warn → regenerate **placeholder** credentials → show **Client ID**, **Client secret**, **Refresh token** (bold labels `--font-weight-bold`; label/value gap `--spacing-25`; intro/list/warning stack `--spacing-100`) with quiet copy (`CdxTooltip` “Copied!”; button stays mounted) and inline warning `CdxMessage`; **Done** closes. Banana keys: `account-reset-dialog-*`. **Success credentials are not real** |
 | Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration; does not insert a real key into the local placeholder list) |
-| Log out | Destructive `CdxButton` below a subtle border divider |
+| Log out | Destructive `CdxButton` below a subtle border divider — clears OAuth and navigates home |
 
-**i18n:** Interface strings in `i18n/*.json` (`account-*` keys). Placeholder row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
+**i18n:** Interface strings in `i18n/*.json` (`account-*` keys, including `account-logged-out-*`; Log in button reuses `header-login-label`). Placeholder row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
 
-**Source:** `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
+**Source:** `app/pages/account.vue`, `app/components/account/*` (incl. `AccountLoggedOutGate.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
 
 ### Primary navigation row (superseded)
 
