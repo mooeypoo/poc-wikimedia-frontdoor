@@ -110,7 +110,7 @@ function onDefault(): void {
 							>{{ credentialRow.value }}</bdi>
 						</p>
 						<AccountResetCredentialCopyButton
-							:value="credentialRow.value"
+							:text-to-copy="credentialRow.value"
 							:copy-aria-label="copyAriaLabel"
 							:copied-tooltip-label="copiedTooltipLabel"
 						/>

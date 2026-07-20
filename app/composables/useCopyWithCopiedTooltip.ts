@@ -22,12 +22,15 @@ export function useCopyWithCopiedTooltip() {
 	let copiedTooltipClearTimeoutId: ReturnType<typeof setTimeout> | null = null
 
 	/**
-	 * Copies `text` to the clipboard and briefly focuses `triggerElement` so `CdxTooltip` shows.
-	 *
-	 * @param text - Credential value to copy.
-	 * @param triggerElement - Focusable host for the tooltip directive (usually the quiet button root).
-	 * @returns Promise that resolves when the copy attempt finishes (failures are swallowed).
-	 */
+ * Copies `text` to the clipboard and briefly focuses `triggerElement` so `CdxTooltip` shows.
+ *
+ * Uses {@link copyTextToClipboard} (Async Clipboard API with `execCommand` fallback).
+ * On failure, returns without showing the tooltip so success is never implied.
+ *
+ * @param text - Credential value to copy.
+ * @param triggerElement - Focusable host for the tooltip directive (usually the quiet button root).
+ * @returns Promise that resolves when the copy attempt finishes (failures are swallowed).
+ */
 	async function copyAndShowCopiedTooltip(
 		text: string,
 		triggerElement: HTMLElement | null
@@ -35,6 +38,11 @@ export function useCopyWithCopiedTooltip() {
 		try {
 			await copyTextToClipboard( text )
 		} catch {
+			// Clipboard unavailable or denied — skip tooltip so we never claim success.
+			return
+		}
+
+		if ( !text ) {
 			return
 		}
 

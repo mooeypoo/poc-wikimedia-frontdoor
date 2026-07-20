@@ -10,8 +10,8 @@ import { useCopyWithCopiedTooltip } from '../../composables/useCopyWithCopiedToo
  * `CdxTooltip` on focus. The button must stay mounted after click (no `:key` remount).
  */
 const properties = defineProps<{
-	/** Credential value to copy (external). */
-	value: string
+	/** Credential string to place on the clipboard (external). */
+	textToCopy: string
 	/** Accessible name for the quiet copy button. */
 	copyAriaLabel: string
 	/** Tooltip text shown after a successful copy (banana-i18n). */
@@ -25,23 +25,44 @@ const { copyAndShowCopiedTooltip } = useCopyWithCopiedTooltip()
 const copyButtonElement = ref<InstanceType<typeof CdxButton> | null>( null )
 
 /**
- * Returns the button root element for focus/blur (tooltip show/hide).
+ * Returns the native button element for focus/blur (tooltip show/hide).
+ *
+ * Prefers Codex’s exposed `button` ref; falls back to `$el` when needed.
  *
  * @returns The host `HTMLElement`, or `null` if unavailable.
  */
 function getCopyButtonRootElement(): HTMLElement | null {
-	const buttonRoot = copyButtonElement.value?.$el as HTMLElement | undefined
+	const componentInstance = copyButtonElement.value
 
-	return buttonRoot ?? null
+	if ( !componentInstance ) {
+		return null
+	}
+
+	const exposedButton = ( componentInstance as { button?: HTMLElement | { value?: HTMLElement } } ).button
+
+	if ( exposedButton && 'value' in exposedButton && exposedButton.value instanceof HTMLElement ) {
+		return exposedButton.value
+	}
+
+	if ( exposedButton instanceof HTMLElement ) {
+		return exposedButton
+	}
+
+	const buttonRoot = componentInstance.$el
+
+	return buttonRoot instanceof HTMLElement ? buttonRoot : null
 }
 
 /**
  * Handles quiet copy click: clipboard + brief “Copied!” tooltip.
  *
+ * @param clickEvent - Native click from `CdxButton` (stop so dialog chrome does not handle it).
  * @returns Nothing.
  */
-async function onCopy(): Promise<void> {
-	await copyAndShowCopiedTooltip( properties.value, getCopyButtonRootElement() )
+async function onCopy( clickEvent: Event ): Promise<void> {
+	clickEvent.preventDefault()
+	clickEvent.stopPropagation()
+	await copyAndShowCopiedTooltip( properties.textToCopy, getCopyButtonRootElement() )
 }
 </script>
 
