@@ -90,7 +90,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
 │   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
 │   ├── auth.ts                 # Account path, Meta-Wiki OAuth URLs, prototype defaults
-│   ├── tokenManagement.ts      # Prototype API key types/seeds; Reset success secret generators
+│   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
 │   ├── explorerSurfaces.ts     # Explorer project controls + module rail surface tokens (neutral-subtle bg, 4px radius)
@@ -117,7 +117,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │
 ├── stores/                     # Pinia stores
 │   ├── prototypeAuthSession.ts # Prototype username seed for direct `/account` visits
-│   ├── prototypeDeveloperTokens.ts  # Prototype API key lists; delete + Reset regenerate
+│   ├── prototypeDeveloperTokens.ts  # In-memory placeholder API key lists; Reset regenerates fakes
 │   └── oauthSession.js         # In-memory OAuth session (username, accessToken, expiresAt)
 │
 └── nuxt.config.ts              # Nuxt configuration; routeRules; runtimeConfig
@@ -199,10 +199,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 | `useAccountPath()` | Locale-aware path for the account dashboard (`buildLocaleAwarePath` in `app/utils/localeAwarePath.ts`) |
-| `usePrototypeAuthSession()` | Prototype account session seeding for direct `/account` visits; wraps `prototypeAuthSession` store (token tables remain prototype until Meta list APIs land) |
-| `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes `useDeveloperTokenDashboard` + `useAccountResetApiKeyDialog` |
-| `useDeveloperTokenDashboard()` | Prototype API key list state/view-models, Meta-Wiki URLs from `config/auth.ts`, delete/request handlers; confirm-reset regenerate via Pinia |
-| `useAccountResetApiKeyDialog()` | Reset dialog state (`CdxDialog`): confirm → success steps (Figma `626:7921` / `633:7695`), banana labels (`account-reset-dialog-*`), revealed Client ID / secret / refresh-token rows, confirm regenerate + Done close |
+| `usePrototypeAuthSession()` | Prototype account session seeding for direct `/account` visits; wraps `prototypeAuthSession` store (**key tables remain placeholders** until Meta list APIs land) |
+| `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes token dashboard + Reset dialog |
+| `useDeveloperTokenDashboard()` | **Placeholder** API key list state/view-models (not live Meta data), Meta-Wiki request URLs from `config/auth.ts`, idle Delete handlers; confirm-reset regenerates placeholders via Pinia |
+| `useAccountResetApiKeyDialog()` | Reset dialog state (`CdxDialog`): confirm → success (Figma `626:7921` / `633:7695`); success Client ID / secret / refresh token are **placeholders**; real reset backend pending |
 | `useCopyWithCopiedTooltip()` | Clipboard copy + brief focus/blur so `CdxTooltip` shows “Copied!” (Reset success quiet copy; keeps trigger mounted) |
 | `useShellAuthNavigation()` | Shell header session control: OAuth `login`/`logout`, username, locale-aware `/account` path, `header-auth-link-aria` |
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items (settings, username→account, log in/out) |
@@ -212,10 +212,23 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 
 **Account dashboard** (`app/pages/account.vue`, Figma node `966:21207`):
 
+#### Prototype placeholders — not real API keys (pending backend)
+
+**The personal and application API key rows on `/account` are not real credentials.** Front Door does **not** retrieve OAuth consumers, developer tokens, client secrets, or refresh tokens from Meta-Wiki or any other backend. What users see is **seed / generated placeholder data** from `config/tokenManagement.ts` held in `stores/prototypeDeveloperTokens.ts`, for **usability testing** of layout and flows only.
+
+| Surface | Reality today | Pending |
+|---------|---------------|---------|
+| Key list cards (names, meta, masked secret) | Placeholder seed rows | Backend (and Meta) APIs to **list** real keys for the signed-in user |
+| Reset confirm → success dialog (Client ID / Client secret / Refresh token) | Newly **generated placeholders** (`createPrototypeClientSecret` / `createPrototypeRefreshToken`); client id kept from the seed row | Backend to **reset / re-issue** real credentials and return live values |
+| Delete | **Idle** (no-op) | Backend to **revoke / delete** real keys |
+| “Request new API key” | Opens Meta registration URL (outbound link only); does not populate the local list with a real key | Wire approval / list sync after Meta registration |
+
+Do **not** treat copied “secrets” from the Reset success dialog as usable against production or test wikis. OAuth **login** (username in the header) may be a real Meta session; that is separate from these fake key tables.
+
 - **Start column:** Hidden via `content-sidebar.global` middleware publishing `sidebar: false` for `/account` (and locale-prefixed equivalents) so `isSidebarHidden` collapses the grid track — no empty section nav.
 - **Title:** banana `account-page-title-before` + `<bdi>` username + `account-page-title-after` (English: `{username}’s dashboard`). Username prefers OAuth session; falls back to prototype seed only for direct visits without OAuth.
-- **Sections:** Personal API keys and Application API keys — Codex `CdxButton` (quiet Reset / destructive quiet Delete; progressive “Request new API key”), `CdxMessage` write-token notice on application cards. Interface copy from banana; seed row fields from `config/tokenManagement.ts` are external (BiDi-isolated).
-- **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`). Confirm step (Figma `626:7921`) warns; primary Reset regenerates via `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (new client secret + refresh token from `createPrototypeClientSecret` / `createPrototypeRefreshToken` in `config/tokenManagement.ts`; client id preserved) and advances to the success step (Figma `633:7695`). Success UI: intro + three rows (**Client ID**, **Client secret**, **Refresh token**) with bold banana labels (`--font-weight-bold`), BiDi-isolated monospace values (`dir="ltr"`), quiet copy (`AccountResetCredentialCopyButton` → `useCopyWithCopiedTooltip` + `CdxTooltip` “Copied!”; button must not remount after click), and inline warning `CdxMessage`. Section stack uses `--spacing-100` (16px) between intro, credential list, and warning. **Done** / close dismisses. Open/step/credential state lives in `useAccountResetApiKeyDialog`.
+- **Sections:** Personal API keys and Application API keys — Codex `CdxButton` (quiet Reset / destructive quiet Delete — **idle**, no-op click; progressive “Request new API key”), `CdxMessage` write-token notice on application cards. Interface copy from banana; **placeholder** row fields from `config/tokenManagement.ts` are external (BiDi-isolated).
+- **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`). Confirm step (Figma `626:7921`) warns; primary Reset regenerates **placeholder** secrets via `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (`createPrototypeClientSecret` / `createPrototypeRefreshToken` in `config/tokenManagement.ts`; client id preserved) and advances to the success step (Figma `633:7695`). Success UI: intro + three rows (**Client ID**, **Client secret**, **Refresh token**) with bold banana labels (`--font-weight-bold`), BiDi-isolated monospace values (`dir="ltr"`), quiet copy (`AccountResetCredentialCopyButton` → `useCopyWithCopiedTooltip` + `CdxTooltip` “Copied!”; button must not remount after click), and inline warning `CdxMessage`. Section stack uses `--spacing-100` (16px) between intro, credential list, and warning. **Done** / close dismisses. Open/step/credential state lives in `useAccountResetApiKeyDialog`. **Credentials shown after Reset are not real.**
 - **Sign out:** Destructive `CdxButton` — clears OAuth and navigates home when logged in; otherwise resets prototype session.
 
 **Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component. `AccountResetApiKeyDialog` wraps Codex `CdxDialog` (confirm then success); success rows use `AccountResetCredentialCopyButton` (quiet `cdxIconCopy` + stable mount + `CdxTooltip`).

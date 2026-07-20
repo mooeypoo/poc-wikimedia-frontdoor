@@ -16,9 +16,11 @@ import type {
 } from '../types/accountTokenList'
 
 /**
- * Wikimedia Meta-Wiki links, token list state, and list view-models for the account dashboard.
+ * Wikimedia Meta-Wiki links, **placeholder** token list state, and list view-models for `/account`.
  *
- * Wraps `prototypeDeveloperTokens` Pinia store; URLs come from `config/auth.ts`.
+ * Wraps `prototypeDeveloperTokens` Pinia store. List rows and Reset-regenerated secrets are
+ * **not real Meta credentials** — usability-testing placeholders from `config/tokenManagement.ts`.
+ * Live list / reset / revoke backends are pending. URLs come from `config/auth.ts`.
  * Masked secrets are computed here (`maskSecretValue`) so list-item components stay presentational.
  *
  * @returns {{
@@ -37,8 +39,9 @@ import type {
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
  *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
- * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, delete/request
- *   handlers, and confirm-reset regenerate handlers (used by {@link useAccountResetApiKeyDialog}).
+ * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, idle Delete
+ *   handlers, request handlers, and confirm-reset regenerate handlers (used by
+ *   {@link useAccountResetApiKeyDialog}).
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
@@ -97,23 +100,27 @@ export function useDeveloperTokenDashboard() {
 	)
 
 	/**
-	 * Removes a personal API key from the prototype list.
+	 * Idle Delete handler for personal API keys (prototype).
 	 *
-	 * @param tokenId - Token row id.
+	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
+	 *
+	 * @param _tokenId - Token row id (unused while Delete is idle).
 	 * @returns Nothing.
 	 */
-	function onDeleteDeveloperJwt( tokenId: string ): void {
-		prototypeDeveloperTokensStore.removeDeveloperJwt( tokenId )
+	function onDeleteDeveloperJwt( _tokenId: string ): void {
+		// Prototype: Delete is intentionally idle.
 	}
 
 	/**
-	 * Removes an application OAuth key from the prototype list.
+	 * Idle Delete handler for application API keys (prototype).
 	 *
-	 * @param consumerId - Consumer row id.
+	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
+	 *
+	 * @param _consumerId - Consumer row id (unused while Delete is idle).
 	 * @returns Nothing.
 	 */
-	function onDeleteOAuthConsumer( consumerId: string ): void {
-		prototypeDeveloperTokensStore.removeOAuthConsumer( consumerId )
+	function onDeleteOAuthConsumer( _consumerId: string ): void {
+		// Prototype: Delete is intentionally idle.
 	}
 
 	/**

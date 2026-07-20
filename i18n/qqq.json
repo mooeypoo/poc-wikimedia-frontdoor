@@ -13,7 +13,7 @@
   "account-col-registered": "Table column header for consumer registration date.",
   "account-col-token-name": "Table column header for token display name.",
   "account-copy-secret-aria": "Accessible name for the icon button that copies a token to the clipboard.",
-  "account-delete-token-button": "Button label to delete a token row from the prototype list only (not revocation on Wikimedia's Meta-Wiki).",
+  "account-delete-token-button": "Destructive quiet Delete button on an API key card. Prototype: click is intentionally idle (no row removal or Meta revoke).",
   "account-developer-tokens-description": "Short introductory paragraph for the developer tokens section (what the section is for).",
   "account-developer-tokens-empty": "Notice when no personal API key rows are shown.",
   "account-developer-tokens-heading": "Section heading for personal API keys on the account page.",

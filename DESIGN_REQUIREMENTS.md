@@ -30,7 +30,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
 - Default Nuxt elements such as skeletons need to be replaced by Codex components
 - Search and settings controls are present but **disabled** or non-functional
-- Account dashboard prototype lives at `/account` (no start-column section nav); after OAuth login the header shows the Meta username as a progressive link to that dashboard
+- Account dashboard at `/account` (no start-column section nav); after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
@@ -338,17 +338,19 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Decision:** Account dashboard layout and copy follow [Unified Developer Front Door — `/account` (Figma node 966:21207)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=966-21207).
 
+**Prototype data — not real API keys:** Personal and application key cards, masked secrets, and credentials shown after **Reset** are **placeholders for usability testing**. They are not retrieved from Meta-Wiki or any live token backend. Reset “regenerates” new placeholder Client secret / Refresh token strings only. **Backend work to list, reset, and revoke real API keys is pending.** See `ARCHITECTURE.md` → Account dashboard → Prototype placeholders. OAuth login (header username) may still be a real session; that does not make the key tables real.
+
 | Element | Behaviour |
 |---------|-----------|
 | Start column | **Hidden** (`sidebar: false` via `content-sidebar.global` for `/account`) — full-width main column; no empty section nav |
 | Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Prefer OAuth username when logged in |
-| Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link |
-| Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, write-token `CdxMessage` notice |
-| Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([confirm](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921) → [success](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=633-7695)): warn → regenerate → show **Client ID**, **Client secret**, **Refresh token** (bold labels `--font-weight-bold`; label/value gap `--spacing-25`; intro/list/warning stack `--spacing-100`) with quiet copy (`CdxTooltip` “Copied!”; button stays mounted) and inline warning `CdxMessage`; **Done** closes. Banana keys: `account-reset-dialog-*` |
-| Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration) |
+| Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete — **idle** / no-op, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link. **Row data = placeholders** |
+| Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, quiet Reset, destructive quiet Delete (**idle** / no-op), write-token `CdxMessage` notice. **Row data = placeholders** |
+| Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([confirm](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921) → [success](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=633-7695)): warn → regenerate **placeholder** credentials → show **Client ID**, **Client secret**, **Refresh token** (bold labels `--font-weight-bold`; label/value gap `--spacing-25`; intro/list/warning stack `--spacing-100`) with quiet copy (`CdxTooltip` “Copied!”; button stays mounted) and inline warning `CdxMessage`; **Done** closes. Banana keys: `account-reset-dialog-*`. **Success credentials are not real** |
+| Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration; does not insert a real key into the local placeholder list) |
 | Log out | Destructive `CdxButton` below a subtle border divider |
 
-**i18n:** Interface strings in `i18n/*.json` (`account-*` keys). Prototype row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
+**i18n:** Interface strings in `i18n/*.json` (`account-*` keys). Placeholder row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
 
 **Source:** `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
 
@@ -742,7 +744,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 13. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. `codex.style-bidi.css`, disabling LTR base when RTL is active) before production. **Blocks:** header language `CdxSelect` expand chevron in RTL (see `ARCHITECTURE.md` → RTL and BiDi).
 14. **Header language select RTL chevron** — resolve without per-component Codex CSS overrides; options include bidi stylesheet, Codex-native trigger icon pattern, or relaxed header width.
 15. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
-16. **Settings and login** — Prototype the user's dashboard and token management flows.
+16. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
 17. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
 18. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
 19. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.

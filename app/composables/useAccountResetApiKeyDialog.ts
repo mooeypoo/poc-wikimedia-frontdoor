@@ -11,9 +11,11 @@ export type AccountResetApiKeyKind = 'personal' | 'application'
 /**
  * Opens and drives the Reset API key dialog (confirm → success).
  *
- * Confirm step: Figma 626:7921. Success step: Figma 633:7695 (new credentials +
- * copy controls). Dialog open state, step, and revealed credential rows live here
- * so `account.vue` / `AccountResetApiKeyDialog` stay presentational.
+ * Confirm step: Figma 626:7921. Success step: Figma 633:7695 (Client ID / Client secret /
+ * Refresh token + copy controls). **Credentials shown after Reset are placeholders** —
+ * not Meta-issued secrets; real reset backend is pending. Dialog open state, step, and
+ * revealed credential rows live here so `account.vue` / `AccountResetApiKeyDialog` stay
+ * presentational.
  *
  * Side effects: watches `isResetDialogOpen` and clears pending id/kind, step, and
  * revealed credentials when the dialog closes.

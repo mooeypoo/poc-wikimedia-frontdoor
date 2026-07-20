@@ -8,11 +8,15 @@ import {
 } from '../config/tokenManagement'
 
 /**
- * In-memory prototype token lists for the account dashboard.
+ * In-memory **placeholder** API key lists for the account dashboard (usability testing).
  *
- * Experiment 2 will load real tokens from Wikimedia's Meta-Wiki via `useOAuthSession()`; this store
- * is UI-prototype only. Delete removes rows; Reset confirm calls `regenerateDeveloperJwt` /
- * `regenerateOAuthConsumer` to mint new prototype secrets and issued dates in place.
+ * Rows are **not** loaded from Meta-Wiki or any live token API. Seed data and Reset
+ * regenerations come from `config/tokenManagement.ts`. Real list / reset / revoke
+ * backends are **pending**. Delete UI handlers are idle (no-op) in the dashboard
+ * composable; store `remove*` helpers remain for demos only.
+ *
+ * Reset confirm calls `regenerateDeveloperJwt` / `regenerateOAuthConsumer` to mint
+ * new **placeholder** secrets in place — not real credentials.
  */
 export const usePrototypeDeveloperTokensStore = defineStore( 'prototypeDeveloperTokens', () => {
 	const developerJwts = ref<PrototypeDeveloperJwt[]>( [ ...PROTOTYPE_SEED_DEVELOPER_JWTS ] )

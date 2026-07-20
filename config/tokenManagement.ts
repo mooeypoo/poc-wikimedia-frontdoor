@@ -1,13 +1,21 @@
 /**
  * Prototype token row types and seed data for the account dashboard.
  *
- * Credential creation and approval use Wikimedia Meta-Wiki URLs from `config/auth.ts`.
- * Seed values mirror the Figma `/account` prototype (node 966:21207).
+ * **Not real credentials.** Values in this file and values minted by
+ * `createPrototypeClientSecret` / `createPrototypeRefreshToken` are **placeholders
+ * for usability testing only**. The Front Door does **not** fetch personal or
+ * application API keys from Meta-Wiki or any other backend. Listing, Reset, and
+ * the Reset success dialog all operate on in-memory seed / generated stand-ins.
  *
- * Seed field strings (names, status, permissions, dates) are **prototype stand-ins** for
- * data that will come from Meta APIs. They are external strings in the UI — always
- * render through `<bdi>` (AGENTS.md BiDi rule). Do not treat them as banana-i18n
- * interface copy; interface labels (section headings, buttons, meta prefixes) live in `i18n/`.
+ * **Pending:** Real retrieval, reset, and revoke of OAuth consumers / developer
+ * tokens still require backend (and Meta) integration — not implemented.
+ *
+ * “Request new API key” may open Meta registration URLs from `config/auth.ts`;
+ * that outbound link is separate from the fake rows shown on `/account`.
+ *
+ * Seed field strings (names, status, permissions, dates, secrets) are **external**
+ * in the UI — always render through `<bdi>` (AGENTS.md BiDi rule). Do not treat
+ * them as banana-i18n interface copy; interface labels live in `i18n/`.
  */
 
 /** Prototype personal API key row shown after sign-in until deleted. */
@@ -52,7 +60,7 @@ export interface PrototypeOAuthConsumer {
 }
 
 /**
- * Builds a prototype hex string for fake OAuth credentials (UI demo only).
+ * Builds a prototype hex string for **fake** OAuth credentials (usability UI only).
  *
  * @param characterCount - Number of hex characters to produce.
  * @returns Lowercase hex string of the requested length.
@@ -69,18 +77,22 @@ function createPrototypeHexString( characterCount: number ): string {
 }
 
 /**
- * Creates a realistic-looking prototype OAuth client secret for Reset regenerations.
+ * Creates a realistic-looking **placeholder** OAuth client secret for Reset regenerations.
  *
- * @returns Opaque client-secret string (external / prototype).
+ * Not a real Meta-issued secret. Usability-testing stand-in only.
+ *
+ * @returns Opaque client-secret string (external / prototype placeholder).
  */
 export function createPrototypeClientSecret(): string {
 	return createPrototypeHexString( 32 )
 }
 
 /**
- * Creates a realistic-looking prototype OAuth refresh token for Reset regenerations.
+ * Creates a realistic-looking **placeholder** OAuth refresh token for Reset regenerations.
  *
- * @returns Opaque refresh-token string (external / prototype).
+ * Not a real Meta-issued refresh token. Usability-testing stand-in only.
+ *
+ * @returns Opaque refresh-token string (external / prototype placeholder).
  */
 export function createPrototypeRefreshToken(): string {
 	return `def50200${ createPrototypeHexString( 56 ) }`
