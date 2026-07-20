@@ -9,7 +9,8 @@ import {
  * In-memory prototype token lists for the account dashboard.
  *
  * Experiment 2 will load real tokens from Wikimedia's Meta-Wiki via `useOAuthSession()`; this store
- * is UI-prototype only.
+ * is UI-prototype only. Delete removes rows; Reset confirm calls `regenerateDeveloperJwt` /
+ * `regenerateOAuthConsumer` to mint new prototype secrets and issued dates in place.
  */
 export const usePrototypeDeveloperTokensStore = defineStore( 'prototypeDeveloperTokens', () => {
 	const developerJwts = ref<PrototypeDeveloperJwt[]>( [ ...PROTOTYPE_SEED_DEVELOPER_JWTS ] )
@@ -36,6 +37,48 @@ export const usePrototypeDeveloperTokensStore = defineStore( 'prototypeDeveloper
 	}
 
 	/**
+	 * Regenerates a personal API key’s prototype secret and issued date (Reset confirm).
+	 *
+	 * @param tokenId - Row identifier from {@link PrototypeDeveloperJwt.id}.
+	 * @returns Nothing.
+	 */
+	function regenerateDeveloperJwt( tokenId: string ): void {
+		const issuedOn = new Date().toISOString().slice( 0, 10 )
+		developerJwts.value = developerJwts.value.map( ( token ) => {
+			if ( token.id !== tokenId ) {
+				return token
+			}
+
+			return {
+				...token,
+				accessToken: `eyJprototype.reset.${ tokenId }.${ Date.now() }`,
+				issuedOn
+			}
+		} )
+	}
+
+	/**
+	 * Regenerates an application API key’s prototype client secret and issued date.
+	 *
+	 * @param consumerId - Row identifier from {@link PrototypeOAuthConsumer.id}.
+	 * @returns Nothing.
+	 */
+	function regenerateOAuthConsumer( consumerId: string ): void {
+		const registeredOn = new Date().toISOString().slice( 0, 10 )
+		oauthConsumers.value = oauthConsumers.value.map( ( consumer ) => {
+			if ( consumer.id !== consumerId ) {
+				return consumer
+			}
+
+			return {
+				...consumer,
+				clientSecret: `prototype-reset-secret-${ Date.now() }`,
+				registeredOn
+			}
+		} )
+	}
+
+	/**
 	 * Restores seed rows after sign-in or for demos.
 	 *
 	 * @returns Nothing.
@@ -50,6 +93,8 @@ export const usePrototypeDeveloperTokensStore = defineStore( 'prototypeDeveloper
 		oauthConsumers,
 		removeDeveloperJwt,
 		removeOAuthConsumer,
+		regenerateDeveloperJwt,
+		regenerateOAuthConsumer,
 		resetToSeedData
 	}
 } )

@@ -32,11 +32,12 @@ import type {
  *   clientSecretLabel: import('vue').ComputedRef<string>,
  *   onDeleteDeveloperJwt: (tokenId: string) => void,
  *   onDeleteOAuthConsumer: (consumerId: string) => void,
- *   onResetDeveloperJwt: (tokenId: string) => void,
- *   onResetOAuthConsumer: (consumerId: string) => void,
+ *   onConfirmResetDeveloperJwt: (tokenId: string) => void,
+ *   onConfirmResetOAuthConsumer: (consumerId: string) => void,
  *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
- * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, and row action handlers.
+ * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, delete/request
+ *   handlers, and confirm-reset regenerate handlers (used by {@link useAccountResetApiKeyDialog}).
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
@@ -115,23 +116,23 @@ export function useDeveloperTokenDashboard() {
 	}
 
 	/**
-	 * Opens Meta-Wiki consumer registration to reset / re-issue a personal token (prototype).
+	 * Regenerates prototype credentials for a personal API key after dialog confirm.
 	 *
-	 * @param _tokenId - Token row id (unused; Meta owns real reset).
+	 * @param tokenId - Token row id.
 	 * @returns Nothing.
 	 */
-	function onResetDeveloperJwt( _tokenId: string ): void {
-		openUrlInNewTab( requestDeveloperJwtUrl )
+	function onConfirmResetDeveloperJwt( tokenId: string ): void {
+		prototypeDeveloperTokensStore.regenerateDeveloperJwt( tokenId )
 	}
 
 	/**
-	 * Opens Meta-Wiki consumer list to manage / reset an application key (prototype).
+	 * Regenerates prototype credentials for an application API key after dialog confirm.
 	 *
-	 * @param _consumerId - Consumer row id (unused; Meta owns real reset).
+	 * @param consumerId - Consumer row id.
 	 * @returns Nothing.
 	 */
-	function onResetOAuthConsumer( _consumerId: string ): void {
-		openUrlInNewTab( manageConsumersOnMetaUrl )
+	function onConfirmResetOAuthConsumer( consumerId: string ): void {
+		prototypeDeveloperTokensStore.regenerateOAuthConsumer( consumerId )
 	}
 
 	/**
@@ -162,8 +163,8 @@ export function useDeveloperTokenDashboard() {
 		externalLinkAccessibleLabel,
 		onDeleteDeveloperJwt,
 		onDeleteOAuthConsumer,
-		onResetDeveloperJwt,
-		onResetOAuthConsumer,
+		onConfirmResetDeveloperJwt,
+		onConfirmResetOAuthConsumer,
 		onRequestNewAuthenticationToken
 	}
 }

@@ -344,12 +344,13 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Prefer OAuth username when logged in |
 | Personal API keys | Section heading + description; list-element card (title, quiet Reset, destructive quiet Delete, Issued \| Status \| Permissions); “Learn more about” + owner-only consumers link |
 | Application API keys | Section heading + description + learn-more (OAuth for developers) above cards; card adds description, Client ID (`dir="ltr"` monospace), masked Client secret, meta row, write-token `CdxMessage` notice |
+| Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([Figma 626:7921](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921)): title (Personal / Application), warning body, Cancel (neutral) + Reset (progressive primary), header close. Confirm regenerates prototype credentials in the Pinia store. Banana keys: `account-reset-dialog-*` |
 | Request action | Progressive `CdxButton` — **Request new API key** (opens Meta consumer registration) |
 | Log out | Destructive `CdxButton` below a subtle border divider |
 
 **i18n:** Interface strings in `i18n/*.json` (`account-*` keys). Prototype row field values in `config/tokenManagement.ts` are external/seed data — BiDi-isolate in templates.
 
-**Source:** `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
+**Source:** `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useShellAuthNavigation.ts`, `config/tokenManagement.ts`, `config/auth.ts`.
 
 ### Primary navigation row (superseded)
 

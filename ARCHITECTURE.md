@@ -54,7 +54,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │   │   │   └── [[view]].vue    # Explorer page (client-only, enterprise sub-routes)
 │   │   └── [...slug].vue       # Catch-all for Markdown content pages
 │   ├── components/
-│   │   ├── account/            # Account dashboard UI (personal/application API key cards, Meta links)
+│   │   ├── account/            # Account dashboard UI (API key cards, Reset CdxDialog, Meta links)
 │   │   ├── explorer/           # Components used only in the explorer
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
@@ -111,7 +111,7 @@ The explorer route (`/explorer/**`) is configured as `ssr: false` in `nuxt.confi
 │
 ├── stores/                     # Pinia stores
 │   ├── prototypeAuthSession.ts # Prototype username seed for direct `/account` visits
-│   ├── prototypeDeveloperTokens.ts  # Prototype personal/application API key lists
+│   ├── prototypeDeveloperTokens.ts  # Prototype API key lists; delete + Reset regenerate
 │   └── oauthSession.js         # In-memory OAuth session (username, accessToken, expiresAt)
 │
 └── nuxt.config.ts              # Nuxt configuration; routeRules; runtimeConfig
@@ -189,8 +189,9 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 | `useAccountPath()` | Locale-aware path for the account dashboard (`buildLocaleAwarePath` in `app/utils/localeAwarePath.ts`) |
 | `usePrototypeAuthSession()` | Prototype account session seeding for direct `/account` visits; wraps `prototypeAuthSession` store (token tables remain prototype until Meta list APIs land) |
-| `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes token dashboard |
-| `useDeveloperTokenDashboard()` | Prototype API key list state/view-models, Meta-Wiki URLs from `config/auth.ts`, reset/delete/request handlers |
+| `useAccountDashboardPage()` | Account page banana labels, OAuth-preferred username, sign-out; composes `useDeveloperTokenDashboard` + `useAccountResetApiKeyDialog` |
+| `useDeveloperTokenDashboard()` | Prototype API key list state/view-models, Meta-Wiki URLs from `config/auth.ts`, delete/request handlers; confirm-reset regenerate via Pinia |
+| `useAccountResetApiKeyDialog()` | Reset confirmation dialog state (`CdxDialog`, Figma `626:7921`): open/pending key, banana labels (`account-reset-dialog-*`), confirm → regenerate prototype credentials |
 | `useShellAuthNavigation()` | Shell header session control: OAuth `login`/`logout`, username, locale-aware `/account` path, `header-auth-link-aria` |
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items (settings, username→account, log in/out) |
 
@@ -199,9 +200,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 - **Start column:** Hidden via `content-sidebar.global` middleware publishing `sidebar: false` for `/account` (and locale-prefixed equivalents) so `isSidebarHidden` collapses the grid track — no empty section nav.
 - **Title:** banana `account-page-title-before` + `<bdi>` username + `account-page-title-after` (English: `{username}’s dashboard`). Username prefers OAuth session; falls back to prototype seed only for direct visits without OAuth.
 - **Sections:** Personal API keys and Application API keys — Codex `CdxButton` (quiet Reset / destructive quiet Delete; progressive “Request new API key”), `CdxMessage` write-token notice on application cards. Interface copy from banana; seed row fields from `config/tokenManagement.ts` are external (BiDi-isolated).
+- **Reset confirmation:** Quiet Reset opens `AccountResetApiKeyDialog` (`CdxDialog`, Figma `626:7921`). Open/confirm state and banana strings live in `useAccountResetApiKeyDialog` (page/dialog components stay presentational). Confirm calls `useDeveloperTokenDashboard` → `prototypeDeveloperTokens.regenerate*` (prototype only; Meta-owned reset later). Cancel / close / Escape dismiss without changes.
 - **Sign out:** Destructive `CdxButton` — clears OAuth and navigates home when logged in; otherwise resets prototype session.
 
-**Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component.
+**Account token list UI** (`app/components/account/`): `AccountDeveloperTokenList` / `AccountOAuthConsumerList` render Figma “List-element” cards (header row with title + actions; personal cards show Issued | Status | Permissions; application cards add description, Client ID, masked secret, meta, write-token notice). Secret masking is computed in `useDeveloperTokenDashboard` (`maskSecretValue`), not in the list-item component. `AccountResetApiKeyDialog` wraps Codex `CdxDialog` (progressive Reset + neutral Cancel + close); labels are props from the Reset composable.
 
 ---
 
@@ -657,7 +659,7 @@ Any string not produced by banana-i18n must be wrapped in `<bdi>`. This is enfor
 - Article titles, page names, or namespace names from any wiki
 - Any string whose language is not statically known at component-write time
 
-Strings from banana-i18n are safe to render without isolation — their direction matches the interface direction by definition.
+Strings from banana-i18n are safe to render without isolation — their direction matches the interface direction by definition. Account Reset dialog copy (`account-reset-dialog-*`) is interface text and does not require `<bdi>`.
 
 ### Known gap: Scalar spec content
 
@@ -923,7 +925,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css` |
 | Header auth (Log in / username→account) | `app/composables/useShellAuthNavigation.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `app/composables/useOAuthSession.ts`, `app/stores/oauthSession.js` |
 | OAuth PKCE flow | `server/api/auth/oauth/login.get.ts`, `server/api/auth/oauth/exchange.post.ts`, `app/pages/oauth/callback.vue`, `app/plugins/oauth-handoff.client.ts`, `app/utils/oauthHandoff.ts`, `docs/adr-wikimedia-oauth-authentication.md` |
-| Account dashboard | `app/pages/account.vue`, `app/components/account/*`, `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
+| Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountResetApiKeyDialog.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `app/middleware/content-sidebar.global.ts` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |

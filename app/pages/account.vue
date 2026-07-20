@@ -3,6 +3,7 @@ import { CdxButton, CdxMessage } from '@wikimedia/codex'
 import AccountDeveloperTokenList from '../components/account/AccountDeveloperTokenList.vue'
 import AccountExternalMetaLink from '../components/account/AccountExternalMetaLink.vue'
 import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumerList.vue'
+import AccountResetApiKeyDialog from '../components/account/AccountResetApiKeyDialog.vue'
 
 /**
  * Developer account dashboard — personal and application API keys (Figma `/account`).
@@ -26,9 +27,17 @@ const {
 	clientSecretLabel,
 	onDeleteDeveloperJwt,
 	onDeleteOAuthConsumer,
-	onResetDeveloperJwt,
-	onResetOAuthConsumer,
 	onRequestNewAuthenticationToken,
+	isResetDialogOpen,
+	resetDialogTitle,
+	resetDialogBody,
+	resetDialogCloseLabel,
+	resetDialogPrimaryAction,
+	resetDialogDefaultAction,
+	openResetPersonalApiKeyDialog,
+	openResetApplicationApiKeyDialog,
+	closeResetApiKeyDialog,
+	confirmResetApiKeyDialog,
 	pageTitleBefore,
 	pageTitleAfter,
 	developerTokensSectionTitle,
@@ -92,7 +101,7 @@ onMounted( () => {
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
 				:delete-button-label="deleteTokenLabel"
-				@reset="onResetDeveloperJwt"
+				@reset="openResetPersonalApiKeyDialog"
 				@delete="onDeleteDeveloperJwt"
 			/>
 			<CdxMessage
@@ -150,7 +159,7 @@ onMounted( () => {
 				:reset-button-label="resetTokenLabel"
 				:delete-button-label="deleteTokenLabel"
 				:write-token-notice="writeTokenNotice"
-				@reset="onResetOAuthConsumer"
+				@reset="openResetApplicationApiKeyDialog"
 				@delete="onDeleteOAuthConsumer"
 			/>
 			<CdxMessage
@@ -180,6 +189,17 @@ onMounted( () => {
 				{{ signOutButtonLabel }}
 			</CdxButton>
 		</footer>
+
+		<AccountResetApiKeyDialog
+			v-model:open="isResetDialogOpen"
+			:title="resetDialogTitle"
+			:body="resetDialogBody"
+			:close-button-label="resetDialogCloseLabel"
+			:primary-action="resetDialogPrimaryAction"
+			:default-action="resetDialogDefaultAction"
+			@confirm="confirmResetApiKeyDialog"
+			@cancel="closeResetApiKeyDialog"
+		/>
 	</div>
 </template>
 

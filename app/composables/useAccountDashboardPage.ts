@@ -1,3 +1,4 @@
+import { useAccountResetApiKeyDialog } from './useAccountResetApiKeyDialog'
 import { useDeveloperTokenDashboard } from './useDeveloperTokenDashboard'
 import { useOAuthSession } from './useOAuthSession'
 import { usePrototypeAuthSession } from './usePrototypeAuthSession'
@@ -5,12 +6,16 @@ import { usePrototypeAuthSession } from './usePrototypeAuthSession'
 /**
  * Interface labels and view-models for the account dashboard page (UI layer).
  *
- * Composes {@link usePrototypeAuthSession} and {@link useDeveloperTokenDashboard};
- * spreads token dashboard refs at the root for correct Vue template unwrapping.
- * When a real OAuth session is active, the displayed username comes from OAuth
- * rather than the prototype seed user.
+ * Composes {@link usePrototypeAuthSession}, {@link useDeveloperTokenDashboard},
+ * and {@link useAccountResetApiKeyDialog}; spreads token dashboard and Reset
+ * dialog fields at the root for correct Vue template unwrapping. When a real
+ * OAuth session is active, the displayed username comes from OAuth rather than
+ * the prototype seed user.
  *
- * @returns Merged dashboard fields plus banana-i18n labels for `app/pages/account.vue`.
+ * @returns Merged account dashboard fields for `app/pages/account.vue`: OAuth-preferred
+ *   username, banana section/action labels, token list view-models and handlers from
+ *   {@link useDeveloperTokenDashboard}, and Reset dialog state/handlers from
+ *   {@link useAccountResetApiKeyDialog}.
  */
 export function useAccountDashboardPage() {
 	const { $bananaI18n } = useNuxtApp()
@@ -21,6 +26,7 @@ export function useAccountDashboardPage() {
 	} = usePrototypeAuthSession()
 	const { isLoggedIn: isOAuthLoggedIn, username: oauthUsername, logout: oauthLogout } = useOAuthSession()
 	const tokenDashboard = useDeveloperTokenDashboard()
+	const resetApiKeyDialog = useAccountResetApiKeyDialog()
 
 	/**
 	 * Prefer the Meta OAuth username when the user arrived via header login;
@@ -86,6 +92,7 @@ export function useAccountDashboardPage() {
 		initializePrototypeAccountSession,
 		resetPrototypeAccountSession: signOutFromAccountDashboard,
 		...tokenDashboard,
+		...resetApiKeyDialog,
 		pageTitleBefore,
 		pageTitleAfter,
 		developerTokensSectionTitle,
