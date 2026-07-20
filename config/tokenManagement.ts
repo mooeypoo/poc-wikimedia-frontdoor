@@ -112,7 +112,7 @@ export const PROTOTYPE_SEED_DEVELOPER_JWTS: readonly PrototypeDeveloperJwt[] = [
 		accessToken: 'eyJprototype.frontdoor.dev.jwt.7f3a9c2e1b4d8a6f0c2e9b1',
 		issuedOn: '2025-07-17',
 		status: 'Approved',
-		permissions: '{{permissions}}'
+		permissions: 'read, write'
 	}
 ]
 
@@ -120,12 +120,12 @@ export const PROTOTYPE_SEED_OAUTH_CONSUMERS: readonly PrototypeOAuthConsumer[] =
 	{
 		id: 'oauth-consumer-1',
 		applicationName: 'API key name',
-		description: '{{Description}}',
+		description: 'API key description',
 		consumerKey: 'a331e186b64a938591e7614170814a75',
 		clientSecret: 'f8e7d6c5b4a392817061524334455667',
 		refreshToken: 'def50200112233445566778899aabbccddeeff00112233445566778899aabbcc',
 		status: 'Approved',
-		permissions: '{{permissions}}',
+		permissions: 'read, write',
 		registeredOn: '2026-07-17'
 	}
 ]
