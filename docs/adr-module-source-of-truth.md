@@ -171,6 +171,25 @@ No config-file-driven abstraction, no plugin layer. One legible `.mjs` of named 
 
 ---
 
+## 11. The discovery parser is shared and isomorphic; the source of truth is not
+
+**The distinction that governs the parser.** Discovery normalization (`normalizeDiscoveryModules`) and the committed source of truth are *different things* and must not be conflated:
+
+- **The parser is a pure, isomorphic transformation** that runs live in three environments: the browser/SSR (the client `useDiscovery` composable), the Nitro server on **every wiki-instance/language switch** (`server/api/explorer-bootstrap.get.ts` re-fetches that instance's live `/discovery` on each change), and plain Node (the offline generator). It is on a hot, per-switch path — not backend-only.
+- **The source of truth is a committed, offline snapshot.** The explorer never consults it on an instance switch; it always reloads live from the selected instance's `/discovery`. The snapshot feeds static/reference consumers (module registry, LLM entrypoints, search/sitemap), not the live picker.
+
+**Decision — share the transformation, never the data.** The live reload and the offline generation transform the *same* discovery payloads, so they must normalize **identically**, or the committed snapshot could disagree with what a live reload shows for the same instance (e.g. differing module identity). Therefore normalization is a single shared function; the two data paths (live fetch vs committed snapshot) stay completely separate. Sharing the parser is the correct unit of reuse; sharing the data would be wrong (it would serve stale snapshots on a switch).
+
+**Constraint — the parser stays pure and isomorphic.** Because it runs in the browser, the server, and Node, `app/utils/normalizeDiscoveryModules.ts` must have **no I/O, no Node-only APIs, no heavy dependencies** (today: zero imports). All fetching and file writing happens *around* it, in the generator and the bootstrap route — never inside it.
+
+**Known gap — three variants exist; consolidation is a follow-up, not a blocker.** As of this ADR there are two normalizer implementations:
+1. `app/utils/normalizeDiscoveryModules.ts` — the shared util, used by `useDiscovery` **and** the generator.
+2. A private, *richer* copy inside `server/api/explorer-bootstrap.get.ts` — it adds `resolveDiscoveryModuleName`, which derives a name from the spec URL when discovery's name is empty (the root "unassociated endpoints" module, `/module/-`, becomes `-`). The generator reaches the same `-` a third way, via its own `canonicalModuleName`.
+
+These agree **today** (all three yield `-` for the root module), so the source of truth is correct and this is **not** required for the feature. The risk is future drift. The **decided** resolution: promote the server's richer logic to be the single shared parser and point the server bootstrap, `useDiscovery`, and the generator at it (dropping `canonicalModuleName`). This is UI-behavior-preserving because the live hot path (server bootstrap) already runs that exact logic, `useDiscovery`'s chain is currently unrendered (`useSpecUrl` has no consumers), and the generated data is unchanged (`-` either way). It touches live server code, so it lands as its **own verified change** (diff `/api/explorer-bootstrap` module lists for several instances before/after), separate from the source-of-truth feature.
+
+---
+
 ## Corrections to existing documentation
 
 | Document | Section | Required update |
@@ -185,7 +204,7 @@ No config-file-driven abstraction, no plugin layer. One legible `.mjs` of named 
 ## Implementation steps
 
 ### Step 1 — Shared normalization (non-breaking refactor)
-Extract the pure discovery-module normalization from `app/composables/useDiscovery.ts` into an importable helper so the composable and the generator share one parser for both payload shapes.
+Extract the pure discovery-module normalization from `app/composables/useDiscovery.ts` into an importable helper (`app/utils/normalizeDiscoveryModules.ts`) so the composable and the generator share one parser for both payload shapes. *Done for those two; the richer private copy in `server/api/explorer-bootstrap.get.ts` is intentionally left for a separate verified consolidation — see §11.*
 
 ### Step 2 — Phase 1: fleet sweep
 1. Fetch + filter sitematrix (§2) → instance list; write `wikiInstances.generated.ts`.
