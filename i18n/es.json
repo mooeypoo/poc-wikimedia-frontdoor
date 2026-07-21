@@ -48,7 +48,7 @@
   "account-request-new-token-button": "Solicitar nueva clave API",
   "account-request-oauth-application-guidance": "Registra un nuevo consumidor en Meta-Wiki de Wikimedia; tras la aprobacion, las credenciales aparecen en la lista publica de consumidores y los usuarios pueden autorizar tu aplicacion.",
   "account-request-oauth-application-link": "Solicitar OAuth de aplicacion en Meta-Wiki de Wikimedia",
-  "account-reset-dialog-body": "¿Seguro que quieres restablecer esta clave API? Se generarán un secreto y un token de autorización nuevos. Las credenciales existentes quedarán obsoletas.",
+  "account-reset-dialog-body": "¿Seguro que quieres restablecer esta clave API? Esto generará un secreto y un token de actualización nuevos. Las credenciales existentes quedarán obsoletas.",
   "account-reset-dialog-cancel": "Cancelar",
   "account-reset-dialog-close": "Cerrar",
   "account-reset-dialog-confirm": "Restablecer",
