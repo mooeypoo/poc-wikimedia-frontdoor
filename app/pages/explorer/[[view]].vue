@@ -420,7 +420,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__project-controls-stack {
 	display: flex;
 	flex-direction: column;
-	gap: var( --spacing-100 );
 	min-inline-size: 0;
 }
 
