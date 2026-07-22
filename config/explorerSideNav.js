@@ -46,10 +46,13 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				enabled: true
 			},
 			{
+				// Hidden from the sidebar for now (functionality retained — the
+				// enterprise-custom mode, route, and component are all still wired;
+				// flip to true to re-expose it). See ADR §5.2 on the `enabled` toggle.
 				id: 'enterprise-apis-custom',
 				messageKey: 'explorer-side-nav-enterprise-apis-custom',
 				mode: 'enterprise-custom',
-				enabled: true
+				enabled: false
 			}
 		]
 	},
