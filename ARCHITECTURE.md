@@ -253,7 +253,7 @@ Do **not** treat copied “secrets” from the Reset success dialog as usable ag
 
 ## Shell section navigation (start column)
 
-The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). **API Explorer** uses `config/explorerSideNav.js` via `isExplorerRoutePath()` — not via a primary-nav tab id. Routes without a section config entry still get an empty panel (`section-nav-site-label`).
+The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). Explorer routes (primary tab **APIs**, id `apis`) use `config/explorerSideNav.js` via `isExplorerRoutePath()` — the start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`). Routes without a section config entry still get an empty panel (`section-nav-site-label`).
 
 **Link behaviour:** On **content routes**, section items are **prototype placeholders** (`to: null` → `href="#"`); active state comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. On **explorer routes**, items with a `mode` in `config/explorerSideNav.js` resolve **`to`** via `pathForExplorerMode()` in `app/utils/explorerRoute.ts`; **`isActive`** follows `explorerModeFromPath()` on the current route; items with **`enabled: false`** are omitted. Overview items (no `mode`) remain placeholders. `ShellSidePanelNav` calls **`navigateTo(item.to)`** on click when `to` is set — URL resolution stays in the composable; the component only handles the click. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
@@ -263,7 +263,7 @@ Route path
 isExplorerRoutePath()?  → yes → config/explorerSideNav.js
     ↓ no                      (filter enabled; mode → pathForExplorerMode)
 getMainNavigationIdFromPath()     ← app/utils/contentRoute.ts
-    (null on /explorer; matches remote primary-nav sources by localPath)
+    (explorer → `apis`; matches remote primary-nav sources by localPath)
     ↓
 usePageSectionNav()
     └── main nav id → config/sectionNavigation.js (sections may be empty)
@@ -486,7 +486,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | `ShellCollapsedNavMenuOverlay.vue` | Full-screen collapsed nav overlay (section + primary views) | Props + events from `default.vue`; `ShellSidePanelNav`; `useShellCollapsedNavMenu` state |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
 
-**API Explorer header link.** Not a tab. `default.vue` renders a `NuxtLink` to `API_EXPLORER_NAVIGATION_PATH` (`/explorer` from `config/mainNavigation.ts`) **immediately after** the quiet tab list in `.frontdoor-shell__primary-nav-row`. Tabs use **`flex: 0 1 auto`** (intrinsic width) so the link follows the last tab, not the inline-end of the row. **`gap: var(--spacing-150)` (24px)** between the last tab and the link. Uses `cdxIconArrowNext` (`--color-progressive` on the icon). Active state when `isExplorerRoutePath()`; no primary tab is selected on explorer routes (`getMainNavigationIdFromPath` returns `null`).
+**APIs primary tab.** The explorer is a quiet tab in `ShellPrimaryNav` (`id: apis`, message key `nav-api` → “APIs”, path `/explorer` / `API_EXPLORER_NAVIGATION_PATH`). `getMainNavigationIdFromPath()` returns **`apis`** for `/explorer` and `/explorer/…` so the tab stays selected. The destination is never locale-prefixed (`i18n: false` on the explorer route; `useMainNavigationLinks` keeps `/explorer`). The start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`).
 
 ### Codex exceptions (shell chrome)
 
@@ -930,7 +930,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.ts` | Wiki instance IDs, display names, base URLs, explicit `dir`, content language codes |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
-| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the header link (not a tab) |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the **APIs** tab (`apis` → `/explorer`) |
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
@@ -958,9 +958,9 @@ Removed or renamed markdown routes are handled by **`config/contentRedirects.ts`
 
 Each mapping is duplicated for locale prefixes (`es`, `fr`, `he`, `fa`), e.g. `/fr/learn` → `/fr/use-content-and-data`, `/fr/about` → `/fr`. **About** and **Enterprise** markdown files are removed from `content/`; only redirects remain for old bookmarks.
 
-**Primary navigation IA (v2, Figma node 284:11443):** Tabs — Get started, Use content and data, Tools and bots, Contribute, Community, Get help, plus **Remote MD** merged from `REMOTE_CONTENT_SOURCES`. **API Explorer** is a header link only. See `DESIGN_REQUIREMENTS.md` → Information architecture.
+**Primary navigation IA:** Tabs include Get started, **APIs** (`/explorer`), Contribute, Community, Get help, plus remote primary merges from `REMOTE_CONTENT_SOURCES`. Start-column explorer section heading remains **API Explorer**. See `DESIGN_REQUIREMENTS.md` → Information architecture.
 
-**Route → nav id:** `app/utils/contentRoute.ts` → `getMainNavigationIdFromPath()` returns `null` on explorer routes, matches `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`, and strips locale prefixes before matching.
+**Route → nav id:** `app/utils/contentRoute.ts` → `getMainNavigationIdFromPath()` returns **`apis`** on explorer routes, matches other `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`, and strips locale prefixes before matching.
 
 ### Netlify deployment
 

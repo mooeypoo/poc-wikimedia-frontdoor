@@ -1,4 +1,4 @@
-import { MAIN_NAVIGATION_ITEMS, type MainNavigationItem } from '../../config/mainNavigation'
+import { API_EXPLORER_NAVIGATION_PATH, MAIN_NAVIGATION_ITEMS, type MainNavigationItem } from '../../config/mainNavigation'
 import { REMOTE_CONTENT_SOURCES, type RemoteContentSource } from '../../config/remoteContentSources'
 import { buildLocaleAwarePath, DEFAULT_CONTENT_LOCALE } from '../utils/localeAwarePath'
 
@@ -17,6 +17,14 @@ export interface MainNavigationLink extends MainNavigationItem {
 function buildContentRoutePath( navigationItem: MainNavigationItem, localeCode: string ): string {
 	if ( navigationItem.path === '/' ) {
 		return localeCode === DEFAULT_CONTENT_LOCALE ? '/' : `/${ localeCode }`
+	}
+
+	// Explorer is `i18n: false` — never locale-prefix the APIs tab destination.
+	if (
+		navigationItem.path === API_EXPLORER_NAVIGATION_PATH
+		|| navigationItem.path.startsWith( `${ API_EXPLORER_NAVIGATION_PATH }/` )
+	) {
+		return navigationItem.path
 	}
 
 	return buildLocaleAwarePath( navigationItem.path, localeCode )
@@ -114,8 +122,8 @@ function mergeRemoteNavSources(
  * Merges entries from REMOTE_CONTENT_SOURCES that declare navEntry.target === 'primary'
  * into the primary navigation according to their navPosition field.
  *
- * Explorer uses an explicit `/explorer` path because `localePath()` can return an
- * empty string when invoked from the `i18n: false` explorer route.
+ * Explorer uses an explicit `/explorer` path (never locale-prefixed) because the
+ * explorer route is `i18n: false`.
  *
  * @returns {{ mainNavigationLinks: import('vue').ComputedRef<MainNavigationLink[]>, homePath: import('vue').ComputedRef<string> }}
  *   Shell navigation links with banana labels and locale-aware `to` paths, plus

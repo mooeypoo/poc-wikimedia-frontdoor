@@ -190,7 +190,7 @@
   "interface-language-label": "Label for the interface language selector in the top header.",
   "interface-language-placeholder": "Placeholder text for the interface language selector with no selected value.",
   "nav-about": "Main navigation item for about page.",
-  "nav-api": "Main navigation item for explorer page.",
+  "nav-api": "Primary navigation tab for the explorer section (\"APIs\"). Start-column section heading remains explorer-side-nav-api-explorer-title (\"API Explorer\").",
   "nav-community": "Main navigation item for the community page.",
   "nav-contribute": "Main navigation item for the contribute page.",
   "nav-enterprise": "Main navigation item for the enterprise page.",

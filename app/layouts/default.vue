@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { CdxIcon } from '@wikimedia/codex'
-import { cdxIconArrowNext } from '@wikimedia/codex-icons'
-import { API_EXPLORER_NAVIGATION_PATH } from '../../config/mainNavigation'
 import { SUPPORTED_LANGUAGES } from '../../config/languages'
 import { useDirection } from '../composables/useDirection'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
@@ -95,7 +92,6 @@ watch( isExplorerRoute, ( nextIsExplorerRoute, wasExplorerRoute ) => {
 
 const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
-const apiExplorerLinkLabel = computed( () => $bananaI18n( 'nav-api' ) )
 const collapsedNavigationRegionLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-label' ) )
 const collapsedNavigationMenuButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-button-label' ) )
 const collapsedNavMenuOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-overlay-label' ) )
@@ -150,14 +146,6 @@ function handlePrimaryNavigationSelect( navigationId: string ): void {
  */
 function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): void {
 	handlePrimaryNavigationSelect( navigationId )
-	closeCollapsedNavMenu()
-}
-
-/**
- * Navigates to the API Explorer from the collapsed overlay and closes it.
- */
-function handleCollapsedNavMenuApiExplorerSelect(): void {
-	navigateTo( API_EXPLORER_NAVIGATION_PATH )
 	closeCollapsedNavMenu()
 }
 
@@ -216,20 +204,6 @@ useHead( {
 										:active-navigation-id="activeNavigationId"
 										@navigation-select="handlePrimaryNavigationSelect"
 									/>
-									<!-- <span class="frontdoor-shell__api-explorer-link-wrap">
-										<NuxtLink
-											:to="API_EXPLORER_NAVIGATION_PATH"
-											class="frontdoor-shell__api-explorer-link"
-											:class="{ 'frontdoor-shell__api-explorer-link--active': isExplorerRoute }"
-										>
-											{{ apiExplorerLinkLabel }}
-											<CdxIcon
-												:icon="cdxIconArrowNext"
-												:flip-for-rtl="true"
-												class="frontdoor-shell__api-explorer-link-icon"
-											/>
-										</NuxtLink>
-									</span> -->
 								</div>
 							</div>
 							<SharedShellCollapsedNavigation
@@ -254,17 +228,14 @@ useHead( {
 			:back-button-label="collapsedNavMenuBackButtonLabel"
 			:primary-navigation-label="primaryNavigationBreadcrumbLabel"
 			:primary-navigation-list-label="primaryNavigationLabel"
-			:api-explorer-link-label="apiExplorerLinkLabel"
 			:menu-view="collapsedNavMenuView"
 			:main-navigation-links="mainNavigationLinks"
 			:active-navigation-id="activeNavigationId"
-			:is-explorer-route="isExplorerRoute"
 			:section-navigation-label="pageSectionNavigationLabel"
 			:section-navigation-sections="pageSectionNavigationSections"
 			@close="closeCollapsedNavMenu"
 			@back="showCollapsedNavMenuPrimaryView"
 			@primary-navigation-select="handleCollapsedNavMenuPrimaryNavigationSelect"
-			@api-explorer-select="handleCollapsedNavMenuApiExplorerSelect"
 		/>
 
 		<SharedPageGrid class="frontdoor-shell__page-grid">
@@ -598,35 +569,6 @@ useHead( {
 .frontdoor-shell__primary-nav:deep( .shell-primary-nav ),
 .frontdoor-shell__primary-nav:deep( .shell-primary-nav__tabs ) {
 	inline-size: auto;
-}
-
-.frontdoor-shell__api-explorer-link-wrap {
-	display: inline-flex;
-	flex: 0 0 auto;
-}
-
-.frontdoor-shell__api-explorer-link {
-	display: inline-flex;
-	align-items: center;
-	gap: var( --spacing-25 );
-	padding-block-end: calc( var( --spacing-25 ) + var( --spacing-75 ) );
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-	white-space: nowrap;
-	color: var( --color-progressive );
-	text-decoration: none;
-}
-
-.frontdoor-shell__api-explorer-link:hover {
-	text-decoration: underline;
-}
-
-.frontdoor-shell__api-explorer-link--active {
-	font-weight: var( --font-weight-bold );
-}
-
-.frontdoor-shell__api-explorer-link-icon {
-	color: var( --color-progressive );
 }
 
 .frontdoor-shell__side-nav,
