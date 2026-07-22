@@ -776,7 +776,7 @@ Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (aft
 
 ### Opt-in module visibility
 
-Project controls expose **Wikimedia project** (project + language comboboxes), **API to explore** (`CdxSelect`, message key `explorer-rest-api-module-label`), **Beta APIs and endpoints**, and **Internal APIs and endpoints** checkboxes (defaults: both opt-in flags off). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
+Project controls expose **Wikimedia project** (project + language comboboxes), **API to explore** (`CdxSelect`, message key `explorer-rest-api-module-label`), **Beta APIs and endpoints**, and **Internal APIs and endpoints** checkboxes (defaults: beta **on**, internal **off** — `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` in `config/explorerOptIn.ts`). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
 
 ```
 includeBetaEndpoints / includeInternalEndpoints (explorer page refs)

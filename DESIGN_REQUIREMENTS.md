@@ -563,7 +563,7 @@ Top to bottom:
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
 
-**Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta and internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
+**Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
 
 **Module switching:** Changing the select calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes.
 
@@ -574,7 +574,7 @@ Top to bottom:
 | Opt-in | Fieldset with two `CdxCheckbox` options: **Beta APIs and endpoints**, **Internal APIs and endpoints** |
 | Opt-in help | Quiet info `CdxButton` + `CdxPopover` (teleported, titled **Opt-in modules and endpoints**, close button) beside the Opt-in legend |
 
-**Defaults:** Beta **off**, Internal **off**.
+**Defaults:** Beta **on**, Internal **off**.
 
 **Layout:** Opt-in group sits beside the REST API module select with **no** extra `margin-block-start` (overrides Codex field default).
 
