@@ -22,11 +22,11 @@ const EXPLORER_MODULE_SELECT_MENU_CONFIG: MenuConfig = {
 /**
  * Builds REST API module select state for explorer project controls.
  *
- * Menu options are sorted alphabetically by displayed `headingTitle` (case-insensitive).
+ * Menu order matches bootstrap discovery order after opt-in filtering (same order as the module rail’s parent module list).
  * The select stores discovery module names; labels use parsed `headingTitle` values.
  * Descriptions come from OpenAPI `info.description` (bootstrap) with config fallbacks; Codex wraps long text in the menu.
  *
- * @param visibleModules - Opt-in-filtered modules (discovery order from bootstrap; menu reorders for display).
+ * @param visibleModules - Opt-in-filtered modules in discovery order.
  * @param selectedModuleName - Active module name from {@link useExplorerBootstrap}.
  * @param selectModule - Bootstrap module selection action.
  * @param isDisabled - Whether the select is disabled (bootstrapping or no modules).
@@ -52,17 +52,7 @@ export function useExplorerModuleSelect(
 	const moduleSelectDefaultLabel = computed( () => $bananaI18n( 'explorer-module-placeholder' ) )
 
 	const selectableModules = computed( () => {
-		return visibleModules.value
-			.filter( ( moduleItem ) => !moduleItem.hasSpecError )
-			.slice()
-			.sort( ( leftModule, rightModule ) => {
-				// Sort by the label users see in the menu, not discovery module ids.
-				return leftModule.headingTitle.localeCompare(
-					rightModule.headingTitle,
-					undefined,
-					{ sensitivity: 'base', numeric: true }
-				)
-			} )
+		return visibleModules.value.filter( ( moduleItem ) => !moduleItem.hasSpecError )
 	} )
 
 	const moduleMenuItems = computed<ExplorerModuleSelectMenuItem[]>( () => {
