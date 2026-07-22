@@ -1,7 +1,41 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** All phases (A–F) complete; pending browser sign-off on C1/D1/E1/F1–F5 QA checklists
+**Status:** All phases (A–F) complete; pending browser sign-off on C1/E1/F1–F5 QA checklists. **Superseded in part — see the Update (2026-07-22) note below.**
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration, plus a custom (non-Scalar) tag-driven Enterprise viewer
+
+---
+
+## Update (2026-07-22): Limited mode removed; spec served locally
+
+After experimenting with three Enterprise sidebar entries, two conclusions
+supersede parts of the original ADR below. The historical narrative (Phases A–F,
+§7 gap analysis, the decision log entries dated 2026-06-xx) is retained as the
+record of *why* each mode was built; where it conflicts with the two points
+here, **this note wins**.
+
+1. **The `enterprise-limited` mode ("Limited Enterprise API" — path D-a, Scalar
+   with hide flags) is removed.** Only two Enterprise sidebar entries remain: the
+   full Scalar experience (`enterprise-full`) and the custom non-Scalar viewer
+   (`enterprise-custom`). The removal deletes: the `enterprise-limited` side-nav
+   entry, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` from `config/enterpriseExplorer.ts`,
+   the `enterprise-limited` arm of the `ExplorerMode` union and of
+   `explorerRoute.ts` (segment + mode mapping), the `mode` parameter of
+   `useEnterpriseExplorer()` (only the full overrides remain), and the
+   `explorer-side-nav-enterprise-apis-limited` i18n key in every locale + qqq.
+   The `enabled` toggle still governs the two surviving entries.
+
+2. **The Enterprise OpenAPI spec is served from the local system, not fetched
+   from a remote endpoint.** The spec is committed at `server/assets/wme-api.yaml`
+   and read through Nitro's server-asset storage (`useStorage('assets:server')`)
+   by both server routes. This makes the §8.10 CORS finding and the "server-side
+   proxy for a remote URL" framing obsolete: `/api/enterprise-spec` and
+   `/api/enterprise-spec-parsed` no longer perform any outbound fetch, carry no
+   User-Agent, and cannot fail with an upstream `502` — they return `500` only if
+   the bundled asset is missing. `ENTERPRISE_SPEC_URL` still points at
+   `/api/enterprise-spec` so Scalar's consumption is unchanged. Server-assets
+   (over a relative `fs` path) is chosen so the file is included in the Netlify
+   serverless bundle; `config/` is reserved for build-time TS/JS modules, not
+   runtime-served data.
 
 ---
 
@@ -35,15 +69,21 @@ This ADR does **not**:
 
 ## 3. Enterprise spec
 
-**Source:** `https://api.enterprise.wikimedia.com/spec/spec.yaml`
+> **Superseded by the Update (2026-07-22) note.** The spec is no longer fetched
+> from the remote URL below; it is committed at `server/assets/wme-api.yaml` and
+> served from the local system. The architectural points about not routing it
+> through discovery and it having no per-wiki variation still hold. The original
+> text is kept for context.
 
-This is a static, externally hosted OpenAPI YAML.  It is not fetched via the Wikimedia MediaWiki discovery endpoint (`/w/rest.php/specs/v0/discovery`) and does not follow the multi-instance, multi-module model of the community APIs.
+**Original source (no longer reachable):** `https://api.enterprise.wikimedia.com/spec/spec.yaml`
+
+This is a static OpenAPI YAML.  It is not fetched via the Wikimedia MediaWiki discovery endpoint (`/w/rest.php/specs/v0/discovery`) and does not follow the multi-instance, multi-module model of the community APIs.
 
 **What this means architecturally:**
 
 - The Enterprise spec **must not** go through `/server/api/explorer-bootstrap.get.ts` — that route is scoped to wiki instances and the discovery protocol.
-- The spec URL is a single stable external URL with no per-wiki variation.  It belongs in config, not in runtime discovery.
-- The existing remote content fetching infrastructure (`/scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`) imports Markdown prose pages via a standalone, pre-committed fetch step (not the build).  The Enterprise spec is fetched at runtime by Scalar (passed as `spec.url`).  These are separate concerns and should stay separate.
+- The spec has no per-wiki variation.  The consumed URL (`ENTERPRISE_SPEC_URL`) belongs in config; the spec document itself is a bundled server asset (`server/assets/wme-api.yaml`), not runtime discovery.
+- The existing remote content fetching infrastructure (`/scripts/fetch-remote-content.mjs` and `config/remoteContentSources.ts`) imports Markdown prose pages via a standalone, pre-committed fetch step (not the build).  The Enterprise spec is a separate concern: it is served by `/api/enterprise-spec` (read from the local asset) and consumed at runtime by Scalar (passed as `spec.url`).
 
 **Proposed config location:** A new `config/enterpriseExplorer.ts` file following the existing `config/scalar.ts` and `config/instances.ts` conventions:
 
@@ -1008,8 +1048,8 @@ Independent of Phase D's `enterprise-limited` mode (which stays as path D-a, Sca
 | B6.5 — URL representation (sub-route deep-links) | B | ✅ Complete | — |
 | B7 — i18n keys | B | ✅ Complete | — |
 | C1 — Full mode QA | C | ✅ Complete (pending browser sign-off) | — |
-| D1 — Limited mode (path D-a, see §7.3) | D | ✅ Complete (pending browser sign-off) | — |
-| E1 — Toggle verification | E | ✅ Complete (pending browser sign-off) | — |
+| D1 — Limited mode (path D-a, see §7.3) | D | ⛔ Removed 2026-07-22 (see Update note) | — |
+| E1 — Toggle verification | E | ✅ Complete (pending browser sign-off; now covers 2 entries) | — |
 | F1 — Extend ExplorerMode + routing | F | ✅ Complete | — |
 | F2 — Side nav entry + i18n | F | ✅ Complete | — |
 | F3 — Server-parsed spec endpoint | F | ✅ Complete (path-item summary/description fallback added) | — |
@@ -1022,20 +1062,24 @@ Independent of Phase D's `enterprise-limited` mode (which stays as path D-a, Sca
 
 Following ARCHITECTURE.md and AGENTS.md conventions:
 
+> Reflects the current state after the Update (2026-07-22) note — two Enterprise
+> modes (`enterprise-full`, `enterprise-custom`) and a locally-served spec.
+
 | What | Where |
 |---|---|
-| Enterprise spec URL + Scalar overrides | `config/enterpriseExplorer.ts` |
-| Side nav with Enterprise items (full, limited, custom) | `config/explorerSideNav.js` (extended) |
-| Mode enum type (`community` / `enterprise-full` / `enterprise-limited` / `enterprise-custom`) | `app/composables/useEnterpriseExplorer.ts` |
+| Enterprise spec URL + Scalar overrides | `config/enterpriseExplorer.ts` (`ENTERPRISE_SPEC_URL`, `ENTERPRISE_FULL_SCALAR_OVERRIDES`) |
+| Enterprise spec document (bundled, served locally) | `server/assets/wme-api.yaml` |
+| Side nav with Enterprise items (full, custom) | `config/explorerSideNav.js` (extended) |
+| Mode enum type (`community` / `enterprise-full` / `enterprise-custom`) | `app/composables/useEnterpriseExplorer.ts` |
 | Mode state | `app/composables/useExplorerMode.ts` (derived from route; no setter — nav uses NuxtLink) |
 | Mode ↔ URL path mapping | `app/utils/explorerRoute.ts` |
 | Sub-route deep-link registration | File-based optional-dynamic route — `app/pages/explorer/[[view]].vue` |
-| Enterprise composable (Scalar-bearing modes) | `app/composables/useEnterpriseExplorer.ts` |
+| Enterprise composable (Scalar-bearing mode) | `app/composables/useEnterpriseExplorer.ts` |
 | Enterprise spec outline composable (custom mode) | `app/composables/useEnterpriseSpecOutline.ts` (Phase F) |
-| Server proxy (YAML, for Scalar) | `server/api/enterprise-spec.get.ts` |
-| Server endpoint (JSON outline, for custom mode) | `server/api/enterprise-spec-parsed.get.ts` (Phase F) |
+| Server route (YAML, for Scalar — reads the local asset) | `server/api/enterprise-spec.get.ts` |
+| Server endpoint (JSON outline, for custom mode — reads the local asset) | `server/api/enterprise-spec-parsed.get.ts` (Phase F) |
 | Custom Enterprise viewer component | `app/components/explorer/ExplorerEnterpriseCustom.vue` (Phase F) |
-| i18n labels | `i18n/*.json` — keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-limited`, `explorer-side-nav-enterprise-apis-custom` |
+| i18n labels | `i18n/*.json` — keys: `explorer-side-nav-enterprise-apis`, `explorer-side-nav-enterprise-apis-custom` |
 
 ---
 
@@ -1060,6 +1104,8 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Enterprise layout specification | Open | Design (§9.5) |
 | Operational separation adequacy | Open | Product (§9.4) |
 | Registration CTA in enterprise view | Open | Design / Product (§8.9) |
+| Remove `enterprise-limited` mode (keep `enterprise-full` + `enterprise-custom`) | ✅ Resolved 2026-07-22 — see Update note | Product / Engineering |
+| Enterprise spec source: remote fetch vs. local bundled asset | ✅ Resolved 2026-07-22 — bundled at `server/assets/wme-api.yaml`, served via Nitro server-asset storage; remote endpoint no longer used | Engineering |
 
 ---
 
@@ -1067,18 +1113,19 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 
 | File | Nature of change |
 |---|---|
-| `server/api/enterprise-spec.get.ts` | New file (Phase B) — proxy route for Enterprise spec (CORS workaround, see §8.10).  Phase F: export the upstream URL constant for reuse by the parsed endpoint |
-| `server/api/enterprise-spec-parsed.get.ts` | **New file (Phase F)** — server-side YAML→JSON conversion, returns `{tags, operationsByTag}` for the custom mode |
-| `config/explorerSideNav.js` | Phase B: add two Enterprise items with `mode` + `enabled` fields; remove static `isActive`.  Phase F: add a third Enterprise item for `enterprise-custom` |
-| `config/enterpriseExplorer.ts` | New file (Phase B) — `ENTERPRISE_SPEC_URL` (proxy path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`, `ENTERPRISE_LIMITED_SCALAR_OVERRIDES`.  Phase F: no change (custom mode does not flow through Scalar overrides) |
+| `server/assets/wme-api.yaml` | **New file (2026-07-22)** — the Enterprise OpenAPI spec, committed and served from the local system (replaces the remote fetch) |
+| `server/api/enterprise-spec.get.ts` | New file (Phase B) — spec route for Scalar.  Originally a proxy for the remote URL (CORS workaround, see §8.10); **2026-07-22: now reads the bundled `server/assets/wme-api.yaml` via `useStorage('assets:server')` and exports `readEnterpriseSpecYaml()` for reuse by the parsed endpoint** |
+| `server/api/enterprise-spec-parsed.get.ts` | **New file (Phase F)** — server-side YAML→JSON conversion, returns `{tags, operationsByTag}` for the custom mode.  2026-07-22: reads the local asset via `readEnterpriseSpecYaml()` (no upstream fetch) |
+| `config/explorerSideNav.js` | Phase B: add Enterprise items with `mode` + `enabled` fields; remove static `isActive`.  Phase F: add the `enterprise-custom` item.  2026-07-22: remove the `enterprise-limited` item |
+| `config/enterpriseExplorer.ts` | New file (Phase B) — `ENTERPRISE_SPEC_URL` (local route path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`.  2026-07-22: `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` removed |
 | `app/components/explorer/ExplorerSideNav.vue` | Phase B: accept `activeMode` prop, filter by `enabled`, render mode-bearing items as `NuxtLink` to their sub-route, compute `isActive` dynamically.  Phase F: no change — new entry uses the existing pattern |
 | `app/components/explorer/ExplorerEnterpriseCustom.vue` | **New file (Phase F)** — tag-driven custom viewer (tablist sidebar + endpoint detail panel with Markdown descriptions) |
 | `app/pages/explorer/[[view]].vue` | Phase B: optional-dynamic route, `explorerMode` derivation, conditional rendering of rail + controls, per-mode Scalar config.  Phase F: add `enterprise-custom` branch that mounts `ExplorerEnterpriseCustom` instead of `ExplorerScalarReference` |
-| `app/composables/useEnterpriseExplorer.ts` | Phase B: returns spec URL + per-mode Scalar overrides.  Phase F: extend `ExplorerMode` union with `'enterprise-custom'` (composable itself still only services full/limited) |
+| `app/composables/useEnterpriseExplorer.ts` | Phase B: returns spec URL + per-mode Scalar overrides.  Phase F: extend `ExplorerMode` union with `'enterprise-custom'`.  2026-07-22: drop `'enterprise-limited'` from the union and the `mode` parameter — only the full overrides remain |
 | `app/composables/useEnterpriseSpecOutline.ts` | **New file (Phase F)** — fetches `/api/enterprise-spec-parsed`, exposes reactive `{tags, operationsByTag, isLoading, hasError, errorMessage}` |
 | `app/composables/useExplorerMode.ts` | Phase B: derives mode from `route.path` (read-only).  Phase F: no change — new mode resolved via `explorerModeFromPath` |
-| `app/utils/explorerRoute.ts` | Phase B: broadened `isExplorerRoutePath`; added `explorerModeFromPath` and `pathForExplorerMode` helpers.  Phase F: add `ENTERPRISE_CUSTOM_SEGMENT` and route it in the helpers |
-| `i18n/en.json` (and other locales) | Phase B: two new keys.  Phase F: third key `explorer-side-nav-enterprise-apis-custom` in all 5 locales + qqq documentation |
+| `app/utils/explorerRoute.ts` | Phase B: broadened `isExplorerRoutePath`; added `explorerModeFromPath` and `pathForExplorerMode` helpers.  Phase F: add `ENTERPRISE_CUSTOM_SEGMENT` and route it in the helpers.  2026-07-22: remove `ENTERPRISE_LIMITED_SEGMENT` and its mapping |
+| `i18n/en.json` (and other locales) | Phase B: two new keys.  Phase F: third key `explorer-side-nav-enterprise-apis-custom` in all 5 locales + qqq documentation.  2026-07-22: remove `explorer-side-nav-enterprise-apis-limited` from all locales + qqq |
 | `ARCHITECTURE.md` | Document four-mode explorer switching pattern, `enabled` toggle mechanism, spec proxy + parsed-outline pattern |
 | `package.json` | Phase F: add `yaml` dependency (server-side only) |
 
@@ -1092,7 +1139,6 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | `config/instances.ts` | No per-wiki variation for Enterprise |
 | `app/components/explorer/ExplorerModuleRail.vue` | Hidden in all Enterprise modes (incl. custom), component itself unchanged |
 | `app/components/explorer/ExplorerProjectControls.vue` | Hidden in all Enterprise modes (incl. custom), component itself unchanged |
-| `app/components/explorer/ExplorerScalarReference.client.vue` | Custom mode bypasses Scalar entirely; the component is unchanged and continues to serve community / enterprise-full / enterprise-limited |
-| `config/enterpriseExplorer.ts` | Phase F adds no new Scalar overrides — custom mode does not use Scalar |
+| `app/components/explorer/ExplorerScalarReference.client.vue` | Custom mode bypasses Scalar entirely; the component is unchanged and continues to serve community / enterprise-full |
 | `app/plugins/explorer-route-navigation.client.ts` | `isExplorerRoutePath` already matches `/explorer/<segment>`; no boundary change needed for the new sub-route |
-| `scripts/fetch-remote-content.mjs` | Enterprise spec is runtime-fetched, not build-time fetched |
+| `scripts/fetch-remote-content.mjs` | Enterprise spec is a bundled server asset served at runtime, not part of the build-time content fetch |

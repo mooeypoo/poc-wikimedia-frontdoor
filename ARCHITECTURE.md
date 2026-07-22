@@ -191,8 +191,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs |
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Explorer items with `mode` resolve `to` via `pathForExplorerMode()` and `isActive` via `explorerModeFromPath()`; `enabled: false` items are omitted. Content routes use prototype active map only. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
-| `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-limited`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
-| `useEnterpriseExplorer(mode)` | Spec URL and Scalar overrides for Scalar-bearing enterprise modes (`enterprise-full`, `enterprise-limited`) |
+| `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
+| `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
 | `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
 | `useExplorerModuleRailPlacement()` | Resolves module rail Teleport target and layout mode: end column (≥ 1120px) vs inline below project controls (< 1120px) |
 | `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | On inline layout when the endpoint panel is expanded and endpoint count exceeds `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (`config/explorerModuleRail.ts`), measures the first N row block size and sets `--explorer-module-rail-inline-endpoint-scroll-max-block-size` on the scrollport |
@@ -609,7 +609,7 @@ Scalar renders its own internal UI strings (button labels, response section head
 
 The `@scalar/nuxt` module supports only a single spec configured at build time. This project requires runtime resolution of specs across hundreds of instance + language + module combinations. The module is therefore not used.
 
-The Vue component is mounted in `app/pages/explorer/[[view]].vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`). Optional path segment selects **enterprise mode** (`/explorer/enterprise`, `/explorer/enterprise-limited`, `/explorer/enterprise-custom`) — see **Explorer modes and start-column routing** below.
+The Vue component is mounted in `app/pages/explorer/[[view]].vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`). Optional path segment selects **enterprise mode** (`/explorer/enterprise`, `/explorer/enterprise-custom`) — see **Explorer modes and start-column routing** below.
 
 ### Project and language picker
 
@@ -756,8 +756,9 @@ Enterprise explorer experiences share the unified start column with community mo
 |------|----------|--------------|
 | `community` | `/explorer` | Community Scalar explorer (`useExplorerBootstrap`) |
 | `enterprise-full` | `/explorer/enterprise` | Full enterprise Scalar spec (`useEnterpriseExplorer`) |
-| `enterprise-limited` | `/explorer/enterprise-limited` | Limited enterprise Scalar spec |
 | `enterprise-custom` | `/explorer/enterprise-custom` | Custom tag-driven viewer (`ExplorerEnterpriseCustom`, `useEnterpriseSpecOutline`) |
+
+**Enterprise spec source:** The Enterprise OpenAPI spec is bundled in the repo at `server/assets/wme-api.yaml` and served from the local system — `server/api/enterprise-spec.get.ts` reads it via Nitro server-asset storage (`useStorage('assets:server')`) and returns YAML for Scalar; `server/api/enterprise-spec-parsed.get.ts` reads the same asset and returns the tag-grouped JSON outline for the custom viewer. There is no remote fetch (the previous upstream endpoint is no longer available).
 
 **Side nav:** `config/explorerSideNav.js` lists sections and items; items with a **`mode`** field are wired by **`usePageSectionNav()`** → **`ShellSidePanelNav`**. Active state and paths are derived from the route — not from `isActive` flags in config. **`ExplorerSideNav.vue`** is superseded and not mounted. **`useExplorerMode()`** exposes the reactive mode for the explorer page and breadcrumbs.
 
