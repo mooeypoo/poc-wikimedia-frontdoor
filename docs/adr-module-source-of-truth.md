@@ -182,11 +182,9 @@ No config-file-driven abstraction, no plugin layer. One legible `.mjs` of named 
 
 **Constraint — the parser stays pure and isomorphic.** Because it runs in the browser, the server, and Node, `app/utils/normalizeDiscoveryModules.ts` must have **no I/O, no Node-only APIs, no heavy dependencies** (today: zero imports). All fetching and file writing happens *around* it, in the generator and the bootstrap route — never inside it.
 
-**Known gap — three variants exist; consolidation is a follow-up, not a blocker.** As of this ADR there are two normalizer implementations:
-1. `app/utils/normalizeDiscoveryModules.ts` — the shared util, used by `useDiscovery` **and** the generator.
-2. A private, *richer* copy inside `server/api/explorer-bootstrap.get.ts` — it adds `resolveDiscoveryModuleName`, which derives a name from the spec URL when discovery's name is empty (the root "unassociated endpoints" module, `/module/-`, becomes `-`). The generator reaches the same `-` a third way, via its own `canonicalModuleName`.
+**Resolution — one parser (implemented).** There were previously three normalizer variants: the shared util (`useDiscovery` + generator), a *richer* private copy in `server/api/explorer-bootstrap.get.ts` (with `resolveDiscoveryModuleName`, which derives a name from the spec URL when discovery's name is empty — the root "unassociated endpoints" module `/module/-` becomes `-`), and the generator's own `canonicalModuleName` reaching the same `-` a third way. The richer server logic is now promoted into the single shared `app/utils/normalizeDiscoveryModules.ts`; the server bootstrap imports it (≈140 duplicated lines removed), and the generator drops `canonicalModuleName`.
 
-These agree **today** (all three yield `-` for the root module), so the source of truth is correct and this is **not** required for the feature. The risk is future drift. The **decided** resolution: promote the server's richer logic to be the single shared parser and point the server bootstrap, `useDiscovery`, and the generator at it (dropping `canonicalModuleName`). This is UI-behavior-preserving because the live hot path (server bootstrap) already runs that exact logic, `useDiscovery`'s chain is currently unrendered (`useSpecUrl` has no consumers), and the generated data is unchanged (`-` either way). It touches live server code, so it lands as its **own verified change** (diff `/api/explorer-bootstrap` module lists for several instances before/after), separate from the source-of-truth feature.
+**Behavior preserved, verified.** A differential test ran the new shared parser, the old server normalizer, and the old generator path over live discovery from 15 diverse instances (including object- and array-shaped payloads and the root module): **byte-identical on all three, every instance.** So the bootstrap/instance-switch hot path is unchanged and the committed `config/generated/` data is unchanged (no regeneration needed). The one runtime delta is `useDiscovery`'s root-module name (`""` → `-`), which renders nowhere — its `useWikiModules` → `useSpecUrl` chain has no consumers.
 
 ---
 
@@ -204,7 +202,7 @@ These agree **today** (all three yield `-` for the root module), so the source o
 ## Implementation steps
 
 ### Step 1 — Shared normalization (non-breaking refactor)
-Extract the pure discovery-module normalization from `app/composables/useDiscovery.ts` into an importable helper (`app/utils/normalizeDiscoveryModules.ts`) so the composable and the generator share one parser for both payload shapes. *Done for those two; the richer private copy in `server/api/explorer-bootstrap.get.ts` is intentionally left for a separate verified consolidation — see §11.*
+Extract the pure discovery-module normalization from `app/composables/useDiscovery.ts` into an importable helper (`app/utils/normalizeDiscoveryModules.ts`) so the composable and the generator share one parser for both payload shapes. *All three consumers — the composable, the generator, and the `explorer-bootstrap` server route — now share this one parser (§11).*
 
 ### Step 2 — Phase 1: fleet sweep
 1. Fetch + filter sitematrix (§2) → instance list; write `wikiInstances.generated.ts`.

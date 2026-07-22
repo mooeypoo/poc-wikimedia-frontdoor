@@ -327,18 +327,6 @@ async function sweepDiscovery( instances ) {
 }
 
 /**
- * Canonical name for a discovery module. Discovery reports the root
- * "unassociated endpoints" module with an empty id; Wikimedia's own spec path
- * names it `-` (`/module/-`), so we adopt that as its identifier.
- *
- * @param {string} name - Raw discovery module name (may be empty).
- * @returns {string} A non-empty canonical name.
- */
-function canonicalModuleName( name ) {
-	return name === '' ? '-' : name
-}
-
-/**
  * Splits a discovery module name into its base and version segment.
  * `site/v1` → `{ base: 'site', version: 'v1' }`; a name without a slash keeps
  * the whole name as the base and an empty version.
@@ -394,7 +382,8 @@ function buildModuleRegistry( modulesByInstance ) {
 
 	for ( const [ instanceId, modules ] of modulesByInstance ) {
 		for ( const discoveryModule of modules ) {
-			const name = canonicalModuleName( discoveryModule.name )
+			// The shared parser already resolves the root module's empty id to `-`.
+			const name = discoveryModule.name
 			let entry = byName.get( name )
 			if ( !entry ) {
 				entry = { instanceIds: new Set(), sample: new Map() }

@@ -1,6 +1,13 @@
 /**
- * Discovery-payload normalization shared by the runtime explorer and the
- * offline module-source-of-truth generator (see docs/adr-module-source-of-truth.md §1, §7).
+ * The single discovery-payload parser, shared by all three consumers
+ * (docs/adr-module-source-of-truth.md §11):
+ *   - the client `useDiscovery` composable (browser/SSR),
+ *   - the `explorer-bootstrap` server route, which re-normalizes live on every
+ *     wiki-instance/language switch,
+ *   - the offline module-source-of-truth generator (plain Node).
+ *
+ * Because it runs in all three environments it MUST stay pure and isomorphic:
+ * no I/O, no Node-only APIs, no dependencies. All fetching happens around it.
  *
  * The Wikimedia discovery endpoint (`{baseUrl}/w/rest.php/specs/v0/discovery`)
  * returns its `modules` field in one of two shapes — an array, or an object
@@ -59,6 +66,29 @@ export function normalizeSpecUrl( baseUrl: string, specUrl: string ): string {
 }
 
 /**
+ * Resolves a stable, non-empty module name. Core REST modules may expose an
+ * empty moduleId (the "unassociated endpoints" root module); in that case the
+ * name is taken from the `/module/{id}` segment of the spec URL (for example
+ * `-`), matching how Wikimedia itself addresses that module.
+ *
+ * @param rawModuleName - Module id or object key from discovery (may be empty).
+ * @param specUrl - Absolute OpenAPI spec URL for the module.
+ * @returns Non-empty module name.
+ */
+export function resolveDiscoveryModuleName( rawModuleName: string, specUrl: string ): string {
+	if ( typeof rawModuleName === 'string' && rawModuleName.trim() !== '' ) {
+		return rawModuleName.trim()
+	}
+
+	const modulePathMatch = specUrl.match( /\/module\/([^/?#]+)/ )
+	if ( modulePathMatch?.[ 1 ] ) {
+		return modulePathMatch[ 1 ]
+	}
+
+	return 'unknown-module'
+}
+
+/**
  * Normalizes discovery module data across both known response shapes.
  *
  * @param discoveryModules - The `modules` field from a discovery response.
@@ -71,19 +101,21 @@ export function normalizeDiscoveryModules(
 ): DiscoveryModule[] {
 	if ( Array.isArray( discoveryModules ) ) {
 		return discoveryModules
-			.filter( ( rawModule ) => typeof rawModule.name === 'string' && typeof rawModule.specUrl === 'string' )
-			.map( ( rawModule ) => ( {
-				name: rawModule.name,
-				title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
-				version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
-				specUrl: normalizeSpecUrl( baseUrl, rawModule.specUrl )
-			} ) )
+			.filter( ( rawModule ) => typeof rawModule.specUrl === 'string' )
+			.map( ( rawModule ) => {
+				const specUrl = normalizeSpecUrl( baseUrl, rawModule.specUrl )
+				return {
+					name: resolveDiscoveryModuleName( rawModule.name, specUrl ),
+					title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
+					version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
+					specUrl
+				}
+			} )
 	}
 
 	if ( discoveryModules && typeof discoveryModules === 'object' ) {
 		return Object.entries( discoveryModules )
 			.flatMap( ( [ moduleKey, moduleValue ] ) => {
-				const moduleName = typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey
 				const moduleVersion =
 					isUsableVersion( moduleValue.info?.version )
 						? moduleValue.info.version
@@ -104,9 +136,15 @@ export function normalizeDiscoveryModules(
 					return []
 				}
 
+				const specUrl = normalizeSpecUrl( baseUrl, rawSpecUrl )
+				const moduleName = resolveDiscoveryModuleName(
+					typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey,
+					specUrl
+				)
+
 				const normalizedModule: DiscoveryModule = {
 					name: moduleName,
-					specUrl: normalizeSpecUrl( baseUrl, rawSpecUrl )
+					specUrl
 				}
 
 				if ( moduleTitle ) {
