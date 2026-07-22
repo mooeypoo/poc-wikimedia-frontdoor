@@ -10,7 +10,7 @@
  */
 
 /**
- * @typedef {'community' | 'enterprise-full' | 'enterprise-limited' | 'enterprise-custom'} ExplorerMode
+ * @typedef {'community' | 'enterprise-full' | 'enterprise-custom'} ExplorerMode
  */
 
 /**
@@ -43,12 +43,6 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				id: 'enterprise-apis',
 				messageKey: 'explorer-side-nav-enterprise-apis',
 				mode: 'enterprise-full',
-				enabled: true
-			},
-			{
-				id: 'enterprise-apis-limited',
-				messageKey: 'explorer-side-nav-enterprise-apis-limited',
-				mode: 'enterprise-limited',
 				enabled: true
 			},
 			{

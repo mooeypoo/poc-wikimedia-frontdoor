@@ -1,9 +1,6 @@
 import { createError, defineEventHandler, setResponseHeader } from 'h3'
 import { parse as parseYaml } from 'yaml'
-import {
-	ENTERPRISE_SPEC_UPSTREAM_URL,
-	ENTERPRISE_SPEC_USER_AGENT
-} from './enterprise-spec.get'
+import { readEnterpriseSpecYaml } from './enterprise-spec.get'
 
 /** HTTP methods extracted from the spec; anything outside this set is ignored. */
 const SUPPORTED_METHODS = [ 'get', 'post', 'put', 'patch', 'delete', 'head', 'options' ] as const
@@ -66,8 +63,8 @@ interface RawSpec {
 }
 
 /**
- * Server-side endpoint that fetches the Enterprise OpenAPI spec, parses YAML,
- * and returns a JSON outline grouped by tag — the data shape consumed by the
+ * Server-side endpoint that reads the bundled Enterprise OpenAPI spec, parses
+ * YAML, and returns a JSON outline grouped by tag — the data shape consumed by the
  * custom Enterprise viewer ({@link ../../app/composables/useEnterpriseSpecOutline.ts}).
  *
  * Keeps the YAML parser out of the client bundle and centralizes tag
@@ -76,19 +73,9 @@ interface RawSpec {
  * @returns JSON payload of shape EnterpriseSpecOutline.
  */
 export default defineEventHandler( async ( event ): Promise<EnterpriseSpecOutline> => {
-	let rawSpecText: string
-	try {
-		rawSpecText = await $fetch<string>( ENTERPRISE_SPEC_UPSTREAM_URL, {
-			headers: { 'user-agent': ENTERPRISE_SPEC_USER_AGENT },
-			responseType: 'text'
-		} )
-	} catch ( error: unknown ) {
-		const statusCode = pickStatusCode( error, 502 )
-		throw createError( {
-			statusCode,
-			statusMessage: 'Failed to fetch Enterprise spec from upstream.'
-		} )
-	}
+	// readEnterpriseSpecYaml throws a 500 H3Error when the bundled asset is
+	// missing/empty; let that propagate unchanged.
+	const rawSpecText = await readEnterpriseSpecYaml()
 
 	let parsedSpec: RawSpec
 	try {
@@ -227,25 +214,6 @@ function pickPrimaryTag( tags: unknown ): string {
  */
 function isRecord( value: unknown ): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray( value )
-}
-
-/**
- * Extracts a numeric statusCode from a thrown error, or returns a fallback.
- *
- * @param error - Thrown value, possibly carrying a Nitro/h3 statusCode field.
- * @param fallback - Default status when no numeric statusCode is present.
- * @returns The detected status code or `fallback`.
- */
-function pickStatusCode( error: unknown, fallback: number ): number {
-	if (
-		typeof error === 'object' &&
-		error !== null &&
-		'statusCode' in error &&
-		typeof ( error as Record<string, unknown> ).statusCode === 'number'
-	) {
-		return ( error as { statusCode: number } ).statusCode
-	}
-	return fallback
 }
 
 export type {

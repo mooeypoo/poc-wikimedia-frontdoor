@@ -34,18 +34,9 @@ const { selectedWikiInstanceId } = useDirection()
 const { explorerMode } = useExplorerMode()
 const isCommunityMode = computed( () => explorerMode.value === 'community' )
 const isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )
-/** True for Scalar-bearing Enterprise modes (full / limited), false for community and custom. */
-const isScalarEnterpriseMode = computed(
-	() => explorerMode.value === 'enterprise-full' || explorerMode.value === 'enterprise-limited'
-)
 
-const enterpriseMode = computed( () =>
-	isScalarEnterpriseMode.value
-		? explorerMode.value as 'enterprise-full' | 'enterprise-limited'
-		: 'enterprise-full' as const
-)
 const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides } =
-	useEnterpriseExplorer( enterpriseMode )
+	useEnterpriseExplorer()
 const {
 	modules,
 	failedModules,
@@ -200,8 +191,6 @@ const explorerTitle = computed( () => {
 	switch ( explorerMode.value ) {
 		case 'enterprise-full':
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis' )
-		case 'enterprise-limited':
-			return $bananaI18n( 'explorer-side-nav-enterprise-apis-limited' )
 		case 'enterprise-custom':
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis-custom' )
 		case 'community':
