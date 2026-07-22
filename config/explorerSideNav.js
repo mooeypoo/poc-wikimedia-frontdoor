@@ -31,6 +31,16 @@
 /** @type {ExplorerSideNavSection[]} */
 export const EXPLORER_SIDE_NAV_SECTIONS = [
 	{
+		id: 'overview',
+		titleMessageKey: 'explorer-side-nav-overview-title',
+		items: [
+			{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
+			{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: 'apis/authentication' },
+			{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: 'apis/rate-limits' }
+
+		]
+	},
+	{
 		id: 'api-explorer',
 		titleMessageKey: 'explorer-side-nav-api-explorer-title',
 		items: [
@@ -53,20 +63,17 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 				messageKey: 'explorer-side-nav-enterprise-apis-custom',
 				mode: 'enterprise-custom',
 				enabled: false
-			}
+			},
+			{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks' }
 		]
 	},
 	{
-		id: 'overview',
-		titleMessageKey: 'explorer-side-nav-overview-title',
+		id: 'resources',
+		titleMessageKey: 'explorer-side-nav-resources-title',
 		items: [
-			{ id: 'access-policy', messageKey: 'explorer-side-nav-access-policy' },
-			{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits' },
-			{ id: 'authentication', messageKey: 'explorer-side-nav-authentication' },
-			{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution' },
-			{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy' },
 			{ id: 'changelog', messageKey: 'explorer-side-nav-changelog' },
-			{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks' }
+			{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy' },
+			{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting' }
 		]
-	}
+	},
 ]
