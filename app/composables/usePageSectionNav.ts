@@ -2,16 +2,18 @@ import { EXPLORER_SIDE_NAV_SECTIONS } from '../../config/explorerSideNav'
 import { SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID } from '../../config/sectionNavigation'
 import type { ExplorerMode } from './useEnterpriseExplorer'
 import { resolveContentPageSidebar } from './useContentPageSidebar'
-import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
+import { contentLocaleFromPath, getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
 import { explorerModeFromPath, isExplorerRoutePath, pathForExplorerMode } from '../utils/explorerRoute'
+import { buildLocaleAwarePath } from '../utils/localeAwarePath'
 
 export interface ResolvedSectionNavItem {
 	id: string
 	label: string
 	isActive: boolean
 	/**
-	 * In-app route when navigation is wired (explorer mode items); `null` keeps a
-	 * non-navigating placeholder link for prototype content sections.
+	 * Locale-aware in-app route. Content items resolve it from their config
+	 * `href`; explorer items from their `mode`. `null` only for items with no
+	 * target (kept as a non-navigating placeholder link).
 	 */
 	to: string | null
 }
@@ -25,7 +27,8 @@ export interface ResolvedSectionNavSection {
 interface ContentSectionNavItem {
 	id: string
 	messageKey: string
-	isActive?: boolean
+	/** Locale-agnostic content path the item links to (see `config/sectionNavigation.js`). */
+	href?: string
 }
 
 interface ExplorerSectionNavItem extends ContentSectionNavItem {
@@ -43,27 +46,13 @@ interface SectionNavigationSource {
 }
 
 /**
- * Prototype active item per content path.
- * Only one item may be selected across the entire side panel on content routes.
- * Explorer active state is derived from the current route path (see `explorerModeFromPath`).
- */
-const PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH: Record<string, { sectionId: string, itemId: string } | null> = {
-	'/get-started': { sectionId: 'get-started', itemId: 'introduction' },
-	'/use-content-and-data': null,
-	'/tools-and-bots': null,
-	'/community': null,
-	'/contribute': null,
-	'/get-help': null
-}
-
-/**
  * Resolves left-hand section navigation for the current route.
  *
  * Returns explorer or content section menus from config, with banana-i18n
- * labels. On content routes, active state uses a prototype map; on explorer
- * routes, items with a `mode` resolve to real paths via `pathForExplorerMode`
- * and active state follows `explorerModeFromPath`. Exactly one item may be
- * selected across the entire menu.
+ * labels. Content items resolve their route from a locale-agnostic `href` and
+ * are active when that `href` matches the current page; explorer items resolve
+ * from a `mode` via `pathForExplorerMode` and follow `explorerModeFromPath`. At
+ * most one item is selected per menu (targets are unique).
  *
  * A page's `sidebar` frontmatter overrides path-based resolution: `false` hides
  * the menu, a string forces a named menu, `true`/omitted uses the path (see
@@ -154,28 +143,7 @@ export function usePageSectionNav() {
 			? null
 			: stripContentLocalePrefix( route.path )
 
-		const prototypeActiveItem = contentPath
-			? PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH[ contentPath ] ?? null
-			: null
-
-		const configActiveItem = onExplorerRoute
-			? null
-			: source.sections.reduce<{ sectionId: string, itemId: string } | null>(
-				( found, section ) => {
-					if ( found ) {
-						return found
-					}
-
-					const activeItem = section.items.find( ( item ) => item.isActive )
-
-					return activeItem
-						? { sectionId: section.id, itemId: activeItem.id }
-						: null
-				},
-				null
-			)
-
-		const activeContentItem = prototypeActiveItem ?? configActiveItem
+		const contentLocale = contentLocaleFromPath( route.path )
 
 		return source.sections.map( ( section ) => ( {
 			id: section.id,
@@ -202,13 +170,18 @@ export function usePageSectionNav() {
 						}
 					}
 
+					const contentItem = item as ContentSectionNavItem
+
 					return {
 						id: item.id,
 						label: $bananaI18n( item.messageKey ),
-						to: null,
-						isActive: activeContentItem !== null
-							&& activeContentItem.sectionId === section.id
-							&& activeContentItem.itemId === item.id
+						to: contentItem.href
+							? buildLocaleAwarePath( contentItem.href, contentLocale )
+							: null,
+						// Active when this item's target is the current page. `contentPath`
+						// and `href` are both locale-agnostic, so they compare directly.
+						isActive: contentItem.href !== undefined
+							&& contentItem.href === contentPath
 					}
 				} )
 		} ) )

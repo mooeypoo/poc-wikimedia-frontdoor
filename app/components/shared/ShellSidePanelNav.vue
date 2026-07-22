@@ -19,8 +19,9 @@ import type { ResolvedSectionNavItem, ResolvedSectionNavSection } from '../../co
  * - Non-selected items: custom `:hover` CSS sets `--color-progressive` text. Codex hover
  *   normally changes background only; `highlighted` is never toggled without a parent `CdxMenu`.
  *
- * **Routing:** Explorer items with a resolved `to` path navigate via `navigateTo`.
- * Content-section items without `to` remain `href="#"` placeholders (prototype).
+ * **Routing:** Items with a resolved `to` path (content items from their config
+ * `href`, explorer items from their `mode`) navigate via `navigateTo`. Only items
+ * with no target fall back to a non-navigating `href="#"` placeholder.
  */
 defineProps<{
 	/** Accessible name for the navigation region. */
