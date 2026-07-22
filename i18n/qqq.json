@@ -27,7 +27,7 @@
   "account-learn-more-oauth-link": "Linked phrase for OAuth for developers documentation (follows account-learn-more-about-before).",
   "account-learn-more-owner-only-link": "Linked phrase for owner-only consumer documentation (follows account-learn-more-about-before).",
   "account-logged-out-description": "Body copy on the logged-out `/account` gate (Figma 1001:18723) prompting the user to sign in.",
-  "account-logged-out-title": "Page title on the logged-out `/account` gate (Figma 1001:18723).",
+  "account-logged-out-title": "Page title on the logged-out `/account` gate (Figma 1001:18723) — “User dashboard”.",
   "account-meta-grants": "Metadata label before the grants summary on an OAuth list item.",
   "account-meta-issued": "Metadata label before the issued date on a token list item; include trailing punctuation appropriate for the locale.",
   "account-meta-last-used": "Metadata label before the last-used date on a token list item.",

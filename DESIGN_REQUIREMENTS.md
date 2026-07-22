@@ -347,7 +347,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | Element | Behaviour |
 |---------|-----------|
 | Start column | **Hidden** (same as logged-in `/account`) |
-| Title | banana `account-logged-out-title` — “Account dashboard” |
+| Title | banana `account-logged-out-title` — “User dashboard” |
 | Body | banana `account-logged-out-description` |
 | Log in | Progressive primary `CdxButton` — same Meta OAuth + PKCE flow as the header Log in link; `returnTo` = locale-aware `/account` |
 | Footer | Shell `ShellSiteFooter` at the **bottom of the viewport**; **logged-out gate only** fills remaining vertical space (`AccountLoggedOutGate` flex + `min-block-size: 100%`). Logged-in dashboard is a separate root with Figma Content gaps (`--spacing-200` between title / sections / request / logout; `--spacing-150` inside sections) — never toggle fill styles on the dashboard container. Route is **`ssr: false`** (OAuth memory + handoff). Do **not** duplicate the Figma-embedded footer inside the page |

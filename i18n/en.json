@@ -27,7 +27,7 @@
   "account-learn-more-oauth-link": "OAuth for developers",
   "account-learn-more-owner-only-link": "owner-only consumers (personal tokens)",
   "account-logged-out-description": "Log in to access your credentials and manage your API keys.",
-  "account-logged-out-title": "Account dashboard",
+  "account-logged-out-title": "User dashboard",
   "account-meta-grants": "Grants:",
   "account-meta-issued": "Issued:",
   "account-meta-last-used": "Last used:",

@@ -218,7 +218,7 @@ Unauthenticated visits to `/account` (including manually appending `/account` to
 
 | Element | Behaviour |
 |---------|-----------|
-| Title | banana `account-logged-out-title` — “Account dashboard” |
+| Title | banana `account-logged-out-title` — “User dashboard” |
 | Body | banana `account-logged-out-description` — prompt to log in for credentials / API keys |
 | Log in | Progressive primary `CdxButton`; starts the **same** Meta OAuth + PKCE flow as the header Log in link (`useShellAuthNavigation` / `useOAuthSession.login`), with `returnTo` = locale-aware account path (`useAccountPath`) so post-auth lands on the dashboard |
 | Footer | **Shell** `ShellSiteFooter` (not a page-local footer). **Logged-out gate only:** `AccountLoggedOutGate` grows (`min-block-size: 100%` / flex) so short gate content pins the footer to the viewport bottom. Logged-in dashboard is a **separate root** with Figma Content gaps (`--spacing-200` / section `--spacing-150`) — never shares the gate’s fill / `gap: 0` styles. `/account` is **`ssr: false`** so post-login handoff does not SSR the gate into the dashboard tree |
