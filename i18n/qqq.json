@@ -150,7 +150,6 @@
   "explorer-side-nav-content-pages": "Placeholder link for content and pages documentation.",
   "explorer-side-nav-enterprise-apis": "Link label for the Enterprise APIs full experience in the left navigation.",
   "explorer-side-nav-enterprise-apis-custom": "Link label for the custom (non-Scalar) Enterprise APIs viewer in the left navigation. \"Custom\" indicates a different presentation than the standard Enterprise API Explorer.",
-  "explorer-side-nav-enterprise-apis-limited": "Link label for the Limited Enterprise API experience in the left navigation.",
   "explorer-side-nav-label": "Accessible name for the API Explorer left-hand section navigation.",
   "explorer-side-nav-libraries-sdks": "Placeholder link for libraries and SDKs documentation.",
   "explorer-side-nav-licensing-attribution": "Placeholder link for licensing and attribution documentation.",
