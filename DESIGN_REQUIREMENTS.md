@@ -497,10 +497,10 @@ This is the **product end decision** (not a temporary experiment): manually open
 Top to bottom:
 
 1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, REST API module select, opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout)
+2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, **API to explore** select, Include opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout). **`.explorer-page__project-controls-stack`** has **no** flex gap between controls and the rail anchor
 3. **Reference panel** — Scalar shell (no separate module title / chip header above the shell)
 
-**Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps.
+**Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps on `.explorer-page` / `.explorer-page__intro`. The project-controls stack itself does **not** add a `--spacing-100` gap after controls.
 
 ### Reference panel (wide ≥ 960px)
 
@@ -560,7 +560,7 @@ Top to bottom:
 | **API module** | `CdxSelect` — field label banana `explorer-rest-api-module-label` (“API to explore”); options from opt-in-filtered bootstrap modules, sorted **alphabetically by `headingTitle`**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
 | **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
-| **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
+| **Description** | `explorer-rest-api-module-description`: “Select the REST API that you’d like to test on this project” |
 
 **Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
 
@@ -575,7 +575,7 @@ Top to bottom:
 
 **Defaults:** Beta **on**, Internal **off**.
 
-**Layout:** Opt-in group sits beside the REST API module select with **no** extra `margin-block-start` (overrides Codex field default).
+**Layout:** Opt-in group sits beside the **API to explore** select with **no** extra `margin-block-start` (overrides Codex field default).
 
 **Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only).
 
