@@ -475,7 +475,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Headings:** Emphasized colour; `h1` uses `--font-size-xx-large`; `h2`–`h6` retain block spacing below titles.
 
-**Monospace:** API paths, HTTP methods in module rail, and Scalar code areas use `--font-family-monospace-stack`.
+**Monospace:** HTTP methods in module rail, and Scalar code areas use `--font-family-monospace-stack`. Endpoint **names** in the rail use the sans stack (path templates remain available in accessible names).
 
 ### Subtle / secondary text
 
@@ -497,7 +497,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 Top to bottom:
 
-1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover REST APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
+1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
 2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, REST API module select, opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout)
 3. **Reference panel** — Scalar shell (no separate module title / chip header above the shell)
 
@@ -558,7 +558,7 @@ Top to bottom:
 
 | Control | Pattern |
 |---------|---------|
-| **REST API module** | `CdxSelect` — options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
+| **API module** | `CdxSelect` — field label banana `explorer-rest-api-module-label` (“API to explore”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
 | **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Choose the REST API module that you'd like to test on the selected project” |
@@ -571,7 +571,7 @@ Top to bottom:
 
 | Control | Pattern |
 |---------|---------|
-| Opt-in | Fieldset with two `CdxCheckbox` options: **Beta modules and endpoints**, **Internal modules and endpoints** |
+| Opt-in | Fieldset with two `CdxCheckbox` options: **Beta APIs and endpoints**, **Internal APIs and endpoints** |
 | Opt-in help | Quiet info `CdxButton` + `CdxPopover` (teleported, titled **Opt-in modules and endpoints**, close button) beside the Opt-in legend |
 
 **Defaults:** Beta **off**, Internal **off**.
@@ -592,7 +592,7 @@ Top to bottom:
 
 ### Purpose
 
-**Decision:** List **endpoints** for the REST API module selected in project controls; click an endpoint to load/focus that operation in Scalar. Module selection for the Scalar reference panel and the rail is driven by the **REST API module** `CdxSelect` (same discovery order and opt-in rules).
+**Decision:** List **endpoints** for the API module selected in project controls; click an endpoint to load/focus that operation in Scalar. Module selection for the Scalar reference panel and the rail is driven by the **API to explore** `CdxSelect` (same discovery order and opt-in rules). Rail rows show each operation’s **name** (OpenAPI `summary`), not the path template.
 
 ### Title
 
@@ -619,18 +619,18 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ### Endpoint rows
 
-**Decision:** Each endpoint is a **`CdxMenuItem`** outside a floating `CdxMenu` — same approved shell pattern as **`ShellSidePanelNav`**. The default slot renders method + path; `:label` supplies the accessible name. Row styling:
+**Decision:** Each endpoint is a **`CdxMenuItem`** outside a floating `CdxMenu` — same approved shell pattern as **`ShellSidePanelNav`**. The default slot renders method + **name** (OpenAPI `summary`, with path as bootstrap fallback); `:label` supplies the accessible name (includes path when it differs from the name). Row styling:
 
 | Part | Style |
 |------|--------|
 | HTTP method | Monospace, uppercase, bold; **method colour**: GET progressive, POST success, DELETE destructive, PUT/PATCH warning; `dir="ltr"`; **`white-space: nowrap`** |
-| Path | Monospace, small; in `<bdi>`; **inline after method** on the same line; wraps only when the row runs out of space |
+| Name | Sans, small; in `<bdi>`; **inline after method** on the same line; wraps only when the row runs out of space |
 
-**Layout:** Method and path use **inline flow** (not flex-wrap rows) so the path always begins after the method tag.
+**Layout:** Method and name use **inline flow** (not flex-wrap rows) so the name always begins after the method tag.
 
-**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module. The focused endpoint row uses **`CdxMenuItem` `:selected`**; the path label uses **`--color-progressive`**. Selected rows **do not** use Codex’s progressive-subtle background fill — path colour only.
+**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module. The focused endpoint row uses **`CdxMenuItem` `:selected`**; the name label uses **`--color-progressive`**. Selected rows **do not** use Codex’s progressive-subtle background fill — name colour only.
 
-**Hover:** Codex menu-item background on hover. **Path** text turns **`--color-progressive`** on hover (same as **`ShellSidePanelNav`** — no underline). **HTTP method** tags **keep their semantic colour** on hover and when selected (GET progressive, POST success, DELETE destructive, PUT/PATCH warning) — do not blanket-apply progressive to the method span.
+**Hover:** Codex menu-item background on hover. **Name** text turns **`--color-progressive`** on hover (same as **`ShellSidePanelNav`** — no underline). **HTTP method** tags **keep their semantic colour** on hover and when selected (GET progressive, POST success, DELETE destructive, PUT/PATCH warning) — do not blanket-apply progressive to the method span.
 
 **Scrolled divider:** When **`.explorer-module-rail__endpoint-scrollport`** is scrolled (`scrollTop > 0`), a sticky **`.explorer-module-rail__scroll-divider`** renders at the top of the scrollport viewport (`border-block-start: 1px solid var(--border-color-subtle)`). **End-column** layout insets the line with **`margin-inline: var(--spacing-75)`**; **inline** layout relies on the rail’s **`padding-inline: var(--spacing-50)`** (`margin-inline: 0` on the divider).
 
