@@ -30,7 +30,7 @@ export function useShellNavigationCollapse(
 	/**
 	 * Returns the inline size the expanded nav row needs including trailing padding.
 	 *
-	 * @param trailingPaddingPx - Required space after the API Explorer link (px).
+	 * @param trailingPaddingPx - Required trailing space after the expanded tab list (px).
 	 * @returns Required inline size in pixels, or `0` when elements are not mounted.
 	 */
 	function measureRequiredExpandedInlineSize( trailingPaddingPx: number ): number {

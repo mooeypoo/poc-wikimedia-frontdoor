@@ -138,9 +138,9 @@ export const MAIN_NAVIGATION_ITEMS = [
 to the locale files. **To reorder:** move the entry. **To remove:** delete it (the
 page itself still exists at its route unless you also remove the file).
 
-Two things that are **not** in this list:
+Two things that are **not** special-cased outside this list:
 
-- **The API Explorer** is a separate header link (`/explorer`), not a tab.
+- **APIs** is a normal primary tab (`id: apis`, `nav-api`, path `/explorer`). It stays selected on explorer routes; the start-column section heading remains **API Explorer**. The destination is never locale-prefixed (`i18n: false` on that route).
 - **Imported pages** can add themselves to the top nav via a `navEntry` block —
   see the [import guide](./content-import-guide.md#add-a-navigation-entry-optional).
 
