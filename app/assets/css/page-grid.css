@@ -121,8 +121,11 @@
 	);
 
 	/*
-	 * Explorer project controls + module rail surfaces.
+	 * Explorer project controls + module rail surfaces (also consumed by account
+	 * list-element cards and Reset credentials panel for the shared exploratory radius).
 	 * Background: Codex `--background-color-neutral-subtle` (theme-aware; not a fixed hex).
+	 * Border radius: exploratory 4px — not a Codex token (`--border-radius-base` is 2px);
+	 * under consideration as a future system default.
 	 * Keep in sync with config/explorerSurfaces.ts.
 	 */
 	--fd-explorer-controls-surface-background-color: var( --background-color-neutral-subtle );

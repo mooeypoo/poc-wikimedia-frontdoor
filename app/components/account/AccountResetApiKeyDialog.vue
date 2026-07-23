@@ -153,8 +153,13 @@ function onDefault(): void {
 }
 
 .account-reset-api-key-dialog__credentials-panel {
-	/* 4px radius — Codex only ships 2px `--border-radius-base`; design asks for 4px. */
-	border-radius: 4px;
+	/*
+	 * Exploratory radius from config/explorerSurfaces.ts (mirrored in page-grid.css).
+	 * Not a Codex token (`--border-radius-base` is 2px); under consideration as a
+	 * future system default. Same token as account list-element cards and explorer
+	 * project controls + module rail.
+	 */
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
 	background-color: var( --background-color-neutral-subtle );
 	/* Codex Spacing/75 = 12px. */
 	padding-block: var( --spacing-75 );
