@@ -3,36 +3,43 @@ sidebar: false
 status: mockup
 ---
 
-# Open access to free knowledge
+# Build with Wikimedia
 
-Find technical documentation, and connect with the developer community behind [Wikipedia](https://www.wikipedia.org/) and other [Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/).
+The infrastructure behind [Wikipedia](https://www.wikipedia.org/) and other [Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools, and bots. Explore live APIs, and connect with a global community of contributors.
 
 ::app-button{href="/get-started" label="Get started"}
 ::
 
 ---
 
-## For communities
+## Build for Wikimedia communities
 
-### Access wiki content and data with Wikimedia APIs
+Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tools and bots using Wikimedia infrastructure.
 
-Fetch articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
+[Learn about building tools →](/get-started/build-for-communities)
 
-[Learn more]()
+## Use Wikimedia content for commercial use cases
 
-### Build tools for readers and editors
+Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched product experiences at scale.
 
-Tools and bots make it easier to edit and maintain Wikimedia projects.
+[Learn about Wikimedia Enterprise →](/get-started/wikimedia-enterprise)
 
-[Learn more]()
+## Download Wikimedia datasets for research
+
+Power research apps and visualizations with bulk downloads of Wikimedia content and data. Learn about Wikimedia communities and the evolution of Wikimedia projects.
+
+[Learn about bulk data downloads →](/get-started/data-for-research)
 
 ---
 
-## High-volume and commercial access
+## Get human-curated knowledge from Wikimedia projects
 
-Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data.
+```sh
+# Get the featured image of the day from Wikimedia Commons
+curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
+```
 
-[Learn more]()
+[Image preview with attribution info]
 
 ---
 
@@ -40,10 +47,12 @@ Wikimedia Enterprise provides a suite of APIs and services designed for high-vol
 
 Help build the Wikimedia ecosystem with open source software.
 
-[Learn more]()
+[Start coding →](/contribute)
 
-## Connect with the community
+---
 
-Get involved with the Wikimedia technical community, and find opportunities for support and learning.
+## Connect with the Wikimedia developer community
 
-[Learn more]()
+Explore hackathons and events, and find opportunities for support and learning.
+
+[Get involved →](/community)

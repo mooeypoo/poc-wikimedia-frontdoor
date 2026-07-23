@@ -4,7 +4,7 @@ import type { Ref } from 'vue'
  * View level for the collapsed-shell navigation overlay menu.
  *
  * - `section` — start-column section navigation (default when sections exist).
- * - `primary` — top-level primary navigation options (main tabs + API Explorer).
+ * - `primary` — top-level primary navigation options (main tabs, including APIs).
  */
 export type ShellCollapsedNavMenuView = 'section' | 'primary'
 
