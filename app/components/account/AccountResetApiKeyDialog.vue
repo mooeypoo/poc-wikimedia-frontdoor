@@ -92,30 +92,32 @@ function onDefault(): void {
 					{{ successIntro }}
 				</p>
 
-				<ul
-					class="account-reset-api-key-dialog__credentials"
-					:aria-label="credentialsListAriaLabel"
-				>
-					<li
-						v-for="credentialRow in credentialRows"
-						:key="credentialRow.id"
-						class="account-reset-api-key-dialog__credential"
+				<div class="account-reset-api-key-dialog__credentials-panel">
+					<ul
+						class="account-reset-api-key-dialog__credentials"
+						:aria-label="credentialsListAriaLabel"
 					>
-						<p class="account-reset-api-key-dialog__credential-text">
+						<li
+							v-for="credentialRow in credentialRows"
+							:key="credentialRow.id"
+							class="account-reset-api-key-dialog__credential"
+						>
 							<span class="account-reset-api-key-dialog__credential-label">{{ credentialRow.label }}</span>
-							<!-- Credential values are external secrets; isolate and keep LTR for code-like tokens. -->
-							<bdi
-								class="account-reset-api-key-dialog__credential-value"
-								dir="ltr"
-							>{{ credentialRow.value }}</bdi>
-						</p>
-						<AccountResetCredentialCopyButton
-							:text-to-copy="credentialRow.value"
-							:copy-aria-label="copyAriaLabel"
-							:copied-tooltip-label="copiedTooltipLabel"
-						/>
-					</li>
-				</ul>
+							<div class="account-reset-api-key-dialog__credential-value-row">
+								<!-- Credential values are external secrets; isolate and keep LTR for code-like tokens. -->
+								<bdi
+									class="account-reset-api-key-dialog__credential-value"
+									dir="ltr"
+								>{{ credentialRow.value }}</bdi>
+								<AccountResetCredentialCopyButton
+									:text-to-copy="credentialRow.value"
+									:copy-aria-label="copyAriaLabel"
+									:copied-tooltip-label="copiedTooltipLabel"
+								/>
+							</div>
+						</li>
+					</ul>
+				</div>
 
 				<CdxMessage
 					class="account-reset-api-key-dialog__warning"
@@ -150,9 +152,26 @@ function onDefault(): void {
 	line-height: var( --line-height-medium );
 }
 
+.account-reset-api-key-dialog__credentials-panel {
+	/*
+	 * Exploratory radius from config/explorerSurfaces.ts (mirrored in page-grid.css).
+	 * Not a Codex token (`--border-radius-base` is 2px); under consideration as a
+	 * future system default. Same token as account list-element cards and explorer
+	 * project controls + module rail.
+	 */
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --background-color-neutral-subtle );
+	/* Codex Spacing/75 = 12px. */
+	padding-block: var( --spacing-75 );
+	padding-inline: var( --spacing-75 );
+	box-sizing: border-box;
+}
+
 .account-reset-api-key-dialog__credentials {
 	display: flex;
 	flex-direction: column;
+	/* Codex Spacing/50 = 8px between credential rows. */
+	gap: var( --spacing-50 );
 	margin-block: 0;
 	margin-inline: 0;
 	padding-block: 0;
@@ -162,34 +181,40 @@ function onDefault(): void {
 
 .account-reset-api-key-dialog__credential {
 	display: flex;
-	flex-wrap: nowrap;
-	align-items: center;
-	column-gap: var( --spacing-50 );
+	flex-direction: column;
+	align-items: stretch;
+	/* Codex Spacing/25 = 4px between label and value row. */
+	gap: var( --spacing-25 );
+	min-inline-size: 0;
 }
 
-.account-reset-api-key-dialog__credential-text {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	column-gap: var( --spacing-25 );
-	margin-block: 0;
-	margin-inline: 0;
-	min-inline-size: 0;
+.account-reset-api-key-dialog__credential-label {
 	font-size: var( --font-size-medium );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-medium );
+}
+
+.account-reset-api-key-dialog__credential-value-row {
+	display: flex;
+	flex-wrap: nowrap;
+	/* Top-align copy with the value (not the label above). */
+	align-items: flex-start;
+	/* Codex Spacing/50 = 8px between value and copy control. */
+	column-gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.account-reset-api-key-dialog__credential-value {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-family: var( --font-family-monospace-stack );
+	font-size: var( --font-size-medium );
+	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
 	overflow-wrap: anywhere;
 }
 
-.account-reset-api-key-dialog__credential-label {
-	font-weight: var( --font-weight-bold );
-}
-
-.account-reset-api-key-dialog__credential-value {
-	font-family: var( --font-family-monospace-stack );
-	font-weight: var( --font-weight-normal );
-}
-
-.account-reset-api-key-dialog__credential :deep( .cdx-button ) {
+.account-reset-api-key-dialog__credential-value-row :deep( .cdx-button ) {
 	flex-shrink: 0;
 }
 
