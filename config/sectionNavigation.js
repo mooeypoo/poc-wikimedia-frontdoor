@@ -42,35 +42,37 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'get-started',
 				titleMessageKey: 'section-nav-get-started-title',
 				items: [
-					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start', href: '/quick-start' },
-					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/about-wikimedia' }
+					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start', href: '/get-started/quick-start' },
+					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' }
 				]
 			},
 			{
 				id: 'for-communities',
 				titleMessageKey: 'section-nav-get-started-for-communities-title',
 				items: [
-					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content', href: '/wiki-content' },
-					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data', href: '/open-data' },
-					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features', href: '/on-wiki' },
-					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots', href: '/tools-and-bots' }
+					{ id: 'community-overview', messageKey: 'section-nav-get-started-community-overview', href: '/get-started/build-for-communities' },
+					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content', href: '/get-started/wiki-content' },
+					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data', href: '/get-started/open-data' },
+					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots', href: '/get-started/tools-and-bots' },
+					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features', href: '/get-started/on-wiki' }
 				]
 			},
 			{
 				id: 'for-enterprise',
 				titleMessageKey: 'section-nav-get-started-for-enterprise-title',
 				items: [
-					{ id: 'about-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/wikimedia-enterprise' },
-					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases', href: '/commercial-use-cases' }
+					{ id: 'about-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/get-started/wikimedia-enterprise' },
+					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases', href: '/get-started/commercial-use-cases' },
+					{ id: 'data-for-research', messageKey: 'section-nav-get-started-data-for-research', href: '/get-started/data-for-research' }
 				]
 			},
 			{
 				id: 'explore',
 				titleMessageKey: 'section-nav-get-started-explore-title',
 				items: [
-					{ id: 'explore-featured-apps', messageKey: 'section-nav-get-started-explore-featured-apps', href: '/featured-apps' },
-					{ id: 'tutorials', messageKey: 'section-nav-get-started-tutorials', href: '/tutorials' },
-					{ id: 'by-language', messageKey: 'section-nav-get-started-by-language', href: '/by-language' }
+					{ id: 'explore-featured-apps', messageKey: 'section-nav-get-started-explore-featured-apps', href: '/get-started/featured-apps' },
+					{ id: 'tutorials', messageKey: 'section-nav-get-started-tutorials', href: '/get-started/tutorials' },
+					{ id: 'by-language', messageKey: 'section-nav-get-started-by-language', href: '/get-started/by-language' }
 				]
 			}
 		]

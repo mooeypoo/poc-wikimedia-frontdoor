@@ -14,7 +14,7 @@ We're so happy you're here! Read the [introduction](/about-wikimedia) to learn a
 
 ---
 
-## For communities
+## Build for Wikimedia communities
 
 Communities are the heart of the Wikimedia movement. Whether you're interested in automating tasks for wiki editors, accessing open data for research, or expanding the reach of free knowledge, you can find APIs, data sets, and hosting options to support you and your community.
 
@@ -44,7 +44,7 @@ Tools and bots make it easier to edit and maintain Wikimedia projects.
 
 ---
 
-## For enterprise
+## Get high-volume and commercial access
 
 Create product experiences backed by human-curated free knowledge using APIs designed for commercial and high-volume access.
 
