@@ -1,30 +1,36 @@
 import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 /**
- * Upstream URL for the Enterprise OpenAPI spec. Exported so sibling server
- * routes (e.g. enterprise-spec-parsed) share a single source of truth.
+ * Storage key of the bundled Enterprise OpenAPI spec inside Nitro's server
+ * assets (`server/assets/`). The spec is served from the local system rather
+ * than fetched from the (now unavailable) remote endpoint. Exported so sibling
+ * server routes (e.g. enterprise-spec-parsed) share a single source of truth.
  */
-export const ENTERPRISE_SPEC_UPSTREAM_URL = 'https://api.enterprise.wikimedia.com/spec/spec.yaml'
+export const ENTERPRISE_SPEC_ASSET_KEY = 'wme-api.yaml'
 
-/** User-Agent sent with every upstream fetch. Exported for reuse. */
-export const ENTERPRISE_SPEC_USER_AGENT = 'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
+/**
+ * Reads the bundled Enterprise OpenAPI spec YAML from server assets.
+ *
+ * Exported so the parsed-outline route reads the identical source. Uses Nitro's
+ * server-asset storage (`assets:server`) so the file is included in the
+ * serverless bundle rather than read from a relative filesystem path.
+ *
+ * @returns Raw YAML text of the Enterprise spec.
+ * @throws {H3Error} 500 when the asset is missing from the bundle or empty.
+ */
+export async function readEnterpriseSpecYaml(): Promise<string> {
+	const spec = await useStorage( 'assets:server' ).getItem<string>( ENTERPRISE_SPEC_ASSET_KEY )
+	if ( typeof spec !== 'string' || spec.length === 0 ) {
+		throw createError( {
+			statusCode: 500,
+			statusMessage: 'Enterprise spec asset is missing or empty.'
+		} )
+	}
+	return spec
+}
 
 export default defineEventHandler( async ( event ) => {
-	try {
-		const spec = await $fetch<string>( ENTERPRISE_SPEC_UPSTREAM_URL, {
-			headers: { 'user-agent': ENTERPRISE_SPEC_USER_AGENT },
-			responseType: 'text'
-		} )
-		setResponseHeader( event, 'content-type', 'text/yaml; charset=utf-8' )
-		return spec
-	} catch ( error: unknown ) {
-		const statusCode =
-			typeof error === 'object' &&
-			error !== null &&
-			'statusCode' in error &&
-			typeof ( error as Record<string, unknown> ).statusCode === 'number'
-				? ( error as { statusCode: number } ).statusCode
-				: 502
-		throw createError( { statusCode, statusMessage: 'Failed to fetch Enterprise spec from upstream.' } )
-	}
+	const spec = await readEnterpriseSpecYaml()
+	setResponseHeader( event, 'content-type', 'text/yaml; charset=utf-8' )
+	return spec
 } )
