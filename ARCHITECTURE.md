@@ -97,6 +97,11 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
+│   ├── moduleSourceOfTruth.ts  # Accessor over the generated module source of truth (FK joins)
+│   ├── generated/              # Committed generated data (regen-and-diff, never hand-edited)
+│   │   ├── wikiInstances.generated.ts  # Public wiki fleet registry
+│   │   ├── modules.generated.ts        # Unique REST modules → instance-id lists
+│   │   └── module-specs/               # Per-module full OpenAPI specs (JSON)
 │   └── scalar.js               # Scalar component defaults
 │
 ├── content/                    # Nuxt Content Markdown source
@@ -113,7 +118,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── fetch-remote-content.mjs    # Fetches remote/on-wiki content → writes to content/
 │   ├── lib/
 │   │   └── wikiContentConversion.mjs  # Parsoid HTML → MDC Markdown (unified pipeline)
-│   └── generate-language-catalog.mjs  # Regenerates config/languages.generated.ts
+│   ├── generate-language-catalog.mjs  # Regenerates config/languages.generated.ts
+│   └── generate-module-source-of-truth.mjs  # Regenerates config/generated/ (fleet, modules, specs)
 │
 ├── stores/                     # Pinia stores
 │   ├── prototypeAuthSession.ts # Placeholder key-table owner seed (after OAuth; not access control)
@@ -677,6 +683,8 @@ useScalarConfig(visibleOpenApiSpecUrl)   ← reactive Scalar configuration
 ```
 
 Per-module language-level spec fallback (`useSpecUrl` + `config/languages.js`) is reserved for a later phase; community explorer uses discovery spec URLs as returned for the selected instance.
+
+**Offline module source of truth (distinct from the runtime flow above).** The `generate-module-source-of-truth` script runs this same discovery flow offline across the whole public fleet to produce committed data in `config/generated/` — the fleet registry, the unique modules and which instances expose each, and each module's full OpenAPI spec — consumed via `config/moduleSourceOfTruth.ts`. It feeds future features (a module registry, LLM entrypoints, search/sitemap discoverability), not the live explorer, which still resolves specs at runtime. See `docs/adr-module-source-of-truth.md`.
 
 ### Reactive spec switching
 

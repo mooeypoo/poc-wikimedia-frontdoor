@@ -1,29 +1,9 @@
 import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { getWikiInstanceById } from '../../config/instances'
+import { normalizeDiscoveryModules } from '../utils/normalizeDiscoveryModules'
+import type { DiscoveryModule, DiscoveryResponse } from '../utils/normalizeDiscoveryModules'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
-
-interface DiscoveryModule {
-	name: string
-	title?: string
-	version?: string
-	specUrl: string
-}
-
-interface DiscoveryModuleObjectShape {
-	moduleId?: string
-	version?: string
-	info?: {
-		title?: string
-		version?: string
-	}
-	spec?: string
-	specUrl?: string
-}
-
-interface DiscoveryResponse {
-	modules?: DiscoveryModule[] | Record<string, DiscoveryModuleObjectShape>
-}
 
 const discoveryCacheByInstance = new Map<string, DiscoveryModule[]>()
 
@@ -39,93 +19,6 @@ export function useDiscovery( selectedWikiInstanceId: Ref<string> ) {
 	const errorMessage = ref( '' )
 	const modules = ref<DiscoveryModule[]>( [] )
 	const { logEvent } = useExplorerDiagnostics()
-
-	/**
-	 * Resolves a spec URL to absolute form.
-	 *
-	 * @param baseUrl - Base URL of the selected wiki instance.
-	 * @param specUrl - Spec URL from discovery response.
-	 * @returns Absolute spec URL suitable for Scalar.
-	 */
-	function normalizeSpecUrl( baseUrl: string, specUrl: string ): string {
-		try {
-			return new URL( specUrl, baseUrl ).toString()
-		} catch {
-			return specUrl
-		}
-	}
-
-	/**
-	 * Normalizes discovery module data across known response shapes.
-	 *
-	 * @param discoveryModules - Modules field from discovery response.
-	 * @param baseUrl - Base URL of the selected wiki instance.
-	 * @returns Normalized module list for explorer pickers.
-	 */
-	function normalizeDiscoveryModules(
-		discoveryModules: DiscoveryResponse[ 'modules' ],
-		baseUrl: string
-	): DiscoveryModule[] {
-		const isUsableVersion = ( version: unknown ): version is string => {
-			return typeof version === 'string' && version.trim() !== '' && version !== 'undefined'
-		}
-
-		if ( Array.isArray( discoveryModules ) ) {
-			return discoveryModules
-				.filter( ( rawModule ) => typeof rawModule.name === 'string' && typeof rawModule.specUrl === 'string' )
-				.map( ( rawModule ) => ( {
-					name: rawModule.name,
-					title: typeof ( rawModule as DiscoveryModule & { title?: string } ).title === 'string'
-						? ( rawModule as DiscoveryModule & { title?: string } ).title
-						: undefined,
-					version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
-					specUrl: normalizeSpecUrl( baseUrl, rawModule.specUrl )
-				} ) )
-		}
-
-		if ( discoveryModules && typeof discoveryModules === 'object' ) {
-			return Object.entries( discoveryModules )
-				.flatMap( ( [ moduleKey, moduleValue ] ) => {
-					const moduleName = typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey
-					const moduleVersion =
-						isUsableVersion( moduleValue.info?.version )
-							? moduleValue.info.version
-							: isUsableVersion( moduleValue.version )
-								? moduleValue.version
-								: undefined
-					const moduleTitle = typeof moduleValue.info?.title === 'string'
-						? moduleValue.info.title
-						: undefined
-					const rawSpecUrl =
-						typeof moduleValue.spec === 'string'
-							? moduleValue.spec
-							: typeof moduleValue.specUrl === 'string'
-								? moduleValue.specUrl
-								: ''
-
-					if ( !rawSpecUrl ) {
-						return []
-					}
-
-					const normalizedModule: DiscoveryModule = {
-						name: moduleName,
-						specUrl: normalizeSpecUrl( baseUrl, rawSpecUrl )
-					}
-
-					if ( moduleTitle ) {
-						normalizedModule.title = moduleTitle
-					}
-
-					if ( moduleVersion ) {
-						normalizedModule.version = moduleVersion
-					}
-
-					return [ normalizedModule ]
-				} )
-		}
-
-		return []
-	}
 
 	/**
 	 * Fetches discovery modules for the current instance.

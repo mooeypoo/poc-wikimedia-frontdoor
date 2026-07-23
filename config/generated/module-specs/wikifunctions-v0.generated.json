@@ -1,0 +1,476 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "abstractwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "abstractwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "abstractwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "APIs for interacting with Wikifunctions",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "Wikifunctions API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/call/{zid}/{arguments}": {
+			"get": {
+				"description": "Call a function",
+				"operationId": "getCallByZidByArguments",
+				"parameters": [
+					{
+						"description": "ZID of the function to call",
+						"in": "path",
+						"name": "zid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Pipe-separated list of arguments to pass to the function, in the order in which its arguments are declared, with each argument URL-encoded",
+						"in": "path",
+						"name": "arguments",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "The result of evaluating the function call",
+									"properties": {
+										"type": {
+											"description": "The ZID of the type of the evaluated output: 'Z6' for a plain string, 'Z89' for an HTML fragment",
+											"enum": [
+												"Z6",
+												"Z89"
+											],
+											"example": "Z6",
+											"type": "string"
+										},
+										"value": {
+											"description": "The evaluated output as a string; either a plain string (for Z6) or an HTML fragment (for Z89)",
+											"example": "Hello, world!",
+											"type": "string"
+										}
+									},
+									"required": [
+										"value",
+										"type"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/call/{zid}/{arguments}/{parselang}/{renderlang}": {
+			"get": {
+				"description": "Call a function, with custom parse and render languages",
+				"operationId": "getCallByZidByArgumentsByParselangByRenderlang",
+				"parameters": [
+					{
+						"description": "ZID of the function to call",
+						"in": "path",
+						"name": "zid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Pipe-separated list of arguments to pass to the function, in the order in which its arguments are declared, with each argument URL-encoded",
+						"in": "path",
+						"name": "arguments",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "BCP-47 language code used to parse string-valued arguments that have a parser function; defaults to 'en'",
+						"in": "path",
+						"name": "parselang",
+						"required": true,
+						"schema": {
+							"default": "en",
+							"type": "string"
+						}
+					},
+					{
+						"description": "BCP-47 language code used to render the function's output and any error messages; defaults to 'en'",
+						"in": "path",
+						"name": "renderlang",
+						"required": true,
+						"schema": {
+							"default": "en",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "The result of evaluating the function call",
+									"properties": {
+										"type": {
+											"description": "The ZID of the type of the evaluated output: 'Z6' for a plain string, 'Z89' for an HTML fragment",
+											"enum": [
+												"Z6",
+												"Z89"
+											],
+											"example": "Z6",
+											"type": "string"
+										},
+										"value": {
+											"description": "The evaluated output as a string; either a plain string (for Z6) or an HTML fragment (for Z89)",
+											"example": "Hello, world!",
+											"type": "string"
+										}
+									},
+									"required": [
+										"value",
+										"type"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/fetch/{zids}": {
+			"get": {
+				"description": "Fetch ZObjects",
+				"operationId": "getFetchByZids",
+				"parameters": [
+					{
+						"description": "Pipe-separated list of ZIDs to fetch, with a maximum of 50 per request",
+						"in": "path",
+						"name": "zids",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "BCP-47 language code to use when resolving multilingual labels in the returned ZObjects; if omitted, all languages are returned",
+						"in": "query",
+						"name": "language",
+						"required": false,
+						"schema": {
+							"enum": [
+								""
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "Whether to additionally return the ZObjects referenced as types in the keys or arguments of the requested ZObjects",
+						"in": "query",
+						"name": "getDependencies",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"additionalProperties": {
+										"description": "A ZObject serialised as a JSON string, as returned by the page-content representation endpoint",
+										"example": "{\"Z1K1\":\"Z2\",\"Z2K1\":{\"Z1K1\":\"Z6\",\"Z6K1\":\"Z801\"},\"Z2K2\":{\"Z1K1\":\"Z8\",\"Z8K1\":[\"Z17\"],\"Z8K2\":\"Z1\",\"Z8K3\":[\"Z20\"],\"Z8K4\":[\"Z14\"],\"Z8K5\":\"Z801\"},\"Z2K3\":{\"Z1K1\":\"Z12\",\"Z12K1\":[\"Z11\"]}}",
+										"type": "string"
+									},
+									"description": "A map from each requested (and, if getDependencies is set, dependency) ZID to its ZObject serialised as a JSON string",
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/fetch/{zids}/{revisions}": {
+			"get": {
+				"description": "Fetch historic versions of ZObjects",
+				"operationId": "getFetchByZidsByRevisions",
+				"parameters": [
+					{
+						"description": "Pipe-separated list of ZIDs to fetch, with a maximum of 50 per request",
+						"in": "path",
+						"name": "zids",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Pipe-separated list of revision IDs, one per requested ZID, to fetch historic versions; if omitted, the latest revision of each ZID is returned",
+						"in": "path",
+						"name": "revisions",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "BCP-47 language code to use when resolving multilingual labels in the returned ZObjects; if omitted, all languages are returned",
+						"in": "query",
+						"name": "language",
+						"required": false,
+						"schema": {
+							"enum": [
+								""
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "Whether to additionally return the ZObjects referenced as types in the keys or arguments of the requested ZObjects",
+						"in": "query",
+						"name": "getDependencies",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"additionalProperties": {
+										"description": "A ZObject serialised as a JSON string, as returned by the page-content representation endpoint",
+										"example": "{\"Z1K1\":\"Z2\",\"Z2K1\":{\"Z1K1\":\"Z6\",\"Z6K1\":\"Z801\"},\"Z2K2\":{\"Z1K1\":\"Z8\",\"Z8K1\":[\"Z17\"],\"Z8K2\":\"Z1\",\"Z8K3\":[\"Z20\"],\"Z8K4\":[\"Z14\"],\"Z8K5\":\"Z801\"},\"Z2K3\":{\"Z1K1\":\"Z12\",\"Z12K1\":[\"Z11\"]}}",
+										"type": "string"
+									},
+									"description": "A map from each requested (and, if getDependencies is set, dependency) ZID to its ZObject serialised as a JSON string",
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://abstract.wikipedia.org/w/rest.php/wikifunctions/v0"
+		}
+	]
+}

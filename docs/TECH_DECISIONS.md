@@ -62,11 +62,15 @@ Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
 `config/instances.js` contains only base URLs, direction, and language metadata. No spec URLs.
 
+**Offline, fleet-wide.** The same discovery flow is run offline across the entire public wiki fleet by the standalone `generate-module-source-of-truth` script to produce a committed source of truth under `config/generated/`: the fleet registry, the unique modules and which instances expose each, and each module's full OpenAPI spec. It is reviewed via git diff and independent of the runtime flow above — the explorer still resolves specs live. See `docs/adr-module-source-of-truth.md`.
+
 ---
 
 ## Wiki instances
 
 Six instances configured for the initial build. All modules and spec URLs for each are derived from their respective `/w/rest.php/specs/v0/discovery` endpoints at runtime.
+
+> These six are the *curated* explorer set (`config/instances.ts`). The full public fleet (~840 wikis) is enumerated separately as generated data in `config/generated/wikiInstances.generated.ts`; the two are distinct concerns and are not merged.
 
 | ID | Base URL | Direction |
 |---|---|---|
