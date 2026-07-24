@@ -77,6 +77,59 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 			}
 		]
 	},
+	'apis': {
+		ariaLabelMessageKey: 'nav-api',
+		sections: [
+			{
+				id: 'overview',
+				titleMessageKey: 'explorer-side-nav-overview-title',
+				items: [
+					{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
+					{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: '/apis/authentication' },
+					{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: '/apis/rate-limits' }
+				]
+			},
+			{
+				id: 'api-explorer',
+				titleMessageKey: 'explorer-side-nav-api-explorer-title',
+				items: [
+					{
+						id: 'wikimedia-api-modules',
+						messageKey: 'explorer-side-nav-wikimedia-api-modules',
+						mode: 'community',
+						href: '../explorer'
+					},
+					{
+						id: 'enterprise-apis',
+						messageKey: 'explorer-side-nav-enterprise-apis',
+						mode: 'enterprise-full',
+						enabled: true,
+						href: '../explorer'
+
+					},
+					{
+						// Hidden from the sidebar for now (functionality retained — the
+						// enterprise-custom mode, route, and component are all still wired;
+						// flip to true to re-expose it). See ADR §5.2 on the `enabled` toggle.
+						id: 'enterprise-apis-custom',
+						messageKey: 'explorer-side-nav-enterprise-apis-custom',
+						mode: 'enterprise-custom',
+						enabled: false
+					},
+					{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks' }
+				]
+			},
+			{
+				id: 'resources',
+				titleMessageKey: 'explorer-side-nav-resources-title',
+				items: [
+					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog' },
+					{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy' },
+					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting' }
+				]
+			}
+		]
+	},
 	'use-content-and-data': {
 		ariaLabelMessageKey: 'section-nav-use-content-and-data-label',
 		sections: [
