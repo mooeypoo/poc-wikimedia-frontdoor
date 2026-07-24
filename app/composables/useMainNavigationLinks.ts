@@ -1,6 +1,6 @@
-import { API_EXPLORER_NAVIGATION_PATH, MAIN_NAVIGATION_ITEMS, type MainNavigationItem } from '../../config/mainNavigation'
+import { MAIN_NAVIGATION_ITEMS, type MainNavigationItem } from '../../config/mainNavigation'
 import { REMOTE_CONTENT_SOURCES, type RemoteContentSource } from '../../config/remoteContentSources'
-import { buildLocaleAwarePath, DEFAULT_CONTENT_LOCALE } from '../utils/localeAwarePath'
+import { DEFAULT_CONTENT_LOCALE, resolveContentHref } from '../utils/localeAwarePath'
 
 export interface MainNavigationLink extends MainNavigationItem {
 	label: string
@@ -19,15 +19,9 @@ function buildContentRoutePath( navigationItem: MainNavigationItem, localeCode: 
 		return localeCode === DEFAULT_CONTENT_LOCALE ? '/' : `/${ localeCode }`
 	}
 
-	// Explorer is `i18n: false` — never locale-prefix the APIs tab destination.
-	if (
-		navigationItem.path === API_EXPLORER_NAVIGATION_PATH
-		|| navigationItem.path.startsWith( `${ API_EXPLORER_NAVIGATION_PATH }/` )
-	) {
-		return navigationItem.path
-	}
-
-	return buildLocaleAwarePath( navigationItem.path, localeCode )
+	// Shared rule: locale-prefix content paths, leave the `i18n: false` explorer
+	// path (`/explorer`) untouched — wherever it is placed in the config.
+	return resolveContentHref( navigationItem.path, localeCode )
 }
 
 /**
