@@ -12,8 +12,6 @@ Ready to start using Wikimedia APIs? [**Go to the quick start →**](/quick-star
 
 We're so happy you're here! Read the [introduction](/about-wikimedia) to learn about Wikimedia projects and technology.
 
----
-
 ## Build for Wikimedia communities
 
 Communities are the heart of the Wikimedia movement. Whether you're interested in automating tasks for wiki editors, accessing open data for research, or expanding the reach of free knowledge, you can find APIs, data sets, and hosting options to support you and your community.
@@ -42,8 +40,6 @@ Tools and bots make it easier to edit and maintain Wikimedia projects.
 
 [Learn more](/tools-and-bots)
 
----
-
 ## Get high-volume and commercial access
 
 Create product experiences backed by human-curated free knowledge using APIs designed for commercial and high-volume access.
@@ -59,8 +55,6 @@ Learn how Wikimedia Enterprise APIs provide realtime and on-demand access to Wik
 Explore ways to use Wikimedia Enterprise in your products, from machine learning to misinformation defense.
 
 [Learn more](/commercial-use-cases)
-
----
 
 ## Explore
 

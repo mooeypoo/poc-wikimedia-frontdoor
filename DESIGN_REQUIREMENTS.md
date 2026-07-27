@@ -703,12 +703,30 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ---
 
+## Content page typography (Get started section)
+
+**Decision:** Markdown content pages (`app/pages/[...slug].vue` → `.fd-content-page`) use Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html) heading styles:
+
+| Element | Style | Tokens |
+|---------|-------|--------|
+| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
+| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+
+Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
+
+**Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`).
+
+**Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
+
+---
+
 ## Commit traceability (design branch)
 
 Mapping of notable commits to design areas (newest first among design-only work):
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / Heading 2 on `.fd-content-page` |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |

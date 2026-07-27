@@ -983,7 +983,18 @@ See `docs/adr-multilingual-search.md` for the full decision record and `docs/sea
 
 ### Rendering pipeline
 
-Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>`. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+
+### Content typography (Codex style guide)
+
+Markdown page titles and section headings follow the Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html), scoped under `.fd-content-page` in `app/assets/css/main.css` (so explorer / shell chrome keep their own heading rules):
+
+| Element | Codex style | Tokens |
+|---------|-------------|--------|
+| `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
+| `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+
+**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers).
 
 ### What works today without configuration
 
@@ -1010,7 +1021,7 @@ Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/
 
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
-| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern |
+| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |

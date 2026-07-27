@@ -140,6 +140,26 @@ h2 {
 	font-size: var( --font-size-x-large );
 }
 
+/*
+ * Markdown content pages — Codex typography style guide
+ * (https://doc.wikimedia.org/codex/latest/style-guide/typography.html):
+ * Heading 1 / Heading 2 use the serif stack with xxx-large / xx-large sizes.
+ * Scoped to `.fd-content-page` so explorer / shell chrome keep their own heading rules.
+ */
+.fd-content-page :where( h1 ) {
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xxx-large );
+}
+
+.fd-content-page :where( h2 ) {
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xx-large );
+}
+
 h3 {
 	font-size: var( --font-size-large );
 }
