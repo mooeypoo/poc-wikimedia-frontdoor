@@ -2,9 +2,8 @@
  * shell-primary-nav-overrides.css — Codex quiet-tabs overrides for shell chrome.
  *
  * `.frontdoor-shell__chrome-band` owns the single header bottom edge (Figma). Codex quiet
- * tabs set physical `border-bottom` on `.cdx-tabs__header`. That rule is re-applied
- * when `codex.style-rtl.css` loads dynamically — import this file after RTL load
- * (see `app/plugins/codex-rtl-styles.client.ts`) as well as from `main.css`.
+ * tabs set physical `border-bottom` on `.cdx-tabs__header`. Imported from `main.css`
+ * after `codex.style-bidi.css` (see `nuxt.config.ts`).
  */
 
 .shell-primary-nav .cdx-tabs__header,

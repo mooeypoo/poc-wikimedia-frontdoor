@@ -242,8 +242,13 @@ function handleLanguageSelection( value: string | number | null ): void {
 
 /**
  * Resets the lookup input to the active language and clears the filter term.
+ *
+ * Also restores `languageSelection` to the committed interface locale: clearing the
+ * input (Codex `clearable`) nulls Lookup’s selection without changing locale, so we
+ * re-sync when closing or reopening.
  */
 function resetLanguageLookupInput(): void {
+	languageSelection.value = selectedInterfaceLocale.value
 	languageInputValue.value = selectedLanguageAutonym.value
 	languageSearchTerm.value = ''
 }
@@ -442,6 +447,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					:menu-items="languageMenuItems"
 					:menu-config="LANGUAGE_LOOKUP_MENU_CONFIG"
 					:start-icon="cdxIconLanguage"
+					clearable
 					:aria-label="interfaceLanguageLabel"
 					:placeholder="interfaceLanguageLabel"
 					@input="handleLanguageInput"
