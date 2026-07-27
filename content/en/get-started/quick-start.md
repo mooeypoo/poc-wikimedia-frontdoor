@@ -23,7 +23,7 @@ For a complete list of projects and languages, visit the [site matrix on Meta-Wi
 API endpoints share a consistent URL structure based on the project name and language code:
 
 ```
-https://[language code].[project].org/...
+https://[language code].[project].org/[version]/
 ```
 
 The API uses HTTP [request methods](https://en.wikipedia.org/wiki/HTTP#Request_methods) and [response status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) and returns data in [JSON](https://en.wikipedia.org/wiki/JSON) format.
@@ -33,12 +33,12 @@ The API uses HTTP [request methods](https://en.wikipedia.org/wiki/HTTP#Request_m
 Get today's featured article from English Wikipedia.
 
 ```sh
-curl https://...
+curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
 ```
 
 ## Try the sandbox
 
-Visit the [API reference]() to try different parameters and explore other available languages and projects.
+Visit the [API explorer](/explorer) to try different parameters and explore other available languages and projects.
 
 ## Next steps
 

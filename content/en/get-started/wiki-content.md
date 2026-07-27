@@ -8,10 +8,7 @@ Access articles from Wikipedia, media files, structured data, and more with publ
 ## Explore APIs
 
 :::navigation-card-grid
-::navigation-card{url="/explorer" title="Page API" description="Search pages, get page contents, fetch media files, and more."}
-::
-
-::navigation-card{url="/explorer" title="Featured content API" description="Get daily featured content from Wikipedia."}
+::navigation-card{url="/explorer" title="MediaWiki REST API" description="Search pages, get page contents, fetch media files, and more."}
 ::
 
 ::navigation-card{url="/explorer" title="Reading lists API" description="Fetch and manage reading lists on Wikipedia."}
@@ -34,7 +31,7 @@ Access articles from Wikipedia, media files, structured data, and more with publ
 ::navigation-card{url="/get-started/quick-start" title="Quick start" description="Get started, and make your first API request."}
 ::
 
-::navigation-card{title="Get featured content" description="Get daily featured articles, most read pages, and more."}
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/API:Picture_of_the_day_viewer" title="Get featured content" description="Get daily featured articles, most read pages, and more."}
 ::
 
 ::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}

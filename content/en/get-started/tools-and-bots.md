@@ -52,7 +52,7 @@ Follow step-by-step guides to learn the basics of interacting with Wikimedia pro
 Explore programming interfaces for building bots and tools.
 
 :::navigation-card-grid
-::navigation-card{url="/explorer" title="Editing API" description="Automate page edits and support wiki maintainers."}
+::navigation-card{url="/explorer" title="MediaWiki REST API" description="Automate page edits and support wiki maintainers."}
 ::
 
 ::navigation-card{url="/explorer" title="Machine learning API" description="Predict the quality of an edit, and get other predictions."}

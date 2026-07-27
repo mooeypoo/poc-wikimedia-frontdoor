@@ -18,10 +18,6 @@ Explore public data that you can use in research and machine learning.
 
 ## Explore APIs
 
-:::navigation-card-grid
-::navigation-card{url="/explorer" title="Analytics API" description="Get page views and other data about Wikimedia projects"}
-::
-
 ::navigation-card{url="/explorer" title="Machine Learning API" description="Get predictions from Wikimedia machine learning models"}
 ::
 :::
@@ -39,7 +35,7 @@ Explore public data that you can use in research and machine learning.
 ## Learn with tutorials
 
 :::navigation-card-grid
-::navigation-card{url="/get-started/tutorials" title="Compare page metrics" description="Analyze page viewership and edit data from Wikipedia."}
+::navigation-card{url="https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/tutorials/compare-page-metrics.html" title="Compare page metrics" description="Analyze page viewership and edit data from Wikipedia."}
 ::
 
 ::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}

@@ -40,6 +40,9 @@ Create product experiences backed by human-curated free knowledge using APIs des
 
 ::navigation-card{url="/get-started/commercial-use-cases" title="Commercial use cases" description="Explore ways to use Wikimedia Enterprise in your products, from machine learning to misinformation defense."}
 ::
+
+::navigation-card{url="/get-started/data-for-research" title="Bulk data for research" description="Wikimedia offers bulk datasets that you can use to answer research questions."}
+::
 :::
 
 ## Explore
