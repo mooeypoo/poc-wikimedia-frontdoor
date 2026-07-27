@@ -27,7 +27,7 @@ These two surfaces have different rules and must not be conflated.
 | Auth | Wikimedia OAuth 2.0, Authorization Code + PKCE |
 | Session state | Pinia |
 | Search | @nuxt/content FTS5 via `useSearchCollection` |
-| Styling | Codex design tokens + CSS variables; Codex RTL stylesheet for RTL locales |
+| Styling | Codex design tokens + CSS variables; experimental `codex.style-bidi.css` for direction (`[dir]` selectors) |
 | Build | `nuxt build` (SSR); explorer route configured `ssr: false` |
 
 ---
@@ -97,7 +97,7 @@ RTL is a first-class requirement, not an afterthought.
 
 - Text direction is set reactively on `<html>` based on the active locale
 - Direction is **declared explicitly** in `config/languages.js` per language entry — never inferred from a language code at runtime
-- Codex RTL stylesheet (`@wikimedia/codex/dist/codex.style-rtl.css`) loaded conditionally when direction is RTL
+- Codex direction styles via experimental `codex.style-bidi.css` (`[dir]` selectors; see `ARCHITECTURE.md` → RTL and BiDi)
 
 ### BiDi isolation rule
 

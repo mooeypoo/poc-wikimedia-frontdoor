@@ -127,8 +127,11 @@ export default defineNuxtConfig( {
 	},
 
 	// Global CSS: Codex design tokens + our shell styles.
+	// Use Codex’s experimental bidi sheet (`[dir=ltr]` / `[dir=rtl]` selectors) so
+	// runtime interface-locale switches do not stack LTR + RTL mirror sheets.
+	// Stacking those sheets breaks clearable TextInput/Lookup icon placement in RTL.
 	css: [
-		'@wikimedia/codex/dist/codex.style.css',
+		'@wikimedia/codex/dist/codex.style-bidi.css',
 		'~/assets/css/main.css',
 		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
 		// Loads after main.css so it overrides the light :root token defaults.

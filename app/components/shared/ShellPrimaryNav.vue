@@ -81,7 +81,7 @@ const activeTabName = computed( {
 
 /*
  * Quiet-tabs header border suppression lives in shell-primary-nav-overrides.css
- * (imported from main.css and after codex.style-rtl.css in codex-rtl-styles.client.ts).
+ * (imported from main.css after `codex.style-bidi.css`).
  */
 
 /*
