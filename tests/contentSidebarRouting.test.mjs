@@ -27,8 +27,10 @@ test( 'other sections still resolve by path', () => {
 	assert.equal( getMainNavigationIdFromPath( '/fr/community' ), 'community' )
 } )
 
-test( 'explorer routes never map to a content section id', () => {
-	assert.equal( getMainNavigationIdFromPath( '/explorer' ), null )
+test( 'explorer routes map to the APIs primary nav id', () => {
+	assert.equal( getMainNavigationIdFromPath( '/explorer' ), 'apis' )
+	assert.equal( getMainNavigationIdFromPath( '/explorer/enterprise' ), 'apis' )
+	assert.equal( getMainNavigationIdFromPath( '/fr/explorer' ), 'apis' )
 } )
 
 test( 'contentLocaleFromPath mirrors prefix_except_default', () => {

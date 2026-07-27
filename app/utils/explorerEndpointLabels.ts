@@ -1,7 +1,7 @@
 import type { ExplorerModuleOperation } from '../composables/useExplorerBootstrap'
 
 /**
- * Resolves the OpenAPI path label shown beside an HTTP method in the module rail.
+ * Resolves the OpenAPI path label for an endpoint (accessible name / fallback).
  *
  * @param operation - Module operation metadata from bootstrap.
  * @param endpointFallbackLabel - Localized banana label when the path is empty.
@@ -16,21 +16,43 @@ export function resolveEndpointPathLabel(
 }
 
 /**
+ * Resolves the human-readable endpoint name shown in the module rail.
+ *
+ * Prefers OpenAPI `summary` (bootstrap already falls back to `operationId`, then path).
+ * Falls back to the path template, then the localized banana fallback.
+ *
+ * @param operation - Module operation metadata from bootstrap.
+ * @param endpointFallbackLabel - Localized banana label when name and path are empty.
+ * @returns Endpoint display name for the rail row.
+ */
+export function resolveEndpointNameLabel(
+	operation: ExplorerModuleOperation,
+	endpointFallbackLabel: string
+): string {
+	const summary = operation.summary.trim()
+	if ( summary ) {
+		return summary
+	}
+
+	return resolveEndpointPathLabel( operation, endpointFallbackLabel )
+}
+
+/**
  * Builds an accessible name for a module rail endpoint control.
  *
  * @param operation - Module operation metadata from bootstrap.
- * @param endpointFallbackLabel - Localized banana label when the path is empty.
- * @returns Method, path, and summary when available.
+ * @param endpointFallbackLabel - Localized banana label when path/name are empty.
+ * @returns Method, display name, and path when they differ.
  */
 export function formatEndpointAccessibleLabel(
 	operation: ExplorerModuleOperation,
 	endpointFallbackLabel: string
 ): string {
 	const pathLabel = resolveEndpointPathLabel( operation, endpointFallbackLabel )
-	const summary = operation.summary.trim()
+	const nameLabel = resolveEndpointNameLabel( operation, endpointFallbackLabel )
 
-	if ( summary && summary !== pathLabel ) {
-		return `${ operation.method } ${ pathLabel }. ${ summary }`
+	if ( nameLabel !== pathLabel ) {
+		return `${ operation.method } ${ nameLabel }. ${ pathLabel }`
 	}
 
 	return `${ operation.method } ${ pathLabel }`

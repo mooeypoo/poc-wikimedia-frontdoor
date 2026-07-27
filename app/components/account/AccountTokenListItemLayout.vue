@@ -2,7 +2,12 @@
 /**
  * Shared card chrome for account dashboard token list items (Figma “List-element”).
  *
- * Title row and actions sit on one line; body content stacks below.
+ * Title row and actions sit on one line; body content stacks below. Surface uses
+ * Codex `--background-color-neutral-subtle` and the exploratory **4px** border
+ * radius from `config/explorerSurfaces.ts` via
+ * `--fd-explorer-controls-surface-border-radius` (not a Codex token; under
+ * consideration as a future system default — same as explorer project controls
+ * and module rail).
  */
 </script>
 
@@ -37,6 +42,12 @@
 	gap: var( --spacing-50 );
 	padding: var( --spacing-100 );
 	background-color: var( --background-color-neutral-subtle );
+	/*
+	 * Exploratory radius from config/explorerSurfaces.ts (mirrored in page-grid.css).
+	 * Not a Codex token (`--border-radius-base` is 2px); under consideration as a
+	 * future system default. Same token as explorer project controls + module rail.
+	 */
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
 }
 
 .account-token-list-item__header {

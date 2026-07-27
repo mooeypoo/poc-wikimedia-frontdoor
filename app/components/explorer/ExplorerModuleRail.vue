@@ -6,7 +6,7 @@ import type { ExplorerBootstrapModule, ExplorerModuleOperation } from '../../com
 import { useExplorerModuleRailInlineEndpointScrollCap } from '../../composables/useExplorerModuleRailInlineEndpointScrollCap'
 import {
 	formatEndpointAccessibleLabel,
-	resolveEndpointPathLabel
+	resolveEndpointNameLabel
 } from '../../utils/explorerEndpointLabels'
 
 /**
@@ -19,7 +19,7 @@ import {
  *
  * **Codex exception:** `CdxMenuItem` outside a floating `CdxMenu` — same approved pattern as
  * `ShellSidePanelNav` (static shell list). Endpoint rows use the default slot for method +
- * path styling; `:label` supplies the accessible name.
+ * name styling; `:label` supplies the accessible name.
  */
 const props = defineProps<{
 	selectedModule: ExplorerBootstrapModule
@@ -234,8 +234,8 @@ function onEndpointScrollportScroll( scrollEvent: Event ): void {
 						>
 							{{ moduleOperation.method }}
 						</span>
-						<span class="explorer-module-rail__endpoint-path">
-							<bdi>{{ resolveEndpointPathLabel( moduleOperation, endpointFallbackLabel ) }}</bdi>
+						<span class="explorer-module-rail__endpoint-name">
+							<bdi>{{ resolveEndpointNameLabel( moduleOperation, endpointFallbackLabel ) }}</bdi>
 						</span>
 					</span>
 				</CdxMenuItem>
@@ -370,7 +370,7 @@ function onEndpointScrollportScroll( scrollEvent: Event ): void {
 	padding-inline-end: var( --spacing-75 );
 }
 
-/* Selected rows: progressive path colour only — no Codex progressive-subtle fill. */
+/* Selected rows: progressive name colour only — no Codex progressive-subtle fill. */
 .explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected ),
 .explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected.cdx-menu-item--enabled:hover ) {
 	background-color: transparent;
@@ -418,20 +418,20 @@ function onEndpointScrollportScroll( scrollEvent: Event ): void {
 	color: var( --color-warning );
 }
 
-.explorer-module-rail__endpoint-path {
+.explorer-module-rail__endpoint-name {
 	display: inline;
-	font-family: var( --font-family-monospace-stack );
+	font-family: var( --font-family-sans-stack );
 	font-size: var( --font-size-small );
 	color: var( --color-base );
 	overflow-wrap: anywhere;
 }
 
-/* CdxMenuItem outside CdxMenu: path turns progressive on hover; HTTP methods keep semantic colours. */
-.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-path ) {
+/* CdxMenuItem outside CdxMenu: name turns progressive on hover; HTTP methods keep semantic colours. */
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .explorer-module-rail__endpoint-name ) {
 	color: var( --color-progressive );
 }
 
-.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-path ) {
+.explorer-module-rail__endpoint-list :deep( .cdx-menu-item--selected .explorer-module-rail__endpoint-name ) {
 	color: var( --color-progressive );
 }
 

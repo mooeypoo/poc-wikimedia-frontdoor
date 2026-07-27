@@ -4,7 +4,7 @@ import type { ExplorerMode } from './useEnterpriseExplorer'
 import { resolveContentPageSidebar } from './useContentPageSidebar'
 import { contentLocaleFromPath, getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
 import { explorerModeFromPath, isExplorerRoutePath, pathForExplorerMode } from '../utils/explorerRoute'
-import { buildLocaleAwarePath } from '../utils/localeAwarePath'
+import { resolveContentHref } from '../utils/localeAwarePath'
 
 export interface ResolvedSectionNavItem {
 	id: string
@@ -176,7 +176,7 @@ export function usePageSectionNav() {
 						id: item.id,
 						label: $bananaI18n( item.messageKey ),
 						to: contentItem.href
-							? buildLocaleAwarePath( contentItem.href, contentLocale )
+							? resolveContentHref( contentItem.href, contentLocale )
 							: null,
 						// Active when this item's target is the current page. `contentPath`
 						// and `href` are both locale-agnostic, so they compare directly.

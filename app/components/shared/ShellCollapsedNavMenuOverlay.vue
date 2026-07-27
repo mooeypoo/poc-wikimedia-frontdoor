@@ -11,7 +11,7 @@ import type { ShellCollapsedNavMenuView } from '../../composables/useShellCollap
  * Default view mirrors `ShellSidePanelNav` (start-column section links) with the active
  * primary section as a quiet back control (`cdxIconPrevious`, `flip-for-rtl`). Section
  * headings that duplicate the back label are omitted via `omitSectionTitleMatching`.
- * The primary view lists main navigation entries and the API Explorer link.
+ * The primary view lists main navigation entries (including the **APIs** tab).
  * Panel inline-end border uses `--border-color-muted` (matches expanded start column).
  * Scroll-end inset: `::after` spacer (`--spacing-200`, 32px) on the panel scrollport,
  * symmetric with the in-shell start panel and site footer. Figma Off-wiki page templates
@@ -26,16 +26,12 @@ defineProps<{
 	primaryNavigationLabel: string
 	/** Accessible name for the primary navigation list. */
 	primaryNavigationListLabel: string
-	/** API Explorer link label. */
-	apiExplorerLinkLabel: string
 	/** Current overlay drill-down level. */
 	menuView: ShellCollapsedNavMenuView
 	/** Resolved primary navigation entries. */
 	mainNavigationLinks: MainNavigationLink[]
 	/** Main navigation id for the current route. */
 	activeNavigationId: string
-	/** Whether the current route is the API Explorer. */
-	isExplorerRoute: boolean
 	/** Accessible name for the section navigation list. */
 	sectionNavigationLabel: string
 	/** Resolved section navigation for the current route. */
@@ -49,8 +45,6 @@ const emit = defineEmits<{
 	back: []
 	/** Emitted when the user selects a primary navigation entry. */
 	'primary-navigation-select': [ navigationId: string ]
-	/** Emitted when the user selects the API Explorer link. */
-	'api-explorer-select': []
 }>()
 </script>
 
@@ -99,16 +93,8 @@ const emit = defineEmits<{
 						class="shell-collapsed-nav-menu-overlay__primary-nav-item"
 						:value="navigationLink.id"
 						:label="navigationLink.label"
-						:selected="navigationLink.id === activeNavigationId && !isExplorerRoute"
+						:selected="navigationLink.id === activeNavigationId"
 						@click.prevent="emit( 'primary-navigation-select', navigationLink.id )"
-					/>
-					<CdxMenuItem
-						id="shell-collapsed-nav-menu-primary-api-explorer"
-						class="shell-collapsed-nav-menu-overlay__primary-nav-item"
-						value="api-explorer"
-						:label="apiExplorerLinkLabel"
-						:selected="isExplorerRoute"
-						@click.prevent="emit( 'api-explorer-select' )"
 					/>
 				</nav>
 			</div>

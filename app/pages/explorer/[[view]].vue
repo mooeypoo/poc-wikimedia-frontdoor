@@ -18,6 +18,7 @@ import { useScalarConfig } from '../../composables/useScalarConfig'
 import { useExplorerMode } from '../../composables/useExplorerMode'
 import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
+import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorerOptIn'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
 
 definePageMeta( {
@@ -54,8 +55,8 @@ const {
 	clearPendingOperationTarget
 } = useExplorerBootstrap( selectedWikiInstanceId, isCommunityMode )
 
-const includeBetaEndpoints = ref( false )
-const includeInternalEndpoints = ref( false )
+const includeBetaEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints )
+const includeInternalEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints )
 
 const {
 	visibleModules,
@@ -408,7 +409,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__project-controls-stack {
 	display: flex;
 	flex-direction: column;
-	gap: var( --spacing-100 );
 	min-inline-size: 0;
 }
 

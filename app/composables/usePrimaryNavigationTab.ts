@@ -1,6 +1,5 @@
 import { useMainNavigationLinks } from './useMainNavigationLinks'
 import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
-import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
  * Resolves the active primary navigation tab for the shell header.
@@ -22,10 +21,6 @@ export function usePrimaryNavigationTab() {
 
 		if ( navigationId ) {
 			return navigationId
-		}
-
-		if ( isExplorerRoutePath( route.path ) ) {
-			return ''
 		}
 
 		// Front page (`/`) is not a tab — no tab is active there.

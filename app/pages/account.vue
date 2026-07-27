@@ -130,6 +130,15 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				<p class="account-page__prose account-page__section-description">
 					{{ developerTokensDescription }}
 				</p>
+				<p class="account-page__learn-more">
+					{{ learnMoreAboutBefore }}
+					<AccountExternalMetaLink
+						:href="ownerOnlyConsumersDocUrl"
+						:accessible-label="learnMoreOwnerOnlyAriaLabel"
+					>
+						{{ learnMoreOwnerOnlyLabel }}
+					</AccountExternalMetaLink>
+				</p>
 			</div>
 
 			<AccountDeveloperTokenList
@@ -150,16 +159,6 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 			>
 				{{ developerJwtEmptyMessage }}
 			</CdxMessage>
-
-			<p class="account-page__learn-more">
-				{{ learnMoreAboutBefore }}
-				<AccountExternalMetaLink
-					:href="ownerOnlyConsumersDocUrl"
-					:accessible-label="learnMoreOwnerOnlyAriaLabel"
-				>
-					{{ learnMoreOwnerOnlyLabel }}
-				</AccountExternalMetaLink>
-			</p>
 		</section>
 
 		<section

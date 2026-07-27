@@ -2,12 +2,10 @@
  * Primary site navigation entries in display order.
  *
  * Paths are locale-agnostic; {@link useMainNavigationLinks} applies the active
- * content locale prefix (`prefix_except_default`). Remote content sources with
- * `navEntry.target === 'primary'` are merged at runtime (see
- * `config/remoteContentSources.ts`).
- *
- * API Explorer is **not** a tab — it is a separate header link to `/explorer`
- * (`i18n: false` on that route). See Figma Header node 284:11443.
+ * content locale prefix (`prefix_except_default`), except for `/explorer`
+ * (`i18n: false` on that route). The **APIs** tab (`nav-api`) owns explorer routes;
+ * the start-column section heading remains **API Explorer**
+ * (`explorer-side-nav-api-explorer-title`).
  */
 export interface MainNavigationItem {
 	id: string
@@ -43,5 +41,5 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 	}
 ]
 
-/** Locale-independent path for the API Explorer header link. */
+/** Locale-independent path for the API Explorer / APIs primary nav destination. */
 export const API_EXPLORER_NAVIGATION_PATH = '/explorer'

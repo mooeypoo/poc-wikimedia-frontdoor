@@ -8,9 +8,9 @@ export const EXPLORER_OPT_IN_VALUE_BETA_ENDPOINTS = 'beta-endpoints'
 /** Opt-in checkbox value for internal REST endpoints and modules. */
 export const EXPLORER_OPT_IN_VALUE_INTERNAL_ENDPOINTS = 'internal-endpoints'
 
-/** Default opt-in checkbox state when the community explorer loads. */
+/** Default opt-in checkbox state when the community explorer loads (beta on, internal off). */
 export const DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS = {
-	includeBetaEndpoints: false,
+	includeBetaEndpoints: true,
 	includeInternalEndpoints: false
 } as const
 

@@ -8,8 +8,8 @@ import {
 /**
  * Bridges explorer opt-in boolean flags to Codex checkbox group `v-model` values.
  *
- * @param includeBetaEndpoints - Whether beta modules and endpoints are included.
- * @param includeInternalEndpoints - Whether internal modules and endpoints are included.
+ * @param includeBetaEndpoints - Whether beta APIs and endpoints are included.
+ * @param includeInternalEndpoints - Whether internal APIs and endpoints are included.
  * @returns Checkbox option descriptors and the array model for `CdxCheckbox`.
  */
 export function useExplorerOptInCheckboxGroup(

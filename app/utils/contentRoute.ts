@@ -1,6 +1,5 @@
 import { MAIN_NAVIGATION_ITEMS } from '../../config/mainNavigation'
 import { REMOTE_CONTENT_SOURCES } from '../../config/remoteContentSources'
-import { isExplorerRoutePath } from './explorerRoute'
 
 /** Content locales that use a URL prefix (must match `nuxt.config.ts` i18n locales). */
 const NON_DEFAULT_CONTENT_LOCALE_PREFIXES = [ 'es', 'fr', 'he', 'fa' ] as const
@@ -50,19 +49,15 @@ export function stripContentLocalePrefix( path: string ): string {
 }
 
 /**
- * Resolves the main navigation entry id for a content route path.
+ * Resolves the main navigation entry id for a route path.
  *
- * Explorer routes return `null` — the explorer is a separate header link, not a tab.
- * Remote primary-nav sources are matched by `localPath`.
+ * Matches `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`.
+ * Explorer routes (`/explorer`, `/explorer/…`) resolve to the **APIs** tab id (`apis`).
  *
  * @param path - Vue Router path (may include locale prefix).
  * @returns Main navigation id from `config/mainNavigation.ts` or a remote source id, or null.
  */
 export function getMainNavigationIdFromPath( path: string ): string | null {
-	if ( isExplorerRoutePath( path ) ) {
-		return null
-	}
-
 	const contentPath = stripContentLocalePrefix( path )
 
 	for ( const remoteSource of REMOTE_CONTENT_SOURCES ) {

@@ -83,7 +83,7 @@ body {
 	color: var( --color-subtle );
 }
 
-/* Shell chrome navigation (Home / About / API Explorer) has no font rule in the
+/* Shell chrome navigation (primary quiet tabs / start section nav) has no font rule in the
  * layout; re-assert the Codex sans stack so links do not pick up generic sans-serif
  * (often computed as Arial on Windows). */
 .shell-side-panel,
