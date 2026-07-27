@@ -252,7 +252,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Footer width vs Figma | Main column only — not x=241 / width=1199 (main+end) | **Intentional deviation** from [Navigation 354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) |
 | Header utility row (Figma) | `.frontdoor-shell__header-top` + `ShellHeaderUtilityActions` | **24px** logo–search gap; search **256px** min triggers collapse; `CdxMenuButton` for overflow utilities |
 | Interface language picker | `CdxLookup` (searchable) + `:key="direction"` | Type-to-filter over the full language catalog; autonym labels; remount on LTR ↔ RTL. See "Interface language picker" below. |
-| Codex RTL sheet toggled on locale switch | `codex-rtl-styles.client.ts` | **`link.disabled`** prototype — prevents stale RTL layout on LTR locales without reload |
+| Codex direction CSS | `codex.style-bidi.css` (`nuxt.config.ts`) | Experimental `[dir]`-scoped sheet — correct clearable/start-icon edges on LTR↔RTL without dual-sheet stacking |
 
 **Architecture reference:** `ARCHITECTURE.md` → Shell layout and chrome.
 
@@ -271,7 +271,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Padding:** `--spacing-150` block-start on chrome; `--spacing-150` gap between utility row and tab row. Symmetric viewport inset on `.frontdoor-shell__chrome-inner` (`--fd-layout-page-margin-inline-start` on both inline edges).
 
-**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **All tab labels** use **`--font-weight-normal`** — **Codex exception** (Codex quiet tabs set `font-weight: 700` on every label); the selected tab is distinguished by colour and progressive underline only. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` and re-imported after `codex.style-rtl.css` in `codex-rtl-styles.client.ts`) because `.frontdoor-shell__chrome-band` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — they flicker on first paint before overflow measurement; header responsiveness will use a separate approach.
+**Tab layout:** Quiet tab labels use **extra `--spacing-75` (12px) block-end padding** beyond Codex defaults (4px block-start, 12px inline) for alignment with the header bottom border. Tab panels are hidden — navigation only; page content renders in the main slot. **All tab labels** use **`--font-weight-normal`** — **Codex exception** (Codex quiet tabs set `font-weight: 700` on every label); the selected tab is distinguished by colour and progressive underline only. **Codex override:** quiet-tabs header **`border-bottom`** is suppressed in `app/assets/css/shell-primary-nav-overrides.css` (imported from `main.css` after `codex.style-bidi.css`) because `.frontdoor-shell__chrome-band` owns the single header edge (Figma layout). Codex uses a **physical** border property; both `border-block-end` and `border-bottom` are cleared with `!important`. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — they flicker on first paint before overflow measurement; header responsiveness will use a separate approach.
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps within the row are **`--spacing-100` (16px)**. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
@@ -317,13 +317,14 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 **Interface language picker:** The portal supports the **full Wikimedia language catalog** (~575 locales; `config/languages.ts`), not a curated few — so the picker is a **searchable `CdxLookup`**, not a `CdxSelect`. There is one language list for both content and interface; locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`). Implementation:
 
 - **`menuItems`** — one per catalog language: `label` = **autonym** (native name), `supportingText` = English `name`, `language: { label: bcp47 }` so each autonym renders under the correct `lang` attribute (script/direction). The globe is the input's **`start-icon`** (`cdxIconLanguage`), forwarded to the inner `CdxTextInput`.
-- **Filtering** — typing filters by autonym, English name, or code (case-insensitive). Results are **capped at `MAX_LANGUAGE_MENU_ITEMS` (50)** for render performance; the active language is always kept present. Typing narrows the list.
-- **Trigger (all widths)** — a **globe + uppercase code** `CdxButton` (`--color-subtle`); clicking toggles a **popover** (anchored under the button, `inset-inline-end: 0`, `box-shadow-drop-medium`) containing the `CdxLookup`. Opening focuses the input; focus-out of the container, Escape, or a selection closes it. Menu-item clicks keep focus (Codex prevents blur on option mousedown), so they do not close the popover early.
+- **Clear** — Codex TextInput **`clearable`** is enabled on the Lookup (attr falls through to the inner input). Clearing empties the filter so the capped full list shows again; it does **not** change the committed interface locale. Closing/reopening re-syncs selection to the active locale.
+- **Filtering** — typing filters by autonym, English name, or code (case-insensitive). Results are **capped at `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` (50)** in `config/headerChrome.ts` for render performance; the active language is always kept present. Typing narrows the list.
+- **Visible rows** — Codex **`menu-config.visibleItemLimit`** is **`HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` (7)** so at most seven options show before the native `CdxMenu` scrolls (Codex 5–7 guidance). Native menu chrome is preserved (no custom borders, shadows, or item styles). A CSS **`max-block-size`** fallback on `.cdx-menu__listbox` covers the case where Codex’s pixel measure has not run yet.
+- **Trigger (all widths)** — a **globe + uppercase code** `CdxButton` (`--color-subtle`); clicking mounts a **popover** (`.shell-header-utility-actions__language-popover`, `v-if`) that wraps the whole `CdxLookup` (input + menu). **`menu-config.renderInPlace: true`** keeps the menu in the Lookup DOM. Lookup’s Floating UI would otherwise absolutely position the menu outside the popover and apply a viewport `maxHeight` (menu grows to fill the screen when `visibleItemLimit` measure races) — first-party CSS cancels that absolute placement / viewport cap only (including physical `max-height: none` to clear Floating UI’s inline style). Do **not** add vertical spacing between input and menu — keep Codex’s flush default. Opening waits for popover layout, then focuses the input; focus-out, Escape, or a selection closes it.
 - **Selection** — `@update:selected` commits the code to `selectedInterfaceLocale` (which drives locale routing via the layout), resets the input to the chosen autonym, and closes the popover.
 - **BiDi** — autonyms render with per-item `lang` via the `language` field; the trigger code sits in `<bdi>`.
 - **Width** — the trigger is icon-sized (`flex: 0 0 auto`), keeping top-bar room for log-in and future utilities; the popover is `18rem` / `min(18rem, 90vw)`.
-- **LTR ↔ RTL switching** — `:key="direction"` remounts the lookup; `codex-rtl-styles.client.ts` enables/disables `codex.style-rtl.css` so Codex mirrored rules do not persist after switching back to an LTR interface locale (**prototype workaround** — no full reload required).
-- **Known open issue (RTL expand chevron):** In Hebrew/Persian interface locales the mandatory `CdxSelect` expand indicator may not appear. Root cause: global `codex.style.css` plus toggled `codex.style-rtl.css` both apply; indicator gets conflicting physical `left`/`right` rules. Per-component Codex CSS overrides were attempted and **reverted**. See `ARCHITECTURE.md` → RTL and BiDi.
+- **LTR ↔ RTL switching** — `:key="direction"` remounts the lookup; Codex chrome follows `<html dir>` via **`codex.style-bidi.css`** (no LTR+RTL sheet stacking). First-party Lookup CSS does **not** override TextInput / clearable / start-icon chrome — only Floating UI menu placement (see `ARCHITECTURE.md` → Codex exception #8).
 
 **Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `config/headerChrome.ts`.
 
@@ -697,7 +698,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision:** Scalar content is not globally direction-flipped; portal maps link colours only. See `ARCHITECTURE.md` → RTL and BiDi.
 
-**Decision (interface locale switch):** When the user changes interface language between LTR and RTL (or back), shell `dir` updates immediately. Codex RTL mirror CSS is toggled via `app/plugins/codex-rtl-styles.client.ts` (`link.disabled` on `#fd-codex-rtl-stylesheet`). Header `CdxSelect` remounts via `:key="direction"`. **Disclaimer:** This is a prototype workaround for Codex’s global RTL stylesheet; other Codex widgets may need similar treatment if locale switching expands beyond the header.
+**Decision (interface locale switch):** When the user changes interface language between LTR and RTL (or back), shell `dir` updates immediately. Codex component chrome uses **`codex.style-bidi.css`** (`[dir=ltr]` / `[dir=rtl]`). Header `CdxLookup` remounts via `:key="direction"`. **Note:** `codex.style-bidi.css` is marked experimental by Codex; revisit if upstream direction loading changes.
 
 **Supported interface locales in shell:** en, es, fr, he, fa (banana + content routing).
 
@@ -709,6 +710,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Interface language Lookup + Codex bidi CSS | Globe + code trigger; popover wraps `CdxLookup`; `clearable`; `visibleItemLimit: 7`; Floating UI cancel for menu containment; `codex.style-bidi.css` replaces dual-sheet RTL toggle |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |
@@ -754,15 +756,14 @@ Mapping of notable commits to design areas (newest first among design-only work)
 10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
 11. **Confirm footer width with design** — keep **main-column only** or adopt Figma [354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) main+end span.
 12. **Add footer horizontal logo asset** — replace composed 14px mark + wordmark with Figma **227×14px** lockup when asset is finalized.
-13. **Codex RTL loading strategy** — evaluate alternatives to `link.disabled` toggling (e.g. `codex.style-bidi.css`, disabling LTR base when RTL is active) before production. **Blocks:** header language `CdxSelect` expand chevron in RTL (see `ARCHITECTURE.md` → RTL and BiDi).
-14. **Header language select RTL chevron** — resolve without per-component Codex CSS overrides; options include bidi stylesheet, Codex-native trigger icon pattern, or relaxed header width.
-15. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
-16. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
-17. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
-18. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
-19. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
-20. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
-21. **Codex styling review** — Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
+13. **Codex `style-bidi.css` production readiness** — confirm experimental bidi sheet remains acceptable before production, or switch to a single direction sheet per request if Codex guidance changes (`ARCHITECTURE.md` → RTL and BiDi).
+14. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
+15. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
+16. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
+17. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
+18. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
+19. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
+20. **Codex styling review** — Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
 
 ---
 
@@ -778,9 +779,10 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Start column chrome | `app/layouts/default.vue` (scrollport border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/composables/usePageSectionNav.ts` |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts` |
-| Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue` |
+| Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
-| Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css`, `app/plugins/codex-rtl-styles.client.ts` |
+| Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |
+| Codex direction CSS | `nuxt.config.ts` (`codex.style-bidi.css`) — see `ARCHITECTURE.md` → RTL and BiDi |
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 | Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
