@@ -7,54 +7,36 @@ Access articles from Wikipedia, media files, structured data, and more with publ
 
 ## Explore APIs
 
-### Page API
+:::navigation-card-grid
+::navigation-card{url="/explorer" title="Page API" description="Search pages, get page contents, fetch media files, and more."}
+::
 
-Search pages, get page contents, fetch media files, and more.
+::navigation-card{url="/explorer" title="Featured content API" description="Get daily featured content from Wikipedia."}
+::
 
-[Try it out]()
-
-### Featured content API
-
-Get daily featured content from Wikipedia.
-
-[Try it out]()
-
-### Reading lists API
-
-Fetch and manage reading lists on Wikipedia.
-
-[Try it out]()
+::navigation-card{url="/explorer" title="Reading lists API" description="Fetch and manage reading lists on Wikipedia."}
+::
+:::
 
 ## High-volume and commercial access
 
-### Wikimedia Enterprise APIs
+:::navigation-card-grid
+::navigation-card{url="/get-started/wikimedia-enterprise" title="Wikimedia Enterprise APIs" description="Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data."}
+::
 
-Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data.
-
-[Read more]()
-
-### Download content in bulk
-
-Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps)
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Download content in bulk" description="Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects." supporting-text="Read more on Meta-Wiki"}
+::
+:::
 
 ## Learn with tutorials
 
-### Quick start
+:::navigation-card-grid
+::navigation-card{url="/get-started/quick-start" title="Quick start" description="Get started, and make your first API request."}
+::
 
-Get started, and make your first API request.
+::navigation-card{title="Get featured content" description="Get daily featured articles, most read pages, and more."}
+::
 
-[Read more]()
-
-### Get featured content
-
-Get daily featured articles, most read pages, and more.
-
-[Read more]()
-
-### Browse all tutorials
-
-Browse featured tutorials.
-
-[Read more]()
+::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}
+::
+:::
