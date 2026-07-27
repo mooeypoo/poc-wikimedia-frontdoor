@@ -3,8 +3,10 @@
  * Grid wrapper for {@link NavigationCard} rows on content pages.
  *
  * Renders slotted cards in up to **three** equal columns (Codex desktop+),
- * stretching each row to the tallest card with top-aligned content. Use from
- * Markdown as `:::navigation-card-grid` wrapping `::navigation-card` blocks.
+ * stretching each row to the tallest card. Title/description stay top-aligned;
+ * when cards include supporting-text, that link is bottom-aligned within each
+ * card so links share a baseline across the row. Use from Markdown as
+ * `:::navigation-card-grid` wrapping `::navigation-card` blocks.
  *
  * @see ARCHITECTURE.md → Markdown content pages → Navigation card
  * @see DESIGN_REQUIREMENTS.md → Navigation card

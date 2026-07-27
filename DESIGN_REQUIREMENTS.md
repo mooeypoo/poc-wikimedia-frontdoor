@@ -731,21 +731,24 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Border (hover, linked) | `--border-color-subtle` |
 | Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
 | Padding | `--spacing-75` |
-| Title / description | Codex base size: `--font-size-medium` / `--line-height-medium` (title bold) |
+| Title / description / supporting-text | Codex base size: `--font-size-medium` / `--line-height-medium` (title bold) |
 | Chips | Optional Codex `CdxInfoChip` under description; gap `--spacing-50` |
 | Top icon | Optional, above title row; progressive colour |
 | Leading icon | Optional, inline with title |
-| Trailing icon | `cdxIconLinkExternal` **only** for off-platform (`http(s)` or `external`) destinations |
-| Click target | Whole card → `url` (no visible “Learn more”) |
+| Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
+| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline |
+| Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
 | Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block-start after section intro |
 
-**Get started:** title + description only (no icons or chips). Cards grouped per `h2` section in `navigation-card-grid`.
+**Get started overview:** title + description only (no icons, chips, or supporting-text). Cards grouped per `h2` in `navigation-card-grid`.
 
-**Content strings:** Title, description, and chip labels live in per-locale Markdown (content translation), BiDi-isolated — not banana-i18n. Banana stays for interface chrome only (`docs/TECH_DECISIONS.md`).
+**About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
+
+**Content strings:** Title, description, supporting-text, and chip labels live in per-locale Markdown (content translation), BiDi-isolated — not banana-i18n. Banana stays for interface chrome only (`docs/TECH_DECISIONS.md`).
 
 **Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
 
-**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `ARCHITECTURE.md` → Navigation card.
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
 
 **Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
@@ -757,6 +760,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | About Wikimedia navigation cards | External cards; supporting-text progressive link + external icon; bottom-aligned links; “Read the docs”; Wikidata default-slot link |
 | *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; 16px intro→grid gap; no icons/chips on Get started |
 | *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / Heading 2 on `.fd-content-page` |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |

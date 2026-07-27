@@ -217,7 +217,7 @@ All planned markdown features are achievable with packages already installed:
 | Line highlighting | ✅ Configured | `transformerMetaHighlight()` |
 | Diff annotations | ✅ Configured | `transformerNotationDiff()` |
 | Callouts (info / warning / error / success) | ✅ Implemented | `Callout.vue` + `CdxMessage` — see **Callout title / icon alignment** below |
-| Navigation cards | ✅ Implemented | `NavigationCard.vue` + `NavigationCardGrid.vue` — Figma variant A; content-authored labels in `<bdi>`; see `ARCHITECTURE.md` → Navigation card |
+| Navigation cards | ✅ Implemented | `NavigationCard.vue` + `NavigationCardGrid.vue` — Figma variant A; stretched whole-card link; `supporting-text` progressive link to same `url` (external icon on supporting-text; bottom-aligned in grids); default slot for Markdown description inside grids; content-authored labels in `<bdi>`; see `ARCHITECTURE.md` → Navigation card |
 | Code tabs | ✅ Implemented | `CodeTabs.vue` + `CodeTab.vue` with **`CdxTabs` (`framed`)** — see **Framed code tabs** below |
 | Buttons | ✅ Implemented | `AppButton.vue` |
 | Next / Previous navigation | ✅ Implemented | `[...slug].vue` frontmatter `prev` / `next` |

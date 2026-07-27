@@ -1044,37 +1044,38 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | Background | Base (white) | Neutral-subtle via `--fd-explorer-controls-surface-background-color` |
 | Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
 | Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
-| Typography | — | Title and description use Codex base **`--font-size-medium`** / **`--line-height-medium`** |
-| Icons | Start `icon` prop only | Optional **top** (above title), **leading** (inline), **trailing** (`cdxIconLinkExternal` for off-platform URLs only) |
-| Chips | — | Optional `CdxInfoChip` row under the description |
-| Click target | Optional whole-card `url` | Whole-card `url` only (no separate “Learn more” control) |
-| Layout on pages | — | Wrap groups in `:::navigation-card-grid` for equal-height **rows of 3** (2 on tablet, 1 on mobile); content top-aligned |
+| Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
+| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **progressive link to the same destination** (not a second URL). External icon on that link for off-platform destinations; title trailing icon omitted when supporting-text is present |
+| Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row |
+| Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 
-**Props / slots:** `url`, `title`, `description`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, `#top-icon`, `#leading-icon`, `#chips`.
+**Props / slots:** `url`, `title`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
 
-**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` so each row matches the tallest card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block-start` separates section intro copy from the card row (collapses with adjacent `p` margins). Non-card MDC wrappers use `display: contents` so cards are the grid items.
+**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block-start` separates section intro copy from the card row (collapses with adjacent `p` margins). Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 
-**BiDi / i18n:** Title, description, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`).
+**BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
-**MDC authoring example:**
+**MDC authoring examples:**
 
 ```md
 :::navigation-card-grid
 ::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles…"}
 ::
-::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data…"}
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects" title="Explore projects" description="…" supporting-text="Read more on Meta-Wiki"}
+::
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
+Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 ::
 :::
 ```
 
-**Content vs banana-i18n:** Title, description, and chip labels are **content** — authored in per-locale Markdown and wrapped in `<bdi>`. They are not banana-i18n interface strings. Banana remains for true chrome (nav labels, buttons, errors). This matches `docs/TECH_DECISIONS.md` (interface → banana-i18n; content → Nuxt Content locales) and avoids duplicating page copy into `i18n/*.json`.
+**Content vs banana-i18n:** Title, description, supporting-text, and chip labels are **content** — authored in per-locale Markdown and wrapped in `<bdi>`. They are not banana-i18n interface strings. Banana remains for true chrome (nav labels, buttons, errors). This matches `docs/TECH_DECISIONS.md` (interface → banana-i18n; content → Nuxt Content locales) and avoids duplicating page copy into `i18n/*.json`.
 
-**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab and show the trailing external-link icon. Internal `/…` paths use `NuxtLink` with no trailing icon.
+**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab. The external-link icon appears on **supporting-text** when that prop is set; otherwise on the title row. Internal `/…` paths use `NuxtLink` with no external icon.
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demo:** `content/en/get-started.md` uses plain title + description cards in `navigation-card-grid` groups (no icons or chips on that page). Card `url` values use Get started child paths (e.g. `/get-started/wiki-content`).
-
+**Demos:** `content/en/get-started.md` (internal whole-card links, no icons/chips/supporting-text); `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 #### Callouts
 
 `Callout.vue` wraps Codex **`CdxMessage`**. Optional `#title` named slot content is Markdown; MDC already emits a `<p>`, so the component must **not** wrap the title in another `<p>` or `<strong>` (invalid nesting misaligned the status icon from the title). When a title is present:

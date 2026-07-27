@@ -7,61 +7,40 @@ Wikimedia content is the largest free knowledge base in the world.
 
 ## Projects and languages
 
-### Explore projects
+:::navigation-card-grid
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects" title="Explore projects" description="Wikimedia content is organized by project and language. Each project hosts a different type of free content—encyclopedia articles on Wikipedia, dictionary entries on Wiktionary—and can be published under a different free license." supporting-text="Read more on Meta-Wiki"}
+::
 
-Wikimedia content is organized by project and language. Each project hosts a different type of free content—encyclopedia articles on Wikipedia, dictionary entries on Wiktionary—and can be published under a different free license.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects)
-
-### Explore languages
-
-Wikimedia content is available in over 300 of the world's human languages, but languages availability varies by project type.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:SiteMatrix)
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:SiteMatrix" title="Explore languages" description="Wikimedia content is available in over 300 of the world's human languages, but languages availability varies by project type." supporting-text="Read more on Meta-Wiki"}
+::
+:::
 
 ## Licensing and attribution
 
-### Review the terms and conditions
+:::navigation-card-grid
+::navigation-card{url="https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Developer_app_guidelines" title="Review the terms and conditions" description="Most Wikimedia content is licensed under a Creative Commons license that allows free reuse with attribution. You can check the bottom of any wiki page to find the applicable license." supporting-text="Read more on the Wikimedia Foundation Governance Wiki"}
+::
 
-Most Wikimedia content is licensed under a Creative Commons license that allows free reuse with attribution. You can check the bottom of any wiki page to find the applicable license.
-
-[Read more on the Wikimedia Foundation Governance Wiki](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Developer_app_guidelines)
-
-### Read the attribution framework
-
-The Wikimedia attribution framework provides guideline for fairly crediting Wikimedia content wherever it is surfaced.
-
-[Read the docs](https://wikimedia-attribution.toolforge.org/)
+::navigation-card{url="https://wikimedia-attribution.toolforge.org/" title="Read the attribution framework" description="The Wikimedia attribution framework provides guideline for fairly crediting Wikimedia content wherever it is surfaced." supporting-text="Read the docs"}
+::
+:::
 
 ## Wikimedia technology
 
-### Introduction to Wikimedia technology
+:::navigation-card-grid
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/New_Developers/Introduction_to_the_Wikimedia_Technical_Ecosystem" title="Introduction to Wikimedia technology" description="Learn about the main technical areas where developers can contribute." supporting-text="Read more on mediawiki.org"}
+::
 
-Learn about the main technical areas where developers can contribute.
+::navigation-card{url="https://www.mediawiki.org/" title="MediaWiki" description="MediaWiki is the software that powers Wikipedia, its sister projects, and thousands of wikis all over the world." supporting-text="Read more on mediawiki.org"}
+::
 
-[Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/New_Developers/Introduction_to_the_Wikimedia_Technical_Ecosystem)
+::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Cloud_Services_introduction" title="Cloud tools and services" description="Learn about shared hosting, data services, and other infrastructure support for technical contributions to Wikimedia projects." supporting-text="Read more on Wikitech"}
+::
 
-### MediaWiki
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_Apps" title="Mobile apps" description="Expand the reach of Wikimedia content by contributing to mobile apps for Wikipedia, Wikimedia Commons, and other projects." supporting-text="Read more on Meta-Wiki"}
+::
 
-MediaWiki is the software that powers Wikipedia, its sister projects, and thousands of wikis all over the world.
-
-[Read more on mediawiki.org](https://www.mediawiki.org/)
-
-### Cloud tools and services
-
-Learn about shared hosting, data services, and other infrastructure support for technical contributions to Wikimedia projects.
-
-[Read more on Wikitech](https://wikitech.wikimedia.org/wiki/Help:Cloud_Services_introduction)
-
-### Mobile apps
-
-Expand the reach of Wikimedia content by contributing to mobile apps for Wikipedia, Wikimedia Commons, and other projects.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_Apps)
-
-### Wikibase and Wikidata
-
-Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers Wikidata.
-
-- [Visit wikidata.org](https://www.wikidata.org/)
-- [Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase)
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
+Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
+::
+:::

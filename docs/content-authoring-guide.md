@@ -57,7 +57,7 @@ see the import guide and `ARCHITECTURE.md` → MDC content components for the fu
 
 ### Navigation cards (destination tiles)
 
-Use **`:::navigation-card-grid`** to lay out destination cards in equal-height rows (up to three columns on desktop). Each card is a whole-link tile — do **not** add a separate “Learn more” link.
+Use **`:::navigation-card-grid`** to lay out destination cards in equal-height rows (up to three columns on desktop). Each card uses a **stretched link** for whole-card navigation. Optional **`supporting-text`** is a progressive link to the **same** `url` (not a second destination) and is bottom-aligned across the row for comparison; do not invent a separate footer URL.
 
 ```md
 :::navigation-card-grid
@@ -68,7 +68,17 @@ Use **`:::navigation-card-grid`** to lay out destination cards in equal-height r
 :::
 ```
 
-Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `chips="subtle:Tag|notice:Other"`, `external` or an `https://…` `url` for off-platform destinations. Title, description, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Example: `content/en/get-started.md`.
+Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `chips="subtle:Tag|notice:Other"`, `supporting-text="Read more on Meta-Wiki"` (progressive link to the same `url`, with external icon for off-platform destinations; title trailing icon is omitted when supporting-text is set; bottom-aligned in equal-height rows), `external` or an `https://…` `url` for off-platform destinations. Title, description, supporting-text, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Examples: `content/en/get-started.md`, `content/en/get-started/about-wikimedia.md`.
+
+When a card needs **Markdown** in the description (e.g. an inline link) **inside** a grid, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and will 404 the page.
+
+```md
+:::navigation-card-grid
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
+Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
+::
+:::
+```
 
 **2. (Optional) add previous / next links.** On content pages, a footer nav renders
 when you set `prev` / `next` in frontmatter:
