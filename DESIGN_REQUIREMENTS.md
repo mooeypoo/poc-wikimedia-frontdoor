@@ -714,9 +714,40 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
 
-**Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`).
+**Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`). Topic destinations use `:::navigation-card-grid` + `::navigation-card` (see **Navigation card** below).
 
 **Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
+
+---
+
+## Navigation card
+
+**Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--fd-explorer-controls-surface-background-color` → `--background-color-neutral-subtle` |
+| Border (default) | `1px solid transparent` (reserves space) |
+| Border (hover, linked) | `--border-color-subtle` |
+| Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
+| Padding | `--spacing-75` |
+| Title / description | Codex base size: `--font-size-medium` / `--line-height-medium` (title bold) |
+| Chips | Optional Codex `CdxInfoChip` under description; gap `--spacing-50` |
+| Top icon | Optional, above title row; progressive colour |
+| Leading icon | Optional, inline with title |
+| Trailing icon | `cdxIconLinkExternal` **only** for off-platform (`http(s)` or `external`) destinations |
+| Click target | Whole card → `url` (no visible “Learn more”) |
+| Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block-start after section intro |
+
+**Get started:** title + description only (no icons or chips). Cards grouped per `h2` section in `navigation-card-grid`.
+
+**Content strings:** Title, description, and chip labels live in per-locale Markdown (content translation), BiDi-isolated — not banana-i18n. Banana stays for interface chrome only (`docs/TECH_DECISIONS.md`).
+
+**Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
+
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `ARCHITECTURE.md` → Navigation card.
+
+**Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
 ---
 
@@ -726,6 +757,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; 16px intro→grid gap; no icons/chips on Get started |
 | *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / Heading 2 on `.fd-content-page` |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |

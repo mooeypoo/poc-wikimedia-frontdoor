@@ -74,7 +74,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── accountTokenSecret.ts # Masking helpers for account API key secrets
 │   │   ├── oauthHandoff.ts      # sessionStorage key for callback → destination token handoff
 │   │   ├── explorerRoute.ts     # isExplorerRoutePath() for layout and plugins
-│   │   └── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
+│   │   ├── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
+│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props for NavigationCard
 │   ├── middleware/
 │   │   └── content-sidebar.global.ts  # Content `sidebar` frontmatter; forces `/account` sidebar off
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
@@ -93,7 +94,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
-│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel)
+│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard)
+│   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
@@ -994,7 +996,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
 | `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
 
-**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers).
+**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons or chips on that page).
 
 ### What works today without configuration
 
@@ -1024,11 +1026,54 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
+| `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
+| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
 | `AppButton.vue` | Progressive button styling (NuxtLink / `<a>`) | `::app-button{href="…" label="…"}` inline |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
 | `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
+
+#### Navigation card
+
+`NavigationCard.vue` is Front Door’s vertical **content / navigation card** — not a thin wrapper around stock `CdxCard`. It follows Figma variant A ([Content card 79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)) for Get started and other Markdown documentation pages.
+
+| Aspect | Stock `CdxCard` | `NavigationCard` |
+|--------|-----------------|------------------|
+| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; no thumbnail |
+| Background | Base (white) | Neutral-subtle via `--fd-explorer-controls-surface-background-color` |
+| Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
+| Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
+| Typography | — | Title and description use Codex base **`--font-size-medium`** / **`--line-height-medium`** |
+| Icons | Start `icon` prop only | Optional **top** (above title), **leading** (inline), **trailing** (`cdxIconLinkExternal` for off-platform URLs only) |
+| Chips | — | Optional `CdxInfoChip` row under the description |
+| Click target | Optional whole-card `url` | Whole-card `url` only (no separate “Learn more” control) |
+| Layout on pages | — | Wrap groups in `:::navigation-card-grid` for equal-height **rows of 3** (2 on tablet, 1 on mobile); content top-aligned |
+
+**Props / slots:** `url`, `title`, `description`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, `#top-icon`, `#leading-icon`, `#chips`.
+
+**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` so each row matches the tallest card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block-start` separates section intro copy from the card row (collapses with adjacent `p` margins). Non-card MDC wrappers use `display: contents` so cards are the grid items.
+
+**BiDi / i18n:** Title, description, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`).
+
+**MDC authoring example:**
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/wiki-content" title="Use wiki content" description="Access articles…"}
+::
+::navigation-card{url="/open-data" title="Access open data" description="Explore public data…"}
+::
+:::
+```
+
+**Content vs banana-i18n:** Title, description, and chip labels are **content** — authored in per-locale Markdown and wrapped in `<bdi>`. They are not banana-i18n interface strings. Banana remains for true chrome (nav labels, buttons, errors). This matches `docs/TECH_DECISIONS.md` (interface → banana-i18n; content → Nuxt Content locales) and avoids duplicating page copy into `i18n/*.json`.
+
+**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab and show the trailing external-link icon. Internal `/…` paths use `NuxtLink` with no trailing icon.
+
+**Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
+
+**Demo:** `content/en/get-started.md` uses plain title + description cards in `navigation-card-grid` groups (no icons or chips on that page).
 
 #### Callouts
 

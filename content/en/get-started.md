@@ -16,64 +16,43 @@ We're so happy you're here! Read the [introduction](/about-wikimedia) to learn a
 
 Communities are the heart of the Wikimedia movement. Whether you're interested in automating tasks for wiki editors, accessing open data for research, or expanding the reach of free knowledge, you can find APIs, data sets, and hosting options to support you and your community.
 
-### Use wiki content
+:::navigation-card-grid
+::navigation-card{url="/wiki-content" title="Use wiki content" description="Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
+::
 
-Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
+::navigation-card{url="/open-data" title="Access open data" description="Explore public data that you can use in research and machine learning."}
+::
 
-[Learn more](/wiki-content)
+::navigation-card{url="/on-wiki" title="Build on-wiki features" description="Learn how to help readers and editors by adding features to Wikimedia wikis."}
+::
 
-### Access open data
-
-Explore public data that you can use in research and machine learning.
-
-[Learn more](/open-data)
-
-### Build on-wiki features
-
-Learn how to help readers and editors by adding features to Wikimedia wikis.
-
-[Learn more](/on-wiki)
-
-### Build tools and bots
-
-Tools and bots make it easier to edit and maintain Wikimedia projects.
-
-[Learn more](/tools-and-bots)
+::navigation-card{url="/tools-and-bots" title="Build tools and bots" description="Tools and bots make it easier to edit and maintain Wikimedia projects."}
+::
+:::
 
 ## Get high-volume and commercial access
 
 Create product experiences backed by human-curated free knowledge using APIs designed for commercial and high-volume access.
 
-### About Wikimedia Enterprise
+:::navigation-card-grid
+::navigation-card{url="/wikimedia-enterprise" title="About Wikimedia Enterprise" description="Learn how Wikimedia Enterprise APIs provide realtime and on-demand access to Wikimedia content."}
+::
 
-Learn how Wikimedia Enterprise APIs provide realtime and on-demand access to Wikimedia content.
-
-[Learn more](/wikimedia-enterprise)
-
-### Commercial use cases
-
-Explore ways to use Wikimedia Enterprise in your products, from machine learning to misinformation defense.
-
-[Learn more](/commercial-use-cases)
+::navigation-card{url="/commercial-use-cases" title="Commercial use cases" description="Explore ways to use Wikimedia Enterprise in your products, from machine learning to misinformation defense."}
+::
+:::
 
 ## Explore
 
 Get inspired and discover more ways to get started.
 
-### Features apps
+:::navigation-card-grid
+::navigation-card{url="/featured-apps" title="Featured apps" description="See examples of open source apps and data visualizations built with Wikimedia content and data."}
+::
 
-See examples of open source apps and data visualizations built with Wikimedia content and data.
+::navigation-card{url="/tutorials" title="Tutorials" description="Follow coding exercises with step-by-step guidance."}
+::
 
-[Learn more](/featured-apps)
-
-### Tutorials
-
-Follow coding exercises with step-by-step guidance.
-
-[Learn more](/tutorials)
-
-### Browse by programming language
-
-Find client libraries, example apps, and open source projects in your preferred coding languages.
-
-[Learn more](/by-language)
+::navigation-card{url="/by-language" title="Browse by programming language" description="Find client libraries, example apps, and open source projects in your preferred coding languages."}
+::
+:::

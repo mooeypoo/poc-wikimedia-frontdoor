@@ -120,7 +120,8 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
 - REST API module select description fallbacks when OpenAPI omits `info.description`, and per-module OpenAPI suffix strip patterns (`config/explorerModuleDescriptions.ts`)
 - Inline collapsible module rail visible endpoint row cap (`config/explorerModuleRail.ts`)
-- Explorer control surface tokens for project controls and module rail (`config/explorerSurfaces.ts`); exploratory **4px** border radius is also consumed by account list-element cards and the Reset credentials panel via `--fd-explorer-controls-surface-border-radius`
+- Explorer control surface tokens for project controls and module rail (`config/explorerSurfaces.ts`); exploratory **4px** border radius is also consumed by account list-element cards, the Reset credentials panel, and **`NavigationCard`** via `--fd-explorer-controls-surface-border-radius`
+- Navigation card allowlisted Codex icon names for MDC (`config/navigationCardIcons.ts`)
 - Test wiki base URL mapping for write-request experimentation (`config/wikiInstanceTestWikis.ts`)
 - Write HTTP methods and Scalar Test Request modal warning flags (`config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`)
 - Language definitions with explicit `dir` declarations
@@ -163,6 +164,7 @@ Vue components placed in `app/components/content/` are auto-registered as MDC co
 - Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs. Quiet tabs remain reserved for shell chrome (`ShellPrimaryNav`).
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
+- Use `NavigationCard` (`::navigation-card`) for vertical content / navigation destination cards — do not restyle stock `CdxCard` for this chrome; wrap groups in `NavigationCardGrid` (`:::navigation-card-grid`) for equal-height rows. See `ARCHITECTURE.md` → Navigation card and `DESIGN_REQUIREMENTS.md` → Navigation card. Title / description / chip labels are **content** (per-locale Markdown + `<bdi>`), not banana-i18n.
 
 All other rules apply inside content components: banana-i18n for interface strings, `<bdi>` for external strings, CSS logical properties.
 
@@ -279,6 +281,7 @@ Before marking any component complete, verify:
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: endpoint **name** uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Primary **APIs** tab (`nav-api`) stays selected on `/explorer` and `/explorer/…`; start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`)
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
+- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle`; trailing external icon only for off-platform URLs; Get started cards sit in `:::navigation-card-grid` (equal-height rows)
 
 ---
 

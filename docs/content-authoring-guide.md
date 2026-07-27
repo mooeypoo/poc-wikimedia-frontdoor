@@ -47,13 +47,28 @@ touch them.
 
 # My page title
 
-Body content in Markdown. MDC components (`::callout`, `::partial`, …) work here —
-see the import guide for the component list.
+Body content in Markdown. MDC components (`::callout`, `::partial`, `::navigation-card`, …) work here —
+see the import guide and `ARCHITECTURE.md` → MDC content components for the full list.
 ```
 
 - The file name (minus `.md`) is the URL slug. `content/en/guides.md` → `/guides`.
 - Nested folders work: `content/en/guides/reuse.md` → `/guides/reuse`.
 - The first `# ` heading is the page title.
+
+### Navigation cards (destination tiles)
+
+Use **`:::navigation-card-grid`** to lay out destination cards in equal-height rows (up to three columns on desktop). Each card is a whole-link tile — do **not** add a separate “Learn more” link.
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/wiki-content" title="Use wiki content" description="Access articles from Wikipedia…"}
+::
+::navigation-card{url="/open-data" title="Access open data" description="Explore public data…"}
+::
+:::
+```
+
+Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `chips="subtle:Tag|notice:Other"`, `external` or an `https://…` `url` for off-platform destinations. Title, description, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Example: `content/en/get-started.md`.
 
 **2. (Optional) add previous / next links.** On content pages, a footer nav renders
 when you set `prev` / `next` in frontmatter:
