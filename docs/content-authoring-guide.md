@@ -61,9 +61,9 @@ Use **`:::navigation-card-grid`** to lay out destination cards in equal-height r
 
 ```md
 :::navigation-card-grid
-::navigation-card{url="/wiki-content" title="Use wiki content" description="Access articles from Wikipedia…"}
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia…"}
 ::
-::navigation-card{url="/open-data" title="Access open data" description="Explore public data…"}
+::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data…"}
 ::
 :::
 ```
@@ -194,7 +194,7 @@ sidebar: false            # hide the sidebar; content spans full width
 
 **Available menu ids** (keys of `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID` in
 [`config/sectionNavigation.js`](../config/sectionNavigation.js)): `get-started`,
-`use-content-and-data`, `tools-and-bots`, `community`, `contribute`, `get-help`.
+`use-content-and-data`, `community`, `contribute`, `get-help`.
 
 Example — a standalone page that should show the Get Started menu:
 

@@ -129,10 +129,6 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 			}
 		]
 	},
-	'tools-and-bots': {
-		ariaLabelMessageKey: 'section-nav-tools-and-bots-label',
-		sections: [] // Empty — start panel still mounts; no ShellSidePanelNav links
-	},
 	community: {
 		ariaLabelMessageKey: 'section-nav-community-label',
 		sections: [

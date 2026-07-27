@@ -9,22 +9,22 @@ Communities are the heart of the Wikimedia movement. Whether you're interested i
 
 Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
 
-[Learn more](/wiki-content)
+[Learn more](/get-started/wiki-content)
 
 ## Access open data
 
 Explore public data that you can use in research and machine learning.
 
-[Learn more](/open-data)
+[Learn more](/get-started/open-data)
 
 ## Build tools and bots
 
 Tools and bots make it easier to edit and maintain Wikimedia projects.
 
-[Learn more](/tools-and-bots)
+[Learn more](/get-started/tools-and-bots)
 
 ## Build on-wiki features
 
 Learn how to help readers and editors by adding features to Wikimedia wikis.
 
-[Learn more](/on-wiki)
+[Learn more](/get-started/on-wiki)

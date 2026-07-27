@@ -1060,9 +1060,9 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 ```md
 :::navigation-card-grid
-::navigation-card{url="/wiki-content" title="Use wiki content" description="Access articles…"}
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles…"}
 ::
-::navigation-card{url="/open-data" title="Access open data" description="Explore public data…"}
+::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data…"}
 ::
 :::
 ```
@@ -1073,7 +1073,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demo:** `content/en/get-started.md` uses plain title + description cards in `navigation-card-grid` groups (no icons or chips on that page).
+**Demo:** `content/en/get-started.md` uses plain title + description cards in `navigation-card-grid` groups (no icons or chips on that page). Card `url` values use Get started child paths (e.g. `/get-started/wiki-content`).
 
 #### Callouts
 
