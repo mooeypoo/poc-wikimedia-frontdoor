@@ -1004,7 +1004,9 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **Access open data** (`content/en/get-started/open-data.md`): intro then an untitled card grid (three external Meta-Wiki / Wikidata cards with writer-authored supporting-text), then `## Explore APIs` (`/explorer`), `## High-volume and commercial access` (Enterprise internal + Meta-Wiki dumps), `## Learn with tutorials` (both cards → `/get-started/tutorials`). **External supporting-text labels always keep the technical writer’s copy** from the source Markdown (do not invent new link labels).
 
-**External supporting-text copy:** When converting prose “Read more on …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
+**Tools and bots** (`content/en/get-started/tools-and-bots.md`): keep each `##` section intro as prose, then a `:::navigation-card-grid`. Most cards are external with writer-authored supporting-text (Toolhub, mediawiki.org, Wikitech, Wikidata). **Use APIs and data sources** cards link to `/explorer` (internal, no supporting-text). **Run scripts in your browser** uses card `url` → Wikitech PAWS + supporting-text “Read more on Wikitech”, and links the word **PAWS** in the description (default slot) to `https://hub-paws.wmcloud.org/`. Duplicate “Build your first tool” cards are kept in Get started and Learn with tutorials.
+
+**External supporting-text copy:** When converting prose “Read more on …” / “Visit …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
 
 ### What works today without configuration
 
@@ -1083,7 +1085,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md` and `content/en/get-started/open-data.md` (mixed internal `/explorer` + Get started paths, external Meta-Wiki/Wikidata supporting-text with writer-authored labels, optional non-clickable cards); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 
 #### Callouts
 

@@ -722,6 +722,8 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Access open data** ([`/get-started/open-data`](https://wikifrodo.netlify.app/get-started/open-data)): untitled intro grid (external) plus Explore APIs / High-volume / Tutorials section grids.
 
+**Tools and bots** ([`/get-started/tools-and-bots`](https://wikifrodo.netlify.app/get-started/tools-and-bots)): section intros + grids; Toolhub/mediawiki/Wikitech/Wikidata supporting-text; `/explorer` for API cards; PAWS linked in description + Wikitech supporting-text.
+
 **Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
 
 ---
@@ -752,6 +754,8 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; external supporting-text uses the technical writer’s existing labels.
 
+**Tools and bots:** section intro prose + grids; external writer-authored supporting-text; `/explorer` for Editing / Machine learning API; **Run scripts in your browser** description links PAWS to hub-paws, card destination Wikitech with supporting-text “Read more on Wikitech”.
+
 **About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
 
 **External supporting-text labels:** Always keep the current link label from the source content (technical writer copy). Do not invent or “improve” those strings when converting to cards.
@@ -760,7 +764,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
 
-**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
 
 **Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
@@ -772,6 +776,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
 | *(uncommitted)* | Access open data navigation cards | Untitled intro external grid; `/explorer` + Enterprise + tutorials; writer-authored supporting-text labels preserved |
 | *(uncommitted)* | Use wiki content navigation cards | Section grids; `/explorer` + Get started internals; Meta-Wiki supporting-text; non-clickable featured-content card; enterprise/tutorials stubs |
 | *(uncommitted)* | Build for communities cards + on-wiki stub | Internal navigation cards (no supporting-text); `content/en/get-started/on-wiki.md` so card/section-nav link resolves |
