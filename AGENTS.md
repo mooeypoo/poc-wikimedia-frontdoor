@@ -10,9 +10,10 @@ Use the right document for the kind of work you are doing:
 
 | Document | Consult for |
 |----------|-------------|
-| **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow |
+| **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow; **Navigation card authoring playbook** (internal vs external card styles for docs automation) |
 | **[`ARCHITECTURE.md`](ARCHITECTURE.md)** | System structure, data flow, composables, route boundaries, discovery, technical constraints |
 | **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | UI/UX: Codex layout system, shell chrome, site navigation IA, API Explorer layout, typography, loading/empty states |
+| **[`docs/content-authoring-guide.md`](docs/content-authoring-guide.md)** | Markdown / MDC authoring, including navigation-card examples |
 | **[`.agents/skills/`](.agents/skills/)** | Codex agent skills (components, tokens, icons, usage, design principles, bidirectionality, layout, content) — summaries of the [Codex style guide](https://doc.wikimedia.org/codex/latest/style-guide/overview.html); subordinate to this file and `DESIGN_REQUIREMENTS.md` |
 
 **Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
@@ -169,12 +170,102 @@ Vue components placed in `app/components/content/` are auto-registered as MDC co
 - Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs. Quiet tabs remain reserved for shell chrome (`ShellPrimaryNav`).
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
-- Use `NavigationCard` (`::navigation-card`) for vertical content / navigation destination cards — do not restyle stock `CdxCard` for this chrome; wrap groups in `NavigationCardGrid` (`:::navigation-card-grid`) for equal-height rows. See `ARCHITECTURE.md` → Navigation card and `DESIGN_REQUIREMENTS.md` → Navigation card. Title, description, **supporting-text**, and chip labels are **content** (per-locale Markdown + `<bdi>`), not banana-i18n. When `supporting-text` + `url` are set, supporting-text is a progressive link to the **same** destination (external icon on that link for off-platform URLs); **preserve the technical writer’s existing supporting-text / link labels** — do not rewrite them. Markdown description inside a grid must use the card **default slot**, not `#description`.
+- Use `NavigationCard` (`::navigation-card`) for vertical content / navigation destination cards — do not restyle stock `CdxCard` for this chrome; wrap groups in `NavigationCardGrid` (`:::navigation-card-grid`) for equal-height rows. See **Navigation card authoring playbook** below, `ARCHITECTURE.md` → Navigation card, and `DESIGN_REQUIREMENTS.md` → Navigation card.
 
 All other rules apply inside content components: banana-i18n for interface strings, `<bdi>` for external strings, CSS logical properties.
 
 For the full feature status and implementation plan see `ARCHITECTURE.md` → "Markdown content pages" and `docs/TECH_DECISIONS.md` → "Markdown content pages".
 
+### Navigation card authoring playbook (for agents)
+
+**One component, two styles.** Internal and external destination tiles both use `NavigationCard` / `NavigationCardGrid`. Do **not** invent a second card component. Choose the style from the destination type. When a human prompt says “internal navigation cards” or “external navigation cards,” follow the matching subsection and copy the MDC shape from the reference pages.
+
+**When the prompt asks to convert a docs page** (e.g. replace `###` + description + “Learn more” / “Try it out” with cards):
+
+1. Keep existing `##` section headings and any section intro paragraphs unless the prompt says otherwise.
+2. Under each section, put one `:::navigation-card-grid` wrapping `::navigation-card` blocks (equal-height rows).
+3. Map each former `###` → card `title`, body copy → `description`, link URL → `url`.
+4. Pick **internal** vs **external** style per card from the rules below (a page may mix both).
+5. If the destination URL is empty / unknown: stop and ask, or omit `url` (non-clickable card) — do not invent URLs silently.
+6. For every new **internal** `url`, ensure `content/<locale>/…` exists (or add a mockup stub); otherwise the card 404s.
+7. Title, description, and supporting-text are **content** (per-locale Markdown + `<bdi>` via the component) — **not** banana-i18n.
+8. Markdown inside a description (inline links) in a grid → card **default slot**, not `#description` (MDC named slots under `:::navigation-card-grid` 404 the page).
+
+#### Internal navigation cards
+
+**Use when:** destination is on Front Door (`/get-started/…`, `/explorer`, other same-origin paths).
+
+**Style (required):**
+
+| Prop | Rule |
+|------|------|
+| `url` | Locale-agnostic internal path (e.g. `/get-started/wiki-content`, `/explorer`) |
+| `title` / `description` | From the section heading + body |
+| `supporting-text` | **Omit** — no progressive footer link, no external icon |
+| Visual link chrome | None beyond whole-card click (stretched link) |
+
+**Do not:** add “Learn more”, “Try it out”, or other in-card link labels for internal destinations — the whole card is the link.
+
+**Reference pages (copy this shape):**
+
+- `content/en/get-started.md`
+- `content/en/get-started/build-for-communities.md`
+- Internal cards on `wiki-content.md`, `open-data.md`, `tools-and-bots.md` (e.g. `/explorer`)
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
+::
+:::
+```
+
+**Prompt phrases (team → agent):** “use internal navigation cards”, “same style as Get started / Build for communities”, “no supporting-text / no in-card link”.
+
+#### External navigation cards
+
+**Use when:** destination is off-platform (`https://…` Meta-Wiki, mediawiki.org, Wikidata, Toolhub, Wikitech, etc.).
+
+**Style (required):**
+
+| Prop | Rule |
+|------|------|
+| `url` | Absolute `http(s):` URL (opens in a new tab) |
+| `title` / `description` | From the section heading + body |
+| `supporting-text` | **Required** progressive footer link to the **same** `url`, with external icon |
+| Supporting-text label | **Keep the technical writer’s existing link text** (“Read more on Meta-Wiki”, “Visit Toolhub”, …). Never invent or “improve” labels when converting |
+
+**Do not:** put the only external affordance on the title trailing icon when supporting-text is present — the component moves the external icon onto supporting-text automatically.
+
+**Reference pages (copy this shape):**
+
+- `content/en/get-started/about-wikimedia.md` (all external)
+- External cards on `open-data.md`, `tools-and-bots.md`, `wiki-content.md` (Meta-Wiki dumps)
+
+```md
+:::navigation-card-grid
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Download content in bulk" description="Access free downloads of wiki content and data…" supporting-text="Read more on Meta-Wiki"}
+::
+:::
+```
+
+**Description + separate off-platform mention:** If the card destination is Wikitech (supporting-text) but a product name in the description should open elsewhere (e.g. PAWS → hub-paws), put the description Markdown in the **default slot** and keep supporting-text as the writer label for the card `url`. Example: `content/en/get-started/tools-and-bots.md` → “Run scripts in your browser”.
+
+**Prompt phrases (team → agent):** “use external navigation cards”, “same style as About Wikimedia”, “supporting-text with writer labels”, “preserve Read more on … / Visit … copy”.
+
+#### Mixed pages
+
+A single page may combine both styles (e.g. `/explorer` internal cards next to Meta-Wiki external cards). Apply the rules **per card**, not per page. References: `wiki-content.md`, `open-data.md`, `tools-and-bots.md`.
+
+#### Ambiguities (raise before guessing)
+
+Stop and ask when:
+
+- Former prose links are empty (`[Try it out]()`, `[Read more]()`)
+- A section has two external URLs (which is the card `url` vs an inline description link?)
+- Duplicate titles appear in two sections (keep both vs one?)
+- Layout of orphan `###` blocks with no parent `##` is unclear
+
+See `ARCHITECTURE.md` → Navigation card and `docs/content-authoring-guide.md` → Navigation cards.
 ---
 
 ## Code quality rules

@@ -1059,6 +1059,15 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 `NavigationCard.vue` is Front Door’s vertical **content / navigation card** — not a thin wrapper around stock `CdxCard`. It follows Figma variant A ([Content card 79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)) for Get started and other Markdown documentation pages.
 
+**Agent playbook:** When converting or authoring destination tiles, follow **`AGENTS.md` → Navigation card authoring playbook**. That section defines the two required styles (same component):
+
+| Style | When | Signature | Reference Markdown |
+|-------|------|-----------|--------------------|
+| **Internal** | Same-origin path (`/get-started/…`, `/explorer`, …) | `url` + `title` + `description` only — **no** `supporting-text` | `get-started.md`, `build-for-communities.md` |
+| **External** | Off-platform `https://…` | `url` + `title` + `description` + **`supporting-text`** (writer label; external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+
+Mixed pages apply the table **per card**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
+
 | Aspect | Stock `CdxCard` | `NavigationCard` |
 |--------|-----------------|------------------|
 | Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; no thumbnail |

@@ -57,7 +57,14 @@ see the import guide and `ARCHITECTURE.md` → MDC content components for the fu
 
 ### Navigation cards (destination tiles)
 
-Use **`:::navigation-card-grid`** to lay out destination cards in equal-height rows (up to three columns on desktop). Each card uses a **stretched link** for whole-card navigation. Optional **`supporting-text`** is a progressive link to the **same** `url` (not a second destination) and is bottom-aligned across the row for comparison; do not invent a separate footer URL. For **internal** paths (`/get-started/…`, `/explorer`), omit supporting-text (same pattern as Get started / Build for communities). When converting existing external “Read more on …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404** even when the card `url` is correct.
+**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.
+
+| Style | Destination | MDC shape | Copy from |
+|-------|-------------|-----------|-----------|
+| **Internal** | `/get-started/…`, `/explorer`, … | `url` + `title` + `description` only (**no** `supporting-text`) | `content/en/get-started.md`, `build-for-communities.md` |
+| **External** | `https://…` off-platform | Same + **`supporting-text`** = writer’s link label (external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+
+Use **`:::navigation-card-grid`** for equal-height rows. Whole-card click via stretched link. For **internal** paths omit supporting-text (no in-card “Learn more”). When converting existing external “Read more on …” / “Visit …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404**.
 
 ```md
 :::navigation-card-grid

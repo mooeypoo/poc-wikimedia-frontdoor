@@ -733,6 +733,8 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
 
+**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels).
+
 | Token / behaviour | Value |
 |-------------------|--------|
 | Background | `--fd-explorer-controls-surface-background-color` → `--background-color-neutral-subtle` |
@@ -777,6 +779,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
 | *(uncommitted)* | Access open data navigation cards | Untitled intro external grid; `/explorer` + Enterprise + tutorials; writer-authored supporting-text labels preserved |
 | *(uncommitted)* | Use wiki content navigation cards | Section grids; `/explorer` + Get started internals; Meta-Wiki supporting-text; non-clickable featured-content card; enterprise/tutorials stubs |
