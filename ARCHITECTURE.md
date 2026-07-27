@@ -467,6 +467,8 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
 | `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail corner radius (exploratory; Codex `--border-radius-base` is 2px) |
 | `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `576px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row |
+| `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
+| `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
 | `--fd-layout-body-columns-max-inline-size` | `calc(1679px cap − margins − start − gutter)` | Main:end sub-grid max width at ≥ 1680px (expanded start nav) |
 | `--fd-layout-body-columns-collapsed-max-inline-size` | `calc(1679px cap − margins)` | Main:end sub-grid max width at ≥ 1680px when start nav collapsed |
 
@@ -497,33 +499,37 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 5. **Start nav scrollbar (WebKit physical `width`)** — **`shell-start-nav-scroll.css`** styles `::-webkit-scrollbar` with physical **`width`** because the pseudo-element API has no logical equivalent. **Single scrollport per breakpoint** (panel tablet+, grid track mobile). Transparent track + thin thumb; body band keeps browser-default scrollbars. **Scroll-end inset:** **`::after` block spacer** (`--spacing-200`) on each scrollport — see **Shell section navigation** (scroll-end inset). See **Shell scroll regions**.
 6. **`ShellHeaderBrand` wordmark** — **Montserrat** via `--font-family-brand-wordmark` (Google Fonts, `config/brandTypography.ts`); banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (translatable). Mark: `developer-portal-logo-mark.svg`.
 7. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**.
-8. **Interface language `CdxSelect`** — menu items omit per-item `icon` props (text-only dropdown). The closed select shows **`cdxIconLanguage`** via the Codex **`#label` scoped slot**, not `defaultIcon` (which Codex only applies when no selection is made). **`default-label`** and the `#label` slot both bind the active locale name from banana-i18n (`interface-language-{code}`) — never the placeholder string. Menu labels use **`isolateLabel()`** (Unicode FSI/PDI) because option-like rendering targets cannot include `<bdi>` tags — see `AGENTS.md` BiDi isolation rule. **`:key="direction"`** remounts the control when interface direction changes (pairs with RTL stylesheet toggle in `codex-rtl-styles.client.ts`). **RTL expand chevron:** known open issue when dual Codex stylesheets are active — see **RTL and BiDi** below; do not override Codex select internals.
+8. **Interface language `CdxLookup`** — globe + uppercase code `CdxButton` mounts `.shell-header-utility-actions__language-popover` (`v-if`) wrapping the whole Lookup (input + native menu). **`menu-config.renderInPlace: true`** keeps the menu in the Lookup DOM; first-party CSS then cancels Floating UI **absolute placement** and viewport **`maxHeight`** (those pull the menu out of the popover box and can show “as many rows as fit the screen” when Codex’s `visibleItemLimit` measure races on open). Overrides do **not** restyle Codex menu chrome and do **not** add vertical gap between input and menu (flush / Codex default). Physical **`max-height: none`** appears only to clear Floating UI’s inline physical style. Fallback **`max-block-size`** on `.cdx-menu__listbox` (~7 supportingText rows) if measure has not run. Open waits for popover layout (double `requestAnimationFrame`) before focusing the input. **`visibleItemLimit: 7`** / render cap **50** from `config/headerChrome.ts`. See **Interface locale picker** and `DESIGN_REQUIREMENTS.md` → Interface language picker.
 9. **`ShellSiteFooter` wordmark** — **Montserrat** via `--font-family-brand-wordmark`; banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (shared with header, single horizontal line).
 10. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px `developer-portal-logo-mark.svg` + translatable wordmark parts** until the footer logo asset ships.
 
 ### Interface locale picker (shell)
 
-The header **`CdxSelect`** in `app/layouts/default.vue` switches the banana-i18n interface locale (`$setInterfaceLocale`, Vue I18n `locale`). Supported values: `en`, `es`, `fr`, `he`, `fa` (prototype subset).
+The header interface-language control in `ShellHeaderUtilityActions` switches the banana-i18n interface locale (`$setInterfaceLocale`, Vue I18n `locale`). The portal language catalog is the full Wikimedia set (~575; `config/languages.ts`); locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`).
 
-**Display pattern (Figma header):**
+**Display pattern:**
 
-| Surface | Icon | Label |
-|---------|------|-------|
-| Closed select (trigger) | Yes — `cdxIconLanguage` via `#label` slot | Active locale name from banana-i18n (`interface-language-{code}`); never the placeholder string |
-| Dropdown menu items | No | Language name only |
+| Surface | Behaviour |
+|---------|-----------|
+| Trigger | Quiet `CdxButton` — `cdxIconLanguage` + uppercase BCP 47 code in `<bdi>` |
+| Popover | `.shell-header-utility-actions__language-popover` (`v-if`) wraps the full `CdxLookup` (input + menu in normal flow, flush — no added gap) |
+| Menu | Native Codex `CdxMenu` chrome; **7** visible rows then scroll (`visibleItemLimit`); Floating UI viewport `maxHeight` / absolute placement cancelled so the popover can contain the menu; CSS listbox fallback cap if measure races; up to **50** items rendered until typing narrows |
 
-**BiDi:** Labels are passed through `isolateLabel()` so mixed-direction language names remain stable inside Codex menu rendering without HTML `<bdi>` wrappers.
+**Open / close:** Clicking the trigger mounts the popover, waits for layout, then focuses the Lookup input (so `visibleItemLimit` can measure). Focus-out of the language control, Escape, or a selection closes it. Menu-item clicks keep focus (Codex prevents blur on option mousedown), so they do not close the popover early.
+
+**BiDi:** Autonyms use Codex MenuItem `language` for correct `lang`; trigger code is `<bdi>`-isolated.
 
 **Routing:** On content routes, changing locale navigates via `switchLocalePath()` when the path differs. On `/explorer`, locale updates in place without URL prefix change — see `DESIGN_REQUIREMENTS.md` → Interface locale on explorer.
 
-**Direction changes:** `:key="direction"` on the select remounts the control when interface locale flips LTR ↔ RTL. Codex RTL stylesheet toggling is handled by `codex-rtl-styles.client.ts` (see **RTL and BiDi** below).
+**Direction changes:** `:key="direction"` on the lookup remounts the control when interface locale flips LTR ↔ RTL. Codex RTL stylesheet toggling is handled by `codex-rtl-styles.client.ts` (see **RTL and BiDi** below).
 
-**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `ShellHeaderUtilityActions` (inline-end, `flex: 1 1 auto`). **Gap between logo and utilities: `var(--spacing-150)` (24px).** Expanded utilities: search (`flex: 1 1 auto`, **256px** min, max **40rem**), settings, language select (**8–11rem**), log in. Collapsed: search icon button + `CdxMenuButton` (`cdxIconEllipsis`). See `DESIGN_REQUIREMENTS.md` → Shell chrome.
+**Config:** `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` / `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` in `config/headerChrome.ts`.
+
+**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `ShellHeaderUtilityActions` (inline-end, `flex: 1 1 auto`). **Gap between logo and utilities: `var(--spacing-150)` (24px).** Expanded utilities: search (`flex: 1 1 auto`, **256px** min, max **40rem**), settings, compact language trigger (globe + code), log in. Collapsed: search icon button + language trigger + `CdxMenuButton` (`cdxIconEllipsis`). See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
 **Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`, intrinsic width) plus the **API Explorer** progressive link (`flex: 0 0 auto`) on the same baseline, **24px** (`--spacing-150`) after the last tab. See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
-**Source:** `app/layouts/default.vue` (`languageMenuItems`, `selectedInterfaceLocale`, `#label` slot, `.frontdoor-shell__api-explorer-link`).
-
+**Source:** `app/layouts/default.vue` (`selectedInterfaceLocale`); `app/components/shared/ShellHeaderUtilityActions.vue`; `config/headerChrome.ts`.
 ### Site footer
 
 Static footer band (`ShellSiteFooter.vue`) rendered inside `.frontdoor-shell__content` in `default.vue` (sibling of `.frontdoor-shell__main`).
@@ -573,13 +579,14 @@ The following are **intentional placeholders** in the design-chrome exploration 
 | Brand logo SVG | **32px `developer-portal-logo-mark.svg` + banana wordmark** (Montserrat); not single-path lockup |
 | Primary nav + start column collapse | **Implemented** — `useShellNavigationCollapse`; hamburger + breadcrumbs; start drawer on expand (`shell-start-nav-reveal.css`) |
 | Collapsed hamburger menu overlay | **Implemented** — `useShellCollapsedNavMenu`; `ShellCollapsedNavMenuOverlay`; backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; **`::after` scroll-end spacer (`--spacing-200`)**; `shell-collapsed-nav-menu.css` scroll lock |
-| Header container-query search collapse | **Implemented** | `ShellHeaderUtilityActions` — 256px search min; `CdxMenuButton` for settings/language/log in |
+| Header container-query search collapse | **Implemented** | `ShellHeaderUtilityActions` — 256px search min; `CdxMenuButton` for settings/log in |
 | Collapsed search button activation | **Deferred** | Icon visible; overlay/expansion behaviour not defined |
 | Header vs body width at ≥ 1440px | Inner header locks to grid content width at 1440px; page grid caps at 1680px — **may need alignment** |
 | Codex RTL stylesheet toggle | **`link.disabled`** on injected `codex.style-rtl.css` — prototype workaround for locale switching without reload; revisit if Codex exposes direction-aware components |
-| Header language `CdxSelect` expand chevron (RTL) | **Open** — dual LTR + RTL Codex sheets hide `.cdx-select-vue__indicator`; see **RTL and BiDi** → known open issue |
+| Interface language `CdxLookup` | **Implemented** — globe + code trigger; popover wraps Lookup; `visibleItemLimit: 7` / render cap **50**; Floating UI cancel so popover contains menu (Codex exception #8) |
+| Dual LTR + RTL Codex sheets (`CdxSelect` chevron) | **Open** for remaining `CdxSelect` surfaces — not applicable to header language Lookup; see **RTL and BiDi** |
 
-Functional in prototype: interface language `CdxSelect`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing, **explorer start-column mode links** (`usePageSectionNav` + `ShellSidePanelNav`).
+Functional in prototype: interface language `CdxLookup`, content search (`useContentSearch` + `SharedSearchResults`), primary nav tab routing, **explorer start-column mode links** (`usePageSectionNav` + `ShellSidePanelNav`).
 
 ---
 
@@ -854,13 +861,13 @@ Requires `NUXT_OAUTH_COOKIE_SECRET` and `NUXT_PUBLIC_OAUTH_CLIENT_ID`. Callback 
 
 The `<html>` element's `dir` attribute is set reactively in `app/layouts/default.vue` using `useDirection()`, which reads interface locale direction from `config/languages.js`.
 
-**Codex RTL stylesheet:** LTR base styles load globally via `nuxt.config.ts` (`codex.style.css`). The client plugin `app/plugins/codex-rtl-styles.client.ts` injects `codex.style-rtl.css` via a persistent `<link id="fd-codex-rtl-stylesheet">` when `direction === 'rtl'` and sets **`link.disabled = true`** when direction returns to `ltr`. Without toggling, Codex components (e.g. header `CdxSelect`) keep mirrored physical layout after switching from Hebrew/Persian back to an LTR interface locale until a full reload.
+**Codex RTL stylesheet:** LTR base styles load globally via `nuxt.config.ts` (`codex.style.css`). The client plugin `app/plugins/codex-rtl-styles.client.ts` injects `codex.style-rtl.css` via a persistent `<link id="fd-codex-rtl-stylesheet">` when `direction === 'rtl'` and sets **`link.disabled = true`** when direction returns to `ltr`. Without toggling, Codex components keep mirrored physical layout after switching from Hebrew/Persian back to an LTR interface locale until a full reload.
 
 **Disclaimer:** This relies on Codex’s global RTL mirror sheet (physical property overrides), not per-component `dir`. It is a **prototype workaround** for runtime locale switching. Third-party quiet-tabs borders are suppressed in `app/assets/css/shell-primary-nav-overrides.css`, re-imported when RTL is enabled so rules load after `codex.style-rtl.css`.
 
-**Known open issue — header `CdxSelect` expand chevron in RTL:** With `codex.style.css` always loaded and `codex.style-rtl.css` toggled on for RTL interface locales, both stylesheets apply at once. Codex mirror sheets are intended to **replace** the LTR bundle, not stack on it. For `.cdx-select-vue__indicator`, the LTR sheet sets `right: 12px` and the RTL sheet sets `left: 12px` without clearing the other edge, which hides the mandatory expand chevron in the header language select. The header also constrains the control to **8–11rem** while Codex’s default select `min-width` is **256px**, and the closed trigger uses a custom `#label` slot with an in-flow globe icon (not Codex’s `--has-start-icon` / `defaultIcon` path). **Do not add per-component overrides on Codex select internals** — attempted fixes were reverted. Revisit via one of: `codex.style-bidi.css` (single `[dir]`-aware bundle), disabling the LTR base sheet when RTL is active, adopting Codex’s documented icon-on-trigger pattern, relaxing header width, or an upstream Codex fix.
+**Known open issue — dual LTR + RTL Codex stylesheets:** With `codex.style.css` always loaded and `codex.style-rtl.css` toggled on for RTL interface locales, both stylesheets apply at once. Codex mirror sheets are intended to **replace** the LTR bundle, not stack on it. That stacking can hide expand indicators on **`CdxSelect`** (conflicting physical `left`/`right` on `.cdx-select-vue__indicator`). The **header interface language control no longer uses `CdxSelect`** — it is a globe + code button + searchable **`CdxLookup`** in a popover — so that specific chevron regression does not apply there. Explorer and other `CdxSelect` surfaces may still be affected. **Do not add per-component overrides on Codex select internals.** Revisit via `codex.style-bidi.css`, disabling the LTR base sheet when RTL is active, or Codex’s documented icon-on-trigger patterns. See `DESIGN_REQUIREMENTS.md` → Interface language picker and open questions.
 
-**Language select remount:** Header `CdxSelect` uses `:key="direction"` so the closed control re-renders when direction changes.
+**Language Lookup remount:** Header `CdxLookup` uses `:key="direction"` so the control re-renders when direction changes.
 
 ### BiDi isolation rule
 
@@ -915,6 +922,8 @@ Direction overrides are explicit in templates and components:
 
 **Documented exception — start nav WebKit scrollbar pseudos.** `app/assets/css/shell-start-nav-scroll.css` styles `::-webkit-scrollbar` with physical **`width`** because that pseudo-element API has no logical equivalent. See **Shell scroll regions** and `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
+**Documented exception — interface language Lookup Floating UI cancel.** `ShellHeaderUtilityActions` puts the native `CdxMenu` in normal flow inside `.shell-header-utility-actions__language-popover` by cancelling Floating UI absolute placement and viewport `maxHeight`. Physical **`max-height: none`** is used only to clear Floating UI’s inline physical style; first-party spacing does not add a gap between input and menu. See **Codex exceptions (shell chrome)** #8 and `AGENTS.md` rule 8.
+
 **Documented pattern — scroll-end inset on nav scrollports.** Start section nav and the collapsed overlay reserve **32px** below the last item via a **`::after` block spacer** (`block-size: var(--spacing-200)`) on the scrollport element — not `padding-block-end` on a nested wrapper. See **Shell section navigation** (scroll-end inset) and `AGENTS.md` rule 8.
 
 **What we do not do.**
@@ -939,6 +948,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
 | `config/explorerSurfaces.ts` | Explorer control surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css` |
+| `config/headerChrome.ts` | Header utility collapse threshold; interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**) |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |

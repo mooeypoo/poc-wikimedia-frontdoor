@@ -35,3 +35,18 @@ export const HEADER_UTILITY_COLLAPSE_THRESHOLD_PX =
 	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.languageSelectMinPx
 	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.loginLinkMinPx
 	+ ( HEADER_UTILITY_COLLAPSE_ESTIMATES.gapCount * HEADER_UTILITY_COLLAPSE_ESTIMATES.gapPx )
+
+/**
+ * Codex `MenuConfig.visibleItemLimit` for the interface-language `CdxLookup` menu.
+ * Codex recommends generally 5–7 visible items before scrolling (“magical number seven”).
+ * See `ARCHITECTURE.md` → Codex exceptions (shell chrome) #8 for how the Lookup popover
+ * keeps this limit when Floating UI would otherwise apply a viewport maxHeight.
+ */
+export const HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT = 7
+
+/**
+ * Cap on language menu items passed to `CdxLookup` for render performance (~575 catalog
+ * languages). Distinct from {@link HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT} (scroll height);
+ * typing narrows the list further. The active language is always kept present.
+ */
+export const HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP = 50

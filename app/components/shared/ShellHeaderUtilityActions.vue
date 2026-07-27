@@ -6,7 +6,8 @@ import {
 	CdxMenuButton,
 	CdxSearchInput,
 	CdxToggleButtonGroup,
-	type ButtonGroupItem
+	type ButtonGroupItem,
+	type MenuConfig
 } from '@wikimedia/codex'
 import type { MenuItemData } from '@wikimedia/codex'
 import {
@@ -19,6 +20,10 @@ import {
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
 import type { ColorMode } from '../../../config/colorMode'
+import {
+	HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP,
+	HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT
+} from '../../../config/headerChrome'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/languages'
 import { useColorMode } from '../../composables/useColorMode'
 import { useContentSearch } from '../../composables/useContentSearch'
@@ -39,8 +44,21 @@ import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtili
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
  */
 
-/** Cap on rendered language menu items — typing narrows the ~575-language list. */
-const MAX_LANGUAGE_MENU_ITEMS = 50
+/**
+ * Codex menu config for the interface-language lookup.
+ *
+ * - `visibleItemLimit` — at most seven rows before the native menu scrolls (Codex 5–7).
+ * - `renderInPlace` — keep the menu in the Lookup DOM so the header popover can wrap
+ *   the whole Lookup (input + menu). Lookup always calls Floating UI, which would
+ *   otherwise teleport-position the menu outside the popover and set a viewport-based
+ *   `maxHeight` that fights `visibleItemLimit` (showing “as many as fit the screen”).
+ *   First-party CSS below cancels that absolute positioning / viewport max-height while
+ *   leaving native Codex menu chrome intact.
+ */
+const LANGUAGE_LOOKUP_MENU_CONFIG: MenuConfig = {
+	visibleItemLimit: HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT,
+	renderInPlace: true
+}
 
 const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', {
 	required: true
@@ -172,7 +190,7 @@ const languageMenuItems = computed<MenuItemData[]>( () => {
 		)
 		: allLanguageMenuItems
 
-	const capped = matches.slice( 0, MAX_LANGUAGE_MENU_ITEMS )
+	const capped = matches.slice( 0, HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP )
 
 	if ( !capped.some( ( item ) => item.value === languageSelection.value ) ) {
 		const active = allLanguageMenuItems.find(
@@ -233,13 +251,24 @@ function resetLanguageLookupInput(): void {
 /**
  * Opens the language popover and focuses the lookup input so the user can type
  * immediately.
+ *
+ * Waits for the popover to be laid out before focusing: if the Lookup expands its
+ * menu while a freshly shown ancestor is still unmeasured, Codex’s
+ * `visibleItemLimit` height math can fail and Floating UI’s viewport `maxHeight`
+ * takes over (menu grows to fill the screen).
  */
-function openLanguageLookup(): void {
+async function openLanguageLookup(): Promise<void> {
 	resetLanguageLookupInput()
 	isLanguageLookupOpen.value = true
-	nextTick( () => {
-		languageLookupRef.value?.$el.querySelector( 'input' )?.focus()
+	await nextTick()
+	await new Promise<void>( ( resolve ) => {
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				resolve()
+			} )
+		} )
 	} )
+	languageLookupRef.value?.$el.querySelector( 'input' )?.focus()
 }
 
 /**
@@ -401,7 +430,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			</CdxButton>
 
 			<div
-				v-show="isLanguageLookupOpen"
+				v-if="isLanguageLookupOpen"
 				class="shell-header-utility-actions__language-popover"
 			>
 				<CdxLookup
@@ -411,6 +440,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					v-model:input-value="languageInputValue"
 					class="shell-header-utility-actions__language-lookup"
 					:menu-items="languageMenuItems"
+					:menu-config="LANGUAGE_LOOKUP_MENU_CONFIG"
 					:start-icon="cdxIconLanguage"
 					:aria-label="interfaceLanguageLabel"
 					:placeholder="interfaceLanguageLabel"
@@ -538,6 +568,8 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	inset-block-start: 100%;
 	inset-inline-end: 0;
 	z-index: 20;
+	display: flex;
+	flex-direction: column;
 	inline-size: 18rem;
 	max-inline-size: min( 18rem, 90vw );
 	margin-block-start: var( --spacing-25 );
@@ -549,7 +581,41 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 }
 
 .shell-header-utility-actions__language-lookup {
+	position: relative;
 	inline-size: 100%;
+}
+
+/*
+ * Lookup always runs Floating UI, which absolutely positions the menu and sets a
+ * viewport-based maxHeight on `.cdx-menu`. That pulls the menu out of the popover
+ * box and, when Codex’s visibleItemLimit measure races, lets the list grow to
+ * “however many rows fit the screen”. Keep the native Codex menu chrome, but put
+ * the menu back in normal flow inside the popover and clear the viewport cap so
+ * `visibleItemLimit: 7` owns the scroll height.
+ */
+.shell-header-utility-actions__language-lookup:deep( .cdx-menu ) {
+	/*
+	 * Cancel Floating UI placement only — do not add spacing; Codex menu sits flush
+	 * under the input. `max-height` (physical) clears Floating UI’s inline style
+	 * (also physical); see AGENTS.md / ARCHITECTURE.md Codex exception #8.
+	 */
+	position: static !important;
+	inset: auto !important;
+	transform: none !important;
+	visibility: visible !important;
+	inline-size: 100% !important;
+	max-block-size: none !important;
+	max-height: none !important;
+}
+
+/*
+ * Fallback list cap if Codex’s pixel measure has not run yet. Inline max-height
+ * from visibleItemLimit still wins when present. ~7 supportingText rows
+ * (HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT).
+ */
+.shell-header-utility-actions__language-lookup:deep( .cdx-menu__listbox ) {
+	max-block-size: 22.75rem;
+	overflow-block: auto;
 }
 
 .shell-header-utility-actions__session {

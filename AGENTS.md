@@ -121,6 +121,7 @@ Values that are likely to change, are environment-dependent, or represent projec
 - REST API module select description fallbacks when OpenAPI omits `info.description`, and per-module OpenAPI suffix strip patterns (`config/explorerModuleDescriptions.ts`)
 - Inline collapsible module rail visible endpoint row cap (`config/explorerModuleRail.ts`)
 - Explorer control surface tokens for project controls and module rail (`config/explorerSurfaces.ts`)
+- Header utility collapse threshold and interface-language menu limits (`config/headerChrome.ts` — `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` / `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP`; Floating UI cancel for the Lookup popover is a documented shell Codex exception, not a separate config knob)
 - Test wiki base URL mapping for write-request experimentation (`config/wikiInstanceTestWikis.ts`)
 - Write HTTP methods and Scalar Test Request modal warning flags (`config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`)
 - Language definitions with explicit `dir` declarations
@@ -147,6 +148,8 @@ Do not:
 - Assume the Scalar explorer should mirror all chrome direction changes; keep explorer direction decisions explicit and content-driven
 
 **Documented exception:** WebKit `::-webkit-scrollbar` pseudos in `app/assets/css/shell-start-nav-scroll.css` use physical **`width`** — the API has no logical equivalent. See `ARCHITECTURE.md` → Shell scroll regions and `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+
+**Documented exception — interface language Lookup menu:** `ShellHeaderUtilityActions` cancels Codex Lookup’s Floating UI absolute placement and viewport `maxHeight` so `.shell-header-utility-actions__language-popover` can wrap the whole Lookup (input + native menu) and `visibleItemLimit: 7` owns scroll height. That override uses physical **`max-height: none`** only to clear Floating UI’s inline physical style; menu chrome stays Codex-default (no restyle, no added gap between input and menu). See `ARCHITECTURE.md` → Codex exceptions (shell chrome) #8 and `DESIGN_REQUIREMENTS.md` → Interface language picker.
 
 **Scroll-end inset on nav scrollports:** Start section nav and the collapsed nav overlay reserve **32px** below the last item via a **`::after` block spacer** (`block-size: var(--spacing-200)`) on the **scrollport** element — not `padding-block-end` on a nested wrapper (nested flex + `overflow: auto` does not always extend scroll range). In-shell rules: `app/assets/css/shell-start-nav-scroll.css` (tablet+ **`.frontdoor-shell__side-panel--start`**, mobile **`.fd-page-grid__start`**). Overlay: `ShellCollapsedNavMenuOverlay.vue`. Site footer keeps **`padding-block-end`** on **`.shell-site-footer`**. See `ARCHITECTURE.md` → Shell section navigation (scroll-end inset).
 
@@ -273,6 +276,7 @@ Before marking any component complete, verify:
 - [ ] Account dashboard: username and seed/API key fields in `<bdi>`; Client ID / secrets use intentional `dir="ltr"` with a comment; interface labels via banana-i18n; **treat key rows as placeholders** (not live Meta credentials — see `ARCHITECTURE.md`); logged-out gate uses banana strings and real OAuth Log in
 - [ ] Account Reset confirmation dialog (`AccountResetApiKeyDialog` / `CdxDialog`): confirm + success copy via banana (`account-reset-dialog-*`); success rows are **placeholder** **Client ID**, **Client secret**, **Refresh token** (not real credentials); bold labels (`--font-weight-bold`); credential values in `<bdi dir="ltr">` with monospace; quiet copy stays mounted and uses `CdxTooltip` “Copied!” via `useCopyWithCopiedTooltip`; intro / credential list / warning separated by `--spacing-100`; inherits interface `dir` from the shell
 - [ ] Header logged-in username is a progressive link to locale-aware `/account` (no “Logged in as” prefix); `aria-label` from `header-auth-link-aria`
+- [ ] Interface language picker: globe + code trigger; popover wraps full `CdxLookup` (input + native menu in normal flow); `visibleItemLimit: 7` / render cap **50** from `config/headerChrome.ts`; Floating UI placement cancelled only as documented (no menu chrome restyle, no added input–menu gap); trigger code in `<bdi>`; autonyms via MenuItem `language` / `lang`
 - [ ] Explorer **`CdxSelect`** / **`CdxCombobox`** floating menus use native Codex MenuItem interaction states — no custom hover / highlighted / selected CSS on `.explorer-page` (`main.css` z-index + list-style only)
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: path uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
