@@ -5,62 +5,43 @@ status: mockup
 
 Explore public data that you can use in research and machine learning.
 
-### Introduction to Wikimedia open data
+:::navigation-card-grid
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Research:Data" title="Introduction to Wikimedia open data" description="Access publicly-available, open-licensed data about Wikimedia projects, including bulk downloads, streams of recent changes, and page statistics." supporting-text="Read more on Meta-Wiki"}
+::
 
-Access publicly-available, open-licensed data about Wikimedia projects, including bulk downloads, streams of recent changes, and page statistics.
+::navigation-card{url="https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:Data_access" title="Explore structured data with Wikidata" description="Wikidata is a free and open knowledge base that can be read and edited by both humans and machines. Learn how to access data from Wikidata, and follow best practices for reusing it." supporting-text="Read more on Wikidata"}
+::
 
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Research:Data)
-
-### Explore structured data with Wikidata
-
-Wikidata is a free and open knowledge base that can be read and edited by both humans and machines. Learn how to access data from Wikidata, and follow best practices for reusing it.
-
-[Read more on Wikidata](https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:Data_access)
-
-### Download content in bulk
-
-Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps)
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Download content in bulk" description="Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects." supporting-text="Read more on Meta-Wiki"}
+::
+:::
 
 ## Explore APIs
 
-### Analytics API
+:::navigation-card-grid
+::navigation-card{url="/explorer" title="Analytics API" description="Get page views and other data about Wikimedia projects"}
+::
 
-Get page views and other data about Wikimedia projects
-
-[Try it out]()
-
-### Machine Learning API
-
-Get predictions from Wikimedia machine learning models
-
-[Try it out]()
+::navigation-card{url="/explorer" title="Machine Learning API" description="Get predictions from Wikimedia machine learning models"}
+::
+:::
 
 ## High-volume and commercial access
 
-### Wikimedia Enterprise APIs
+:::navigation-card-grid
+::navigation-card{url="/get-started/wikimedia-enterprise" title="Wikimedia Enterprise APIs" description="Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data."}
+::
 
-Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data.
-
-[Read more]()
-
-### Bulk data downloads
-
-Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects.
-
-[Read more on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps)
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Bulk data downloads" description="Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects." supporting-text="Read more on Meta-Wiki"}
+::
+:::
 
 ## Learn with tutorials
 
-### Compare page metrics
+:::navigation-card-grid
+::navigation-card{url="/get-started/tutorials" title="Compare page metrics" description="Analyze page viewership and edit data from Wikipedia."}
+::
 
-Analyze page viewership and edit data from Wikipedia.
-
-[Read more]()
-
-### Browse all tutorials
-
-Browse featured tutorials.
-
-[Read more]()
+::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}
+::
+:::

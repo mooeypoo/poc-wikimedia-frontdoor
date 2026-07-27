@@ -1001,6 +1001,11 @@ Markdown page titles and section headings follow the Codex [typography style gui
 **Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
 **Use wiki content** (`content/en/get-started/wiki-content.md`): three `##` sections each with a `:::navigation-card-grid`. Explore APIs cards link to `/explorer` (internal, no supporting-text). High-volume section mixes an internal Enterprise card (`/get-started/wikimedia-enterprise`) with an external Meta-Wiki dumps card (`supporting-text="Read more on Meta-Wiki"`). Tutorials: Quick start and Browse all tutorials are internal (`/get-started/quick-start`, `/get-started/tutorials`); **Get featured content** is intentionally non-interactive (no `url`) until a destination is chosen.
+
+**Access open data** (`content/en/get-started/open-data.md`): intro then an untitled card grid (three external Meta-Wiki / Wikidata cards with writer-authored supporting-text), then `## Explore APIs` (`/explorer`), `## High-volume and commercial access` (Enterprise internal + Meta-Wiki dumps), `## Learn with tutorials` (both cards → `/get-started/tutorials`). **External supporting-text labels always keep the technical writer’s copy** from the source Markdown (do not invent new link labels).
+
+**External supporting-text copy:** When converting prose “Read more on …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
+
 ### What works today without configuration
 
 | Feature | Mechanism |
@@ -1048,7 +1053,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
 | Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
 | Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
-| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **progressive link to the same destination** (not a second URL). External icon on that link for off-platform destinations; title trailing icon omitted when supporting-text is present |
+| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **progressive link to the same destination** (not a second URL). External icon on that link for off-platform destinations; title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 
@@ -1074,11 +1079,13 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Content vs banana-i18n:** Title, description, supporting-text, and chip labels are **content** — authored in per-locale Markdown and wrapped in `<bdi>`. They are not banana-i18n interface strings. Banana remains for true chrome (nav labels, buttons, errors). This matches `docs/TECH_DECISIONS.md` (interface → banana-i18n; content → Nuxt Content locales) and avoids duplicating page copy into `i18n/*.json`.
 
-**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab. The external-link icon appears on **supporting-text** when that prop is set; otherwise on the title row. Internal `/…` paths use `NuxtLink` with no external icon.
+**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab. The external-link icon appears on **supporting-text** when that prop is set; otherwise on the title row. Internal `/…` paths use `NuxtLink` with no external icon and no supporting-text. When converting existing “Read more on …” prose links into `supporting-text`, **always keep the writer’s label text**.
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md` (mixed internal `/explorer` + Get started paths, one external Meta-Wiki supporting-text link, one non-clickable card); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).#### Callouts
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md` and `content/en/get-started/open-data.md` (mixed internal `/explorer` + Get started paths, external Meta-Wiki/Wikidata supporting-text with writer-authored labels, optional non-clickable cards); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+
+#### Callouts
 
 `Callout.vue` wraps Codex **`CdxMessage`**. Optional `#title` named slot content is Markdown; MDC already emits a `<p>`, so the component must **not** wrap the title in another `<p>` or `<strong>` (invalid nesting misaligned the status icon from the title). When a title is present:
 

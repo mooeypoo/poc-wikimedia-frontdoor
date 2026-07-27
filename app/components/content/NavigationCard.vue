@@ -25,7 +25,9 @@ export type { NavigationCardChip }
  *   link to the same destination (external icon appended for off-platform URLs);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`)
+ *   supporting-text is bottom-aligned (`margin-block-start: auto`). When
+ *   converting from prose, **keep the technical writer’s supporting-text /
+ *   link labels** — do not rewrite them
  * - Optional `CdxInfoChip` row
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
@@ -56,7 +58,8 @@ const props = withDefaults( defineProps<{
 	/**
 	 * Optional Codex Card supporting-text. When `url` is set, rendered as a
 	 * progressive link to the same destination (with external icon when
-	 * off-platform). Content string — BiDi-isolated.
+	 * off-platform). Content string — BiDi-isolated. Preserve technical-writer
+	 * labels when converting from prose.
 	 */
 	supportingText?: string
 	/**
