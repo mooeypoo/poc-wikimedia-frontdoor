@@ -996,7 +996,9 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
 | `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
 
-**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons or chips on that page).
+**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page).
+
+**Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
 ### What works today without configuration
 
@@ -1075,7 +1077,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` (internal whole-card links, no icons/chips/supporting-text); `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/on-wiki.md` (mockup stub for the on-wiki-features card / section-nav item); `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 #### Callouts
 
 `Callout.vue` wraps Codex **`CdxMessage`**. Optional `#title` named slot content is Markdown; MDC already emits a `<p>`, so the component must **not** wrap the title in another `<p>` or `<strong>` (invalid nesting misaligned the status icon from the title). When a title is present:

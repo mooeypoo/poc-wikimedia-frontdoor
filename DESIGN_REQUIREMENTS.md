@@ -716,6 +716,8 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`). Topic destinations use `:::navigation-card-grid` + `::navigation-card` (see **Navigation card** below).
 
+**Build for communities** ([`/get-started/build-for-communities`](https://wikifrodo.netlify.app/get-started/build-for-communities)): intro copy, then one card grid (same internal whole-card pattern as Get started — no supporting-text). Destinations align with For communities section nav, including [`/get-started/on-wiki`](https://wikifrodo.netlify.app/get-started/on-wiki) (mockup stub).
+
 **Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
 
 ---
@@ -740,7 +742,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
 | Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block-start after section intro |
 
-**Get started overview:** title + description only (no icons, chips, or supporting-text). Cards grouped per `h2` in `navigation-card-grid`.
+**Get started overview / Build for communities:** title + description only (no icons, chips, or supporting-text). Cards grouped in `navigation-card-grid` (overview: per `h2`; build-for-communities: page intro then one grid).
 
 **About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
 
@@ -748,7 +750,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
 
-**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
 
 **Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
@@ -760,6 +762,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Build for communities cards + on-wiki stub | Internal navigation cards (no supporting-text); `content/en/get-started/on-wiki.md` so card/section-nav link resolves |
 | *(uncommitted)* | About Wikimedia navigation cards | External cards; supporting-text progressive link + external icon; bottom-aligned links; “Read the docs”; Wikidata default-slot link |
 | *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; 16px intro→grid gap; no icons/chips on Get started |
 | *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / Heading 2 on `.fd-content-page` |
