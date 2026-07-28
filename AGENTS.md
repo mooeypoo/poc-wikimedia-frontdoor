@@ -192,6 +192,8 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 7. Title, description, and supporting-text are **content** (per-locale Markdown + `<bdi>` via the component) — **not** banana-i18n.
 8. Markdown inside a description (inline links) in a grid → card **default slot**, not `#description` (MDC named slots under `:::navigation-card-grid` 404 the page).
 
+**Do not cardify:** `content/en/get-started/wikimedia-enterprise.md` body sections stay **prose** (heading + paragraphs + writer links). That page may use `::highlight` for the intro CTA only — see `ARCHITECTURE.md` → About Wikimedia Enterprise.
+
 #### Internal navigation cards
 
 **Use when:** destination is on Front Door (`/get-started/…`, `/explorer`, other same-origin paths).
@@ -240,7 +242,6 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 **Reference pages (copy this shape):**
 
 - `content/en/get-started/about-wikimedia.md` (all external)
-- `content/en/get-started/wikimedia-enterprise.md` (Enterprise docs / pricing / Wikitech; commercial-use-cases **prose link below** the Explore grid)
 - External cards on `open-data.md`, `tools-and-bots.md`, `wiki-content.md` (Meta-Wiki dumps)
 
 ```md
@@ -266,6 +267,7 @@ Stop and ask when:
 - A section has two external URLs (which is the card `url` vs an inline description link?)
 - Duplicate titles appear in two sections (keep both vs one?)
 - Layout of orphan `###` blocks with no parent `##` is unclear
+- The prompt would cardify `wikimedia-enterprise.md` (body must stay prose — confirm before changing)
 
 See `ARCHITECTURE.md` → Navigation card and `docs/content-authoring-guide.md` → Navigation cards.
 ---
@@ -380,8 +382,8 @@ Before marking any component complete, verify:
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: endpoint **name** uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Primary **APIs** tab (`nav-api`) stays selected on `/explorer` and `/explorer/…`; start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`)
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
-- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, supporting-text, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle` on linked cards; whole-card click via stretched link; when `supporting-text` + `url` are set, supporting-text is a progressive link to the same destination (external icon on supporting-text for off-platform URLs; title trailing icon omitted); **keep writer-authored supporting-text labels** when converting from prose; supporting-text bottom-aligned in equal-height grid rows; without supporting-text, title trailing icon for off-platform URLs; omit `url` for intentionally non-clickable cards; description may include inline links (e.g. PAWS / Wikidata; ProseA external icons suppressed); Get started / Build for communities / Use wiki content / Access open data / Tools and bots / About Wikimedia / Wikimedia Enterprise cards sit in `:::navigation-card-grid` (equal-height rows); grid uses **`--spacing-100` (16px)** `margin-block` above and below (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page`); internal card/`sectionNavigation` `href`s have matching `content/<locale>/…` Markdown (e.g. `/get-started/on-wiki` → `on-wiki.md`) so destinations do not 404
-- [ ] **Highlight** (`Highlight` / `.fd-highlight`): progressive-subtle CTA / featured blurb only (not `Callout` / `CdxMessage` status types); no banana keys for highlight copy (Markdown / Vue slot content); no border; radius via `--fd-explorer-controls-surface-border-radius`; padding `--spacing-75`; first-party CSS uses logical properties; inherits interface `dir` from the shell; links inside follow ProseA / progressive link rules; demos include Get started landing and Wikimedia Enterprise intro CTA (Enterprise CTA has **no** arrow)
+- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, supporting-text, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle` on linked cards; whole-card click via stretched link; when `supporting-text` + `url` are set, supporting-text is a progressive link to the same destination (external icon on supporting-text for off-platform URLs; title trailing icon omitted); **keep writer-authored supporting-text labels** when converting from prose; supporting-text bottom-aligned in equal-height grid rows; without supporting-text, title trailing icon for off-platform URLs; omit `url` for intentionally non-clickable cards; description may include inline links (e.g. PAWS / Wikidata; ProseA external icons suppressed); Get started / Build for communities / Use wiki content / Access open data / Tools and bots / About Wikimedia cards sit in `:::navigation-card-grid` (equal-height rows); grid uses **`--spacing-100` (16px)** `margin-block` above and below (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page`); internal card/`sectionNavigation` `href`s have matching `content/<locale>/…` Markdown (e.g. `/get-started/on-wiki` → `on-wiki.md`) so destinations do not 404; **Wikimedia Enterprise body content is prose, not cards**
+- [ ] **Highlight** (`Highlight` / `.fd-highlight`): progressive-subtle CTA / featured blurb only (not `Callout` / `CdxMessage` status types); no banana keys for highlight copy (Markdown / Vue slot content); no border; radius via `--fd-explorer-controls-surface-border-radius`; padding `--spacing-75`; first-party CSS uses logical properties; inherits interface `dir` from the shell; links inside follow ProseA / progressive link rules; demos include Get started landing (inline CTA with arrow) and Wikimedia Enterprise intro (sentence + CTA on a **new line**, **no** arrow; body of that page is **prose**, not cards)
 - [ ] **Content page typography** (`.fd-content-page`): Codex Heading 1 / 2 / 3 on `h1` / `h2` / `h3` per `ARCHITECTURE.md` → Content typography
 
 ---

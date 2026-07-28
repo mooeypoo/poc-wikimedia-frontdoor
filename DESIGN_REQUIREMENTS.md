@@ -726,7 +726,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Tools and bots** ([`/get-started/tools-and-bots`](https://wikifrodo.netlify.app/get-started/tools-and-bots)): section intros + grids; Toolhub/mediawiki/Wikitech/Wikidata supporting-text; `/explorer` for API cards; PAWS linked in description + Wikitech supporting-text.
 
-**About Wikimedia Enterprise** ([`/get-started/wikimedia-enterprise`](https://wikifrodo.netlify.app/get-started/wikimedia-enterprise)): `::highlight` for high-volume access + Enterprise CTA (no arrow); external navigation cards under Explore use cases (Snapshot / On-demand / Realtime) with commercial-use-cases link below the grid; free-tier + communities cards under Get started for free.
+**About Wikimedia Enterprise** ([`/get-started/wikimedia-enterprise`](https://wikifrodo.netlify.app/get-started/wikimedia-enterprise)): `::highlight` for high-volume access + Enterprise CTA (no arrow, new line); body sections remain prose (not navigation cards).
 
 **Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
 
@@ -774,6 +774,8 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Get started overview / Build for communities:** title + description only (no icons, chips, or supporting-text). Cards grouped in `navigation-card-grid` (overview: per `h2`; build-for-communities: page intro then one grid).
 
+**Exception — Wikimedia Enterprise:** `/get-started/wikimedia-enterprise` uses `::highlight` for the intro CTA only; Download / On-demand / Realtime / free-access sections remain **prose** (do not convert to cards). See `ARCHITECTURE.md` → About Wikimedia Enterprise.
+
 **Use wiki content:** three section grids — internal cards (no supporting-text) to `/explorer` and Get started paths; external Meta-Wiki dumps card with supporting-text; optional non-clickable card when destination is TBD (omit `url`).
 
 **Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; external supporting-text uses the technical writer’s existing labels.
@@ -788,7 +790,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
 
-**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
 
 **Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
@@ -800,7 +802,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Enterprise page highlight + external cards | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow); Explore external cards + commercial link below; free-tier + communities cards; Codex Heading 3; card-grid 16px block margins |
+| *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
