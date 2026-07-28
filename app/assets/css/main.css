@@ -160,6 +160,33 @@ h2 {
 	line-height: var( --line-height-xx-large );
 }
 
+/*
+ * Highlight — progressive-subtle surface for prose CTAs / featured blurbs
+ * (Get started quick-start banner; reusable for API catalog, etc.).
+ * Not a status callout (use Callout / CdxMessage for notice/warning/error/success).
+ * MDC: `::highlight` → `Highlight.vue`. Class may also be applied in Vue.
+ * Block margin `--spacing-100` is vertical rhythm vs adjacent prose (not part of
+ * the Figma padding spec of 12px).
+ * Name is independent of code syntax highlighting (Shiki / mw-highlight).
+ */
+.fd-highlight {
+	box-sizing: border-box;
+	inline-size: 100%;
+	margin-block: var( --spacing-100 );
+	padding: var( --spacing-75 );
+	border: 0;
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --background-color-progressive-subtle );
+}
+
+.fd-highlight :where( p ) {
+	margin-block: 0;
+}
+
+.fd-highlight :where( p + p ) {
+	margin-block-start: var( --spacing-50 );
+}
+
 h3 {
 	font-size: var( --font-size-large );
 }

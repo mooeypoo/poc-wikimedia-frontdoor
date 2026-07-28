@@ -729,6 +729,22 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 ---
 
+## Highlight
+
+**Decision:** Prose CTA / featured-blurb surfaces (Get started quick-start banner; future API catalog panels) use a shared **`.fd-highlight`** class and optional MDC `::highlight` (`Highlight.vue`). **Do not** use this for status messages — those remain `::callout` / `CdxMessage`. Name is independent of code syntax highlighting.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--background-color-progressive-subtle` |
+| Border | none |
+| Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
+| Padding | `--spacing-75` (**12px**) |
+| Block margin | `--spacing-100` (default vertical rhythm vs adjacent prose) |
+
+**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `ARCHITECTURE.md` → Highlight.
+
+---
+
 ## Navigation card
 
 **Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
@@ -779,6 +795,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
 | *(uncommitted)* | Access open data navigation cards | Untitled intro external grid; `/explorer` + Enterprise + tutorials; writer-authored supporting-text labels preserved |

@@ -1007,7 +1007,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
 | `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
 
-**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page).
+**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
 
 **Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
@@ -1047,6 +1047,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
+| `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
@@ -1106,6 +1107,26 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
 **Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+
+#### Highlight
+
+`Highlight.vue` (`::highlight`) wraps Markdown in the shared **`.fd-highlight`** surface for progressive CTAs / featured blurbs on prose pages (and reusable elsewhere, e.g. an API catalog).
+
+**Not a callout:** Status / alert copy stays `Callout` → `CdxMessage` (`notice` / `warning` / `error` / `success`). Highlight is a **non-status** progressive-subtle panel. Codex has no equivalent surface without message chrome — this is an intentional bespoke exception to “prefer Codex widgets” for content components.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--background-color-progressive-subtle` |
+| Border | none |
+| Radius | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
+| Padding | `--spacing-75` (**12px**) |
+| Block margin | `--spacing-100` (vertical rhythm vs adjacent prose; see DESIGN_REQUIREMENTS) |
+
+CSS lives in `app/assets/css/main.css` so Vue templates may apply `class="fd-highlight"` without the MDC wrapper. Nested paragraphs reset top/bottom margin so single-line CTAs sit flush in the padding; consecutive paragraphs use `--spacing-50` between them.
+
+Highlight copy is **page content** (per-locale Markdown or Vue slots) — not banana-i18n interface strings. The name is independent of code syntax highlighting (Shiki / `mw-highlight`).
+
+**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …”).
 
 #### Callouts
 

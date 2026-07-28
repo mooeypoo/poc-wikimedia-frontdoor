@@ -6,7 +6,9 @@ status: 0 draft
 
 Welcome to the Wikimedia Developer Portal! Start here to learn about APIs for accessing Wikipedia and other Wikimedia projects, as well as open data sets and resources for building tools and bots.
 
+::highlight
 Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-started/quick-start)
+::
 
 ## New to Wikimedia?
 

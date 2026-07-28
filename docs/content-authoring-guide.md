@@ -47,13 +47,27 @@ touch them.
 
 # My page title
 
-Body content in Markdown. MDC components (`::callout`, `::partial`, `::navigation-card`, …) work here —
+Body content in Markdown. MDC components (`::callout`, `::highlight`, `::partial`, `::navigation-card`, …) work here —
 see the import guide and `ARCHITECTURE.md` → MDC content components for the full list.
 ```
 
 - The file name (minus `.md`) is the URL slug. `content/en/guides.md` → `/guides`.
 - Nested folders work: `content/en/guides/reuse.md` → `/guides/reuse`.
 - The first `# ` heading is the page title.
+
+### Highlight (progressive CTA / featured blurb)
+
+Use **`::highlight`** for a progressive-subtle banner / CTA (no border, exploratory **4px** radius, **12px** / `--spacing-75` padding, `--spacing-100` block margin). Same surface as class **`.fd-highlight`** in Vue templates.
+
+**Not a callout:** For notice / warning / error / success, use **`::callout`** (`CdxMessage`). Highlight has no status icon or message type — only an emphasized panel. Independent of code syntax highlighting.
+
+```md
+::highlight
+Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-started/quick-start)
+::
+```
+
+Example: `content/en/get-started.md`. Copy is page content (per-locale Markdown), not banana-i18n.
 
 ### Navigation cards (destination tiles)
 
