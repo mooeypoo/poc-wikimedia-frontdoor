@@ -140,7 +140,74 @@ h2 {
 	font-size: var( --font-size-x-large );
 }
 
+/*
+ * Markdown content pages — Codex typography style guide
+ * (https://doc.wikimedia.org/codex/latest/style-guide/typography.html):
+ * Heading 1 / 2 use the serif stack; Heading 3 uses base + bold.
+ * Scoped to `.fd-content-page` so explorer / shell chrome keep their own heading rules.
+ */
+.fd-content-page :where( h1 ) {
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xxx-large );
+}
+
+.fd-content-page :where( h2 ) {
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xx-large );
+}
+
+.fd-content-page :where( h3 ) {
+	font-family: var( --font-family-base );
+	font-size: var( --font-size-x-large );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-x-large );
+}
+
+/*
+ * Keep NavigationCardGrid’s `--spacing-100` (16px) block margins intact:
+ * zero adjoining list/paragraph margins so they do not collapse with the grid.
+ */
+.fd-content-page :where( p, ul, ol ):has( + .navigation-card-grid ) {
+	margin-block-end: 0;
+}
+
+.fd-content-page .navigation-card-grid + :where( p, ul, ol ) {
+	margin-block-start: 0;
+}
+
+/*
+ * Highlight — progressive-subtle surface for prose CTAs / featured blurbs
+ * (Get started quick-start banner; reusable for API catalog, etc.).
+ * Not a status callout (use Callout / CdxMessage for notice/warning/error/success).
+ * MDC: `::highlight` → `Highlight.vue`. Class may also be applied in Vue.
+ * Block margin `--spacing-100` is vertical rhythm vs adjacent prose (not part of
+ * the Figma padding spec of 12px).
+ * Name is independent of code syntax highlighting (Shiki / mw-highlight).
+ */
+.fd-highlight {
+	box-sizing: border-box;
+	inline-size: 100%;
+	margin-block: var( --spacing-100 );
+	padding: var( --spacing-75 );
+	border: 0;
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
+	background-color: var( --background-color-progressive-subtle );
+}
+
+.fd-highlight :where( p ) {
+	margin-block: 0;
+}
+
+.fd-highlight :where( p + p ) {
+	margin-block-start: var( --spacing-50 );
+}
+
 h3 {
+	/* Non-content pages only; `.fd-content-page h3` uses Codex Heading 3. */
 	font-size: var( --font-size-large );
 }
 

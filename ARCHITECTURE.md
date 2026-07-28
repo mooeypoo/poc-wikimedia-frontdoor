@@ -74,7 +74,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── accountTokenSecret.ts # Masking helpers for account API key secrets
 │   │   ├── oauthHandoff.ts      # sessionStorage key for callback → destination token handoff
 │   │   ├── explorerRoute.ts     # isExplorerRoutePath() for layout and plugins
-│   │   └── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
+│   │   ├── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
+│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props for NavigationCard
 │   ├── middleware/
 │   │   └── content-sidebar.global.ts  # Content `sidebar` frontmatter; forces `/account` sidebar off
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
@@ -93,7 +94,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
-│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel)
+│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard)
+│   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
@@ -994,7 +996,37 @@ See `docs/adr-multilingual-search.md` for the full decision record and `docs/sea
 
 ### Rendering pipeline
 
-Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>`. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+
+### Content typography (Codex style guide)
+
+Markdown page titles and section headings follow the Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html), scoped under `.fd-content-page` in `app/assets/css/main.css` (so explorer / shell chrome keep their own heading rules):
+
+| Element | Codex style | Tokens |
+|---------|-------------|--------|
+| `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
+| `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+| `h3` | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
+
+**Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
+
+**Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
+
+**Use wiki content** (`content/en/get-started/wiki-content.md`): three `##` sections each with a `:::navigation-card-grid`. Explore APIs cards link to `/explorer` (internal, no supporting-text). High-volume section mixes an internal Enterprise card (`/get-started/wikimedia-enterprise`) with an external Meta-Wiki dumps card (`supporting-text="Read more on Meta-Wiki"`). Tutorials: Quick start and Browse all tutorials are internal (`/get-started/quick-start`, `/get-started/tutorials`); **Get featured content** is intentionally non-interactive (no `url`) until a destination is chosen.
+
+**Access open data** (`content/en/get-started/open-data.md`): intro then an untitled card grid (three external Meta-Wiki / Wikidata cards with writer-authored supporting-text), then `## Explore APIs` (internal **Lift Wing API** → `/explorer`), `## High-volume and commercial access` (Enterprise internal + Meta-Wiki dumps), `## Learn with tutorials` (Compare page metrics external + Browse all tutorials internal). **External supporting-text labels always keep the technical writer’s copy** from the source Markdown (do not invent new link labels).
+
+**Tools and bots** (`content/en/get-started/tools-and-bots.md`): keep each `##` section intro as prose, then a `:::navigation-card-grid`. Most cards are external with writer-authored supporting-text (Toolhub, mediawiki.org, Wikitech, Wikidata). **Use APIs and data sources** cards link to `/explorer` (internal, no supporting-text) — titles **MediaWiki REST API** and **Lift Wing API**. **Run scripts in your browser** uses card `url` → Wikitech PAWS + supporting-text “Read more on Wikitech”, and links the word **PAWS** in the description (default slot) to `https://hub-paws.wmcloud.org/`. Duplicate “Build your first tool” cards are kept in Get started and Learn with tutorials.
+
+**Get started API card titles (current ecosystem):** Until discovery modules are listed as first-class destinations and some solutions are renamed for broader accessibility, Explore / Use APIs cards use **current product names** as they exist today (e.g. **Lift Wing API**, not a generic “Machine Learning API”). Prefer writer/product-accurate titles over aspirational or umbrella labels. See `AGENTS.md` → Navigation card authoring playbook.
+
+**About Wikimedia Enterprise** (`content/en/get-started/wikimedia-enterprise.md`): intro ends the SLA sentence with a full stop; the high-volume access sentence + **Get started with Wikimedia Enterprise** CTA (no arrow, new line) sit in `::highlight` (`https://enterprise.wikimedia.com`). Body sections remain **prose** (not navigation cards): Explore use cases bullets + commercial-use-cases link; Download / On-demand / Realtime `##` sections with writer links; Get started for free + Free access for Wikimedia communities.
+
+**Bulk data for research** (`content/en/get-started/data-for-research.md`), **Featured apps** (`featured-apps.md`), and **Browse by programming language** (`by-language.md`): mockup stubs so Get started / section-nav links resolve (same pattern as `on-wiki.md` / `tutorials.md`).
+
+**Commercial use cases** (`content/en/get-started/commercial-use-cases.md`): Markdown under `.fd-content-page` (Codex Heading 1–3). Card conversion not applied yet.
+
+**External supporting-text copy:** When converting prose “Read more on …” / “Visit …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
 
 ### What works today without configuration
 
@@ -1021,14 +1053,89 @@ Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/
 
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
-| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern |
+| `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
+| `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
+| `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
+| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
 | `AppButton.vue` | Progressive button styling (NuxtLink / `<a>`) | `::app-button{href="…" label="…"}` inline |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
 | `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
+
+#### Navigation card
+
+`NavigationCard.vue` is Front Door’s vertical **content / navigation card** — not a thin wrapper around stock `CdxCard`. It follows Figma variant A ([Content card 79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)) for Get started and other Markdown documentation pages.
+
+**Agent playbook:** When converting or authoring destination tiles, follow **`AGENTS.md` → Navigation card authoring playbook**. That section defines the two required styles (same component):
+
+| Style | When | Signature | Reference Markdown |
+|-------|------|-----------|--------------------|
+| **Internal** | Same-origin path (`/get-started/…`, `/explorer`, …) | `url` + `title` + `description` only — **no** `supporting-text` | `get-started.md`, `build-for-communities.md` |
+| **External** | Off-platform `https://…` | `url` + `title` + `description` + **`supporting-text`** (writer label; external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+
+Mixed pages apply the table **per card**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
+
+| Aspect | Stock `CdxCard` | `NavigationCard` |
+|--------|-----------------|------------------|
+| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; no thumbnail |
+| Background | Base (white) | Neutral-subtle via `--fd-explorer-controls-surface-background-color` |
+| Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
+| Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
+| Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
+| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **progressive link to the same destination** (not a second URL). External icon on that link for off-platform destinations; title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
+| Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row |
+| Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
+
+**Props / slots:** `url`, `title`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
+
+**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose. Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
+
+**BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
+
+**MDC authoring examples:**
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles…"}
+::
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects" title="Explore projects" description="…" supporting-text="Read more on Meta-Wiki"}
+::
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
+Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
+::
+:::
+```
+
+**Content vs banana-i18n:** Title, description, supporting-text, and chip labels are **content** — authored in per-locale Markdown and wrapped in `<bdi>`. They are not banana-i18n interface strings. Banana remains for true chrome (nav labels, buttons, errors). This matches `docs/TECH_DECISIONS.md` (interface → banana-i18n; content → Nuxt Content locales) and avoids duplicating page copy into `i18n/*.json`.
+
+**External destinations:** Absolute `http(s):` URLs (or `external`) open in a new tab. The external-link icon appears on **supporting-text** when that prop is set; otherwise on the title row. Internal `/…` paths use `NuxtLink` with no external icon and no supporting-text. When converting existing “Read more on …” prose links into `supporting-text`, **always keep the writer’s label text**.
+
+**Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
+
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+
+#### Highlight
+
+`Highlight.vue` (`::highlight`) wraps Markdown in the shared **`.fd-highlight`** surface for progressive CTAs / featured blurbs on prose pages (and reusable elsewhere, e.g. an API catalog).
+
+**Not a callout:** Status / alert copy stays `Callout` → `CdxMessage` (`notice` / `warning` / `error` / `success`). Highlight is a **non-status** progressive-subtle panel. Codex has no equivalent surface without message chrome — this is an intentional bespoke exception to “prefer Codex widgets” for content components.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--background-color-progressive-subtle` |
+| Border | none |
+| Radius | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
+| Padding | `--spacing-75` (**12px**) |
+| Block margin | `--spacing-100` (vertical rhythm vs adjacent prose; see DESIGN_REQUIREMENTS) |
+
+CSS lives in `app/assets/css/main.css` so Vue templates may apply `class="fd-highlight"` without the MDC wrapper. Nested paragraphs reset top/bottom margin so single-line CTAs sit flush in the padding; consecutive paragraphs use `--spacing-50` between them.
+
+Highlight copy is **page content** (per-locale Markdown or Vue slots) — not banana-i18n interface strings. The name is independent of code syntax highlighting (Shiki / `mw-highlight`).
+
+**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …” with arrow, single paragraph). Also `content/en/get-started/wikimedia-enterprise.md` — high-volume access blurb + **Get started with Wikimedia Enterprise** as a **second paragraph** inside the highlight (**no** arrow; `https://enterprise.wikimedia.com`). Enterprise **body** sections are prose (not cards).
 
 #### Callouts
 

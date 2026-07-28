@@ -9,8 +9,9 @@
  *
  * Border radius is an exploratory **4px** value — not a Codex design token
  * (Codex `--border-radius-base` is **2px**). It is under consideration as a
- * future system default. Account list-element cards and the Reset success
- * credentials panel consume the mirrored CSS variable
+ * future system default. Account list-element cards, the Reset success
+ * credentials panel, content **`NavigationCard`**, and **`.fd-highlight`** /
+ * **`Highlight`** consume the mirrored CSS variable
  * `--fd-explorer-controls-surface-border-radius` (do not hardcode `4px` there).
  */
 export const EXPLORER_CONTROLS_SURFACE_BACKGROUND_COLOR = 'var(--background-color-neutral-subtle)'

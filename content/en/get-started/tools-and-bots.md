@@ -1,96 +1,73 @@
 ---
-status: 0 draft
+status: mockup
 ---
-
 # Tools and bots
+
 Tools and bots make it easier to edit and maintain Wikimedia projects.
 
 ## Discover and share tools
 
 Browse the catalog of tools on Toolhub, share your tools, and help maintain tool metadata.
 
-### Toolhub
+:::navigation-card-grid
+::navigation-card{url="https://toolhub.wikimedia.org/" title="Toolhub" description="Toolhub is a catalog of tools that make it easier to edit and maintain Wikimedia projects. Use Toolhub to discover new tools, connect with tool maintainers, and share lists of your favorite tools." supporting-text="Visit Toolhub"}
+::
 
-Toolhub is a catalog of tools that make it easier to edit and maintain Wikimedia projects. Use Toolhub to discover new tools, connect with tool maintainers, and share lists of your favorite tools.
-
-[Visit Toolhub](https://toolhub.wikimedia.org/)
-
-### Share a tool
-
-Add your tool to the Toolhub catalog so others can benefit from and build on your work. Log in to Toolhub with your Wikimedia account to get started.
-
-[Add a tool to Toolhub](https://toolhub.wikimedia.org/add-or-remove-tools?tab=tool-create)
+::navigation-card{url="https://toolhub.wikimedia.org/add-or-remove-tools?tab=tool-create" title="Share a tool" description="Add your tool to the Toolhub catalog so others can benefit from and build on your work. Log in to Toolhub with your Wikimedia account to get started." supporting-text="Add a tool to Toolhub"}
+::
+:::
 
 ## Get started
 
 Create your first tool, learn about running a bot, and get best practices.
 
-### Build your first tool
+:::navigation-card-grid
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Pywikibot/PAWS" title="Build your first tool" description="Learn how to edit wiki pages using Python and the Pywikibot framework. This tutorial helps you get started quickly using only your browser." supporting-text="Read more on mediawiki.org"}
+::
 
-Learn how to edit wiki pages using Python and the Pywikibot framework. This tutorial helps you get started quickly using only your browser.
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Creating_a_bot" title="Learn about creating and running bots" description="Bots help maintain wikis by performing repetitive tasks. Get started creating and running bots by learning about best practices." supporting-text="Read more on mediawiki.org"}
+::
 
-[Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Pywikibot/PAWS)
-
-### Learn about creating and running bots
-
-Bots help maintain wikis by performing repetitive tasks. Get started creating and running bots by learning about best practices.
-
-[Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Creating_a_bot)
-
-### Best practices for open source tools
-New to open source? Get tips to help you develop successful tools and bots, including choosing a license, publishing the code, and writing docs.
-
-[Read more on Wikitech](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Developing_successful_tools)
-
+::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Toolforge/Developing_successful_tools" title="Best practices for open source tools" description="New to open source? Get tips to help you develop successful tools and bots, including choosing a license, publishing the code, and writing docs." supporting-text="Read more on Wikitech"}
+::
+:::
 
 ## Learn with tutorials
+
 Follow step-by-step guides to learn the basics of interacting with Wikimedia projects.
 
-### Build your first tool
+:::navigation-card-grid
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Pywikibot/PAWS" title="Build your first tool" description="Learn how to edit wiki pages using Python and the Pywikibot framework. This tutorial helps you get started quickly using only your browser." supporting-text="Read more on mediawiki.org"}
+::
 
-Learn how to edit wiki pages using Python and the Pywikibot framework. This tutorial helps you get started quickly using only your browser.
+::navigation-card{url="https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:Pywikibot_-_Python_3_Tutorial" title="Write a bot that uses Wikidata" description="Use Python to handle large datasets from Wikidata and transfer data between tools in your workflow." supporting-text="Read more on Wikidata"}
+::
 
-[Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Pywikibot/PAWS)
-
-### Write a bot that uses Wikidata
-
-Use Python to handle large datasets from Wikidata and transfer data between tools in your workflow.
-
-[Read more on Wikidata](https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:Pywikibot_-_Python_3_Tutorial)
-
-### Host a tool on Wikimedia cloud servers
-
-Toolforge is a free hosting environment for running and managing tools. Get started with Toolforge by creating an account and setting up a basic web service.
-
-[Read more on Wikitech](https://wikitech.wikimedia.org/wiki/Help:Toolforge/Quickstart)
+::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Toolforge/Quickstart" title="Host a tool on Wikimedia cloud servers" description="Toolforge is a free hosting environment for running and managing tools. Get started with Toolforge by creating an account and setting up a basic web service." supporting-text="Read more on Wikitech"}
+::
+:::
 
 ## Use APIs and data sources
+
 Explore programming interfaces for building bots and tools.
 
-### Editing API
+:::navigation-card-grid
+::navigation-card{url="/explorer" title="MediaWiki REST API" description="Automate page edits and support wiki maintainers."}
+::
 
-Automate page edits and support wiki maintainers.
-
-[Read the API reference]()
-
-### Machine learning API
-
-Predict the quality of an edit, and get other predictions.
-
-[Read the API reference]()
+::navigation-card{url="/explorer" title="Lift Wing API" description="Predict the quality of an edit, and get other predictions."}
+::
+:::
 
 ## Host tools on Wikimedia servers
+
 Access cloud services for performing analytics, administering bots, running web services, and hosting tools that help Wikimedia projects.
 
-### Run scripts in your browser
+:::navigation-card-grid
+::navigation-card{url="https://wikitech.wikimedia.org/wiki/PAWS" title="Run scripts in your browser" supporting-text="Read more on Wikitech"}
+[PAWS](https://hub-paws.wmcloud.org/) is a free, cloud-hosted playground for creating scripts and data visualizations related to Wikimedia projects. Log in with your Wikimedia account and create a notebook to get started.
+::
 
-PAWS is a free, cloud-hosted playground for creating scripts and data visualizations related to Wikimedia projects. Log in with your Wikimedia account and create a notebook to get started.
-
-- [Visit PAWS](https://hub-paws.wmcloud.org/
-- [Read more on Wikitech](https://wikitech.wikimedia.org/wiki/PAWS)
-
-### Learn about cloud hosting for tools
-
-Toolforge is a free hosting environment for running and managing tools. Developing a tool in Toolforge makes it easier to access Wikimedia content and data and to share your tool with others.
-
-[Read more on Wikitech](https://wikitech.wikimedia.org/wiki/Help:Toolforge)
+::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Toolforge" title="Learn about cloud hosting for tools" description="Toolforge is a free hosting environment for running and managing tools. Developing a tool in Toolforge makes it easier to access Wikimedia content and data and to share your tool with others." supporting-text="Read more on Wikitech"}
+::
+:::

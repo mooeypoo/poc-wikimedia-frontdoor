@@ -11,7 +11,8 @@ const NON_DEFAULT_CONTENT_LOCALE_CODES = [ 'es', 'fr', 'he', 'fa' ] as const
 const LEGACY_PATH_REDIRECTS: Readonly<Record<string, string>> = {
 	'/learn': '/use-content-and-data',
 	'/about': '/',
-	'/enterprise': '/'
+	'/enterprise': '/',
+	'/tools-and-bots': '/get-started/tools-and-bots'
 }
 
 /**

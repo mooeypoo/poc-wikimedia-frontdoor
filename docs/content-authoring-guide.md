@@ -47,13 +47,61 @@ touch them.
 
 # My page title
 
-Body content in Markdown. MDC components (`::callout`, `::partial`, …) work here —
-see the import guide for the component list.
+Body content in Markdown. MDC components (`::callout`, `::highlight`, `::partial`, `::navigation-card`, …) work here —
+see the import guide and `ARCHITECTURE.md` → MDC content components for the full list.
 ```
 
 - The file name (minus `.md`) is the URL slug. `content/en/guides.md` → `/guides`.
 - Nested folders work: `content/en/guides/reuse.md` → `/guides/reuse`.
 - The first `# ` heading is the page title.
+
+### Highlight (progressive CTA / featured blurb)
+
+Use **`::highlight`** for a progressive-subtle banner / CTA (no border, exploratory **4px** radius, **12px** / `--spacing-75` padding, `--spacing-100` block margin). Same surface as class **`.fd-highlight`** in Vue templates.
+
+**Not a callout:** For notice / warning / error / success, use **`::callout`** (`CdxMessage`). Highlight has no status icon or message type — only an emphasized panel. Independent of code syntax highlighting.
+
+```md
+::highlight
+Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-started/quick-start)
+::
+```
+
+Example: `content/en/get-started.md` (quick-start CTA with arrow). Also `content/en/get-started/wikimedia-enterprise.md` — sentence and CTA as **separate paragraphs** inside the highlight (CTA **without** arrow). That page’s body sections stay **prose** (not navigation cards). Copy is page content (per-locale Markdown), not banana-i18n.
+
+### Navigation cards (destination tiles)
+
+**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.
+
+| Style | Destination | MDC shape | Copy from |
+|-------|-------------|-----------|-----------|
+| **Internal** | `/get-started/…`, `/explorer`, … | `url` + `title` + `description` only (**no** `supporting-text`) | `content/en/get-started.md`, `build-for-communities.md` |
+| **External** | `https://…` off-platform | Same + **`supporting-text`** = writer’s link label (external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+
+Use **`:::navigation-card-grid`** for equal-height rows with **`--spacing-100` (16px)** above and below the grid. Whole-card click via stretched link. For **internal** paths omit supporting-text (no in-card “Learn more”). When converting existing external “Read more on …” / “Visit …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404**. **Do not** convert `wikimedia-enterprise.md` body sections to cards — that page stays prose under a `::highlight` intro CTA.
+
+**API / product titles on cards:** Use **current** ecosystem names (e.g. **Lift Wing API**, **MediaWiki REST API**). Do not replace them with generic umbrellas (e.g. “Machine Learning API”) until product decides modules are surfaced and accessibility-oriented renames ship.
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia…"}
+::
+::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data…"}
+::
+:::
+```
+
+Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `chips="subtle:Tag|notice:Other"`, `supporting-text="Read more on Meta-Wiki"` (progressive link to the same `url`, with external icon for off-platform destinations; title trailing icon is omitted when supporting-text is set; bottom-aligned in equal-height rows; **keep the technical writer’s label text**), `external` or an `https://…` `url` for off-platform destinations. Omit `url` for a non-interactive card (e.g. destination TBD). Title, description, supporting-text, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Examples: `content/en/get-started.md`, `content/en/get-started/build-for-communities.md` (internal cards, no supporting-text), `content/en/get-started/wiki-content.md` / `open-data.md` / `tools-and-bots.md` (mixed internal / external; description default slot for inline links), `content/en/get-started/about-wikimedia.md` (external supporting-text links).
+
+When a card needs **Markdown** in the description (e.g. an inline link) **inside** a grid, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and will 404 the page.
+
+```md
+:::navigation-card-grid
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
+Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
+::
+:::
+```
 
 **2. (Optional) add previous / next links.** On content pages, a footer nav renders
 when you set `prev` / `next` in frontmatter:
@@ -179,7 +227,7 @@ sidebar: false            # hide the sidebar; content spans full width
 
 **Available menu ids** (keys of `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID` in
 [`config/sectionNavigation.js`](../config/sectionNavigation.js)): `get-started`,
-`use-content-and-data`, `tools-and-bots`, `community`, `contribute`, `get-help`.
+`use-content-and-data`, `community`, `contribute`, `get-help`.
 
 Example — a standalone page that should show the Get Started menu:
 

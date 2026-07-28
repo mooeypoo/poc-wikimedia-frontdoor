@@ -704,12 +704,117 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ---
 
+## Content page typography (Get started section)
+
+**Decision:** Markdown content pages (`app/pages/[...slug].vue` → `.fd-content-page`) use Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html) heading styles:
+
+| Element | Style | Tokens |
+|---------|-------|--------|
+| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
+| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
+
+Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
+
+**Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`). Topic destinations use `:::navigation-card-grid` + `::navigation-card` (see **Navigation card** below).
+
+**Build for communities** ([`/get-started/build-for-communities`](https://wikifrodo.netlify.app/get-started/build-for-communities)): intro copy, then one card grid (same internal whole-card pattern as Get started — no supporting-text). Destinations align with For communities section nav, including [`/get-started/on-wiki`](https://wikifrodo.netlify.app/get-started/on-wiki) (mockup stub).
+
+**Use wiki content** ([`/get-started/wiki-content`](https://wikifrodo.netlify.app/get-started/wiki-content)): cards under Explore APIs / High-volume / Tutorials; mix of `/explorer`, Get started paths, one Meta-Wiki supporting-text link, and one non-clickable “Get featured content” card.
+
+**Access open data** ([`/get-started/open-data`](https://wikifrodo.netlify.app/get-started/open-data)): untitled intro grid (external) plus Explore APIs (**Lift Wing API** → `/explorer`) / High-volume / Tutorials section grids.
+
+**Tools and bots** ([`/get-started/tools-and-bots`](https://wikifrodo.netlify.app/get-started/tools-and-bots)): section intros + grids; Toolhub/mediawiki/Wikitech/Wikidata supporting-text; `/explorer` for API cards; PAWS linked in description + Wikitech supporting-text.
+
+**About Wikimedia Enterprise** ([`/get-started/wikimedia-enterprise`](https://wikifrodo.netlify.app/get-started/wikimedia-enterprise)): `::highlight` for high-volume access + Enterprise CTA (no arrow, new line); body sections remain prose (not navigation cards).
+
+**Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
+
+**Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
+
+---
+
+## Highlight
+
+**Decision:** Prose CTA / featured-blurb surfaces (Get started quick-start banner; future API catalog panels) use a shared **`.fd-highlight`** class and optional MDC `::highlight` (`Highlight.vue`). **Do not** use this for status messages — those remain `::callout` / `CdxMessage`. Name is independent of code syntax highlighting.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--background-color-progressive-subtle` |
+| Border | none |
+| Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
+| Padding | `--spacing-75` (**12px**) |
+| Block margin | `--spacing-100` (default vertical rhythm vs adjacent prose) |
+
+**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `ARCHITECTURE.md` → Highlight.
+
+---
+
+## Navigation card
+
+**Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
+
+**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels).
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Background | `--fd-explorer-controls-surface-background-color` → `--background-color-neutral-subtle` |
+| Border (default) | `1px solid transparent` (reserves space) |
+| Border (hover, linked) | `--border-color-subtle` |
+| Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
+| Padding | `--spacing-75` |
+| Title / description / supporting-text | Codex base size: `--font-size-medium` / `--line-height-medium` (title bold) |
+| Chips | Optional Codex `CdxInfoChip` under description; gap `--spacing-50` |
+| Top icon | Optional, above title row; progressive colour |
+| Leading icon | Optional, inline with title |
+| Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
+| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline |
+| Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
+| Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
+
+**Get started overview / Build for communities:** title + description only (no icons, chips, or supporting-text). Cards grouped in `navigation-card-grid` (overview: per `h2`; build-for-communities: page intro then one grid).
+
+**Exception — Wikimedia Enterprise:** `/get-started/wikimedia-enterprise` uses `::highlight` for the intro CTA only; Download / On-demand / Realtime / free-access sections remain **prose** (do not convert to cards). See `ARCHITECTURE.md` → About Wikimedia Enterprise.
+
+**Use wiki content:** three section grids — internal cards (no supporting-text) to `/explorer` and Get started paths; external Meta-Wiki dumps card with supporting-text; optional non-clickable card when destination is TBD (omit `url`).
+
+**Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; Explore APIs uses current product title **Lift Wing API** → `/explorer`; external supporting-text uses the technical writer’s existing labels.
+
+**Tools and bots:** section intro prose + grids; external writer-authored supporting-text; `/explorer` for **MediaWiki REST API** and **Lift Wing API** (current ecosystem names — not generic “Machine learning API”); **Run scripts in your browser** description links PAWS to hub-paws, card destination Wikitech with supporting-text “Read more on Wikitech”.
+
+**API card titles:** Prefer current product names until modules are available in the explorer IA and renames for accessibility are decided (see `ARCHITECTURE.md` → Get started API card titles).
+
+**About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
+
+**External supporting-text labels:** Always keep the current link label from the source content (technical writer copy). Do not invent or “improve” those strings when converting to cards.
+
+**Content strings:** Title, description, supporting-text, and chip labels live in per-locale Markdown (content translation), BiDi-isolated — not banana-i18n. Banana stays for interface chrome only (`docs/TECH_DECISIONS.md`).
+
+**Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
+
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
+
+**Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
+
+---
+
 ## Commit traceability (design branch)
 
 Mapping of notable commits to design areas (newest first among design-only work):
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
+| *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
+| *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
+| *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
+| *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
+| *(uncommitted)* | Access open data navigation cards | Untitled intro external grid; `/explorer` + Enterprise + tutorials; writer-authored supporting-text labels preserved |
+| *(uncommitted)* | Use wiki content navigation cards | Section grids; `/explorer` + Get started internals; Meta-Wiki supporting-text; non-clickable featured-content card; enterprise/tutorials stubs |
+| *(uncommitted)* | Build for communities cards + on-wiki stub | Internal navigation cards (no supporting-text); `content/en/get-started/on-wiki.md` so card/section-nav link resolves |
+| *(uncommitted)* | About Wikimedia navigation cards | External cards; supporting-text progressive link + external icon; bottom-aligned links; “Read the docs”; Wikidata default-slot link |
+| *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; **16px** grid `margin-block` above/below; no icons/chips on Get started |
+| *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / 2 / 3 on `.fd-content-page` |
 | *(uncommitted)* | Interface language Lookup + Codex bidi CSS | Globe + code trigger; popover wraps `CdxLookup`; `clearable`; `visibleItemLimit: 7`; Floating UI cancel for menu containment; `codex.style-bidi.css` replaces dual-sheet RTL toggle |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |

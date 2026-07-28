@@ -10,9 +10,10 @@ Use the right document for the kind of work you are doing:
 
 | Document | Consult for |
 |----------|-------------|
-| **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow |
+| **`AGENTS.md`** (this file) | Non-negotiable implementation rules — always follow; **Navigation card authoring playbook** (internal vs external card styles for docs automation) |
 | **[`ARCHITECTURE.md`](ARCHITECTURE.md)** | System structure, data flow, composables, route boundaries, discovery, technical constraints |
 | **[`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md)** | UI/UX: Codex layout system, shell chrome, site navigation IA, API Explorer layout, typography, loading/empty states |
+| **[`docs/content-authoring-guide.md`](docs/content-authoring-guide.md)** | Markdown / MDC authoring, including navigation-card examples |
 | **[`.agents/skills/`](.agents/skills/)** | Codex agent skills (components, tokens, icons, usage, design principles, bidirectionality, layout, content) — summaries of the [Codex style guide](https://doc.wikimedia.org/codex/latest/style-guide/overview.html); subordinate to this file and `DESIGN_REQUIREMENTS.md` |
 
 **Read [`DESIGN_REQUIREMENTS.md`](DESIGN_REQUIREMENTS.md) before changing** anything that affects what users see or how they move through the shell: `app/layouts/`, `app/components/shared/`, shell layout CSS (`app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-end-panel-nav.css`), explorer UI components, or site-wide visual patterns. Implement to match recorded decisions there (e.g. desktop **4 \| 16 \| 4** grid, end-panel nav aligned via `useEndPanelNavAlign`) unless the user explicitly requests a design change.
@@ -121,7 +122,8 @@ Values that are likely to change, are environment-dependent, or represent projec
 - Explorer opt-in checkbox defaults and beta-gated module rules (`config/explorerOptIn.ts`)
 - REST API module select description fallbacks when OpenAPI omits `info.description`, and per-module OpenAPI suffix strip patterns (`config/explorerModuleDescriptions.ts`)
 - Inline collapsible module rail visible endpoint row cap (`config/explorerModuleRail.ts`)
-- Explorer control surface tokens for project controls and module rail (`config/explorerSurfaces.ts`); exploratory **4px** border radius is also consumed by account list-element cards and the Reset credentials panel via `--fd-explorer-controls-surface-border-radius`
+- Explorer control surface tokens for project controls and module rail (`config/explorerSurfaces.ts`); exploratory **4px** border radius is also consumed by account list-element cards, the Reset credentials panel, **`NavigationCard`**, and **`.fd-highlight`** / **`Highlight`** via `--fd-explorer-controls-surface-border-radius`
+- Navigation card allowlisted Codex icon names for MDC (`config/navigationCardIcons.ts`)
 - Header utility collapse threshold and interface-language menu limits (`config/headerChrome.ts` — `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` / `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP`; Floating UI cancel for the Lookup popover is a documented shell Codex exception, not a separate config knob)
 - Test wiki base URL mapping for write-request experimentation (`config/wikiInstanceTestWikis.ts`)
 - Write HTTP methods and Scalar Test Request modal warning flags (`config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`)
@@ -165,14 +167,111 @@ Vue components placed in `app/components/content/` are auto-registered as MDC co
 
 - Use `CdxIcon` + `cdxIconLink` in `ProseH2.vue` … `ProseH6.vue` for heading anchor icons. The default `@nuxtjs/mdc` heading component wraps the full heading text in `<a>` — the override renders heading text as plain text and places a `CdxIcon` link alongside it, shown on hover via CSS.
 - Use `CdxMessage` for callout/alert boxes — its `type` prop covers `notice`, `warning`, `error`, and `success` variants. For titled callouts, pass `#title` as Markdown (MDC already emits a `<p>`); do not re-wrap the title — see `ARCHITECTURE.md` → “Markdown content pages” → Callouts.
+- Use `Highlight` (`::highlight`) for **progressive-subtle highlight / CTA** surfaces in Markdown (not status messages — those stay `Callout` / `CdxMessage`). Shared class **`.fd-highlight`** is also reusable in Vue (e.g. API catalog). Codex has no equivalent padded progressive surface without message chrome; this is an approved bespoke exception. See `ARCHITECTURE.md` → Highlight.
 - Use `CdxTabs` + `CdxTab` for tabbed code groups. Use the **`framed`** variant (`framed` prop on `CdxTabs`) inside a bordered module — see `ARCHITECTURE.md` → “Markdown content pages” → Code tabs. Quiet tabs remain reserved for shell chrome (`ShellPrimaryNav`).
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
+- Use `NavigationCard` (`::navigation-card`) for vertical content / navigation destination cards — do not restyle stock `CdxCard` for this chrome; wrap groups in `NavigationCardGrid` (`:::navigation-card-grid`) for equal-height rows. See **Navigation card authoring playbook** below, `ARCHITECTURE.md` → Navigation card, and `DESIGN_REQUIREMENTS.md` → Navigation card.
 
 All other rules apply inside content components: banana-i18n for interface strings, `<bdi>` for external strings, CSS logical properties.
 
 For the full feature status and implementation plan see `ARCHITECTURE.md` → "Markdown content pages" and `docs/TECH_DECISIONS.md` → "Markdown content pages".
 
+### Navigation card authoring playbook (for agents)
+
+**One component, two styles.** Internal and external destination tiles both use `NavigationCard` / `NavigationCardGrid`. Do **not** invent a second card component. Choose the style from the destination type. When a human prompt says “internal navigation cards” or “external navigation cards,” follow the matching subsection and copy the MDC shape from the reference pages.
+
+**When the prompt asks to convert a docs page** (e.g. replace `###` + description + “Learn more” / “Try it out” with cards):
+
+1. Keep existing `##` section headings and any section intro paragraphs unless the prompt says otherwise.
+2. Under each section, put one `:::navigation-card-grid` wrapping `::navigation-card` blocks (equal-height rows).
+3. Map each former `###` → card `title`, body copy → `description`, link URL → `url`.
+4. Pick **internal** vs **external** style per card from the rules below (a page may mix both).
+5. If the destination URL is empty / unknown: stop and ask, or omit `url` (non-clickable card) — do not invent URLs silently.
+6. For every new **internal** `url`, ensure `content/<locale>/…` exists (or add a mockup stub); otherwise the card 404s.
+7. Title, description, and supporting-text are **content** (per-locale Markdown + `<bdi>` via the component) — **not** banana-i18n.
+8. Markdown inside a description (inline links) in a grid → card **default slot**, not `#description` (MDC named slots under `:::navigation-card-grid` 404 the page).
+9. **API / product card titles** reflect the **current** Wikimedia API ecosystem (e.g. **Lift Wing API**, **MediaWiki REST API**). Do not invent friendlier umbrella names (e.g. “Machine Learning API”) ahead of planned module surfacing / accessibility renames — wait for an explicit product decision.
+
+**Do not cardify:** `content/en/get-started/wikimedia-enterprise.md` body sections stay **prose** (heading + paragraphs + writer links). That page may use `::highlight` for the intro CTA only — see `ARCHITECTURE.md` → About Wikimedia Enterprise.
+
+#### Internal navigation cards
+
+**Use when:** destination is on Front Door (`/get-started/…`, `/explorer`, other same-origin paths).
+
+**Style (required):**
+
+| Prop | Rule |
+|------|------|
+| `url` | Locale-agnostic internal path (e.g. `/get-started/wiki-content`, `/explorer`) |
+| `title` / `description` | From the section heading + body |
+| `supporting-text` | **Omit** — no progressive footer link, no external icon |
+| Visual link chrome | None beyond whole-card click (stretched link) |
+
+**Do not:** add “Learn more”, “Try it out”, or other in-card link labels for internal destinations — the whole card is the link.
+
+**Reference pages (copy this shape):**
+
+- `content/en/get-started.md`
+- `content/en/get-started/build-for-communities.md`
+- Internal cards on `wiki-content.md`, `open-data.md`, `tools-and-bots.md` (e.g. `/explorer`)
+
+```md
+:::navigation-card-grid
+::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
+::
+:::
+```
+
+**Prompt phrases (team → agent):** “use internal navigation cards”, “same style as Get started / Build for communities”, “no supporting-text / no in-card link”.
+
+#### External navigation cards
+
+**Use when:** destination is off-platform (`https://…` Meta-Wiki, mediawiki.org, Wikidata, Toolhub, Wikitech, etc.).
+
+**Style (required):**
+
+| Prop | Rule |
+|------|------|
+| `url` | Absolute `http(s):` URL (opens in a new tab) |
+| `title` / `description` | From the section heading + body |
+| `supporting-text` | **Required** progressive footer link to the **same** `url`, with external icon |
+| Supporting-text label | **Keep the technical writer’s existing link text** (“Read more on Meta-Wiki”, “Visit Toolhub”, …). Never invent or “improve” labels when converting |
+
+**Do not:** put the only external affordance on the title trailing icon when supporting-text is present — the component moves the external icon onto supporting-text automatically.
+
+**Reference pages (copy this shape):**
+
+- `content/en/get-started/about-wikimedia.md` (all external)
+- External cards on `open-data.md`, `tools-and-bots.md`, `wiki-content.md` (Meta-Wiki dumps)
+
+```md
+:::navigation-card-grid
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Download content in bulk" description="Access free downloads of wiki content and data…" supporting-text="Read more on Meta-Wiki"}
+::
+:::
+```
+
+**Description + separate off-platform mention:** If the card destination is Wikitech (supporting-text) but a product name in the description should open elsewhere (e.g. PAWS → hub-paws), put the description Markdown in the **default slot** and keep supporting-text as the writer label for the card `url`. Example: `content/en/get-started/tools-and-bots.md` → “Run scripts in your browser”.
+
+**Prompt phrases (team → agent):** “use external navigation cards”, “same style as About Wikimedia”, “supporting-text with writer labels”, “preserve Read more on … / Visit … copy”.
+
+#### Mixed pages
+
+A single page may combine both styles (e.g. `/explorer` internal cards next to Meta-Wiki external cards). Apply the rules **per card**, not per page. References: `wiki-content.md`, `open-data.md`, `tools-and-bots.md`.
+
+#### Ambiguities (raise before guessing)
+
+Stop and ask when:
+
+- Former prose links are empty (`[Try it out]()`, `[Read more]()`)
+- A section has two external URLs (which is the card `url` vs an inline description link?)
+- Duplicate titles appear in two sections (keep both vs one?)
+- Layout of orphan `###` blocks with no parent `##` is unclear
+- The prompt would cardify `wikimedia-enterprise.md` (body must stay prose — confirm before changing)
+- The prompt asks for a friendlier API umbrella title that is not the current product name (e.g. “Machine Learning API” vs **Lift Wing API**) — confirm before inventing labels
+
+See `ARCHITECTURE.md` → Navigation card and `docs/content-authoring-guide.md` → Navigation cards.
 ---
 
 ## Code quality rules
@@ -285,6 +384,9 @@ Before marking any component complete, verify:
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: endpoint **name** uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Primary **APIs** tab (`nav-api`) stays selected on `/explorer` and `/explorer/…`; start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`)
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
+- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, supporting-text, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle` on linked cards; whole-card click via stretched link; when `supporting-text` + `url` are set, supporting-text is a progressive link to the same destination (external icon on supporting-text for off-platform URLs; title trailing icon omitted); **keep writer-authored supporting-text labels** when converting from prose; supporting-text bottom-aligned in equal-height grid rows; without supporting-text, title trailing icon for off-platform URLs; omit `url` for intentionally non-clickable cards; description may include inline links (e.g. PAWS / Wikidata; ProseA external icons suppressed); Get started / Build for communities / Use wiki content / Access open data / Tools and bots / About Wikimedia cards sit in `:::navigation-card-grid` (equal-height rows); grid uses **`--spacing-100` (16px)** `margin-block` above and below (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page`); internal card/`sectionNavigation` `href`s have matching `content/<locale>/…` Markdown (e.g. `/get-started/on-wiki` → `on-wiki.md`) so destinations do not 404; **Wikimedia Enterprise body content is prose, not cards**
+- [ ] **Highlight** (`Highlight` / `.fd-highlight`): progressive-subtle CTA / featured blurb only (not `Callout` / `CdxMessage` status types); no banana keys for highlight copy (Markdown / Vue slot content); no border; radius via `--fd-explorer-controls-surface-border-radius`; padding `--spacing-75`; first-party CSS uses logical properties; inherits interface `dir` from the shell; links inside follow ProseA / progressive link rules; demos include Get started landing (inline CTA with arrow) and Wikimedia Enterprise intro (sentence + CTA on a **new line**, **no** arrow; body of that page is **prose**, not cards)
+- [ ] **Content page typography** (`.fd-content-page`): Codex Heading 1 / 2 / 3 on `h1` / `h2` / `h3` per `ARCHITECTURE.md` → Content typography
 
 ---
 
