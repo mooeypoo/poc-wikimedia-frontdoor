@@ -1020,6 +1020,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **About Wikimedia Enterprise** (`content/en/get-started/wikimedia-enterprise.md`): intro ends the SLA sentence with a full stop; the high-volume access sentence + **Get started with Wikimedia Enterprise** CTA (no arrow) sit in `::highlight` (`https://enterprise.wikimedia.com`). Under **Explore use cases**, keep the bullet intro, then three **external** cards (Snapshot / On-demand / Realtime) with writer-authored supporting-text; the commercial-use-cases link sits **below** the card grid. Under **Get started for free**, two **external** cards: **Free access Enterprise tier** (pricing) and **Free access for Wikimedia communities** (Wikitech).
 
+**Bulk data for research** (`content/en/get-started/data-for-research.md`): mockup stub so Get started / section-nav links to `/get-started/data-for-research` resolve (same pattern as `on-wiki.md` / `tutorials.md`).
+
 **Commercial use cases** (`content/en/get-started/commercial-use-cases.md`): Markdown under `.fd-content-page` (Codex Heading 1–3). Card conversion not applied yet.
 
 **External supporting-text copy:** When converting prose “Read more on …” / “Visit …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
@@ -1111,7 +1113,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (external Snapshot / On-demand / Realtime under Explore use cases; free-tier + communities cards under Get started for free); mockup stubs `on-wiki.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (external Snapshot / On-demand / Realtime under Explore use cases; free-tier + communities cards under Get started for free); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 
 #### Highlight
 
