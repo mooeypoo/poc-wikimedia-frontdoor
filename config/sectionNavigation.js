@@ -61,7 +61,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'for-enterprise',
 				titleMessageKey: 'section-nav-get-started-for-enterprise-title',
 				items: [
-					{ id: 'about-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/get-started/wikimedia-enterprise' },
+					{ id: 'wikimedia-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/get-started/wikimedia-enterprise' },
 					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases', href: '/get-started/commercial-use-cases' },
 					{ id: 'data-for-research', messageKey: 'section-nav-get-started-data-for-research', href: '/get-started/data-for-research' }
 				]
