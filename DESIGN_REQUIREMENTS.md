@@ -722,7 +722,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Use wiki content** ([`/get-started/wiki-content`](https://wikifrodo.netlify.app/get-started/wiki-content)): cards under Explore APIs / High-volume / Tutorials; mix of `/explorer`, Get started paths, one Meta-Wiki supporting-text link, and one non-clickable “Get featured content” card.
 
-**Access open data** ([`/get-started/open-data`](https://wikifrodo.netlify.app/get-started/open-data)): untitled intro grid (external) plus Explore APIs / High-volume / Tutorials section grids.
+**Access open data** ([`/get-started/open-data`](https://wikifrodo.netlify.app/get-started/open-data)): untitled intro grid (external) plus Explore APIs (**Lift Wing API** → `/explorer`) / High-volume / Tutorials section grids.
 
 **Tools and bots** ([`/get-started/tools-and-bots`](https://wikifrodo.netlify.app/get-started/tools-and-bots)): section intros + grids; Toolhub/mediawiki/Wikitech/Wikidata supporting-text; `/explorer` for API cards; PAWS linked in description + Wikitech supporting-text.
 
@@ -778,9 +778,11 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Use wiki content:** three section grids — internal cards (no supporting-text) to `/explorer` and Get started paths; external Meta-Wiki dumps card with supporting-text; optional non-clickable card when destination is TBD (omit `url`).
 
-**Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; external supporting-text uses the technical writer’s existing labels.
+**Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; Explore APIs uses current product title **Lift Wing API** → `/explorer`; external supporting-text uses the technical writer’s existing labels.
 
-**Tools and bots:** section intro prose + grids; external writer-authored supporting-text; `/explorer` for Editing / Machine learning API; **Run scripts in your browser** description links PAWS to hub-paws, card destination Wikitech with supporting-text “Read more on Wikitech”.
+**Tools and bots:** section intro prose + grids; external writer-authored supporting-text; `/explorer` for **MediaWiki REST API** and **Lift Wing API** (current ecosystem names — not generic “Machine learning API”); **Run scripts in your browser** description links PAWS to hub-paws, card destination Wikitech with supporting-text “Read more on Wikitech”.
+
+**API card titles:** Prefer current product names until modules are available in the explorer IA and renames for accessibility are decided (see `ARCHITECTURE.md` → Get started API card titles).
 
 **About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
 
@@ -802,6 +804,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
 | *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |

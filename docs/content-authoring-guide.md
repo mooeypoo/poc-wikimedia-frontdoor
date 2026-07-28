@@ -80,6 +80,8 @@ Example: `content/en/get-started.md` (quick-start CTA with arrow). Also `content
 
 Use **`:::navigation-card-grid`** for equal-height rows with **`--spacing-100` (16px)** above and below the grid. Whole-card click via stretched link. For **internal** paths omit supporting-text (no in-card “Learn more”). When converting existing external “Read more on …” / “Visit …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404**. **Do not** convert `wikimedia-enterprise.md` body sections to cards — that page stays prose under a `::highlight` intro CTA.
 
+**API / product titles on cards:** Use **current** ecosystem names (e.g. **Lift Wing API**, **MediaWiki REST API**). Do not replace them with generic umbrellas (e.g. “Machine Learning API”) until product decides modules are surfaced and accessibility-oriented renames ship.
+
 ```md
 :::navigation-card-grid
 ::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia…"}

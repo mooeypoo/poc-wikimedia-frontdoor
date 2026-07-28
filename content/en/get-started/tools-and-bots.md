@@ -55,7 +55,7 @@ Explore programming interfaces for building bots and tools.
 ::navigation-card{url="/explorer" title="MediaWiki REST API" description="Automate page edits and support wiki maintainers."}
 ::
 
-::navigation-card{url="/explorer" title="Machine learning API" description="Predict the quality of an edit, and get other predictions."}
+::navigation-card{url="/explorer" title="Lift Wing API" description="Predict the quality of an edit, and get other predictions."}
 ::
 :::
 

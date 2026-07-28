@@ -191,6 +191,7 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 6. For every new **internal** `url`, ensure `content/<locale>/…` exists (or add a mockup stub); otherwise the card 404s.
 7. Title, description, and supporting-text are **content** (per-locale Markdown + `<bdi>` via the component) — **not** banana-i18n.
 8. Markdown inside a description (inline links) in a grid → card **default slot**, not `#description` (MDC named slots under `:::navigation-card-grid` 404 the page).
+9. **API / product card titles** reflect the **current** Wikimedia API ecosystem (e.g. **Lift Wing API**, **MediaWiki REST API**). Do not invent friendlier umbrella names (e.g. “Machine Learning API”) ahead of planned module surfacing / accessibility renames — wait for an explicit product decision.
 
 **Do not cardify:** `content/en/get-started/wikimedia-enterprise.md` body sections stay **prose** (heading + paragraphs + writer links). That page may use `::highlight` for the intro CTA only — see `ARCHITECTURE.md` → About Wikimedia Enterprise.
 
@@ -268,6 +269,7 @@ Stop and ask when:
 - Duplicate titles appear in two sections (keep both vs one?)
 - Layout of orphan `###` blocks with no parent `##` is unclear
 - The prompt would cardify `wikimedia-enterprise.md` (body must stay prose — confirm before changing)
+- The prompt asks for a friendlier API umbrella title that is not the current product name (e.g. “Machine Learning API” vs **Lift Wing API**) — confirm before inventing labels
 
 See `ARCHITECTURE.md` → Navigation card and `docs/content-authoring-guide.md` → Navigation cards.
 ---
