@@ -40,6 +40,7 @@ Wikimedia content is the largest free knowledge base in the world.
 ::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_Apps" title="Mobile apps" description="Expand the reach of Wikimedia content by contributing to mobile apps for Wikipedia, Wikimedia Commons, and other projects." supporting-text="Read more on Meta-Wiki"}
 ::
 
-::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Main_Page" title="Wikibase and Wikidata" description="Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers Wikidata. supporting-text="Visit wikidata.org"}
+::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Main_Page" title="Wikibase and Wikidata" supporting-text="Visit wikidata.org"}
+Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 ::
 :::
