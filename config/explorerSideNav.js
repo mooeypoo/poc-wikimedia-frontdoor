@@ -35,8 +35,8 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 		titleMessageKey: 'explorer-side-nav-overview-title',
 		items: [
 			{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
-			{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: 'apis/authentication' },
-			{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: 'apis/rate-limits' }
+			{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: '/apis/authentication' },
+			{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: '/apis/rate-limits' }
 
 		]
 	},
