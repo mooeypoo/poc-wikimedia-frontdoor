@@ -712,6 +712,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 |---------|-------|--------|
 | Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
 | Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
 
 Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
 
@@ -724,6 +725,10 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 **Access open data** ([`/get-started/open-data`](https://wikifrodo.netlify.app/get-started/open-data)): untitled intro grid (external) plus Explore APIs / High-volume / Tutorials section grids.
 
 **Tools and bots** ([`/get-started/tools-and-bots`](https://wikifrodo.netlify.app/get-started/tools-and-bots)): section intros + grids; Toolhub/mediawiki/Wikitech/Wikidata supporting-text; `/explorer` for API cards; PAWS linked in description + Wikitech supporting-text.
+
+**About Wikimedia Enterprise** ([`/get-started/wikimedia-enterprise`](https://wikifrodo.netlify.app/get-started/wikimedia-enterprise)): `::highlight` for high-volume access + Enterprise CTA (no arrow); external navigation cards under Explore use cases (Snapshot / On-demand / Realtime) with commercial-use-cases link below the grid; free-tier + communities cards under Get started for free.
+
+**Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
 
 **Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
 
@@ -741,7 +746,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Padding | `--spacing-75` (**12px**) |
 | Block margin | `--spacing-100` (default vertical rhythm vs adjacent prose) |
 
-**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `ARCHITECTURE.md` → Highlight.
+**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `ARCHITECTURE.md` → Highlight.
 
 ---
 
@@ -765,7 +770,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
 | Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline |
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
-| Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block-start after section intro |
+| Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
 
 **Get started overview / Build for communities:** title + description only (no icons, chips, or supporting-text). Cards grouped in `navigation-card-grid` (overview: per `h2`; build-for-communities: page intro then one grid).
 
@@ -795,6 +800,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Enterprise page highlight + external cards | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow); Explore external cards + commercial link below; free-tier + communities cards; Codex Heading 3; card-grid 16px block margins |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
@@ -802,8 +808,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Use wiki content navigation cards | Section grids; `/explorer` + Get started internals; Meta-Wiki supporting-text; non-clickable featured-content card; enterprise/tutorials stubs |
 | *(uncommitted)* | Build for communities cards + on-wiki stub | Internal navigation cards (no supporting-text); `content/en/get-started/on-wiki.md` so card/section-nav link resolves |
 | *(uncommitted)* | About Wikimedia navigation cards | External cards; supporting-text progressive link + external icon; bottom-aligned links; “Read the docs”; Wikidata default-slot link |
-| *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; 16px intro→grid gap; no icons/chips on Get started |
-| *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / Heading 2 on `.fd-content-page` |
+| *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; **16px** grid `margin-block` above/below; no icons/chips on Get started |
+| *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / 2 / 3 on `.fd-content-page` |
 | *(uncommitted)* | Interface language Lookup + Codex bidi CSS | Globe + code trigger; popover wraps `CdxLookup`; `clearable`; `visibleItemLimit: 7`; Floating UI cancel for menu containment; `codex.style-bidi.css` replaces dual-sheet RTL toggle |
 | *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |

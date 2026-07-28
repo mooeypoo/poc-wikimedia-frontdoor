@@ -5,7 +5,10 @@
  * Renders slotted cards in up to **three** equal columns (Codex desktop+),
  * stretching each row to the tallest card. Title/description stay top-aligned;
  * when cards include supporting-text, that link is bottom-aligned within each
- * card so links share a baseline across the row. Use from Markdown as
+ * card so links share a baseline across the row. Vertical rhythm uses
+ * **`--spacing-100` (16px)** `margin-block` above and below the grid; under
+ * `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in
+ * `main.css` so that gap does not collapse. Use from Markdown as
  * `:::navigation-card-grid` wrapping `::navigation-card` blocks.
  *
  * @see ARCHITECTURE.md → Markdown content pages → Navigation card
@@ -26,9 +29,12 @@
 	/* Match shell column gutter rhythm (24px at tablet+). */
 	gap: var( --spacing-100 );
 	align-items: stretch;
-	/* 16px between section intro copy and the card row. */
-	margin-block-start: var( --spacing-100 );
-	margin-block-end: var( --spacing-100 );
+	/*
+	 * 16px above and below the card row vs adjacent prose
+	 * (`--spacing-100`). Adjacent list/paragraph margins are zeroed under
+	 * `.fd-content-page` in `main.css` so this gap does not collapse away.
+	 */
+	margin-block: var( --spacing-100 );
 	inline-size: 100%;
 }
 

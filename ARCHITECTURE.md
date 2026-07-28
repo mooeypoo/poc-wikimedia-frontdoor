@@ -1006,6 +1006,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 |---------|-------------|--------|
 | `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
 | `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
+| `h3` | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
 
@@ -1016,6 +1017,10 @@ Markdown page titles and section headings follow the Codex [typography style gui
 **Access open data** (`content/en/get-started/open-data.md`): intro then an untitled card grid (three external Meta-Wiki / Wikidata cards with writer-authored supporting-text), then `## Explore APIs` (`/explorer`), `## High-volume and commercial access` (Enterprise internal + Meta-Wiki dumps), `## Learn with tutorials` (both cards → `/get-started/tutorials`). **External supporting-text labels always keep the technical writer’s copy** from the source Markdown (do not invent new link labels).
 
 **Tools and bots** (`content/en/get-started/tools-and-bots.md`): keep each `##` section intro as prose, then a `:::navigation-card-grid`. Most cards are external with writer-authored supporting-text (Toolhub, mediawiki.org, Wikitech, Wikidata). **Use APIs and data sources** cards link to `/explorer` (internal, no supporting-text). **Run scripts in your browser** uses card `url` → Wikitech PAWS + supporting-text “Read more on Wikitech”, and links the word **PAWS** in the description (default slot) to `https://hub-paws.wmcloud.org/`. Duplicate “Build your first tool” cards are kept in Get started and Learn with tutorials.
+
+**About Wikimedia Enterprise** (`content/en/get-started/wikimedia-enterprise.md`): intro ends the SLA sentence with a full stop; the high-volume access sentence + **Get started with Wikimedia Enterprise** CTA (no arrow) sit in `::highlight` (`https://enterprise.wikimedia.com`). Under **Explore use cases**, keep the bullet intro, then three **external** cards (Snapshot / On-demand / Realtime) with writer-authored supporting-text; the commercial-use-cases link sits **below** the card grid. Under **Get started for free**, two **external** cards: **Free access Enterprise tier** (pricing) and **Free access for Wikimedia communities** (Wikitech).
+
+**Commercial use cases** (`content/en/get-started/commercial-use-cases.md`): Markdown under `.fd-content-page` (Codex Heading 1–3). Card conversion not applied yet.
 
 **External supporting-text copy:** When converting prose “Read more on …” / “Visit …” links into card `supporting-text`, **always preserve the existing label text** authored by the technical writer. Do not rewrite those strings.
 
@@ -1082,7 +1087,7 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 
 **Props / slots:** `url`, `title`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
 
-**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block-start` separates section intro copy from the card row (collapses with adjacent `p` margins). Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
+**Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose (e.g. commercial-use-cases link under Explore use cases on Wikimedia Enterprise). Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
@@ -1106,7 +1111,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); mockup stubs `on-wiki.md`, `wikimedia-enterprise.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (external Snapshot / On-demand / Realtime under Explore use cases; free-tier + communities cards under Get started for free); mockup stubs `on-wiki.md`, `tutorials.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 
 #### Highlight
 
@@ -1126,7 +1131,7 @@ CSS lives in `app/assets/css/main.css` so Vue templates may apply `class="fd-hig
 
 Highlight copy is **page content** (per-locale Markdown or Vue slots) — not banana-i18n interface strings. The name is independent of code syntax highlighting (Shiki / `mw-highlight`).
 
-**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …”).
+**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …” with arrow). Also `content/en/get-started/wikimedia-enterprise.md` — high-volume access blurb + **Get started with Wikimedia Enterprise** link on a **new line** (**no** arrow; `https://enterprise.wikimedia.com`).
 
 #### Callouts
 

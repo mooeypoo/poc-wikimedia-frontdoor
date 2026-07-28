@@ -143,7 +143,7 @@ h2 {
 /*
  * Markdown content pages — Codex typography style guide
  * (https://doc.wikimedia.org/codex/latest/style-guide/typography.html):
- * Heading 1 / Heading 2 use the serif stack with xxx-large / xx-large sizes.
+ * Heading 1 / 2 use the serif stack; Heading 3 uses base + bold.
  * Scoped to `.fd-content-page` so explorer / shell chrome keep their own heading rules.
  */
 .fd-content-page :where( h1 ) {
@@ -158,6 +158,25 @@ h2 {
 	font-size: var( --font-size-xx-large );
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-xx-large );
+}
+
+.fd-content-page :where( h3 ) {
+	font-family: var( --font-family-base );
+	font-size: var( --font-size-x-large );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-x-large );
+}
+
+/*
+ * Keep NavigationCardGrid’s `--spacing-100` (16px) block margins intact:
+ * zero adjoining list/paragraph margins so they do not collapse with the grid.
+ */
+.fd-content-page :where( p, ul, ol ):has( + .navigation-card-grid ) {
+	margin-block-end: 0;
+}
+
+.fd-content-page .navigation-card-grid + :where( p, ul, ol ) {
+	margin-block-start: 0;
 }
 
 /*
@@ -188,6 +207,7 @@ h2 {
 }
 
 h3 {
+	/* Non-content pages only; `.fd-content-page h3` uses Codex Heading 3. */
 	font-size: var( --font-size-large );
 }
 
