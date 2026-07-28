@@ -18,6 +18,7 @@ Explore public data that you can use in research and machine learning.
 
 ## Explore APIs
 
+:::navigation-card-grid
 ::navigation-card{url="/explorer" title="Machine Learning API" description="Get predictions from Wikimedia machine learning models"}
 ::
 :::
