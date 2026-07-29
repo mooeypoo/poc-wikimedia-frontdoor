@@ -20,6 +20,7 @@ import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorerOptIn'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
+import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../../config/explorerInternalSidebarExperiment'
 
 definePageMeta( {
 	i18n: false,
@@ -289,7 +290,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			</div>
 		</div>
 
-		<ClientOnly v-if="isCommunityMode">
+		<ClientOnly v-if="isCommunityMode && !EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR">
 			<Teleport
 				:to="moduleRailTeleportTarget"
 				:disabled="!isActiveExplorerRoute"
