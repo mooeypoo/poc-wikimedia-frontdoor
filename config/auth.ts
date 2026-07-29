@@ -42,13 +42,13 @@ export const META_OAUTH_CONSUMER_LIST_URL =
  * @see https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers
  */
 export const MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL =
-	'https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers'
+	'/apis/authentication#personal-api-tokens'
 
 /**
  * OAuth developer documentation (registration, OAuth 2.0 flow, security).
  */
 export const MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL =
-	'https://www.mediawiki.org/wiki/OAuth/For_Developers'
+	'/apis/authentication#oauth-authorization-code-flow'
 
 /**
  * Wikimedia API authentication overview (Wikimedia's Meta-Wiki as authorization server).
