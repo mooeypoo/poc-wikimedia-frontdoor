@@ -4,16 +4,12 @@ status: version 1
 
 # About Wikimedia Enterprise
 
-Integrate the world’s knowledge into your product experiences with Wikimedia Enterprise: a suite of APIs powered by the Wikimedia Foundation and designed specifically for commercial use cases.
-Backed by comprehensive services and support, SLAs, and guaranteed uptime.
+Integrate the world’s knowledge into your product experiences with Wikimedia Enterprise: a suite of APIs powered by the Wikimedia Foundation and designed specifically for [commercial use cases](/get-started/commercial-use-cases).
+Backed by comprehensive services and support, SLAs, and guaranteed uptime, Wikimedia Enterprise APIs offer high-volume, on-demand access to content from Wikipedia and other Wikimedia projects.
 
 ::highlight
-Wikimedia Enterprise APIs offer high-volume, on-demand access to content from Wikipedia and other Wikimedia projects.
-
 [**Get started with Wikimedia Enterprise**](https://enterprise.wikimedia.com)
 ::
-
-## Explore use cases
 
 Wikimedia Enterprise is designed for:
 
@@ -21,8 +17,6 @@ Wikimedia Enterprise is designed for:
 * high-volume real-time updates of Wikimedia data
 * downloading Wikimedia content in bulk for research or other projects
 * higher rate limits than Wikimedia community APIs
-
-[Learn more about commercial use cases](/get-started/commercial-use-cases)
 
 ## Download content in bulk
 
@@ -48,7 +42,7 @@ Wikimedia Enterprise offers a free access tier for the Snapshot API and On-deman
 
 [Learn more about pricing](https://enterprise.wikimedia.com/pricing/)
 
-## Free access for Wikimedia communities
+## Access for Wikimedia communities
 
 Wikimedia Enterprise APIs are fully free to use for Wikimedia community members through Wikimedia Cloud Services.
 
