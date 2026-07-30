@@ -471,7 +471,7 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
 | `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
 | `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, and Reset credentials panel (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
-| `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `576px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row |
+| `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `560px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row (search min + controls + **16px** search→preferences + **8px**×2 remaining gaps) |
 | `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
 | `--fd-layout-body-columns-max-inline-size` | `calc(1679px cap − margins − start − gutter)` | Main:end sub-grid max width at ≥ 1680px (expanded start nav) |
@@ -503,7 +503,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
 5. **Start nav scrollbar (WebKit physical `width`)** — **`shell-start-nav-scroll.css`** styles `::-webkit-scrollbar` with physical **`width`** because the pseudo-element API has no logical equivalent. **Single scrollport per breakpoint** (panel tablet+, grid track mobile). Transparent track + thin thumb; body band keeps browser-default scrollbars. **Scroll-end inset:** **`::after` block spacer** (`--spacing-200`) on each scrollport — see **Shell section navigation** (scroll-end inset). See **Shell scroll regions**.
 6. **`ShellHeaderBrand` wordmark** — **Montserrat** via `--font-family-brand-wordmark` (Google Fonts, `config/brandTypography.ts`); banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (translatable). Mark: inlined **`WikimediaLogoMark`** ([Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` / `--color-base` for light+dark — not `<img>`, which cannot inherit colour).
-7. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**. **Color theme preferences:** see **Color theme preferences (shell)** below — settings gear (or collapsed menu Settings) opens a content-only `CdxPopover`; former header `CdxToggleButtonGroup` removed.
+7. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**. **Utility option spacing:** `column-gap: var(--spacing-50)` (8px) between options; search → preferences is **`--spacing-100` (16px)** via an extra search-wrap `margin-inline-end`. Brand + utilities share a vertical centerline. **Color theme preferences:** see **Color theme preferences (shell)** below — quiet settings gear (or collapsed menu Settings) opens a content-only `CdxPopover`; former header `CdxToggleButtonGroup` removed.
 8. **Interface language `CdxLookup`** — globe + uppercase code `CdxButton` mounts `.shell-header-utility-actions__language-popover` (`v-if`) wrapping the whole Lookup (input + native menu). **`clearable`** enables Codex TextInput clear (attr fallthrough; filter only — committed locale unchanged). **`menu-config.renderInPlace: true`** keeps the menu in the Lookup DOM; first-party CSS then cancels Floating UI **absolute placement** and viewport **`maxHeight`** (those pull the menu out of the popover box and can show “as many rows as fit the screen” when Codex’s `visibleItemLimit` measure races on open). Overrides do **not** restyle Codex menu chrome, TextInput, clear, or start-icon, and do **not** add vertical gap between input and menu (flush / Codex default). Physical **`max-height: none`** appears only to clear Floating UI’s inline physical style. Fallback **`max-block-size`** on `.cdx-menu__listbox` (~7 supportingText rows) if measure has not run. Open waits for popover layout (double `requestAnimationFrame`) before focusing the input. **`visibleItemLimit: 7`** / render cap **50** from `config/headerChrome.ts`. Direction chrome for clearable/start-icon comes from **`codex.style-bidi.css`**, not per-component CSS. See **Interface locale picker** and `DESIGN_REQUIREMENTS.md` → Interface language picker.
 9. **`ShellSiteFooter` wordmark** — **Montserrat** via `--font-family-brand-wordmark`; banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (shared with header, single horizontal line).
 10. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px inlined `WikimediaLogoMark` + translatable wordmark parts** (`currentColor` / `--color-subtle`) until the footer logo asset ships.
@@ -514,11 +514,21 @@ The header **settings** control opens a **preferences** popover for site color t
 
 | Surface | Behaviour |
 |---------|-----------|
-| Trigger (expanded) | Quiet `CdxButton` + `cdxIconConfigure`; `aria-expanded` tracks popover open state |
+| Trigger (expanded) | Quiet `CdxButton` + `cdxIconConfigure` (`weight="quiet"`); `aria-expanded` tracks popover open state |
 | Trigger (collapsed) | Overflow `CdxMenuButton` **Settings** item (`SHELL_HEADER_UTILITY_MENU_VALUE.settings`); popover anchors to the menu button (acceptable while the menu closes) |
 | Popover | `CdxPopover` (`placement="bottom-end"`); **content only** — no title bar or close button; dismiss via outside click / Escape; **stays open** after a radio selection |
 | Field | `CdxField` with `is-fieldset`; legend banana `color-mode-group-label` (“Color theme”) |
 | Radios | `CdxRadio` for each entry in `COLOR_THEME_PREFERENCE_OPTIONS` — **Light → Dark → System default** (`light` / `dark` / `auto`); labels banana `color-mode-*-label` |
+
+**Utility option spacing (expanded):**
+
+| Pair | Token | Size |
+|------|-------|------|
+| Search → preferences | `--spacing-100` (`column-gap` + search-wrap `margin-inline-end: --spacing-50`) | 16px |
+| Preferences → language | `--spacing-50` (`column-gap`) | 8px |
+| Language → session | `--spacing-50` (`column-gap`) | 8px |
+
+Collapsed overflow uses the same **8px** `column-gap` between search icon, language, and menu. Collapse threshold gap estimates in `config/headerChrome.ts` must stay aligned with these values.
 
 **Config:** `COLOR_MODES` (storage / class enumeration: `light`, `auto`, `dark`), `COLOR_THEME_PREFERENCE_OPTIONS` (UI order), `COLOR_MODE_STORAGE_KEY`, `DEFAULT_COLOR_MODE` (`auto`) in `config/colorMode.ts`. Dark token overrides: `app/assets/css/color-modes.css`.
 
@@ -532,7 +542,7 @@ The header interface-language control in `ShellHeaderUtilityActions` switches th
 
 | Surface | Behaviour |
 |---------|-----------|
-| Trigger | Quiet `CdxButton` — `cdxIconLanguage` + uppercase BCP 47 code in `<bdi>` |
+| Trigger | Quiet `CdxButton` — `cdxIconLanguage` + uppercase BCP 47 code in `<bdi>` ([Button with icon](https://doc.wikimedia.org/codex/latest/components/demos/button.html#with-icon); native gap/color/typography, no first-party icon/label overrides) |
 | Popover | `.shell-header-utility-actions__language-popover` (`v-if`) wraps the full `CdxLookup` (input + menu in normal flow, flush — no added gap) |
 | Menu | Native Codex `CdxMenu` chrome; **7** visible rows then scroll (`visibleItemLimit`); Floating UI viewport `maxHeight` / absolute placement cancelled so the popover can contain the menu; CSS listbox fallback cap if measure races; up to **50** items rendered until typing narrows |
 | Clear | Codex TextInput **`clearable`** via Lookup attr fallthrough — clears the filter input only; committed interface locale unchanged until a menu selection |
@@ -547,7 +557,7 @@ The header interface-language control in `ShellHeaderUtilityActions` switches th
 
 **Config:** `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` / `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` in `config/headerChrome.ts`.
 
-**Utility row layout (row 1):** `.frontdoor-shell__header-top` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `ShellHeaderUtilityActions` (inline-end, `flex: 1 1 auto`). **Gap between logo and utilities: `var(--spacing-150)` (24px).** Expanded utilities: search (`flex: 1 1 auto`, **256px** min, max **40rem**), settings, compact language trigger (globe + code), log in. Collapsed: search icon button + language trigger + `CdxMenuButton` (`cdxIconEllipsis`). See `DESIGN_REQUIREMENTS.md` → Shell chrome.
+**Utility row layout (row 1):** `.frontdoor-shell__header-top` / `.frontdoor-shell__chrome-utility-band` is **`justify-between`**: `ShellHeaderBrand` (inline-start) and `ShellHeaderUtilityActions` (inline-end, `flex: 1 1 auto`). **Gap between logo and utilities: `var(--spacing-150)` (24px).** Brand and utilities are **vertically centered** on the row (`align-items` / `align-self: center`). Expanded utilities: search (`flex: 1 1 auto`, **256px** min, max **40rem**), **quiet** settings, compact language trigger (globe + code), log in — with **`column-gap: var(--spacing-50)` (8px)** between options and **`--spacing-100` (16px)** between search and preferences (`margin-inline-end` on the search wrap). Collapsed: search icon button + language trigger + `CdxMenuButton` (`cdxIconEllipsis`), **8px** gap. See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
 **Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`, intrinsic width) plus the **API Explorer** progressive link (`flex: 0 0 auto`) on the same baseline, **24px** (`--spacing-150`) after the last tab. See `DESIGN_REQUIREMENTS.md` → Shell chrome.
 
@@ -970,7 +980,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
 | `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards and Reset credentials panel |
-| `config/headerChrome.ts` | Header utility collapse threshold; interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
+| `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |

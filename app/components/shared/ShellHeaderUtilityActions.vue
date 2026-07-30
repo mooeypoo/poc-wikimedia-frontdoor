@@ -43,9 +43,12 @@ import {
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
- * Color theme uses `useColorMode` via a settings `CdxPopover` with `CdxField` +
- * `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark /
- * System default). Figma:
+ * Color theme uses `useColorMode` via a quiet settings `CdxPopover` with
+ * `CdxField` + `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS`
+ * (Light / Dark / System default). Utility options use `--spacing-50` (8px)
+ * `column-gap`, with search → preferences at `--spacing-100` (16px) via an
+ * extra search-wrap `margin-inline-end`; share a vertical centerline with the
+ * brand. Figma:
  * [Preferences popover 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029).
  *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
@@ -433,6 +436,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxButton
 				ref="settingsButtonRef"
 				class="shell-header-utility-actions__settings-button"
+				weight="quiet"
 				:aria-label="settingsButtonLabel"
 				:aria-expanded="isPreferencesPopoverOpen"
 				@click="togglePreferencesPopover"
@@ -441,6 +445,10 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			</CdxButton>
 		</span>
 
+		<!--
+			Popover stays a sibling so collapsed mode can anchor to the overflow
+			menu; Teleport keeps it out of the flex gap (comment nodes only).
+		-->
 		<CdxPopover
 			v-model:open="isPreferencesPopoverOpen"
 			class="shell-header-utility-actions__preferences-popover"
@@ -477,10 +485,12 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 				:aria-expanded="isLanguageLookupOpen"
 				@click="toggleLanguageLookup"
 			>
+				<!--
+					Codex Button with icon — label + icon only; no custom gap/color.
+					https://doc.wikimedia.org/codex/latest/components/demos/button.html#with-icon
+				-->
 				<CdxIcon :icon="cdxIconLanguage" />
-				<bdi class="shell-header-utility-actions__language-code">
-					{{ selectedLanguageCodeLabel }}
-				</bdi>
+				<bdi>{{ selectedLanguageCodeLabel }}</bdi>
 			</CdxButton>
 
 			<div
@@ -543,13 +553,19 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 </template>
 
 <style scoped>
+/*
+ * Utility options share one flex row: search + settings + language + session
+ * (or collapsed search + language + overflow). Gap is always `--spacing-50`
+ * (8px) between those options; cross-axis center keeps icons/links aligned.
+ */
 .shell-header-utility-actions {
 	display: flex;
 	flex: 1 1 auto;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: flex-end;
-	gap: var( --spacing-100 );
+	column-gap: var( --spacing-50 );
+	row-gap: 0;
 	min-inline-size: 0;
 }
 
@@ -560,6 +576,11 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	max-inline-size: min( 40rem, 100% );
 	display: flex;
 	align-items: center;
+	/*
+	 * Extra `--spacing-50` beyond the row `column-gap` so search → preferences
+	 * is `--spacing-100` (16px); other option pairs stay at 8px.
+	 */
+	margin-inline-end: var( --spacing-50 );
 }
 
 .shell-header-utility-actions__search {
@@ -591,8 +612,13 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 .shell-header-utility-actions__settings,
 .shell-header-utility-actions__settings-button,
 .shell-header-utility-actions__search-toggle,
-.shell-header-utility-actions__utility-menu {
+.shell-header-utility-actions__utility-menu,
+.shell-header-utility-actions__language,
+.shell-header-utility-actions__session {
+	display: inline-flex;
 	flex: 0 0 auto;
+	align-items: center;
+	margin: 0;
 }
 
 .shell-header-utility-actions__preferences-popover :deep( .cdx-popover__body ) {
@@ -609,27 +635,12 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 }
 
 /*
- * Language control: a compact globe + uppercase-code button at all widths,
- * opening the searchable lookup in a popover. Keeping it icon-sized (rather
- * than an always-open input) preserves top-bar room for the log-in link and
- * the settings (color theme) control.
+ * Language control: compact globe + uppercase-code quiet `CdxButton` (Codex
+ * Button with icon — native gap/color/typography; no first-party overrides).
+ * Opens the searchable lookup in a popover so the top bar stays compact.
  */
 .shell-header-utility-actions__language {
 	position: relative;
-	flex: 0 0 auto;
-}
-
-.shell-header-utility-actions__language-toggle {
-	display: inline-flex;
-	align-items: center;
-	gap: var( --spacing-25 );
-}
-
-.shell-header-utility-actions__language-code {
-	font-size: var( --font-size-small );
-	line-height: var( --line-height-small );
-	color: var( --color-subtle );
-	white-space: nowrap;
 }
 
 .shell-header-utility-actions__language-popover {
@@ -688,16 +699,17 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 }
 
 .shell-header-utility-actions__session {
-	flex: 0 0 auto;
-	display: inline-flex;
-	align-items: center;
 	white-space: nowrap;
 }
 
 /* Codex progressive link pattern — navigation uses NuxtLink, not CdxButton. */
 .shell-header-utility-actions__login-link,
 .shell-header-utility-actions__account-link {
+	display: inline-flex;
+	align-items: center;
 	flex: 0 0 auto;
+	/* Match quiet icon-button block size so the link shares the row centerline. */
+	min-block-size: var( --min-size-interactive-pointer );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
 	color: var( --color-progressive );
