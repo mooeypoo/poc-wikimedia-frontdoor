@@ -451,7 +451,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 		-->
 		<CdxPopover
 			v-model:open="isPreferencesPopoverOpen"
-			class="shell-header-utility-actions__preferences-popover"
+			class="shell-header-utility-actions__preferences-popover fd-cdx-popover--arrow-seam-fix"
 			:anchor="preferencesPopoverAnchor"
 			placement="bottom-end"
 		>
@@ -621,9 +621,10 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	margin: 0;
 }
 
-.shell-header-utility-actions__preferences-popover :deep( .cdx-popover__body ) {
-	padding: var( --spacing-100 );
-}
+/*
+ * Preferences `CdxPopover` is teleported — body padding and arrow/body seam live in
+ * `app/assets/css/shell-codex-overrides.css` (class `fd-cdx-popover--arrow-seam-fix`).
+ */
 
 .shell-header-utility-actions__color-theme-field {
 	margin-block-start: 0;
