@@ -41,6 +41,6 @@ Wikimedia content is the largest free knowledge base in the world.
 ::
 
 ::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Main_Page" title="Wikibase and Wikidata" supporting-text="Visit wikidata.org"}
-Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
+Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers Wikidata.
 ::
 :::

@@ -22,9 +22,6 @@ Browse the catalog of tools on Toolhub, share your tools, and help maintain tool
 Create your first tool, learn about running a bot, and get best practices.
 
 :::navigation-card-grid
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Pywikibot/PAWS" title="Build your first tool" description="Learn how to edit wiki pages using Python and the Pywikibot framework. This tutorial helps you get started quickly using only your browser." supporting-text="Read more on mediawiki.org"}
-::
-
 ::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Manual:Creating_a_bot" title="Learn about creating and running bots" description="Bots help maintain wikis by performing repetitive tasks. Get started creating and running bots by learning about best practices." supporting-text="Read more on mediawiki.org"}
 ::
 
@@ -65,7 +62,7 @@ Access cloud services for performing analytics, administering bots, running web 
 
 :::navigation-card-grid
 ::navigation-card{url="https://wikitech.wikimedia.org/wiki/PAWS" title="Run scripts in your browser" supporting-text="Read more on Wikitech"}
-[PAWS](https://hub-paws.wmcloud.org/) is a free, cloud-hosted playground for creating scripts and data visualizations related to Wikimedia projects. Log in with your Wikimedia account and create a notebook to get started.
+PAWS is a free, cloud-hosted playground for creating scripts and data visualizations related to Wikimedia projects. Log in with your Wikimedia account and create a notebook to get started.
 ::
 
 ::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Toolforge" title="Learn about cloud hosting for tools" description="Toolforge is a free hosting environment for running and managing tools. Developing a tool in Toolforge makes it easier to access Wikimedia content and data and to share your tool with others." supporting-text="Read more on Wikitech"}
