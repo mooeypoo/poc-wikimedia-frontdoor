@@ -2,6 +2,7 @@
 import { CdxIcon, CdxInfoChip } from '@wikimedia/codex'
 import { cdxIconLinkExternal, type Icon } from '@wikimedia/codex-icons'
 import { resolveNavigationCardIcon } from '../../../config/navigationCardIcons'
+import { resolveNavigationCardTitleLogo } from '../../../config/navigationCardTitleLogos'
 import {
 	parseNavigationCardChips,
 	type NavigationCardChip
@@ -20,14 +21,20 @@ export type { NavigationCardChip }
  * - Neutral-subtle background; transparent border that uses
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
- * - Optional **top** / **leading** title icons
- * - Optional **supporting-text**: when `url` is set, rendered as a progressive
- *   link to the same destination (external icon appended for off-platform URLs);
+ * - Optional **top** / **leading** title icons (Codex allowlist)
+ * - Optional **title-logo** — allowlisted monochrome brand SVG
+ *   (`gerrit` / `github` / `gitlab`) in the title position at
+ *   `--size-icon-medium`, `currentColor` / `--color-base` (dark mode via tokens).
+ *   Prefer over a text `title` for logo-led cards (e.g. Browse repositories).
+ * - Optional **supporting-text**: when `url` is set, rendered as a Codex Link
+ *   (mixin tokens: `--color-link*`) to the same destination (external icon
+ *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`). When
- *   converting from prose, **keep the technical writer’s supporting-text /
- *   link labels** — do not rewrite them
+ *   supporting-text is bottom-aligned (`margin-block-start: auto`) with a Codex
+ *   **minimum** `--spacing-50` (8px) from the description via
+ *   `padding-block-start`. When converting from prose, **keep the technical
+ *   writer’s supporting-text / link labels** — do not rewrite them
  * - Optional `CdxInfoChip` row
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
@@ -49,6 +56,7 @@ const props = withDefaults( defineProps<{
 	url?: string
 	/**
 	 * Title text when the `#title` slot is unused. Content string — BiDi-isolated.
+	 * Omit when `titleLogo` supplies the title visual instead.
 	 */
 	title?: string
 	/**
@@ -57,11 +65,17 @@ const props = withDefaults( defineProps<{
 	description?: string
 	/**
 	 * Optional Codex Card supporting-text. When `url` is set, rendered as a
-	 * progressive link to the same destination (with external icon when
-	 * off-platform). Content string — BiDi-isolated. Preserve technical-writer
-	 * labels when converting from prose.
+	 * Codex Link (Link mixin tokens) to the same destination (with external
+	 * icon when off-platform). Content string — BiDi-isolated. Preserve
+	 * technical-writer labels when converting from prose.
 	 */
 	supportingText?: string
+	/**
+	 * Optional monochrome brand logo in the title position (MDC:
+	 * `title-logo="gerrit"`). Allowlisted in `config/navigationCardTitleLogos.ts`.
+	 * Sized to `--size-icon-medium`; colour via `currentColor` / `--color-base`.
+	 */
+	titleLogo?: string
 	/**
 	 * Optional icon above the title row. Pass a Codex {@link Icon} from Vue, or
 	 * an allowlisted name from Markdown (`top-icon="userGroup"`).
@@ -88,6 +102,7 @@ const props = withDefaults( defineProps<{
 	title: '',
 	description: '',
 	supportingText: '',
+	titleLogo: '',
 	chips: () => [],
 	external: false
 } )
@@ -150,6 +165,13 @@ const resolvedTopIcon = computed( () => resolveNavigationCardIcon( props.topIcon
 const resolvedLeadingIcon = computed( () => resolveNavigationCardIcon( props.leadingIcon ) )
 
 /**
+ * Allowlisted brand mark for the title row (replaces text title when set alone).
+ */
+const resolvedTitleLogo = computed( () =>
+	resolveNavigationCardTitleLogo( props.titleLogo )
+)
+
+/**
  * Render prop supporting-text as a progressive link to the same `url`.
  * Custom `#supporting-text` slots are left as authored.
  */
@@ -180,7 +202,9 @@ const hasTopIcon = computed( () =>
 )
 
 const hasTitle = computed( () =>
-	Boolean( slots.title ) || props.title.trim().length > 0
+	Boolean( slots.title ) ||
+	props.title.trim().length > 0 ||
+	Boolean( resolvedTitleLogo.value )
 )
 
 const hasDescription = computed( () =>
@@ -275,7 +299,38 @@ const hasBody = computed( () =>
 						</span>
 						<div class="navigation-card__title">
 							<slot name="title">
-								<bdi>{{ title }}</bdi>
+								<svg
+									v-if="resolvedTitleLogo"
+									class="navigation-card__title-logo"
+									:viewBox="resolvedTitleLogo.viewBox"
+									aria-hidden="true"
+									focusable="false"
+								>
+									<g
+										v-if="resolvedTitleLogo.groupTransform"
+										:transform="resolvedTitleLogo.groupTransform"
+									>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</g>
+									<template v-else>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</template>
+								</svg>
+								<bdi v-if="title.trim().length > 0">{{ title }}</bdi>
 							</slot>
 						</div>
 						<span
@@ -415,7 +470,8 @@ const hasBody = computed( () =>
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
-	gap: var( --spacing-25 );
+	/* No flex gap — description↔supporting-text min spacing is owned below. */
+	gap: 0;
 	inline-size: 100%;
 	min-inline-size: 0;
 	min-block-size: 0;
@@ -427,6 +483,11 @@ const hasBody = computed( () =>
 	gap: var( --spacing-50 );
 	inline-size: 100%;
 	min-inline-size: 0;
+}
+
+/* Codex spacing-25 between title block and description when both are present. */
+.navigation-card__intro + .navigation-card__description {
+	margin-block-start: var( --spacing-25 );
 }
 
 .navigation-card__top-icon {
@@ -453,6 +514,18 @@ const hasBody = computed( () =>
 	line-height: var( --line-height-medium );
 	color: var( --color-base );
 	overflow-wrap: anywhere;
+}
+
+/*
+ * Brand title logos: Codex medium icon size; inherit title `--color-base`
+ * (and dark-mode token overrides) via currentColor — not progressive link colour.
+ */
+.navigation-card__title-logo {
+	display: block;
+	inline-size: var( --size-icon-medium );
+	block-size: var( --size-icon-medium );
+	flex-shrink: 0;
+	color: inherit;
 }
 
 .navigation-card__title-icon {
@@ -483,8 +556,15 @@ const hasBody = computed( () =>
 }
 
 .navigation-card__supporting-text {
-	/* Absorb free vertical space so links share a baseline across equal-height cards. */
+	/*
+	 * Bottom-align in equal-height grids (`auto` absorbs free space). Codex
+	 * **minimum** `--spacing-50` (8px) from the description via padding so the
+	 * gap never collapses below 8px when free space is zero. Padding sits inside
+	 * the supporting-text box so it remains immediately above the link when
+	 * pinned to the card bottom.
+	 */
 	margin-block-start: auto;
+	padding-block-start: var( --spacing-50 );
 	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
@@ -496,16 +576,51 @@ const hasBody = computed( () =>
 	margin-block: 0;
 }
 
+/*
+ * Codex Link mixin (`.cdx-mixin-link-base()`) expressed with design tokens —
+ * https://doc.wikimedia.org/codex/latest/components/mixins/link.html
+ * Project CSS is plain CSS (no Less), so tokens mirror the mixin rather than
+ * importing `link.less`. External icon inherits link colour (Codex pattern).
+ */
 .navigation-card__supporting-text-link {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	color: var( --color-progressive );
-	text-decoration: none;
+	color: var( --color-link );
+	border-radius: var( --border-radius-base );
+	text-decoration: var( --text-decoration-none );
+}
+
+.navigation-card__supporting-text-link:visited {
+	color: var( --color-link--visited );
+}
+
+.navigation-card__supporting-text-link:visited:hover {
+	color: var( --color-link--visited--hover );
+}
+
+.navigation-card__supporting-text-link:visited:active {
+	color: var( --color-link--visited--active );
 }
 
 .navigation-card__supporting-text-link:hover {
-	text-decoration: underline;
+	color: var( --color-link--hover );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:active {
+	color: var( --color-link--active );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:focus-visible {
+	outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+}
+
+@supports not selector( :focus-visible ) {
+	.navigation-card__supporting-text-link:focus {
+		outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+	}
 }
 
 .navigation-card__supporting-text-external-icon {
@@ -534,7 +649,12 @@ const hasBody = computed( () =>
 	box-shadow: inset 0 0 0 2px var( --box-shadow-color-progressive--focus, var( --color-progressive ) );
 }
 
-.navigation-card__stretched-link:focus {
+/*
+ * Suppress Codex Link focus outline on the invisible stretched hit target —
+ * the card surface shows focus via inset box-shadow above.
+ */
+.navigation-card__stretched-link:focus,
+.navigation-card__stretched-link:focus-visible {
 	outline: 1px solid transparent;
 }
 </style>

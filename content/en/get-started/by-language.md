@@ -17,12 +17,12 @@ status: mockup
 Explore Wikimedia codebases.
 
 :::navigation-card-grid
-::navigation-card{url="https://gerrit.wikimedia.org/g/" supporting-text="Browse repositories on Gerrit"}
+::navigation-card{url="https://gerrit.wikimedia.org/g/" title-logo="gerrit" supporting-text="Browse repositories on Gerrit"}
 ::
 
-::navigation-card{url="https://github.com/wikimedia" supporting-text="Browse repositories on GitHub"}
+::navigation-card{url="https://github.com/wikimedia" title-logo="github" supporting-text="Browse repositories on GitHub"}
 ::
 
-::navigation-card{url="https://gitlab.wikimedia.org/explore" supporting-text="Browse repositories on GitLab"}
+::navigation-card{url="https://gitlab.wikimedia.org/explore" title-logo="gitlab" supporting-text="Browse repositories on GitLab"}
 ::
 :::

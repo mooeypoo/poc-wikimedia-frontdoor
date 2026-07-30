@@ -171,7 +171,7 @@ function onOptInPopoverTriggerClick(): void {
 							<CdxIcon :icon="cdxIconInfo" />
 						</CdxButton>
 						<CdxPopover
-							class="explorer-project-controls__opt-in-help-popover"
+							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							v-model:open="isOptInPopoverOpen"
 							:anchor="optInPopoverTrigger"
 							:title="optInPopoverTitle"

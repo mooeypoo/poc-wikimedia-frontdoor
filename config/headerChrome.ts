@@ -4,6 +4,10 @@
  * Collapse is driven by a `ResizeObserver` on `.shell-header-utility-actions` comparing
  * the allocated flex track width to {@link HEADER_UTILITY_COLLAPSE_THRESHOLD_PX}.
  *
+ * Expanded option spacing (must stay in sync with `ShellHeaderUtilityActions` CSS):
+ * - search → preferences: `--spacing-100` (16px)
+ * - preferences → language → session: `--spacing-50` (8px) via `column-gap`
+ *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
  */
 
@@ -14,15 +18,22 @@ export const HEADER_SEARCH_INPUT_MIN_INLINE_SIZE_PX = 256
 export const HEADER_SEARCH_INPUT_MIN_INLINE_SIZE = '16rem'
 
 /**
- * Fixed-width estimates for expanded utility controls (settings, full language select,
+ * Fixed-width estimates for expanded utility controls (settings, language trigger,
  * log in) used to compute the collapse threshold — not for runtime layout measurement.
+ *
+ * Gap fields match the CSS tokens in `ShellHeaderUtilityActions`
+ * (`column-gap: --spacing-50`; search wrap adds another `--spacing-50` toward preferences).
  */
 export const HEADER_UTILITY_COLLAPSE_ESTIMATES = {
 	settingsButtonPx: 32,
 	languageSelectMinPx: 128,
 	loginLinkMinPx: 112,
-	gapPx: 16,
-	gapCount: 3
+	/** `--spacing-100` between search input and preferences button. */
+	searchToPreferencesGapPx: 16,
+	/** `--spacing-50` between preferences↔language and language↔session. */
+	optionGapPx: 8,
+	/** Option-gap slots after preferences (language, then session). */
+	optionGapCountAfterPreferences: 2
 } as const
 
 /**
@@ -34,7 +45,9 @@ export const HEADER_UTILITY_COLLAPSE_THRESHOLD_PX =
 	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.settingsButtonPx
 	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.languageSelectMinPx
 	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.loginLinkMinPx
-	+ ( HEADER_UTILITY_COLLAPSE_ESTIMATES.gapCount * HEADER_UTILITY_COLLAPSE_ESTIMATES.gapPx )
+	+ HEADER_UTILITY_COLLAPSE_ESTIMATES.searchToPreferencesGapPx
+	+ ( HEADER_UTILITY_COLLAPSE_ESTIMATES.optionGapCountAfterPreferences
+		* HEADER_UTILITY_COLLAPSE_ESTIMATES.optionGapPx )
 
 /**
  * Codex `MenuConfig.visibleItemLimit` for the interface-language `CdxLookup` menu.
