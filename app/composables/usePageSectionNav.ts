@@ -1,9 +1,6 @@
-import { EXPLORER_SIDE_NAV_SECTIONS } from '../../config/explorerSideNav'
 import { SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID } from '../../config/sectionNavigation'
-import type { ExplorerMode } from './useEnterpriseExplorer'
 import { resolveContentPageSidebar } from './useContentPageSidebar'
 import { contentLocaleFromPath, getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
-import { explorerModeFromPath, isExplorerRoutePath, pathForExplorerMode } from '../utils/explorerRoute'
 import { resolveContentHref } from '../utils/localeAwarePath'
 
 export interface ResolvedSectionNavItem {
@@ -11,9 +8,8 @@ export interface ResolvedSectionNavItem {
 	label: string
 	isActive: boolean
 	/**
-	 * Locale-aware in-app route. Content items resolve it from their config
-	 * `href`; explorer items from their `mode`. `null` only for items with no
-	 * target (kept as a non-navigating placeholder link).
+	 * Locale-aware in-app route resolved from the item's config `href`. `null`
+	 * only for items with no target (kept as a non-navigating placeholder link).
 	 */
 	to: string | null
 }
@@ -24,15 +20,16 @@ export interface ResolvedSectionNavSection {
 	items: ResolvedSectionNavItem[]
 }
 
-interface ContentSectionNavItem {
+interface SectionNavItem {
 	id: string
 	messageKey: string
-	/** Locale-agnostic content path the item links to (see `config/sectionNavigation.js`). */
+	/**
+	 * Locale-agnostic path the item links to (see `config/sectionNavigation.js`).
+	 * Content paths are locale-prefixed by `resolveContentHref`; `/explorer` paths
+	 * are left verbatim (`i18n: false`). Omitted for a non-navigating placeholder.
+	 */
 	href?: string
-}
-
-interface ExplorerSectionNavItem extends ContentSectionNavItem {
-	mode?: ExplorerMode
+	/** When false, the item is hidden entirely. Defaults to true. */
 	enabled?: boolean
 }
 
@@ -41,21 +38,24 @@ interface SectionNavigationSource {
 	sections: Array<{
 		id: string
 		titleMessageKey: string
-		items: Array<ContentSectionNavItem | ExplorerSectionNavItem>
+		items: SectionNavItem[]
 	}>
 }
 
 /**
  * Resolves left-hand section navigation for the current route.
  *
- * Returns explorer or content section menus from config, with banana-i18n
- * labels. Content items resolve their route from a locale-agnostic `href` and
- * are active when that `href` matches the current page; explorer items resolve
- * from a `mode` via `pathForExplorerMode` and follow `explorerModeFromPath`. At
- * most one item is selected per menu (targets are unique).
+ * Every menu — including the API Explorer sidebar — is a named entry in
+ * `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID`, so content experts edit them all
+ * the same way. Each item resolves its route from a locale-agnostic `href`
+ * (`resolveContentHref` locale-prefixes content paths and leaves `/explorer`
+ * paths verbatim) and is active when that `href` matches the current page. Items
+ * with `enabled: false` are hidden; items without an `href` are non-navigating
+ * placeholders. At most one item is selected per menu (targets are unique).
  *
  * A page's `sidebar` frontmatter overrides path-based resolution: `false` hides
- * the menu, a string forces a named menu, `true`/omitted uses the path (see
+ * the menu, a string forces a named menu (e.g. `sidebar: "apis"` attaches the
+ * API Explorer sidebar to any page), `true`/omitted uses the path (see
  * `useContentPageSidebar`). The `/account` Vue page is not Nuxt Content —
  * `content-sidebar.global` publishes `sidebar: false` for that path so the
  * shell collapses the start column (Figma `/account` has no section nav).
@@ -74,15 +74,10 @@ export function usePageSectionNav() {
 
 	const mainNavigationId = computed( () => getMainNavigationIdFromPath( route.path ) )
 
-	// Per-page `sidebar` frontmatter, ignored on explorer routes (which resolve
-	// their side nav from the path). See `useContentPageSidebar`.
-	const sidebarPreference = computed( () => {
-		if ( isExplorerRoutePath( route.path ) ) {
-			return undefined
-		}
-
-		return resolveContentPageSidebar( route.path )
-	} )
+	// Per-page `sidebar` frontmatter. Explorer routes are not Nuxt Content, so
+	// `content-sidebar.global` never publishes a preference for them and this
+	// resolves to `undefined` (path-based resolution). See `useContentPageSidebar`.
+	const sidebarPreference = computed( () => resolveContentPageSidebar( route.path ) )
 
 	/**
 	 * Whether the current page explicitly hides its sidebar (`sidebar: false`).
@@ -97,13 +92,6 @@ export function usePageSectionNav() {
 	}
 
 	const navigationSource = computed<SectionNavigationSource>( () => {
-		if ( isExplorerRoutePath( route.path ) ) {
-			return {
-				ariaLabelMessageKey: 'explorer-side-nav-label',
-				sections: EXPLORER_SIDE_NAV_SECTIONS
-			}
-		}
-
 		const preference = sidebarPreference.value
 
 		// `sidebar: false` — hide the sidebar entirely.
@@ -136,54 +124,25 @@ export function usePageSectionNav() {
 
 	const navigationSections = computed<ResolvedSectionNavSection[]>( () => {
 		const source = navigationSource.value
-		const onExplorerRoute = isExplorerRoutePath( route.path )
-		const activeExplorerMode = onExplorerRoute ? explorerModeFromPath( route.path ) : null
-
-		const contentPath = onExplorerRoute
-			? null
-			: stripContentLocalePrefix( route.path )
-
+		const contentPath = stripContentLocalePrefix( route.path )
 		const contentLocale = contentLocaleFromPath( route.path )
 
 		return source.sections.map( ( section ) => ( {
 			id: section.id,
 			title: $bananaI18n( section.titleMessageKey ),
 			items: section.items
-				.filter( ( item ) => {
-					if ( !onExplorerRoute ) {
-						return true
-					}
-
-					const explorerItem = item as ExplorerSectionNavItem
-					return explorerItem.enabled !== false
-				} )
-				.map( ( item ) => {
-					if ( onExplorerRoute ) {
-						const explorerItem = item as ExplorerSectionNavItem
-						const mode = explorerItem.mode
-
-						return {
-							id: item.id,
-							label: $bananaI18n( item.messageKey ),
-							to: mode !== undefined ? pathForExplorerMode( mode ) : null,
-							isActive: mode !== undefined && mode === activeExplorerMode
-						}
-					}
-
-					const contentItem = item as ContentSectionNavItem
-
-					return {
-						id: item.id,
-						label: $bananaI18n( item.messageKey ),
-						to: contentItem.href
-							? resolveContentHref( contentItem.href, contentLocale )
-							: null,
-						// Active when this item's target is the current page. `contentPath`
-						// and `href` are both locale-agnostic, so they compare directly.
-						isActive: contentItem.href !== undefined
-							&& contentItem.href === contentPath
-					}
-				} )
+				.filter( ( item ) => item.enabled !== false )
+				.map( ( item ) => ( {
+					id: item.id,
+					label: $bananaI18n( item.messageKey ),
+					to: item.href
+						? resolveContentHref( item.href, contentLocale )
+						: null,
+					// Active when this item's target is the current page. Both
+					// `contentPath` and `href` are locale-agnostic (explorer paths
+					// carry no locale prefix), so they compare directly.
+					isActive: item.href !== undefined && item.href === contentPath
+				} ) )
 		} ) )
 	} )
 
