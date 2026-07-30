@@ -172,6 +172,7 @@ Vue components placed in `app/components/content/` are auto-registered as MDC co
 - Use `CdxButton` for inline call-to-action buttons.
 - Use `CdxIcon` with the appropriate `cdxIcon*` constant for decorative icons (e.g. `cdxIconLinkExternal` on external links).
 - Use `NavigationCard` (`::navigation-card`) for vertical content / navigation destination cards — do not restyle stock `CdxCard` for this chrome; wrap groups in `NavigationCardGrid` (`:::navigation-card-grid`) for equal-height rows. See **Navigation card authoring playbook** below, `ARCHITECTURE.md` → Navigation card, and `DESIGN_REQUIREMENTS.md` → Navigation card.
+- **Approved exception — catalog InfoChips are label-only:** Optional `CdxInfoChip` rows on `NavigationCard` keep stock Codex **status colours** but hide status icons. Codex forces icons on `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips`. Do not re-enable icons or invent a second chip component. See `ARCHITECTURE.md` → Navigation card → Info chips.
 
 All other rules apply inside content components: banana-i18n for interface strings, `<bdi>` for external strings, CSS logical properties.
 
@@ -256,9 +257,23 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 
 **Prompt phrases (team → agent):** “use external navigation cards”, “same style as About Wikimedia”, “supporting-text with writer labels”, “preserve Read more on … / Visit … copy”.
 
+#### Info chips (optional)
+
+**Use when:** design asks for scope / stability tags on destination cards — primary surface is the **API catalog** (`content/en/apis.md`). **Do not** add chips to Get started overview / Build for communities cards unless the prompt explicitly asks.
+
+| Codex `status` | Catalog use |
+|----------------|-------------|
+| `notice` | Scope (e.g. All projects, Multi-project, Wikidata) |
+| `success` | Stable / Check stability at endpoint level |
+| `warning` | Beta |
+
+**MDC:** `chips="notice:All projects|success:Stable"` (pipe-separated; `status:label` or bare label → default `subtle`). Labels are **content** (per-locale Markdown + `<bdi>`), not banana-i18n. Chips are **label-only** (no status icons) — see the approved exception above.
+
+**Reference page:** `content/en/apis.md` (mixed internal `/explorer` + external cards with chips; best-practice panels use `::highlight`, not cards).
+
 #### Mixed pages
 
-A single page may combine both styles (e.g. `/explorer` internal cards next to Meta-Wiki external cards). Apply the rules **per card**, not per page. References: `wiki-content.md`, `open-data.md`, `tools-and-bots.md`.
+A single page may combine both styles (e.g. `/explorer` internal cards next to Meta-Wiki external cards). Apply the rules **per card**, not per page. References: `wiki-content.md`, `open-data.md`, `tools-and-bots.md`, `apis.md` (catalog).
 
 #### Ambiguities (raise before guessing)
 
@@ -384,8 +399,8 @@ Before marking any component complete, verify:
 - [ ] **Module rail** standalone **`CdxMenuItem`** rows: endpoint **name** uses **`--color-progressive`** on hover and when selected; HTTP method tags keep semantic colours (do not blanket progressive on hover/selected); selected rows have **no** Codex progressive-subtle background fill
 - [ ] Primary **APIs** tab (`nav-api`) lands on `/apis`; stays selected on `/apis` (+ children) and `/explorer` (+ children); start-column section heading on explorer remains **API Explorer** (`explorer-side-nav-api-explorer-title`)
 - [ ] Scalar Test Request modal write-request **`CdxCheckbox`** uses banana-i18n labels; production wiki display name and test wiki hostname are wrapped in `<bdi>` (hostname also `dir="ltr"` with monospace styling)
-- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, supporting-text, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle` on linked cards; whole-card click via stretched link; when `supporting-text` + `url` are set, supporting-text is a progressive link to the same destination (external icon on supporting-text for off-platform URLs; title trailing icon omitted); **keep writer-authored supporting-text labels** when converting from prose; supporting-text bottom-aligned in equal-height grid rows; without supporting-text, title trailing icon for off-platform URLs; omit `url` for intentionally non-clickable cards; description may include inline links (e.g. PAWS / Wikidata; ProseA external icons suppressed); Get started / Build for communities / Use wiki content / Access open data / Tools and bots / About Wikimedia cards sit in `:::navigation-card-grid` (equal-height rows); grid uses **`--spacing-100` (16px)** `margin-block` above and below (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page`); internal card/`sectionNavigation` `href`s have matching `content/<locale>/…` Markdown (e.g. `/get-started/on-wiki` → `on-wiki.md`) so destinations do not 404; **Wikimedia Enterprise body content is prose, not cards**
-- [ ] **Highlight** (`Highlight` / `.fd-highlight`): progressive-subtle CTA / featured blurb only (not `Callout` / `CdxMessage` status types); no banana keys for highlight copy (Markdown / Vue slot content); no border; radius via `--fd-explorer-controls-surface-border-radius`; padding `--spacing-75`; first-party CSS uses logical properties; inherits interface `dir` from the shell; links inside follow ProseA / progressive link rules; demos include Get started landing (inline CTA with arrow) and Wikimedia Enterprise intro (sentence + CTA on a **new line**, **no** arrow; body of that page is **prose**, not cards)
+- [ ] **Navigation card** (`NavigationCard` / `NavigationCardGrid`): title, description, supporting-text, and chip labels in `<bdi>`; no banana keys for card copy; first-party CSS uses logical properties; hover border `--border-color-subtle` on linked cards; whole-card click via stretched link; when `supporting-text` + `url` are set, supporting-text is a progressive link to the same destination (external icon on supporting-text for off-platform URLs; title trailing icon omitted); **keep writer-authored supporting-text labels** when converting from prose; supporting-text bottom-aligned in equal-height grid rows; without supporting-text, title trailing icon for off-platform URLs; omit `url` for intentionally non-clickable cards; description may include inline links (e.g. PAWS / Wikidata; ProseA external icons suppressed); optional `CdxInfoChip` rows are **label-only** (status icons hidden under `.navigation-card__chips`; stock Codex status colours; catalog: `notice` = scope, `success` = stable, `warning` = beta); Get started / Build for communities / Use wiki content / Access open data / Tools and bots / About Wikimedia / **API catalog** (`apis.md`) cards sit in `:::navigation-card-grid` (equal-height rows); grid uses **`--spacing-100` (16px)** `margin-block` above and below (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page`); internal card/`sectionNavigation` `href`s have matching `content/<locale>/…` Markdown (e.g. `/get-started/on-wiki` → `on-wiki.md`) so destinations do not 404; **Wikimedia Enterprise body content is prose, not cards**
+- [ ] **Highlight** (`Highlight` / `.fd-highlight`): progressive-subtle CTA / featured blurb only (not `Callout` / `CdxMessage` status types); no banana keys for highlight copy (Markdown / Vue slot content); no border; radius via `--fd-explorer-controls-surface-border-radius`; padding `--spacing-75`; first-party CSS uses logical properties; inherits interface `dir` from the shell; links inside follow ProseA / progressive link rules; demos include Get started landing (inline CTA with arrow), Wikimedia Enterprise intro (sentence + CTA on a **new line**, **no** arrow; body of that page is **prose**, not cards), and API catalog (`apis.md` — Quick start + best-practice panels)
 - [ ] **Content page typography** (`.fd-content-page`): Codex Heading 1 / 2 / 3 on `h1` / `h2` / `h3` per `ARCHITECTURE.md` → Content typography
 
 ---

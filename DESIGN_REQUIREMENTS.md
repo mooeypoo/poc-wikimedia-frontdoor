@@ -752,9 +752,9 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 ## API catalog
 
-**Decision:** The **APIs** primary tab lands on the Markdown catalog at [`/apis`](https://wikifrodo.netlify.app/apis) ([Figma 1183:30852](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1183-30852)) — section overview (same role as `/get-started`). Start-column menu is **`config/explorerSideNav.js`** on `/apis`, `/apis/…`, and explorer routes. Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** / **Wikimedia Enterprise APIs** / **Classic APIs** card grids; stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Deferred for a later pass: info chips on cards, “Filter by project”, end-column page nav, and curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`).
+**Decision:** The **APIs** primary tab lands on the Markdown catalog at [`/apis`](https://wikifrodo.netlify.app/apis) ([Figma 1183:30852](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1183-30852)) — section overview (same role as `/get-started`). Start-column menu is **`config/explorerSideNav.js`** on `/apis`, `/apis/…`, and explorer routes. Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** / **Wikimedia Enterprise APIs** / **Classic APIs** card grids with Codex **`CdxInfoChip`** rows (scope = `notice`, stability = `success`, beta = `warning` — stock Codex status colours; label-only, status icons hidden); stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Deferred for a later pass: “Filter by project”, end-column page nav, and curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`).
 
-**Source:** `content/en/apis.md`, `config/mainNavigation.ts` (`API_CATALOG_NAVIGATION_PATH`), `config/explorerSideNav.js`, `app/composables/usePageSectionNav.ts`, `app/utils/contentRoute.ts` (`getMainNavigationIdFromPath`).
+**Source:** `content/en/apis.md`, `config/mainNavigation.ts` (`API_CATALOG_NAVIGATION_PATH`), `config/explorerSideNav.js`, `app/composables/usePageSectionNav.ts`, `app/utils/contentRoute.ts` (`getMainNavigationIdFromPath`), `app/components/content/NavigationCard.vue` (label-only chips), `ARCHITECTURE.md` → Markdown content pages → API catalog / Navigation card → Info chips.
 
 ---
 
@@ -772,7 +772,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Radius | `--fd-explorer-controls-surface-border-radius` (**4px** exploratory) |
 | Padding | `--spacing-75` |
 | Title / description / supporting-text | Codex base size: `--font-size-medium` / `--line-height-medium` (title bold) |
-| Chips | Optional Codex `CdxInfoChip` under description; gap `--spacing-50` |
+| Chips | Optional Codex `CdxInfoChip` under description (label-only; no status icons); gap `--spacing-50` |
 | Top icon | Optional, above title row; progressive colour |
 | Leading icon | Optional, inline with title |
 | Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
@@ -800,7 +800,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Out of scope for docs pages:** Figma [1061:21484](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1061-21484) richer pattern (chips between title and description, divider, footer link list).
 
-**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
+**Source:** `app/components/content/NavigationCard.vue`, `NavigationCardGrid.vue`, `config/navigationCardIcons.ts`, `app/utils/parseNavigationCardChips.ts`, `content/en/apis.md`, `content/en/get-started.md`, `content/en/get-started/build-for-communities.md`, `content/en/get-started/wiki-content.md`, `content/en/get-started/open-data.md`, `content/en/get-started/tools-and-bots.md`, `content/en/get-started/on-wiki.md`, `content/en/get-started/tutorials.md`, `content/en/get-started/about-wikimedia.md`, `ARCHITECTURE.md` → Navigation card.
 
 **Also recorded in:** `AGENTS.md` (content components + RTL checklist), `docs/TECH_DECISIONS.md` (feature status), `docs/content-authoring-guide.md` (authoring).
 
