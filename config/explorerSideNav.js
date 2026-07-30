@@ -71,9 +71,9 @@ export const EXPLORER_SIDE_NAV_SECTIONS = [
 		id: 'resources',
 		titleMessageKey: 'explorer-side-nav-resources-title',
 		items: [
-			{ id: 'changelog', messageKey: 'explorer-side-nav-changelog' },
-			{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy' },
-			{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting' }
+			{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
+			{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy', href: '/apis/stability' },
+			{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting', href: '/apis/troubleshooting' }
 		]
 	},
 ]
