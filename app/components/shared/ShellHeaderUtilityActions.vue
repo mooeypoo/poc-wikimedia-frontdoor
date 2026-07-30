@@ -1,25 +1,24 @@
 <script setup lang="ts">
 import {
 	CdxButton,
+	CdxField,
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
+	CdxPopover,
+	CdxRadio,
 	CdxSearchInput,
-	CdxToggleButtonGroup,
-	type ButtonGroupItem,
 	type MenuConfig
 } from '@wikimedia/codex'
-import type { MenuItemData } from '@wikimedia/codex'
+import type { MenuItemData, MenuItemValue } from '@wikimedia/codex'
 import {
-	cdxIconBright,
 	cdxIconConfigure,
 	cdxIconEllipsis,
-	cdxIconHalfBright,
 	cdxIconLanguage,
-	cdxIconMoon,
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
 import type { ColorMode } from '../../../config/colorMode'
+import { COLOR_THEME_PREFERENCE_OPTIONS } from '../../../config/colorMode'
 import {
 	HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP,
 	HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT
@@ -30,10 +29,13 @@ import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
-import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtilityMenu'
+import {
+	SHELL_HEADER_UTILITY_MENU_VALUE,
+	useShellHeaderUtilityMenu
+} from '../../composables/useShellHeaderUtilityMenu'
 
 /**
- * Header utility row — search, settings, interface language, and session control.
+ * Header utility row — search, settings (color theme), interface language, and session control.
  *
  * Compact mode when the allocated actions track is narrower than the expanded minimum
  * (256px search + siblings). Search becomes an icon button; settings and log in move
@@ -41,7 +43,13 @@ import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtili
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
+ * Color theme uses `useColorMode` via a settings `CdxPopover` with `CdxField` +
+ * `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark /
+ * System default). Figma:
+ * [Preferences popover 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029).
+ *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
+ * @see ARCHITECTURE.md → Color theme preferences (shell)
  */
 
 /**
@@ -87,7 +95,8 @@ watch( hasQuery, ( newHasQuery ) => {
 	}
 } )
 
-const { menuSelection, menuItems, handleMenuSelection } = useShellHeaderUtilityMenu()
+const { menuSelection, menuItems, handleMenuSelection: handleUtilityMenuSelection } =
+	useShellHeaderUtilityMenu()
 const {
 	isLoggedIn,
 	username,
@@ -97,44 +106,62 @@ const {
 } = useShellAuthNavigation()
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
-const colorModeGroupLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
-
-// Light / Auto / Dark, in that order. Icon-only (label: null); the icons read as
-// sun / half-sun / moon. `auto` follows the operating system preference.
-const colorModeButtons = computed<ButtonGroupItem[]>( () => [
-	{
-		value: 'light',
-		label: null,
-		icon: cdxIconBright,
-		ariaLabel: $bananaI18n( 'color-mode-light-label' )
-	},
-	{
-		value: 'auto',
-		label: null,
-		icon: cdxIconHalfBright,
-		ariaLabel: $bananaI18n( 'color-mode-auto-label' )
-	},
-	{
-		value: 'dark',
-		label: null,
-		icon: cdxIconMoon,
-		ariaLabel: $bananaI18n( 'color-mode-dark-label' )
-	}
-] )
+const isPreferencesPopoverOpen = ref( false )
+const settingsButtonRef = ref<InstanceType<typeof CdxButton> | undefined>()
+const utilityMenuButtonRef = ref<InstanceType<typeof CdxMenuButton> | undefined>()
 
 /**
- * Applies a color-mode selection from the toggle group.
- *
- * The group is single-select, so it never emits an array; ignore a null value
- * so the active mode cannot be cleared.
- *
- * @param value - Selected color-mode value.
+ * Popover anchor: settings gear when expanded; overflow menu when collapsed.
  */
-function handleColorModeSelect( value: string | number | ( string | number )[] | null ): void {
-	if ( typeof value !== 'string' ) {
+const preferencesPopoverAnchor = computed( () => {
+	return isUtilityCollapsed.value ? utilityMenuButtonRef.value : settingsButtonRef.value
+} )
+
+const colorThemeFieldLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
+
+/**
+ * Color theme radios in Figma preferences order (`COLOR_THEME_PREFERENCE_OPTIONS`).
+ */
+const colorThemePreferenceOptions = computed( () => {
+	return COLOR_THEME_PREFERENCE_OPTIONS.map( ( option ) => ( {
+		mode: option.mode,
+		label: $bananaI18n( option.labelMessageKey )
+	} ) )
+} )
+
+/**
+ * Bridges radio `v-model` to `useColorMode` without changing persistence / class logic.
+ */
+const colorModeSelection = computed<ColorMode>( {
+	get() {
+		return colorMode.value
+	},
+	set( nextMode ) {
+		setColorMode( nextMode )
+	}
+} )
+
+/**
+ * Opens or closes the preferences (color theme) popover.
+ */
+function togglePreferencesPopover(): void {
+	isPreferencesPopoverOpen.value = !isPreferencesPopoverOpen.value
+}
+
+/**
+ * Handles collapsed utility menu selection, including opening preferences.
+ *
+ * @param selectedValue - Newly selected menu item value, or null.
+ */
+function handleMenuSelection(
+	selectedValue: MenuItemValue | null
+): void {
+	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.settings ) {
+		isPreferencesPopoverOpen.value = true
+		menuSelection.value = null
 		return
 	}
-	setColorMode( value as ColorMode )
+	handleUtilityMenuSelection( selectedValue )
 }
 
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
@@ -399,22 +426,44 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
-		<CdxToggleButtonGroup
-			class="shell-header-utility-actions__color-mode"
-			:model-value="colorMode"
-			:buttons="colorModeButtons"
-			:aria-label="colorModeGroupLabel"
-			@update:model-value="handleColorModeSelect"
-		/>
-
-		<CdxButton
+		<span
 			v-show="!isUtilityCollapsed"
-			class="shell-header-utility-actions__settings-button"
-			:aria-label="settingsButtonLabel"
-			disabled
+			class="shell-header-utility-actions__settings"
 		>
-			<CdxIcon :icon="cdxIconConfigure" />
-		</CdxButton>
+			<CdxButton
+				ref="settingsButtonRef"
+				class="shell-header-utility-actions__settings-button"
+				:aria-label="settingsButtonLabel"
+				:aria-expanded="isPreferencesPopoverOpen"
+				@click="togglePreferencesPopover"
+			>
+				<CdxIcon :icon="cdxIconConfigure" />
+			</CdxButton>
+		</span>
+
+		<CdxPopover
+			v-model:open="isPreferencesPopoverOpen"
+			class="shell-header-utility-actions__preferences-popover"
+			:anchor="preferencesPopoverAnchor"
+			placement="bottom-end"
+		>
+			<CdxField
+				class="shell-header-utility-actions__color-theme-field"
+				is-fieldset
+			>
+				<template #label>
+					{{ colorThemeFieldLabel }}
+				</template>
+				<CdxRadio
+					v-for="option in colorThemePreferenceOptions"
+					:key="option.mode"
+					v-model="colorModeSelection"
+					:input-value="option.mode"
+				>
+					{{ option.label }}
+				</CdxRadio>
+			</CdxField>
+		</CdxPopover>
 
 		<div
 			class="shell-header-utility-actions__language"
@@ -480,6 +529,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<CdxMenuButton
 			v-show="isUtilityCollapsed"
+			ref="utilityMenuButtonRef"
 			v-model:selected="menuSelection"
 			class="shell-header-utility-actions__utility-menu"
 			weight="quiet"
@@ -538,18 +588,31 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	overflow-y: auto;
 }
 
+.shell-header-utility-actions__settings,
 .shell-header-utility-actions__settings-button,
 .shell-header-utility-actions__search-toggle,
-.shell-header-utility-actions__utility-menu,
-.shell-header-utility-actions__color-mode {
+.shell-header-utility-actions__utility-menu {
 	flex: 0 0 auto;
+}
+
+.shell-header-utility-actions__preferences-popover :deep( .cdx-popover__body ) {
+	padding: var( --spacing-100 );
+}
+
+.shell-header-utility-actions__color-theme-field {
+	margin-block-start: 0;
+	min-inline-size: 12rem;
+}
+
+.shell-header-utility-actions__color-theme-field :deep( .cdx-field__label ) {
+	margin-block-end: var( --spacing-25 );
 }
 
 /*
  * Language control: a compact globe + uppercase-code button at all widths,
  * opening the searchable lookup in a popover. Keeping it icon-sized (rather
  * than an always-open input) preserves top-bar room for the log-in link and
- * future utilities (e.g. a dark-mode toggle).
+ * the settings (color theme) control.
  */
 .shell-header-utility-actions__language {
 	position: relative;

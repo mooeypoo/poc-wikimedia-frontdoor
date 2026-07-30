@@ -29,7 +29,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - The site needs to be tested for compliance with an AA level of accessibility. It should be fully actionable via screen reader technology.
 - Page areas such as the header, side navigation menus and the footer are placeholders that will be replaced by new standardized components
 - Default Nuxt elements such as skeletons need to be replaced by Codex components
-- Search and settings controls are present but **disabled** or non-functional
+- Search and settings controls are present; settings opens a **preferences popover** for color theme (Light / Dark / System default)
 - Account dashboard at `/account` (no start-column section nav); unauthenticated visits show the logged-out gate (Figma 1001:18723) with real OAuth Log in; after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
@@ -233,7 +233,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Primary nav as Codex quiet tabs | `ShellPrimaryNav`, `usePrimaryNavigationTab` | Tab panels hidden — **navigation-only** Codex exception |
 | Primary nav tab scroll buttons | `shell-primary-nav-overrides.css` | **Hidden** — Codex overflow scrollers flicker on load; separate responsive approach planned |
 | Primary nav tab label weight | `shell-primary-nav-overrides.css` | **Codex exception** — all labels `--font-weight-normal` (Codex defaults to bold); selection via colour/underline |
-| Two-row header (utility + tabs) | `default.vue` `.frontdoor-shell__chrome` inside full-bleed band | Settings **disabled**; log in **non-functional** |
+| Two-row header (utility + tabs) | `default.vue` `.frontdoor-shell__chrome` inside full-bleed band | Settings → preferences / color theme; Log in → Meta OAuth |
 | Full-viewport header band | `.frontdoor-shell__chrome-band` in `default.vue` | Background + `--border-color-muted` bottom border span viewport; inner content centred |
 | Header / start nav aligned at inline-start | Brand: `--spacing-75` inset (removed when nav collapsed); nav row: flush to chrome inner edge | Section menu items keep `--spacing-75` padding inside start column |
 | Header utilities at inline-end | Body grid column + `justify-content: flex-end` | Search/settings/language/log in |
@@ -262,7 +262,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon → **`CdxPopover`** with Color theme radios), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/explorer` |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -275,11 +275,13 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps within the row are **`--spacing-100` (16px)**. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
-**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (disabled) and **Log in** (or username → account + **Log out** when authenticated). Search button activation is **deferred**.
+**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (opens color-theme preferences popover) and **Log in** (or username → account + **Log out** when authenticated). Search button activation is **deferred**.
 
 **Utility row layout (expanded):** Search field, settings icon button, language button, log-in text link — or authenticated **username** link to `/account`.
 
-**Language control is compact at all widths.** With ~575 languages to choose from (and further utilities coming, e.g. a dark-mode toggle), an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
+**Language control is compact at all widths.** With ~575 languages to choose from, an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
+
+**Color theme (preferences):** The configure **settings** button opens a **preferences** **`CdxPopover`** ([Figma 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029)) with a **`CdxField`** (`is-fieldset`) titled **Color theme** and **`CdxRadio`** options **Light**, **Dark**, and **System default** (values `light` / `dark` / `auto` via `COLOR_THEME_PREFERENCE_OPTIONS` in `config/colorMode.ts`). Selection calls existing `useColorMode().setMode` — same persistence and `html.fd-theme--*` behaviour as the former header toggle group (removed). Product decisions: popover **stays open** after select; **no** title/close chrome (outside click / Escape dismiss); collapsed utility **Settings** opens the same popover anchored to the overflow `CdxMenuButton`. Banana: `color-mode-group-label`, `color-mode-*-label`. Trigger label remains `header-settings-label` (“Settings”); the surface is preferences.
 
 **Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`). The **APIs** tab (`nav-api`) maps to `/explorer`; `getMainNavigationIdFromPath` returns **`apis`** so the tab stays selected on explorer routes. Start-column section heading remains **API Explorer**.
 
@@ -309,10 +311,10 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 |---------|-----------|
 | Search (`CdxSearchInput`) | Flexes in the header (max **640px**); **`min-inline-size: 256px`** when expanded; collapses to icon-only when the actions track is narrower than `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`useHeaderUtilityCollapse`) |
 | Search icon button | Shown in collapsed mode; **activation deferred** (no overlay yet) |
-| Settings (`CdxButton` + configure icon) | **Disabled** prototype; inline when expanded; overflow menu when collapsed |
+| Settings (`CdxButton` + configure icon) | Opens **preferences** popover (color theme radios); inline when expanded; overflow menu when collapsed |
 | Interface language (`CdxLookup`) | **Globe + uppercase code** `CdxButton` at all widths; click opens the searchable lookup in a popover. Keeps the bar compact. |
 | Log in / account | **Log in** text link when signed out (starts Meta OAuth + PKCE, returns to the current page). When signed in: **username only** (no “Logged in as” prefix) as a Codex progressive link (`NuxtLink` → locale-aware `/account`); `aria-label` from `header-auth-link-aria`. Collapsed overflow menu: username → account, plus **Log out** |
-| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings + log in when signed out; settings + username → account + log out when signed in |
+| Utility overflow menu (`CdxMenuButton`) | Icon-only (`cdxIconEllipsis`); settings (opens preferences / color-theme popover) + log in when signed out; settings + username → account + log out when signed in |
 
 **Interface language picker:** The portal supports the **full Wikimedia language catalog** (~575 locales; `config/languages.ts`), not a curated few — so the picker is a **searchable `CdxLookup`**, not a `CdxSelect`. There is one language list for both content and interface; locales without content or interface strings fall back through the chain to English (see `docs/adr-language-catalog.md`). Implementation:
 
@@ -326,7 +328,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 - **Width** — the trigger is icon-sized (`flex: 0 0 auto`), keeping top-bar room for log-in and future utilities; the popover is `18rem` / `min(18rem, 90vw)`.
 - **LTR ↔ RTL switching** — `:key="direction"` remounts the lookup; Codex chrome follows `<html dir>` via **`codex.style-bidi.css`** (no LTR+RTL sheet stacking). First-party Lookup CSS does **not** override TextInput / clearable / start-icon chrome — only Floating UI menu placement (see `ARCHITECTURE.md` → Codex exception #8).
 
-**Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `config/headerChrome.ts`.
+**Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `app/composables/useColorMode.ts`, `config/headerChrome.ts`, `config/colorMode.ts`.
 
 **Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()` (explorer stays `/explorer`). Explorer routes keep the **APIs** tab selected (`activeNavigationId` = `apis`).
 
@@ -809,6 +811,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Header color theme preferences | Settings → preferences `CdxPopover` + Color theme radios (`COLOR_THEME_PREFERENCE_OPTIONS` / `useColorMode`); stay open on select; no close chrome; remove toggle group |
 | *(uncommitted)* | Content `h2` section gap (decision) | Docs `.fd-content-page h2` → **`--spacing-250` (40px)** `margin-block-start` — official; see Content page typography |
 | *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |
