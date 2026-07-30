@@ -36,12 +36,16 @@ Get today's featured article from English Wikipedia.
 curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
 ```
 
+## Review API policies
+
+Before you go, we ask that you take a minute to look over the [API policies](/apis/policies). Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use.
+
 ## Try the sandbox
 
 Visit the [API explorer](/explorer) to try different parameters and explore other available languages and projects.
 
 ## Next steps
 
-- Explore featured apps
-- Learn with tutorials
-- Connect with the community
+- [Explore featured apps](/get-started/featured-apps)
+- [Learn with tutorials](/get-started/tutorials)
+- [Connect with the community](/community)
