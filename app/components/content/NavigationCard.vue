@@ -2,6 +2,7 @@
 import { CdxIcon, CdxInfoChip } from '@wikimedia/codex'
 import { cdxIconLinkExternal, type Icon } from '@wikimedia/codex-icons'
 import { resolveNavigationCardIcon } from '../../../config/navigationCardIcons'
+import { resolveNavigationCardTitleLogo } from '../../../config/navigationCardTitleLogos'
 import {
 	parseNavigationCardChips,
 	type NavigationCardChip
@@ -20,7 +21,11 @@ export type { NavigationCardChip }
  * - Neutral-subtle background; transparent border that uses
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
- * - Optional **top** / **leading** title icons
+ * - Optional **top** / **leading** title icons (Codex allowlist)
+ * - Optional **title-logo** — allowlisted monochrome brand SVG
+ *   (`gerrit` / `github` / `gitlab`) in the title position at
+ *   `--size-icon-medium`, `currentColor` / `--color-base` (dark mode via tokens).
+ *   Prefer over a text `title` for logo-led cards (e.g. Browse repositories).
  * - Optional **supporting-text**: when `url` is set, rendered as a Codex Link
  *   (mixin tokens: `--color-link*`) to the same destination (external icon
  *   appended for off-platform URLs; icon inherits link colour);
@@ -51,6 +56,7 @@ const props = withDefaults( defineProps<{
 	url?: string
 	/**
 	 * Title text when the `#title` slot is unused. Content string — BiDi-isolated.
+	 * Omit when `titleLogo` supplies the title visual instead.
 	 */
 	title?: string
 	/**
@@ -64,6 +70,12 @@ const props = withDefaults( defineProps<{
 	 * technical-writer labels when converting from prose.
 	 */
 	supportingText?: string
+	/**
+	 * Optional monochrome brand logo in the title position (MDC:
+	 * `title-logo="gerrit"`). Allowlisted in `config/navigationCardTitleLogos.ts`.
+	 * Sized to `--size-icon-medium`; colour via `currentColor` / `--color-base`.
+	 */
+	titleLogo?: string
 	/**
 	 * Optional icon above the title row. Pass a Codex {@link Icon} from Vue, or
 	 * an allowlisted name from Markdown (`top-icon="userGroup"`).
@@ -90,6 +102,7 @@ const props = withDefaults( defineProps<{
 	title: '',
 	description: '',
 	supportingText: '',
+	titleLogo: '',
 	chips: () => [],
 	external: false
 } )
@@ -152,6 +165,13 @@ const resolvedTopIcon = computed( () => resolveNavigationCardIcon( props.topIcon
 const resolvedLeadingIcon = computed( () => resolveNavigationCardIcon( props.leadingIcon ) )
 
 /**
+ * Allowlisted brand mark for the title row (replaces text title when set alone).
+ */
+const resolvedTitleLogo = computed( () =>
+	resolveNavigationCardTitleLogo( props.titleLogo )
+)
+
+/**
  * Render prop supporting-text as a progressive link to the same `url`.
  * Custom `#supporting-text` slots are left as authored.
  */
@@ -182,7 +202,9 @@ const hasTopIcon = computed( () =>
 )
 
 const hasTitle = computed( () =>
-	Boolean( slots.title ) || props.title.trim().length > 0
+	Boolean( slots.title ) ||
+	props.title.trim().length > 0 ||
+	Boolean( resolvedTitleLogo.value )
 )
 
 const hasDescription = computed( () =>
@@ -277,7 +299,38 @@ const hasBody = computed( () =>
 						</span>
 						<div class="navigation-card__title">
 							<slot name="title">
-								<bdi>{{ title }}</bdi>
+								<svg
+									v-if="resolvedTitleLogo"
+									class="navigation-card__title-logo"
+									:viewBox="resolvedTitleLogo.viewBox"
+									aria-hidden="true"
+									focusable="false"
+								>
+									<g
+										v-if="resolvedTitleLogo.groupTransform"
+										:transform="resolvedTitleLogo.groupTransform"
+									>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</g>
+									<template v-else>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</template>
+								</svg>
+								<bdi v-if="title.trim().length > 0">{{ title }}</bdi>
 							</slot>
 						</div>
 						<span
@@ -461,6 +514,18 @@ const hasBody = computed( () =>
 	line-height: var( --line-height-medium );
 	color: var( --color-base );
 	overflow-wrap: anywhere;
+}
+
+/*
+ * Brand title logos: Codex medium icon size; inherit title `--color-base`
+ * (and dark-mode token overrides) via currentColor — not progressive link colour.
+ */
+.navigation-card__title-logo {
+	display: block;
+	inline-size: var( --size-icon-medium );
+	block-size: var( --size-icon-medium );
+	flex-shrink: 0;
+	color: inherit;
 }
 
 .navigation-card__title-icon {
