@@ -16,8 +16,12 @@
  * @typedef {object} SectionNavItem
  * @property {string} id - Stable id for the nav item.
  * @property {string} messageKey - banana-i18n message key for the link label.
- * @property {string} href - Locale-agnostic content path the item links to
+ * @property {string} [href] - Locale-agnostic content path the item links to
  *   (e.g. `/quick-start`). Resolved to a locale-aware route by `usePageSectionNav()`.
+ *   API Explorer paths (`/explorer`, `/explorer/…`) are left unprefixed
+ *   (`i18n: false`). Omit for a non-navigating placeholder link.
+ * @property {boolean} [enabled] - When false, the item is hidden entirely
+ *   (functionality may still be wired). Defaults to true.
  */
 
 /**
@@ -35,6 +39,52 @@
 
 /** @type {Record<string, SectionNavigationDefinition>} */
 export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
+	// APIs / API Explorer. Shared by the `/apis` catalog page and every
+	// `/explorer` route (both resolve to the `apis` main-nav id — see
+	// `getMainNavigationIdFromPath`). Explorer-mode links are plain `href`s to
+	// their public URLs; `resolveContentHref` leaves `/explorer` paths unprefixed
+	// (`i18n: false`) and active state is derived from the path like any content item.
+	apis: {
+		ariaLabelMessageKey: 'explorer-side-nav-label',
+		sections: [
+			{
+				id: 'overview',
+				titleMessageKey: 'explorer-side-nav-overview-title',
+				items: [
+					{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
+					{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: '/apis/authentication' },
+					{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: '/apis/rate-limits' }
+				]
+			},
+			{
+				id: 'api-explorer',
+				titleMessageKey: 'explorer-side-nav-api-explorer-title',
+				items: [
+					{ id: 'wikimedia-api-modules', messageKey: 'explorer-side-nav-wikimedia-api-modules', href: '/explorer' },
+					{ id: 'enterprise-apis', messageKey: 'explorer-side-nav-enterprise-apis', href: '/explorer/enterprise' },
+					{
+						// Hidden for now (functionality retained — the enterprise-custom
+						// mode, route, and component are all still wired; flip `enabled`
+						// to true to re-expose it). See ADR §5.2 on the `enabled` toggle.
+						id: 'enterprise-apis-custom',
+						messageKey: 'explorer-side-nav-enterprise-apis-custom',
+						href: '/explorer/enterprise-custom',
+						enabled: false
+					},
+					{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks', href: '/apis/libraries-sdks' }
+				]
+			},
+			{
+				id: 'resources',
+				titleMessageKey: 'explorer-side-nav-resources-title',
+				items: [
+					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
+					{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy', href: '/apis/stability' },
+					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/apis/troubleshooting' }
+				]
+			}
+		]
+	},
 	'get-started': {
 		ariaLabelMessageKey: 'section-nav-get-started-label',
 		sections: [
@@ -152,11 +202,10 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'contribute',
 				titleMessageKey: 'section-nav-contribute-title',
 				items: [
-					{ id: 'wikimedia-open-source', messageKey: 'section-nav-contribute-wikimedia-open-source', href: '/wikimedia-open-source' },
-					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/learn-how-contributing-works' },
-					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute-by-topic' },
-					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute-by-programming-language' },
-					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/search-all-projects' }
+					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/contribute/overview' },
+					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute/by-topic' },
+					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute/by-language' },
+					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' }
 				]
 			},
 			{

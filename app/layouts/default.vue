@@ -7,6 +7,7 @@ import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigation
 import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
 import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMenu'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
+import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInternalSidebarExperiment'
 
 /**
  * Default layout — the Front Door application shell.
@@ -25,6 +26,14 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+/**
+ * Experiment: on the Explorer route with Scalar's built-in sidebar enabled, the
+ * manual endpoints rail is not mounted, so the end column is collapsed and the
+ * reference panel stretches full-width. See config/explorerInternalSidebarExperiment.ts.
+ */
+const isExplorerInternalSidebar = computed(
+	() => isExplorerRoute.value && EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR
+)
 const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
 	navigationLabel: pageSectionNavigationLabel,
@@ -184,6 +193,7 @@ useHead( {
 		class="frontdoor-shell"
 		:class="{
 			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--explorer-internal-sidebar': isExplorerInternalSidebar,
 			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
 			'frontdoor-shell--sidebar-hidden': isSidebarHidden
 		}"
@@ -519,6 +529,20 @@ useHead( {
 
 	.frontdoor-shell__side-panel--end {
 		display: flex;
+	}
+
+	/*
+	 * Experiment: Scalar's built-in sidebar replaces the manual endpoints rail.
+	 * Collapse the end column so the reference panel takes the full body width.
+	 * See config/explorerInternalSidebarExperiment.ts.
+	 */
+	.frontdoor-shell--explorer-internal-sidebar .frontdoor-shell__body-columns {
+		grid-template-columns: minmax( 0, 1fr );
+		column-gap: 0;
+	}
+
+	.frontdoor-shell--explorer-internal-sidebar .frontdoor-shell__side-panel--end {
+		display: none;
 	}
 }
 
