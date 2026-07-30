@@ -776,15 +776,15 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Exception — Wikimedia Enterprise:** `/get-started/wikimedia-enterprise` uses `::highlight` for the intro CTA only; Download / On-demand / Realtime / free-access sections remain **prose** (do not convert to cards). See `ARCHITECTURE.md` → About Wikimedia Enterprise.
 
-**Use wiki content:** three section grids — internal cards (no supporting-text) to `/explorer` and Get started paths; external Meta-Wiki dumps card with supporting-text; optional non-clickable card when destination is TBD (omit `url`).
+**Use wiki content:** three section grids — internal cards (no supporting-text) to `/explorer` and Get started paths; external Meta-Wiki dumps card with supporting-text; **Get featured content** external with `supporting-text="Read more on mediawiki.org"` (Picture of the day viewer).
 
-**Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; Explore APIs uses current product title **Lift Wing API** → `/explorer`; external supporting-text uses the technical writer’s existing labels.
+**Access open data:** untitled intro grid (external Meta-Wiki / Wikidata) plus Explore APIs / High-volume / Tutorials section grids; Explore APIs uses current product title **Lift Wing API** → `/explorer`; **Compare page metrics** external with `supporting-text="Read the docs"`; external supporting-text uses the technical writer’s existing labels.
 
 **Tools and bots:** section intro prose + grids; external writer-authored supporting-text; `/explorer` for **MediaWiki REST API** and **Lift Wing API** (current ecosystem names — not generic “Machine learning API”); **Run scripts in your browser** description links PAWS to hub-paws, card destination Wikitech with supporting-text “Read more on Wikitech”.
 
 **API card titles:** Prefer current product names until modules are available in the explorer IA and renames for accessibility are decided (see `ARCHITECTURE.md` → Get started API card titles).
 
-**About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. Wikidata name in one description links to [Wikidata:Main Page](https://www.wikidata.org/wiki/Wikidata:Main_Page) (ProseA external icon suppressed in card descriptions).
+**About Wikimedia:** external destination cards with `supporting-text` (“Read more on …” / “Read the docs”) as a link to the same URL with external icon; supporting-text links are bottom-aligned within equal-height rows. **Wikibase and Wikidata** description names Wikidata in plain text (no inline link — the card already exposes the external destination via supporting-text).
 
 **External supporting-text labels:** Always keep the current link label from the source content (technical writer copy). Do not invent or “improve” those strings when converting to cards.
 
@@ -804,6 +804,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Card supporting-text polish | Wikibase plain “Wikidata”; featured content + Compare page metrics use writer supporting-text (title icon hidden) |
 | *(uncommitted)* | Navigation card description↔supporting gap | Min **`--spacing-50` (8px)** via `padding-block-start` on supporting-text; keeps bottom-align |
 | *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
 | *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |

@@ -254,6 +254,8 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 
 **Description + separate off-platform mention:** If the card destination is Wikitech (supporting-text) but a product name in the description should open elsewhere (e.g. PAWS → hub-paws), put the description Markdown in the **default slot** and keep supporting-text as the writer label for the card `url`. Example: `content/en/get-started/tools-and-bots.md` → “Run scripts in your browser”.
 
+**Do not** add an inline link in the description to the same off-platform destination the card already opens (e.g. Wikibase/Wikidata on About Wikimedia) — supporting-text (or the title icon) already exposes that URL.
+
 **Prompt phrases (team → agent):** “use external navigation cards”, “same style as About Wikimedia”, “supporting-text with writer labels”, “preserve Read more on … / Visit … copy”.
 
 #### Mixed pages
