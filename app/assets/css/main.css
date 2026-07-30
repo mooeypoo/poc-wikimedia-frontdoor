@@ -188,6 +188,9 @@ h2 {
 	font-size: var( --font-size-xx-large );
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-xx-large );
+	/* Official section rhythm: --spacing-250 (40px). See DESIGN_REQUIREMENTS.md
+	 * → Content page typography → Decision (section spacing). */
+	margin-block-start: var( --spacing-250 );
 }
 
 .fd-content-page :where( h3 ) {

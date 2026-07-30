@@ -704,7 +704,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ---
 
-## Content page typography (Get started section)
+## Content page typography (documentation pages)
 
 **Decision:** Markdown content pages (`app/pages/[...slug].vue` → `.fd-content-page`) use Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html) heading styles:
 
@@ -715,6 +715,10 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 | Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
 
 Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
+
+**Decision (section spacing):** Between documentation sections, each `h2` uses **`margin-block-start: var(--spacing-250)` (40px)**. Do **not** use the global heading default `--spacing-150` (24px) for content-page `h2`. `margin-block-end` stays **`--spacing-75` (12px)** (shared with other headings). Applies to all `.fd-content-page` routes (Get started and other prose docs), not explorer or shell chrome.
+
+**Rationale:** 24px was too tight between major section blocks once cards and longer section bodies shipped; **40px** is the next Codex spacing step (`--spacing-250`) and keeps rhythm on the design-token scale.
 
 **Get started landing** ([`/get-started`](https://wikifrodo.netlify.app/get-started)): no Markdown `---` section dividers between `h2` blocks (no visual `<hr>`). Topic destinations use `:::navigation-card-grid` + `::navigation-card` (see **Navigation card** below).
 
@@ -730,7 +734,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
 
-**Source:** `content/en/get-started.md`, `app/pages/[...slug].vue`, `app/assets/css/main.css`, `ARCHITECTURE.md` → Markdown content pages.
+**Source:** `app/assets/css/main.css` (`.fd-content-page` heading + `h2` section spacing), `app/pages/[...slug].vue`, `content/en/get-started*.md`, `ARCHITECTURE.md` → Content typography, `AGENTS.md` RTL checklist → Content page typography.
 
 ---
 
@@ -805,6 +809,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Content `h2` section gap (decision) | Docs `.fd-content-page h2` → **`--spacing-250` (40px)** `margin-block-start` — official; see Content page typography |
 | *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |
 | *(uncommitted)* | Codex Link states on card / content links | Supporting-text + `.frontdoor-shell__main a` use `--color-link*` (hover colour, visited, active, focus) per [Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) |
