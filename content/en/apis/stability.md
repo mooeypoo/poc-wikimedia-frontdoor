@@ -32,13 +32,13 @@ Example route: `rest.php/mymodule/v1-beta/example-endpoint`
 
 Beta APIs are exploratory, subject to change, and intentionally short-lived. They are intended to provide a functional endpoint to collect user feedback and support iterative API development. The version in the beta route most commonly correlates to the version being tested — for example, if v1 is the current major version, v2-beta may be introduced to test changes ahead of the next major version release. All beta modules will either be elevated to official vX endpoints or will be removed entirely once the beta phase is over.
 
-### [Coming soon] Internal
+### Internal
 
 Example route: `rest.php/mymodule/v1-internal/example-endpoint`
 
 Internal APIs are only intended for use by Wikimedia Foundation staff and services. Although publicly published and technically available to call, stability is not guaranteed and usage outside of Wikimedia Foundation use cases is discouraged. In some cases, internal APIs may be reused or repackaged as a sister public API. In cases where an internal API is used by multiple teams, major versions are expected in parallel with the internal indicator, but appropriate versioning may not be strictly enforced due to internal needs.
 
-### [Coming soon] Restricted
+### Restricted
 
 Example route: `rest.php/mymodule/v1-restricted/example-endpoint`
 
