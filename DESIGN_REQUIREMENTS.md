@@ -768,7 +768,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Top icon | Optional, above title row; progressive colour |
 | Leading icon | Optional, inline with title |
 | Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
-| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline |
+| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline; **min `--spacing-50` (8px)** from description (`padding-block-start` on `.navigation-card__supporting-text`) |
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
 | Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
 
@@ -804,6 +804,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Navigation card description↔supporting gap | Min **`--spacing-50` (8px)** via `padding-block-start` on supporting-text; keeps bottom-align |
 | *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
 | *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |

@@ -25,9 +25,10 @@ export type { NavigationCardChip }
  *   link to the same destination (external icon appended for off-platform URLs);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`). When
- *   converting from prose, **keep the technical writer’s supporting-text /
- *   link labels** — do not rewrite them
+ *   supporting-text is bottom-aligned (`margin-block-start: auto`) with a Codex
+ *   **minimum** `--spacing-50` (8px) from the description via
+ *   `padding-block-start`. When converting from prose, **keep the technical
+ *   writer’s supporting-text / link labels** — do not rewrite them
  * - Optional `CdxInfoChip` row
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
@@ -415,7 +416,8 @@ const hasBody = computed( () =>
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
-	gap: var( --spacing-25 );
+	/* No flex gap — description↔supporting-text min spacing is owned below. */
+	gap: 0;
 	inline-size: 100%;
 	min-inline-size: 0;
 	min-block-size: 0;
@@ -427,6 +429,11 @@ const hasBody = computed( () =>
 	gap: var( --spacing-50 );
 	inline-size: 100%;
 	min-inline-size: 0;
+}
+
+/* Codex spacing-25 between title block and description when both are present. */
+.navigation-card__intro + .navigation-card__description {
+	margin-block-start: var( --spacing-25 );
 }
 
 .navigation-card__top-icon {
@@ -483,8 +490,15 @@ const hasBody = computed( () =>
 }
 
 .navigation-card__supporting-text {
-	/* Absorb free vertical space so links share a baseline across equal-height cards. */
+	/*
+	 * Bottom-align in equal-height grids (`auto` absorbs free space). Codex
+	 * **minimum** `--spacing-50` (8px) from the description via padding so the
+	 * gap never collapses below 8px when free space is zero. Padding sits inside
+	 * the supporting-text box so it remains immediately above the link when
+	 * pinned to the card bottom.
+	 */
 	margin-block-start: auto;
+	padding-block-start: var( --spacing-50 );
 	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
