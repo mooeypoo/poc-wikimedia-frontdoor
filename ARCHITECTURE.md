@@ -187,12 +187,12 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
 | `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `label` + `supportingText` (beta/version) + `description` (OpenAPI or config fallback); `default-label`, `menu-config`; calls `selectModule` with `source: 'module-select'` |
-| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab keeps explicit `/explorer` (never locale-prefixed; `i18n: false`) |
+| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab → catalog `/apis`; explorer `/explorer` stays never locale-prefixed (`i18n: false`) |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route (`apis` on explorer); pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
 | `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs (primary crumb uses active tab label, including **APIs** on explorer) |
-| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Explorer items with `mode` resolve `to` via `pathForExplorerMode()` and `isActive` via `explorerModeFromPath()`; `enabled: false` items are omitted. Content routes use prototype active map only. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
+| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). **APIs** section (`apis`: catalog + explorer) from `config/explorerSideNav.js`; other content IA from `config/sectionNavigation.js`; fallback `section-nav-site-label` when no config entry. APIs items: `mode` → `pathForExplorerMode()` / `explorerModeFromPath()`; `href` → content routes; `enabled: false` omitted. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
 | `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
@@ -255,27 +255,26 @@ Do **not** treat copied “secrets” from the Reset success dialog as usable ag
 
 ## Shell section navigation (start column)
 
-The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). Explorer routes (primary tab **APIs**, id `apis`) use `config/explorerSideNav.js` via `isExplorerRoutePath()` — the start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`). Routes without a section config entry still get an empty panel (`section-nav-site-label`).
+The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). The **APIs** primary section (`apis`) — catalog `/apis` (section overview, like `/get-started`), `/apis/…`, and explorer `/explorer` / `/explorer/…` — always uses `config/explorerSideNav.js`. The start-column section heading for explorer mode links remains **API Explorer** (`explorer-side-nav-api-explorer-title`). Routes without a section config entry still get an empty panel (`section-nav-site-label`).
 
-**Link behaviour:** On **content routes**, section items are **prototype placeholders** (`to: null` → `href="#"`); active state comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. On **explorer routes**, items with a `mode` in `config/explorerSideNav.js` resolve **`to`** via `pathForExplorerMode()` in `app/utils/explorerRoute.ts`; **`isActive`** follows `explorerModeFromPath()` on the current route; items with **`enabled: false`** are omitted. Overview items (no `mode`) remain placeholders. `ShellSidePanelNav` calls **`navigateTo(item.to)`** on click when `to` is set — URL resolution stays in the composable; the component only handles the click. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+**Link behaviour:** On **content routes** under other primary tabs, section items resolve `to` from `href` when set (otherwise placeholders). On the **APIs** section menu, items with **`mode`** resolve via `pathForExplorerMode()` / `explorerModeFromPath()`; items with **`href`** resolve via `resolveContentHref()` and activate when the locale-agnostic path matches; items with **`enabled: false`** are omitted; items with neither `mode` nor `href` remain placeholders. `ShellSidePanelNav` calls **`navigateTo(item.to)`** on click when `to` is set — URL resolution stays in the composable; the component only handles the click. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 ```
 Route path
     ↓
-isExplorerRoutePath()?  → yes → config/explorerSideNav.js
-    ↓ no                      (filter enabled; mode → pathForExplorerMode)
 getMainNavigationIdFromPath()     ← app/utils/contentRoute.ts
-    (explorer → `apis`; matches remote primary-nav sources by localPath)
+    (explorer → `apis`; `/apis` (+ children) → `apis`)
     ↓
 usePageSectionNav()
-    └── main nav id → config/sectionNavigation.js (sections may be empty)
+    ├── `apis` (catalog or explorer) → config/explorerSideNav.js
+    │     (filter enabled; mode → pathForExplorerMode; href → content)
+    └── other main nav id → config/sectionNavigation.js (sections may be empty)
     ↓
 banana-i18n labels + resolved to + single global active item
     ↓
 .shell-side-panel (always) + ShellSidePanelNav (when sections.length > 0)
     └── navigateTo(to) when item.to is set; else href="#" placeholder
 ```
-
 **Rendering.** `app/layouts/default.vue` always mounts the start panel wrapper with classes **`frontdoor-shell__side-panel--start`**, **`shell-side-panel`**, and **`shell-side-panel--start`** (all three are required — block-start padding on `.shell-side-panel`, scroll-end spacer on the breakpoint scrollport in `shell-start-nav-scroll.css`, and `shell-start-nav-reveal.css` drawer rules all target the BEM `--start` suffix). `SharedShellSidePanelNav` renders when `navigationSections` is non-empty and remains in the DOM when navigation is collapsed (`inert` + `aria-hidden` on the panel wrapper). The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly. **`ShellSidePanelNav`** receives pre-resolved `to` paths and invokes **`navigateTo`** on item click when `to` is non-null (explorer mode links and collapsed-overlay reuse).
 
 **Scroll-end inset (symmetry).** Start section nav, collapsed nav overlay, and site footer all reserve **32px** (`var(--spacing-200)`) below the last visible item. Footer inset uses **`padding-block-end`** on **`.shell-site-footer`** (`ShellSiteFooter.vue`). Start nav and overlay use a **`::after` block spacer** on the **scrollport** element — not `padding-block-end` on a nested wrapper — because nested flex + `overflow: auto` does not always extend scroll range for padding on inner panels (mobile scrollport is **`.fd-page-grid__start`**; tablet+ scrollport is **`.frontdoor-shell__side-panel--start`**; overlay scrollport is **`.shell-collapsed-nav-menu-overlay__panel`**). Spacer rules live in **`shell-start-nav-scroll.css`** (in-shell) and **`ShellCollapsedNavMenuOverlay.vue`** (overlay). Supersedes the earlier **48px** (`--spacing-300`) footer-only inset from Figma Footer **393:4639** — prototype choice for column symmetry.
@@ -490,7 +489,9 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | `ShellCollapsedNavMenuOverlay.vue` | Full-screen collapsed nav overlay (section + primary views) | Props + events from `default.vue`; `ShellSidePanelNav`; `useShellCollapsedNavMenu` state |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
 
-**APIs primary tab.** The explorer is a quiet tab in `ShellPrimaryNav` (`id: apis`, message key `nav-api` → “APIs”, path `/explorer` / `API_EXPLORER_NAVIGATION_PATH`). `getMainNavigationIdFromPath()` returns **`apis`** for `/explorer` and `/explorer/…` so the tab stays selected. The destination is never locale-prefixed (`i18n: false` on the explorer route; `useMainNavigationLinks` keeps `/explorer`). The start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`).
+**APIs primary tab.** Quiet tab in `ShellPrimaryNav` (`id: apis`, message key `nav-api` → “APIs”, path `/apis` / `API_CATALOG_NAVIGATION_PATH`). `getMainNavigationIdFromPath()` returns **`apis`** for `/apis` (+ children) and for `/explorer` (+ children) so the tab stays selected in both the catalog and the explorer. The explorer destination remains never locale-prefixed (`i18n: false`; `API_EXPLORER_NAVIGATION_PATH`). The start-column section heading on explorer routes remains **API Explorer** (`explorer-side-nav-api-explorer-title`).
+
+**Tab re-selection:** Clicking the already-selected primary tab returns to that section’s landing path (e.g. `/get-started` from a Get started child, `/apis` from `/apis/…` or `/explorer`). Codex `CdxTabs` does not emit `update:active` for a no-op re-select, so `ShellPrimaryNav` listens for clicks on the active tab and re-emits `navigation-select`. Mount-time `v-model` sync is ignored so the explorer does not bounce to the catalog on load. `handlePrimaryNavigationSelect` no-ops only when the route is already the tab’s landing `to`.
 
 ### Codex exceptions (shell chrome)
 
@@ -777,8 +778,10 @@ Enterprise explorer experiences share the unified start column with community mo
 
 The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
 
-1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation).
+1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation). Skips the router’s **initial** navigation (`from.matched.length === 0`) and skips when `window.location.pathname` already matches the target (avoids full-reload loops on hard load / same-URL assign).
 2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+
+**APIs tab vs explorer:** The primary **APIs** tab lands on `/apis` but stays selected on `/explorer`. Re-clicking **APIs** from explorer (or an `/apis/…` page) navigates to the catalog overview; mount-time tab sync is ignored so load does not bounce through this plugin. `ShellSidePanelNav` does not re-navigate when a mode item’s `to` is already the current path (community → `/explorer`).
 
 `app/utils/explorerRoute.ts` provides `isExplorerRoutePath()`, `explorerModeFromPath()`, and `pathForExplorerMode()` for the layout, explorer page (teleport disable on exit), side nav (`usePageSectionNav`), and the route-boundary plugin.
 
@@ -943,7 +946,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.ts` | Wiki instance IDs, display names, base URLs, explicit `dir`, content language codes |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
-| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the **APIs** tab (`apis` → `/explorer`) |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_CATALOG_NAVIGATION_PATH` (`/apis`) for the **APIs** tab landing; `API_EXPLORER_NAVIGATION_PATH` (`/explorer`) for the explorer (`i18n: false`) |
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
@@ -972,7 +975,7 @@ Removed or renamed markdown routes are handled by **`config/contentRedirects.ts`
 
 Each mapping is duplicated for locale prefixes (`es`, `fr`, `he`, `fa`), e.g. `/fr/learn` → `/fr/use-content-and-data`, `/fr/about` → `/fr`. **About** and **Enterprise** markdown files are removed from `content/`; only redirects remain for old bookmarks.
 
-**Primary navigation IA:** Tabs include Get started, **APIs** (`/explorer`), Contribute, Community, Get help, plus remote primary merges from `REMOTE_CONTENT_SOURCES`. Start-column explorer section heading remains **API Explorer**. See `DESIGN_REQUIREMENTS.md` → Information architecture.
+**Primary navigation IA:** Tabs include Get started, **APIs** (catalog `/apis`; explorer keeps the tab selected), Contribute, Community, Get help, plus remote primary merges from `REMOTE_CONTENT_SOURCES`. Start-column explorer section heading remains **API Explorer**. See `DESIGN_REQUIREMENTS.md` → Information architecture.
 
 **Route → nav id:** `app/utils/contentRoute.ts` → `getMainNavigationIdFromPath()` returns **`apis`** on explorer routes, matches other `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`, and strips locale prefixes before matching.
 

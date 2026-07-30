@@ -45,20 +45,31 @@ interface SectionNavigationSource {
 	}>
 }
 
+const APIS_SECTION_NAVIGATION_SOURCE: SectionNavigationSource = {
+	ariaLabelMessageKey: 'explorer-side-nav-label',
+	sections: EXPLORER_SIDE_NAV_SECTIONS
+}
+
+const EMPTY_SECTION_SOURCE: SectionNavigationSource = {
+	ariaLabelMessageKey: 'section-nav-site-label',
+	sections: []
+}
+
 /**
  * Resolves left-hand section navigation for the current route.
  *
  * Returns explorer or content section menus from config, with banana-i18n
- * labels. Content items resolve their route from a locale-agnostic `href` and
- * are active when that `href` matches the current page; explorer items resolve
- * from a `mode` via `pathForExplorerMode` and follow `explorerModeFromPath`. At
- * most one item is selected per menu (targets are unique).
+ * labels. The **APIs** primary section (`apis`) — catalog `/apis`, `/apis/…`,
+ * and explorer `/explorer` / `/explorer/…` — always uses
+ * `config/explorerSideNav.js` (same menu as Get started keeps its section nav
+ * on every page under that tab). Items may declare `href` (content), `mode`
+ * (explorer), or neither (placeholder). `enabled: false` items are omitted.
  *
- * A page's `sidebar` frontmatter overrides path-based resolution: `false` hides
- * the menu, a string forces a named menu, `true`/omitted uses the path (see
- * `useContentPageSidebar`). The `/account` Vue page is not Nuxt Content —
- * `content-sidebar.global` publishes `sidebar: false` for that path so the
- * shell collapses the start column (Figma `/account` has no section nav).
+ * A page's `sidebar` frontmatter overrides path-based resolution on content
+ * routes: `false` hides the menu, a string forces a named menu, `true`/omitted
+ * uses the path (see `useContentPageSidebar`). Explorer routes ignore
+ * frontmatter and always show the APIs section menu. The `/account` Vue page
+ * publishes `sidebar: false` so the shell collapses the start column.
  *
  * @returns {{
  *   navigationLabel: import('vue').ComputedRef<string>,
@@ -73,11 +84,13 @@ export function usePageSectionNav() {
 	const { $bananaI18n } = useNuxtApp()
 
 	const mainNavigationId = computed( () => getMainNavigationIdFromPath( route.path ) )
+	const onExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+	const isApisSection = computed( () => mainNavigationId.value === 'apis' )
 
-	// Per-page `sidebar` frontmatter, ignored on explorer routes (which resolve
-	// their side nav from the path). See `useContentPageSidebar`.
+	// Per-page `sidebar` frontmatter, ignored on explorer routes (which always
+	// show the APIs section menu). See `useContentPageSidebar`.
 	const sidebarPreference = computed( () => {
-		if ( isExplorerRoutePath( route.path ) ) {
+		if ( onExplorerRoute.value ) {
 			return undefined
 		}
 
@@ -91,17 +104,10 @@ export function usePageSectionNav() {
 	 */
 	const isSidebarHidden = computed( () => sidebarPreference.value === false )
 
-	const EMPTY_SECTION_SOURCE: SectionNavigationSource = {
-		ariaLabelMessageKey: 'section-nav-site-label',
-		sections: []
-	}
-
 	const navigationSource = computed<SectionNavigationSource>( () => {
-		if ( isExplorerRoutePath( route.path ) ) {
-			return {
-				ariaLabelMessageKey: 'explorer-side-nav-label',
-				sections: EXPLORER_SIDE_NAV_SECTIONS
-			}
+		// Explorer always shows the APIs section menu (ignores content frontmatter).
+		if ( onExplorerRoute.value ) {
+			return APIS_SECTION_NAVIGATION_SOURCE
 		}
 
 		const preference = sidebarPreference.value
@@ -120,7 +126,11 @@ export function usePageSectionNav() {
 				: EMPTY_SECTION_SOURCE
 		}
 
-		// `sidebar: true` or omitted — automatic, path-based resolution.
+		// Catalog `/apis` and `/apis/…` share the same menu as the explorer.
+		if ( isApisSection.value ) {
+			return APIS_SECTION_NAVIGATION_SOURCE
+		}
+
 		const navigationId = mainNavigationId.value
 
 		if ( navigationId ) {
@@ -136,10 +146,12 @@ export function usePageSectionNav() {
 
 	const navigationSections = computed<ResolvedSectionNavSection[]>( () => {
 		const source = navigationSource.value
-		const onExplorerRoute = isExplorerRoutePath( route.path )
-		const activeExplorerMode = onExplorerRoute ? explorerModeFromPath( route.path ) : null
+		const usingApisSectionMenu = source === APIS_SECTION_NAVIGATION_SOURCE
+		const activeExplorerMode = onExplorerRoute.value
+			? explorerModeFromPath( route.path )
+			: null
 
-		const contentPath = onExplorerRoute
+		const contentPath = onExplorerRoute.value
 			? null
 			: stripContentLocalePrefix( route.path )
 
@@ -150,7 +162,7 @@ export function usePageSectionNav() {
 			title: $bananaI18n( section.titleMessageKey ),
 			items: section.items
 				.filter( ( item ) => {
-					if ( !onExplorerRoute ) {
+					if ( !usingApisSectionMenu ) {
 						return true
 					}
 
@@ -158,15 +170,34 @@ export function usePageSectionNav() {
 					return explorerItem.enabled !== false
 				} )
 				.map( ( item ) => {
-					if ( onExplorerRoute ) {
+					if ( usingApisSectionMenu ) {
 						const explorerItem = item as ExplorerSectionNavItem
 						const mode = explorerItem.mode
+						const href = explorerItem.href
+
+						if ( mode !== undefined ) {
+							return {
+								id: item.id,
+								label: $bananaI18n( item.messageKey ),
+								to: pathForExplorerMode( mode ),
+								isActive: mode === activeExplorerMode
+							}
+						}
+
+						if ( href !== undefined ) {
+							return {
+								id: item.id,
+								label: $bananaI18n( item.messageKey ),
+								to: resolveContentHref( href, contentLocale ),
+								isActive: href === contentPath
+							}
+						}
 
 						return {
 							id: item.id,
 							label: $bananaI18n( item.messageKey ),
-							to: mode !== undefined ? pathForExplorerMode( mode ) : null,
-							isActive: mode !== undefined && mode === activeExplorerMode
+							to: null,
+							isActive: false
 						}
 					}
 

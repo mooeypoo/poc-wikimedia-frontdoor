@@ -48,7 +48,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 | Order | Label (en) | Route | Notes |
 |------:|------------|-------|--------|
 | 1 | Get started | `/get-started` | Locale-prefixed when not default |
-| 2 | APIs | `/explorer` | Primary tab (`nav-api`); stays selected on `/explorer` and `/explorer/…`; route is `i18n: false` (never locale-prefixed) |
+| 2 | APIs | `/apis` | Primary tab (`nav-api`) lands on the API catalog; stays selected on `/apis`, `/apis/…`, `/explorer`, and `/explorer/…` (`getMainNavigationIdFromPath`); explorer remains `i18n: false` |
 | 3 | Contribute | `/contribute` | Stub |
 | 4 | Community | `/community` | Stub |
 | 5 | Get help | `/get-help` | Stub |
@@ -95,7 +95,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 - **Fixed width** **281px** (`--fd-layout-start-panel-inline-size` = Figma **241px** + one Codex **40px** desktop grid column) for the **drawer panel** at tablet and above — **wider than Figma** side-panel spec. The **grid track** uses **`min-inline-size: 0`**; inline size is **0** (collapsed) or **281px** (expanded).
 - **Responsive collapse:** when primary tabs do not fit, `useShellNavigationCollapse` collapses header tabs into hamburger + breadcrumbs and hides the start track (see **Shell chrome** → Primary nav + section menu collapse).
 - **Item hover:** non-selected menu item labels turn **`--color-progressive`** on hover (custom CSS — see **Codex exceptions** below).
-- **Explorer mode links:** items with a **`mode`** in `config/explorerSideNav.js` navigate to `/explorer` sub-routes (`pathForExplorerMode` in `usePageSectionNav`); **`ShellSidePanelNav`** calls `navigateTo` on click. Active state follows `explorerModeFromPath()` on the current route. Items with **`enabled: false`** are hidden.
+- **Explorer / APIs section links:** The **APIs** primary section (catalog `/apis` overview + `/apis/…` + explorer) uses `config/explorerSideNav.js`. Items with a **`mode`** navigate to `/explorer` sub-routes (`pathForExplorerMode` in `usePageSectionNav`); items with **`href`** navigate to content pages (e.g. `/apis/attribution`). **`ShellSidePanelNav`** calls `navigateTo` on click. Active state follows `explorerModeFromPath()` or locale-agnostic `href` match. Items with **`enabled: false`** are hidden.
 - **Exactly one** menu item shows a selected state at a time (current page). On Get started (`/`), only **Introduction** is selected.
 
 **Content sources:**
@@ -104,7 +104,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 |-------------|--------|-------|
 | Get started, Use content and data, Community, Contribute, Get help | `config/sectionNavigation.js` | IA from Developer Portal v2 |
 | Tools and bots | `config/sectionNavigation.js` | **Empty** sections array — panel shown, no `<nav>` |
-| API Explorer | `config/explorerSideNav.js` | Two sections: **API Explorer** heading (mode links — **functional**) + Overview placeholders. Primary tab label is **APIs** (`nav-api`) |
+| API Explorer / APIs section | `config/explorerSideNav.js` | Shared start-column menu for catalog `/apis` (overview) and explorer; **API Explorer** heading for mode links; Overview `href`s to `/apis/…`. Primary tab label is **APIs** (`nav-api`) |
 
 **Rendering:** `usePageSectionNav()` → start panel wrapper always in `app/layouts/default.vue` (`frontdoor-shell__side-panel--start` + `shell-side-panel` + **`shell-side-panel--start`**); `ShellSidePanelNav.vue` when sections are non-empty. Labels via banana-i18n only. In the **collapsed nav overlay**, the same component is reused with optional **`omitSectionTitleMatching`** so a section heading equal to the back-control label is not shown twice (see **Shell chrome** → Collapsed overlay).
 
@@ -116,7 +116,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 4. **Start nav scrollbar (WebKit physical `width`)** — `shell-start-nav-scroll.css` uses physical **`width`** on `::-webkit-scrollbar` (API has no logical equivalent). **One scrollport per breakpoint**; transparent track + thin thumb. Border lives on the scrollport panel so it does not stack beside the scrollbar gutter.
 5. **Scroll-end inset (`::after` spacer)** — **32px** (`--spacing-200`) below the last nav item via a **`::after` block** on the scrollport — not `padding-block-end` on the inner panel wrapper. In-shell: `shell-start-nav-scroll.css`. Overlay: `ShellCollapsedNavMenuOverlay.vue`. Footer: `padding-block-end` on `.shell-site-footer`.
 
-**Status:** **Visual/IA prototype** on content routes — item links use `href="#"` with `@click.prevent`. Active state on content routes comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. **Explorer routes:** items with a `mode` in `config/explorerSideNav.js` resolve to real paths via `pathForExplorerMode()`; active state follows `explorerModeFromPath()` on the current route. Overview section items (no `mode`) remain placeholders.
+**Status:** **APIs** section menu is functional for `mode` and `href` items across catalog and explorer. Other content primary tabs still use `config/sectionNavigation.js` (some items may remain placeholders). Active state: explorer mode from `explorerModeFromPath()`; content `href` from locale-agnostic path match.
 
 **Superseded:** `ExplorerSideNav.vue` is no longer mounted; explorer mode routing lives in `usePageSectionNav()` + `ShellSidePanelNav`.
 
@@ -227,7 +227,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 |--------|----------------|------------|
 | v2 primary nav IA (Figma 284:11443) | `config/mainNavigation.ts`, `useMainNavigationLinks` | Use content and data, Tools and bots; Enterprise/About removed |
 | Header brand in utility row | `ShellHeaderBrand.vue`, `developer-portal-logo-mark.svg` | 32px mark + two-line banana wordmark; **Montserrat** |
-| APIs primary tab | `config/mainNavigation.ts` (`apis` / `nav-api`), `usePrimaryNavigationTab` | Selected on `/explorer` and `/explorer/…`; start-column heading remains **API Explorer** |
+| APIs primary tab | `config/mainNavigation.ts` (`apis` / `nav-api` → `/apis`), `usePrimaryNavigationTab` | Selected on `/apis` (+ children) and `/explorer` (+ children); start-column heading on explorer remains **API Explorer** |
 | Legacy URL redirects | `config/contentRedirects.ts` → `nuxt.config` `routeRules` | `/learn`, `/about`, `/enterprise` → 301 |
 | Start column section nav | `ShellSidePanelNav`, `usePageSectionNav` | Panel always mounted; nav when sections exist; explorer **mode** links functional; **Tools and bots** empty |
 | Primary nav as Codex quiet tabs | `ShellPrimaryNav`, `usePrimaryNavigationTab` | Tab panels hidden — **navigation-only** Codex exception |
@@ -263,7 +263,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Row | Contents |
 |-----|----------|
 | **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
-| **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/explorer` |
+| **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/apis` (catalog); explorer keeps the tab selected |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
 
@@ -281,7 +281,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Language control is compact at all widths.** With ~575 languages to choose from (and further utilities coming, e.g. a dark-mode toggle), an always-open lookup input would crowd the top bar. So the interface-language control is a **globe + uppercase locale code** `CdxButton` at every width; clicking it opens the searchable `CdxLookup` in a **popover** anchored under the button (it does not widen the row). This replaces the earlier always-visible `CdxSelect`/input.
 
-**Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`). The **APIs** tab (`nav-api`) maps to `/explorer`; `getMainNavigationIdFromPath` returns **`apis`** so the tab stays selected on explorer routes. Start-column section heading remains **API Explorer**.
+**Primary nav row (row 2):** `.frontdoor-shell__primary-nav-row` — quiet tabs (`flex: 0 1 auto`). The **APIs** tab (`nav-api`) maps to the catalog at `/apis`; `getMainNavigationIdFromPath` returns **`apis`** for `/apis` (+ children) and for explorer routes so the tab stays selected in the explorer. Start-column section heading on explorer remains **API Explorer**.
 
 **Primary nav + section menu collapse (Figma [Off-wiki page templates 50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)):** `useShellNavigationCollapse` observes `.frontdoor-shell__primary-nav-row` and `.frontdoor-shell__primary-nav-expanded__content` with **`ResizeObserver`**. Collapse uses intrinsic-width + **hysteresis** (`scrollWidth + 24px` to collapse, `scrollWidth + 48px` to expand). When collapsed, **`ShellCollapsedNavigation`** replaces quiet tabs; **`page-grid.css`** sets **`grid-template-columns: 0 minmax(0, 1fr)`** and **`column-gap: 0`** so the body band fills the freed space. Start panel **`border-inline-end-width: 0`**. Brand **`--spacing-75`** inline-start padding removed.
 
@@ -328,7 +328,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `config/headerChrome.ts`.
 
-**Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()` (explorer stays `/explorer`). Explorer routes keep the **APIs** tab selected (`activeNavigationId` = `apis`).
+**Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()` (**APIs** → `/apis`; explorer stays `/explorer` when linked from section nav). Catalog and explorer routes keep the **APIs** tab selected (`activeNavigationId` = `apis`).
 
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
@@ -736,7 +736,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 ## Highlight
 
-**Decision:** Prose CTA / featured-blurb surfaces (Get started quick-start banner; future API catalog panels) use a shared **`.fd-highlight`** class and optional MDC `::highlight` (`Highlight.vue`). **Do not** use this for status messages — those remain `::callout` / `CdxMessage`. Name is independent of code syntax highlighting.
+**Decision:** Prose CTA / featured-blurb surfaces (Get started quick-start banner; API catalog intro) use a shared **`.fd-highlight`** class and optional MDC `::highlight` (`Highlight.vue`). **Do not** use this for status messages — those remain `::callout` / `CdxMessage`. Name is independent of code syntax highlighting.
 
 | Token / behaviour | Value |
 |-------------------|--------|
@@ -746,7 +746,15 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Padding | `--spacing-75` (**12px**) |
 | Block margin | `--spacing-100` (default vertical rhythm vs adjacent prose) |
 
-**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `ARCHITECTURE.md` → Highlight.
+**Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/apis.md`, `ARCHITECTURE.md` → Highlight.
+
+---
+
+## API catalog
+
+**Decision:** The **APIs** primary tab lands on the Markdown catalog at [`/apis`](https://wikifrodo.netlify.app/apis) ([Figma 1183:30852](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1183-30852)) — section overview (same role as `/get-started`). Start-column menu is **`config/explorerSideNav.js`** on `/apis`, `/apis/…`, and explorer routes. Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** / **Wikimedia Enterprise APIs** / **Classic APIs** card grids; stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Deferred for a later pass: info chips on cards, “Filter by project”, end-column page nav, and curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`).
+
+**Source:** `content/en/apis.md`, `config/mainNavigation.ts` (`API_CATALOG_NAVIGATION_PATH`), `config/explorerSideNav.js`, `app/composables/usePageSectionNav.ts`, `app/utils/contentRoute.ts` (`getMainNavigationIdFromPath`).
 
 ---
 

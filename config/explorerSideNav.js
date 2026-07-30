@@ -1,12 +1,17 @@
 /**
  * config/explorerSideNav.js
  *
- * Static section structure for the API Explorer left-hand navigation menu.
+ * Static section structure for the **APIs** primary-tab start-column menu
+ * (catalog `/apis`, `/apis/…`, and explorer `/explorer` / `/explorer/…`).
  * Labels are resolved at runtime via banana-i18n using each entry's messageKey.
  *
- * Items with a `mode` field are wired to real routes by `usePageSectionNav()`
- * (`pathForExplorerMode` in `app/utils/explorerRoute.ts`). Active state is derived
+ * Items with a `mode` field navigate to explorer routes via `usePageSectionNav()`
+ * (`pathForExplorerMode` in `app/utils/explorerRoute.ts`). Items with `href`
+ * navigate to content pages (e.g. `/apis/attribution`). Active state is derived
  * from the current route — do not set `isActive` in this config.
+ *
+ * The catalog landing (`/apis`) is the section overview (same role as
+ * `/get-started` under Get started) and does not need its own menu row.
  */
 
 /**

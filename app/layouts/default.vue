@@ -124,19 +124,40 @@ const {
 	hasSectionNavigationBreadcrumb
 } = useShellNavigationBreadcrumbs()
 
+const isPrimaryNavigationReady = ref( false )
+
+onMounted( () => {
+	// Defer until after Codex tabs finish their mount-time active sync.
+	void nextTick( () => {
+		isPrimaryNavigationReady.value = true
+	} )
+} )
+
 /**
  * Navigates to the primary nav destination when a header tab is selected.
+ *
+ * Always goes to the tab’s configured landing path (`navigationLink.to`) unless
+ * the route is already there — so re-selecting **Get started** / **APIs** from a
+ * section-nav child (or from `/explorer`) returns to that section’s overview.
+ * Mount-time tab sync is ignored via {@link isPrimaryNavigationReady} so the
+ * explorer does not bounce to `/apis` on load.
  *
  * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
  */
 function handlePrimaryNavigationSelect( navigationId: string ): void {
+	if ( !isPrimaryNavigationReady.value ) {
+		return
+	}
+
 	const navigationLink = mainNavigationLinks.value.find(
 		( link ) => link.id === navigationId
 	)
 
-	if ( navigationLink ) {
-		navigateTo( navigationLink.to )
+	if ( !navigationLink || navigationLink.to === route.path ) {
+		return
 	}
+
+	navigateTo( navigationLink.to )
 }
 
 /**
