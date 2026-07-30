@@ -152,11 +152,10 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'contribute',
 				titleMessageKey: 'section-nav-contribute-title',
 				items: [
-					{ id: 'wikimedia-open-source', messageKey: 'section-nav-contribute-wikimedia-open-source', href: '/wikimedia-open-source' },
-					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/learn-how-contributing-works' },
-					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute-by-topic' },
-					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute-by-programming-language' },
-					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/search-all-projects' }
+					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/contribute/overview' },
+					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute/by-topic' },
+					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute/by-language' },
+					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' }
 				]
 			},
 			{
