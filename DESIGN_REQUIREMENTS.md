@@ -76,7 +76,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 ### Brand logo
 
-**Decision:** The **header** shows a compact lockup: **32px** Wikimedia mark (`public/images/developer-portal-logo-mark.svg`) plus a **two-line wordmark** via banana-i18n — `brand-wordmark-wikimedia` (top line) and **`brand-wordmark-developer-portal`** (bottom line, translatable per locale). Typography uses **Montserrat** (`--font-family-brand-wordmark`, loaded from `config/brandTypography.ts` / `nuxt.config.ts`). Links to **Get started** through `ShellHeaderBrand.vue` (`aria-label` from `app-title`). The start column does not show a logo.
+**Decision:** The **header** shows a compact lockup: **32px** Wikimedia mark (inlined `WikimediaLogoMark` from [Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` so light/dark follow `--color-base`) plus a **two-line wordmark** via banana-i18n — `brand-wordmark-wikimedia` (top line) and **`brand-wordmark-developer-portal`** (bottom line, translatable per locale). Typography uses **Montserrat** (`--font-family-brand-wordmark`, loaded from `config/brandTypography.ts` / `nuxt.config.ts`). Links to **Get started** through `ShellHeaderBrand.vue` (`aria-label` from `app-title`). The start column does not show a logo.
 
 **Footer (separate):** **14px mark** + single-line wordmark from the same banana keys as the header (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in **Montserrat** — not the Figma **227×14px** horizontal lockup asset yet.
 
@@ -226,7 +226,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Change | Implementation | Disclaimer |
 |--------|----------------|------------|
 | v2 primary nav IA (Figma 284:11443) | `config/mainNavigation.ts`, `useMainNavigationLinks` | Use content and data, Tools and bots; Enterprise/About removed |
-| Header brand in utility row | `ShellHeaderBrand.vue`, `developer-portal-logo-mark.svg` | 32px mark + two-line banana wordmark; **Montserrat** |
+| Header brand in utility row | `ShellHeaderBrand.vue`, `WikimediaLogoMark.vue` | 32px inlined mark (`currentColor`) + two-line banana wordmark; **Montserrat** |
 | APIs primary tab | `config/mainNavigation.ts` (`apis` / `nav-api`), `usePrimaryNavigationTab` | Selected on `/explorer` and `/explorer/…`; start-column heading remains **API Explorer** |
 | Legacy URL redirects | `config/contentRedirects.ts` → `nuxt.config` `routeRules` | `/learn`, `/about`, `/enterprise` → 301 |
 | Start column section nav | `ShellSidePanelNav`, `usePageSectionNav` | Panel always mounted; nav when sections exist; explorer **mode** links functional; **Tools and bots** empty |
@@ -391,7 +391,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 - **Long pages:** Footer follows content in normal document flow.
 - **No `margin-block-end`** on the footer — **32px** bottom spacing is **`padding-block-end: var(--spacing-200)`** inside `.shell-site-footer` only (symmetric with start nav / overlay **`::after` scroll-end spacers**).
 
-**Content (row 1):** Centred brand row — **14px** Wikimedia mark (`developer-portal-logo-mark.svg`) + single-line wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links.
+**Content (row 1):** Centred brand row — **14px** inlined Wikimedia mark (`WikimediaLogoMark`, `currentColor` / `--color-subtle`) + single-line wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links.
 
 **Content (row 2):** Centred legal attribution — **three sentences** (one per line) with an inline **Creative Commons Attribution-ShareAlike** link on the middle line.
 
@@ -805,6 +805,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |
 | *(uncommitted)* | Codex Link states on card / content links | Supporting-text + `.frontdoor-shell__main a` use `--color-link*` (hover colour, visited, active, focus) per [Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) |
 | *(uncommitted)* | Card supporting-text polish | Wikibase plain “Wikidata”; featured content + Compare page metrics use writer supporting-text (title icon hidden) |
@@ -888,7 +889,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Start column chrome | `app/layouts/default.vue` (scrollport border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/composables/usePageSectionNav.ts` |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
-| Header brand | `app/components/shared/ShellHeaderBrand.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts` |
+| Header brand | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/WikimediaLogoMark.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts` |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |

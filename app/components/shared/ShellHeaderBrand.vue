@@ -5,8 +5,10 @@ import { useMainNavigationLinks } from '../../composables/useMainNavigationLinks
  * Compact header brand lockup — Wikimedia mark (32px SVG) plus two-line wordmark.
  *
  * Rendered in the shell header utility row per Figma Header node 284:11443.
- * Mark: `public/images/developer-portal-logo-mark.svg`. Wordmark lines use banana-i18n
- * (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in Montserrat.
+ * Mark: inlined {@link WikimediaLogoMark} (Commons Wikimedia-logo_black.svg with
+ * `currentColor`) so light / dark mode follow `--color-base`. Wordmark lines use
+ * banana-i18n (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in
+ * Montserrat.
  */
 const { homePath } = useMainNavigationLinks()
 const { $bananaI18n } = useNuxtApp()
@@ -22,14 +24,9 @@ const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-de
 		class="shell-header-brand"
 		:aria-label="brandLogoAccessibleLabel"
 	>
-		<img
-			class="shell-header-brand__mark"
-			src="/images/developer-portal-logo-mark.svg"
-			width="32"
-			height="32"
-			alt=""
-			aria-hidden="true"
-		>
+		<span class="shell-header-brand__mark">
+			<SharedWikimediaLogoMark />
+		</span>
 		<span class="shell-header-brand__wordmark">
 			<span class="shell-header-brand__wordmark-top">{{ brandWordmarkTopLabel }}</span>
 			<span class="shell-header-brand__wordmark-bottom">{{ brandWordmarkBottomLabel }}</span>
@@ -53,6 +50,7 @@ const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-de
 	inline-size: 2rem;
 	block-size: 2rem;
 	flex-shrink: 0;
+	color: inherit;
 }
 
 .shell-header-brand__wordmark {

@@ -12,9 +12,11 @@ import {
  * matches the main column width (same as central page content). Tablet and desktop:
  * does not extend into the end panel or under the start navigation column.
  *
- * Brand lockup uses the 14px Wikimedia mark and a single-line banana wordmark built from
- * `brand-wordmark-wikimedia` + `brand-wordmark-developer-portal` (same translatable keys as
- * the header) in Montserrat. Not the Figma horizontal 227×14px footer logo asset yet.
+ * Brand lockup uses the 14px Wikimedia mark ({@link WikimediaLogoMark}, Commons
+ * Wikimedia-logo_black.svg with `currentColor`) and a single-line banana wordmark
+ * built from `brand-wordmark-wikimedia` + `brand-wordmark-developer-portal` (same
+ * translatable keys as the header) in Montserrat. Not the Figma horizontal
+ * 227×14px footer logo asset yet.
  * Legal copy includes outbound links to Foundation policy pages and the CC BY-SA license
  * deed (`config/siteFooter.ts`).
  *
@@ -48,14 +50,9 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 					class="shell-site-footer__brand"
 					:aria-label="footerBrandAccessibleLabel"
 				>
-					<img
-						class="shell-site-footer__mark"
-						src="/images/developer-portal-logo-mark.svg"
-						width="14"
-						height="14"
-						alt=""
-						aria-hidden="true"
-					>
+					<span class="shell-site-footer__mark">
+						<SharedWikimediaLogoMark />
+					</span>
 					<span
 						class="shell-site-footer__wordmark"
 						aria-hidden="true"
@@ -134,6 +131,7 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 	inline-size: 0.875rem;
 	block-size: 0.875rem;
 	flex-shrink: 0;
+	color: inherit;
 }
 
 .shell-site-footer__wordmark {
