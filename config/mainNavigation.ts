@@ -22,7 +22,7 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 	{
 		id: 'apis',
 		messageKey: 'nav-api',
-		path: '/explorer'
+		path: '/apis'
 	},
 	{
 		id: 'contribute',
