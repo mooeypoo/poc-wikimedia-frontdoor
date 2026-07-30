@@ -69,6 +69,29 @@ Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-starte
 
 Example: `content/en/get-started.md` (quick-start CTA with arrow). Also `content/en/get-started/wikimedia-enterprise.md` — sentence and CTA as **separate paragraphs** inside the highlight (CTA **without** arrow). That page’s body sections stay **prose** (not navigation cards). Copy is page content (per-locale Markdown), not banana-i18n.
 
+### Section heading with chip
+
+For a content `h2` that needs an inline Codex InfoChip:
+
+```md
+::section-heading{title="Wikimedia APIs" chip="Recommended" status="notice"}
+::
+```
+
+Title and chip text are page content (per-locale Markdown), not banana-i18n. Default status is `notice`. See `ARCHITECTURE.md` → Section heading.
+
+### API catalog — Wikimedia APIs (filterable)
+
+On `/apis`, do **not** hand-author the Wikimedia APIs card grid. Use:
+
+```md
+::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
+Discover our curated selection of production-ready APIs…
+::
+```
+
+`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility, and the Figma combobox width live in `config/apiCatalogWikimedia.ts`. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter layout.
+
 ### Navigation cards (destination tiles)
 
 **Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.

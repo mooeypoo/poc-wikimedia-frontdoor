@@ -96,6 +96,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
 │   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
+│   ├── apiCatalogWikimedia.ts  # Wikimedia APIs catalog cards + project-filter options
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
@@ -1013,7 +1014,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
 
-**API catalog** (`content/en/apis.md`): section overview for the primary **APIs** tab (`API_CATALOG_NAVIGATION_PATH` `/apis` — same landing role as `/get-started`). Start-column menu is `config/explorerSideNav.js` (shared with `/apis/…` and explorer). Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** / **Wikimedia Enterprise APIs** / **Classic APIs** `:::navigation-card-grid`s with optional `CdxInfoChip` rows (see Navigation card → Info chips); stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Mixed internal (`/explorer`, `/apis/…`) and external cards; external cards keep writer-authored `supporting-text`. Deferred: project filter, end-column page nav, curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`). See `DESIGN_REQUIREMENTS.md` → API catalog.
+**API catalog** (`content/en/apis.md`): section overview for the primary **APIs** tab (`API_CATALOG_NAVIGATION_PATH` `/apis` — same landing role as `/get-started`). Start-column menu is `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID.apis` in `config/sectionNavigation.js` (shared with `/apis/…` and explorer). Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** via `::api-catalog-wikimedia-section` (Recommended chip + project filter + cards); **Wikimedia Enterprise APIs** / **Classic APIs** `:::navigation-card-grid`s with optional `CdxInfoChip` rows (see Navigation card → Info chips); stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Mixed internal (`/explorer`, `/apis/…`) and external cards; external cards keep writer-authored `supporting-text`. Deferred: end-column page nav, curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`). See `DESIGN_REQUIREMENTS.md` → API catalog.
 
 **Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
@@ -1062,6 +1063,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
+| `SectionHeading.vue` | `CdxInfoChip` + `ProseHeading` | `::section-heading{title="…" chip="…"}` — see **Section heading** below |
+| `ApiCatalogWikimediaSection.vue` | `CdxField` + `CdxCombobox` + `SectionHeading` + `NavigationCard` | `::api-catalog-wikimedia-section` — see **API catalog project filter** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
@@ -1134,6 +1137,39 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted icon names for MDC), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
 **Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+
+#### Section heading
+
+`SectionHeading.vue` (`::section-heading`) renders a prose `h2` (via `ProseHeading` — hover anchor) with an optional inline Codex **`CdxInfoChip`**. Props: `title` (required), `chip`, `status` (default `notice`), `id` (optional; otherwise slugified from `title` with `github-slugger`), `level` (default `2`). Title and chip labels are content strings in `<bdi>` (not banana-i18n). Status icons are hidden (same catalog exception as navigation-card chips). Also composed inside `ApiCatalogWikimediaSection`.
+
+```md
+::section-heading{title="Wikimedia APIs" chip="Recommended" status="notice"}
+::
+```
+
+#### API catalog project filter
+
+`ApiCatalogWikimediaSection.vue` (`::api-catalog-wikimedia-section`) is a **client-interactive island** on the still-static `/apis` Markdown page: the route stays SSG (not `ssr: false`, not wrapped in `<ClientOnly>`). Pre-render shows the default **Any** filter (all cards); hydration enables show/hide without a full SPA catalog route.
+
+It renders:
+
+1. Header row — Wikimedia APIs + Recommended (`SectionHeading`; `title` / `chip` are **content** props from Markdown) and **Filter by project** (`CdxField` + `CdxCombobox`, Figma 1183:31958). Restores content **`h2`** block-start rhythm via `margin-block-start: var(--spacing-150)` on the header (heading margin is zeroed so the filter can share the row). Heading cluster and filter are **`flex: 0 0 auto`** with **`gap: var(--spacing-150)`** (24px) and **`flex-wrap`**: when the space between the Recommended chip and the filter label would drop below 24px, the filter wraps below the heading. Combobox **`inline-size`** comes from `API_CATALOG_PROJECT_FILTER_COMBOBOX_INLINE_SIZE` in `config/apiCatalogWikimedia.ts`, applied as `--fd-api-catalog-filter-combobox-inline-size` on the section (deep Codex input wrappers also constrained so the control does not overflow the content column).
+2. Optional intro (default slot — Markdown)
+3. Filtered `NavigationCardGrid` of cards from `config/apiCatalogWikimedia.ts`
+
+**Composable:** `useApiCatalogProjectFilter()` — banana field / option / empty labels, `isolatePickerLabel()` on menu item labels, selected filter id, Codex Combobox label↔id bridge, visible cards. No fetch or URL construction in the Vue component.
+
+**Filter options (banana):** Any, Wikidata / Wikibase, Wikifunctions, Wikimedia Commons, Wikipedia.
+
+**Visibility (product):** Cards marked `universal` stay visible for **every** project option (not only Any). Project-specific cards show for Any and their matching project(s). Wikipedia currently has no exclusive cards — selecting it shows universal cards only. Visibility helper: `isApiCatalogCardVisibleForProjectFilter()` in config.
+
+**i18n split:** Filter chrome → banana-i18n (`api-catalog-filter-*`). Section heading title / chip → content (MDC props). Card title / description / chips / supporting-text → English content in config (v0; per-locale card catalogs can follow).
+
+```md
+::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
+Discover our curated selection of production-ready APIs…
+::
+```
 
 #### Highlight
 

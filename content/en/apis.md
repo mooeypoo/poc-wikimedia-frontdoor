@@ -8,56 +8,9 @@ status: 0 draft
 Wikimedia’s APIs provide access to projects’ content and data. To learn more, [**go to the Quick start →**](/get-started/quick-start)
 ::
 
-## Wikimedia APIs
-
+::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
 Discover our curated selection of production-ready APIs, designed to help you build, integrate, and scale with Wikimedia's open knowledge ecosystem.
-
-:::navigation-card-grid
-::navigation-card{url="/explorer" title="MediaWiki REST API" description="Provides access to wiki content and functionality, supporting operations like searching, getting and transforming wiki pages, and accessing page history." chips="notice:All projects|success:Check stability at endpoint level"}
 ::
-
-::navigation-card{url="/explorer" title="Attribution API" description="Returns attribution signals for wiki pages to ensure fair reuse of Wikimedia content." chips="notice:Multi-project|warning:Beta"}
-::
-
-::navigation-card{url="/explorer" title="Lift Wing API" description="A machine-learning model-serving platform that returns predictions about Wikimedia pages and edits, such as article or edit-quality score." chips="notice:Multi-project|success:Check stability at endpoint level"}
-::
-
-::navigation-card{url="/explorer" title="GrowthExperiments API" description="Experimental editing suggestions and editor feedback regarding such suggestions" chips="notice:Multi-project|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="ReadingLists API" description="Store and retrieve private lists of pages, such as bookmarks or read-it-later feature." chips="notice:Multi-project|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="CampaignEvents API" description="REST API for the CampaignEvents extension. Create and manage campaign events, invite and track participants, and associate wiki contributions with events." chips="notice:Multi-project|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Commons analytics API" description="Provides data about the usage of categories and media files on Wikimedia Commons. This data is focused on categories associated with contributions from galleries, libraries, archives, and museums (GLAM)." chips="notice:Wikimedia Commons|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Devices analytics API" description="Provides data about the number of unique devices that access Wikimedia projects. This endpoint only returns data for projects that have at least 1,000 unique devices for the requested time period." chips="notice:Multi-project|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Edit analytics API" description="Edit analytics provides data about the number of edits and edited pages on Wikimedia projects." chips="notice:All projects|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Editors analytics API" description="Editor analytics provides data about the number of editors and newly registered users of Wikimedia projects. Data returned by these endpoints includes edits on redirects." chips="notice:All projects|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Media files analytics API" description="Media file analytics provides data about requests for media files on Wikimedia projects." chips="notice:All projects|success:Stable"}
-::
-
-::navigation-card{url="/explorer" title="Page views analytics API" description="Page view analytics provides data about page views for Wikimedia projects." chips="notice:All projects|success:Stable"}
-::
-
-::navigation-card{url="https://www.mediawiki.org/wiki/Wikifunctions_API" title="Wikifunctions API" description="Search, fetch, and call functions hosted on Wikifunctions (Abstract Wikipedia). Create, edit, and orchestrate function objects." supporting-text="Read more on mediawiki.org" chips="notice:Wikifunctions|success:Stable"}
-::
-
-::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Wikibase_GraphQL" title="Wikibase GraphQL API" description="A GraphQL API for Wikidata optimised for developer experience. Handles common read use cases in a single request, reducing load vs SPARQL. Beta, actively developed." supporting-text="Read more on Wikidata" chips="notice:Wikidata|warning:Beta"}
-::
-
-::navigation-card{url="https://doc.wikimedia.org/Wikibase/master/js/rest-api/" title="Wikibase REST API" description="A modern, OpenAPI-documented REST interface for reading and writing Wikidata entities, statements, labels, aliases, and sitelinks." supporting-text="Read the docs" chips="notice:Wikidata|success:Stable"}
-::
-:::
 
 ## Wikimedia Enterprise APIs
 
