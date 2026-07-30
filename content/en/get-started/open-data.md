@@ -36,7 +36,7 @@ Explore public data that you can use in research and machine learning.
 ## Learn with tutorials
 
 :::navigation-card-grid
-::navigation-card{url="https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/tutorials/compare-page-metrics.html" title="Compare page metrics" description="Analyze page viewership and edit data from Wikipedia."}
+::navigation-card{url="https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/tutorials/compare-page-metrics.html" title="Compare page metrics" description="Analyze page viewership and edit data from Wikipedia." supporting-text="Read the docs"}
 ::
 
 ::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}

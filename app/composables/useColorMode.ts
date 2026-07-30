@@ -11,7 +11,7 @@ import {
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)'
 
 // Init runs once per client page load, even though several components call this
-// composable (header toggle, Scalar config). Guarded by `import.meta.client`, so
+// composable (header preferences popover, Scalar config). Guarded by `import.meta.client`, so
 // module scope is per browser tab — never shared across SSR requests.
 let clientInitialized = false
 

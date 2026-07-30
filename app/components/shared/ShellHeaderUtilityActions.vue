@@ -1,25 +1,24 @@
 <script setup lang="ts">
 import {
 	CdxButton,
+	CdxField,
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
+	CdxPopover,
+	CdxRadio,
 	CdxSearchInput,
-	CdxToggleButtonGroup,
-	type ButtonGroupItem,
 	type MenuConfig
 } from '@wikimedia/codex'
-import type { MenuItemData } from '@wikimedia/codex'
+import type { MenuItemData, MenuItemValue } from '@wikimedia/codex'
 import {
-	cdxIconBright,
 	cdxIconConfigure,
 	cdxIconEllipsis,
-	cdxIconHalfBright,
 	cdxIconLanguage,
-	cdxIconMoon,
 	cdxIconSearch
 } from '@wikimedia/codex-icons'
 import type { ColorMode } from '../../../config/colorMode'
+import { COLOR_THEME_PREFERENCE_OPTIONS } from '../../../config/colorMode'
 import {
 	HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP,
 	HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT
@@ -30,10 +29,13 @@ import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
-import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtilityMenu'
+import {
+	SHELL_HEADER_UTILITY_MENU_VALUE,
+	useShellHeaderUtilityMenu
+} from '../../composables/useShellHeaderUtilityMenu'
 
 /**
- * Header utility row — search, settings, interface language, and session control.
+ * Header utility row — search, settings (color theme), interface language, and session control.
  *
  * Compact mode when the allocated actions track is narrower than the expanded minimum
  * (256px search + siblings). Search becomes an icon button; settings and log in move
@@ -41,7 +43,16 @@ import { useShellHeaderUtilityMenu } from '../../composables/useShellHeaderUtili
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
+ * Color theme uses `useColorMode` via a quiet settings `CdxPopover` with
+ * `CdxField` + `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS`
+ * (Light / Dark / System default). Utility options use `--spacing-50` (8px)
+ * `column-gap`, with search → preferences at `--spacing-100` (16px) via an
+ * extra search-wrap `margin-inline-end`; share a vertical centerline with the
+ * brand. Figma:
+ * [Preferences popover 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029).
+ *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
+ * @see ARCHITECTURE.md → Color theme preferences (shell)
  */
 
 /**
@@ -87,7 +98,8 @@ watch( hasQuery, ( newHasQuery ) => {
 	}
 } )
 
-const { menuSelection, menuItems, handleMenuSelection } = useShellHeaderUtilityMenu()
+const { menuSelection, menuItems, handleMenuSelection: handleUtilityMenuSelection } =
+	useShellHeaderUtilityMenu()
 const {
 	isLoggedIn,
 	username,
@@ -97,44 +109,62 @@ const {
 } = useShellAuthNavigation()
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
-const colorModeGroupLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
-
-// Light / Auto / Dark, in that order. Icon-only (label: null); the icons read as
-// sun / half-sun / moon. `auto` follows the operating system preference.
-const colorModeButtons = computed<ButtonGroupItem[]>( () => [
-	{
-		value: 'light',
-		label: null,
-		icon: cdxIconBright,
-		ariaLabel: $bananaI18n( 'color-mode-light-label' )
-	},
-	{
-		value: 'auto',
-		label: null,
-		icon: cdxIconHalfBright,
-		ariaLabel: $bananaI18n( 'color-mode-auto-label' )
-	},
-	{
-		value: 'dark',
-		label: null,
-		icon: cdxIconMoon,
-		ariaLabel: $bananaI18n( 'color-mode-dark-label' )
-	}
-] )
+const isPreferencesPopoverOpen = ref( false )
+const settingsButtonRef = ref<InstanceType<typeof CdxButton> | undefined>()
+const utilityMenuButtonRef = ref<InstanceType<typeof CdxMenuButton> | undefined>()
 
 /**
- * Applies a color-mode selection from the toggle group.
- *
- * The group is single-select, so it never emits an array; ignore a null value
- * so the active mode cannot be cleared.
- *
- * @param value - Selected color-mode value.
+ * Popover anchor: settings gear when expanded; overflow menu when collapsed.
  */
-function handleColorModeSelect( value: string | number | ( string | number )[] | null ): void {
-	if ( typeof value !== 'string' ) {
+const preferencesPopoverAnchor = computed( () => {
+	return isUtilityCollapsed.value ? utilityMenuButtonRef.value : settingsButtonRef.value
+} )
+
+const colorThemeFieldLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
+
+/**
+ * Color theme radios in Figma preferences order (`COLOR_THEME_PREFERENCE_OPTIONS`).
+ */
+const colorThemePreferenceOptions = computed( () => {
+	return COLOR_THEME_PREFERENCE_OPTIONS.map( ( option ) => ( {
+		mode: option.mode,
+		label: $bananaI18n( option.labelMessageKey )
+	} ) )
+} )
+
+/**
+ * Bridges radio `v-model` to `useColorMode` without changing persistence / class logic.
+ */
+const colorModeSelection = computed<ColorMode>( {
+	get() {
+		return colorMode.value
+	},
+	set( nextMode ) {
+		setColorMode( nextMode )
+	}
+} )
+
+/**
+ * Opens or closes the preferences (color theme) popover.
+ */
+function togglePreferencesPopover(): void {
+	isPreferencesPopoverOpen.value = !isPreferencesPopoverOpen.value
+}
+
+/**
+ * Handles collapsed utility menu selection, including opening preferences.
+ *
+ * @param selectedValue - Newly selected menu item value, or null.
+ */
+function handleMenuSelection(
+	selectedValue: MenuItemValue | null
+): void {
+	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.settings ) {
+		isPreferencesPopoverOpen.value = true
+		menuSelection.value = null
 		return
 	}
-	setColorMode( value as ColorMode )
+	handleUtilityMenuSelection( selectedValue )
 }
 
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
@@ -399,22 +429,49 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
-		<CdxToggleButtonGroup
-			class="shell-header-utility-actions__color-mode"
-			:model-value="colorMode"
-			:buttons="colorModeButtons"
-			:aria-label="colorModeGroupLabel"
-			@update:model-value="handleColorModeSelect"
-		/>
-
-		<CdxButton
+		<span
 			v-show="!isUtilityCollapsed"
-			class="shell-header-utility-actions__settings-button"
-			:aria-label="settingsButtonLabel"
-			disabled
+			class="shell-header-utility-actions__settings"
 		>
-			<CdxIcon :icon="cdxIconConfigure" />
-		</CdxButton>
+			<CdxButton
+				ref="settingsButtonRef"
+				class="shell-header-utility-actions__settings-button"
+				weight="quiet"
+				:aria-label="settingsButtonLabel"
+				:aria-expanded="isPreferencesPopoverOpen"
+				@click="togglePreferencesPopover"
+			>
+				<CdxIcon :icon="cdxIconConfigure" />
+			</CdxButton>
+		</span>
+
+		<!--
+			Popover stays a sibling so collapsed mode can anchor to the overflow
+			menu; Teleport keeps it out of the flex gap (comment nodes only).
+		-->
+		<CdxPopover
+			v-model:open="isPreferencesPopoverOpen"
+			class="shell-header-utility-actions__preferences-popover fd-cdx-popover--arrow-seam-fix"
+			:anchor="preferencesPopoverAnchor"
+			placement="bottom-end"
+		>
+			<CdxField
+				class="shell-header-utility-actions__color-theme-field"
+				is-fieldset
+			>
+				<template #label>
+					{{ colorThemeFieldLabel }}
+				</template>
+				<CdxRadio
+					v-for="option in colorThemePreferenceOptions"
+					:key="option.mode"
+					v-model="colorModeSelection"
+					:input-value="option.mode"
+				>
+					{{ option.label }}
+				</CdxRadio>
+			</CdxField>
+		</CdxPopover>
 
 		<div
 			class="shell-header-utility-actions__language"
@@ -428,10 +485,12 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 				:aria-expanded="isLanguageLookupOpen"
 				@click="toggleLanguageLookup"
 			>
+				<!--
+					Codex Button with icon — label + icon only; no custom gap/color.
+					https://doc.wikimedia.org/codex/latest/components/demos/button.html#with-icon
+				-->
 				<CdxIcon :icon="cdxIconLanguage" />
-				<bdi class="shell-header-utility-actions__language-code">
-					{{ selectedLanguageCodeLabel }}
-				</bdi>
+				<bdi>{{ selectedLanguageCodeLabel }}</bdi>
 			</CdxButton>
 
 			<div
@@ -480,6 +539,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<CdxMenuButton
 			v-show="isUtilityCollapsed"
+			ref="utilityMenuButtonRef"
 			v-model:selected="menuSelection"
 			class="shell-header-utility-actions__utility-menu"
 			weight="quiet"
@@ -493,13 +553,19 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 </template>
 
 <style scoped>
+/*
+ * Utility options share one flex row: search + settings + language + session
+ * (or collapsed search + language + overflow). Gap is always `--spacing-50`
+ * (8px) between those options; cross-axis center keeps icons/links aligned.
+ */
 .shell-header-utility-actions {
 	display: flex;
 	flex: 1 1 auto;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: flex-end;
-	gap: var( --spacing-100 );
+	column-gap: var( --spacing-50 );
+	row-gap: 0;
 	min-inline-size: 0;
 }
 
@@ -510,6 +576,11 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	max-inline-size: min( 40rem, 100% );
 	display: flex;
 	align-items: center;
+	/*
+	 * Extra `--spacing-50` beyond the row `column-gap` so search → preferences
+	 * is `--spacing-100` (16px); other option pairs stay at 8px.
+	 */
+	margin-inline-end: var( --spacing-50 );
 }
 
 .shell-header-utility-actions__search {
@@ -538,35 +609,39 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	overflow-y: auto;
 }
 
+.shell-header-utility-actions__settings,
 .shell-header-utility-actions__settings-button,
 .shell-header-utility-actions__search-toggle,
 .shell-header-utility-actions__utility-menu,
-.shell-header-utility-actions__color-mode {
+.shell-header-utility-actions__language,
+.shell-header-utility-actions__session {
+	display: inline-flex;
 	flex: 0 0 auto;
+	align-items: center;
+	margin: 0;
 }
 
 /*
- * Language control: a compact globe + uppercase-code button at all widths,
- * opening the searchable lookup in a popover. Keeping it icon-sized (rather
- * than an always-open input) preserves top-bar room for the log-in link and
- * future utilities (e.g. a dark-mode toggle).
+ * Preferences `CdxPopover` is teleported — body padding and arrow/body seam live in
+ * `app/assets/css/shell-codex-overrides.css` (class `fd-cdx-popover--arrow-seam-fix`).
+ */
+
+.shell-header-utility-actions__color-theme-field {
+	margin-block-start: 0;
+	min-inline-size: 12rem;
+}
+
+.shell-header-utility-actions__color-theme-field :deep( .cdx-field__label ) {
+	margin-block-end: var( --spacing-25 );
+}
+
+/*
+ * Language control: compact globe + uppercase-code quiet `CdxButton` (Codex
+ * Button with icon — native gap/color/typography; no first-party overrides).
+ * Opens the searchable lookup in a popover so the top bar stays compact.
  */
 .shell-header-utility-actions__language {
 	position: relative;
-	flex: 0 0 auto;
-}
-
-.shell-header-utility-actions__language-toggle {
-	display: inline-flex;
-	align-items: center;
-	gap: var( --spacing-25 );
-}
-
-.shell-header-utility-actions__language-code {
-	font-size: var( --font-size-small );
-	line-height: var( --line-height-small );
-	color: var( --color-subtle );
-	white-space: nowrap;
 }
 
 .shell-header-utility-actions__language-popover {
@@ -625,16 +700,17 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 }
 
 .shell-header-utility-actions__session {
-	flex: 0 0 auto;
-	display: inline-flex;
-	align-items: center;
 	white-space: nowrap;
 }
 
 /* Codex progressive link pattern — navigation uses NuxtLink, not CdxButton. */
 .shell-header-utility-actions__login-link,
 .shell-header-utility-actions__account-link {
+	display: inline-flex;
+	align-items: center;
 	flex: 0 0 auto;
+	/* Match quiet icon-button block size so the link shares the row centerline. */
+	min-block-size: var( --min-size-interactive-pointer );
 	font-size: var( --font-size-medium );
 	line-height: var( --line-height-small );
 	color: var( --color-progressive );

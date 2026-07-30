@@ -438,6 +438,8 @@ useHead( {
 
 .frontdoor-shell__chrome-start--brand {
 	padding-inline-start: var( --spacing-75 );
+	/* Keep brand lockup on the same vertical centerline as utility actions. */
+	align-self: center;
 }
 
 /* Logo aligns with collapsed hamburger row — no extra inset on the start column track. */
@@ -453,6 +455,7 @@ useHead( {
 	display: flex;
 	flex: 1 1 auto;
 	align-items: center;
+	align-self: center;
 	justify-content: flex-end;
 	min-inline-size: 0;
 }
@@ -568,6 +571,8 @@ useHead( {
 }
 
 .frontdoor-shell__header {
+	display: flex;
+	align-items: center;
 	min-inline-size: 0;
 }
 

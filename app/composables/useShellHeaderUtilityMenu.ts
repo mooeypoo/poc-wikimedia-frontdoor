@@ -10,12 +10,17 @@ const UTILITY_MENU_VALUE = {
 	logout: 'logout'
 } as const
 
+/** Collapsed utility menu item values used by `ShellHeaderUtilityActions`. */
+export const SHELL_HEADER_UTILITY_MENU_VALUE = UTILITY_MENU_VALUE
+
 /**
  * Builds collapsed utility-row overflow menu items (settings, account, log in/out).
  *
  * Interface language remains a compact control beside the collapsed search icon;
- * it is not included in this menu. When logged in, the menu includes a link to
- * the account dashboard (username label) plus log out.
+ * it is not included in this menu. Settings opens the color-theme preferences
+ * popover in `ShellHeaderUtilityActions` (handled by the parent selection
+ * wrapper). When logged in, the menu includes a link to the account dashboard
+ * (username label) plus log out.
  *
  * @returns Reactive menu state and handlers for `CdxMenuButton`.
  */
@@ -35,8 +40,7 @@ export function useShellHeaderUtilityMenu() {
 			{
 				label: $bananaI18n( 'header-settings-label' ),
 				value: UTILITY_MENU_VALUE.settings,
-				icon: cdxIconConfigure,
-				disabled: true
+				icon: cdxIconConfigure
 			}
 		]
 
