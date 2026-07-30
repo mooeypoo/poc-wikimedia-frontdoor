@@ -18,7 +18,8 @@ export interface RemoteContentNavEntry {
 	 *
 	 * 'primary' — merge into the primary top nav bar (implemented in Phase 1).
 	 * 'explorer-side' — add to the API Explorer left side nav (planned, not yet
-	 *                   implemented; requires extending config/explorerSideNav.js).
+	 *                   implemented; requires extending the `apis` menu in
+	 *                   config/sectionNavigation.js).
 	 */
 	target: 'primary'  // extend to 'primary' | 'explorer-side' when Phase 2 nav is added
 

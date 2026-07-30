@@ -1,5 +1,13 @@
 import { MAIN_NAVIGATION_ITEMS } from '../../config/mainNavigation'
 import { REMOTE_CONTENT_SOURCES } from '../../config/remoteContentSources'
+import { isExplorerRoutePath } from './explorerRoute'
+
+/**
+ * Main-navigation id that owns the API Explorer (the **APIs** tab), from
+ * `config/mainNavigation.ts`. Explorer routes (`/explorer`, `/explorer/…`) live
+ * under this tab even though its path is `/apis`.
+ */
+const API_EXPLORER_NAVIGATION_ID = 'apis'
 
 /** Content locales that use a URL prefix (must match `nuxt.config.ts` i18n locales). */
 const NON_DEFAULT_CONTENT_LOCALE_PREFIXES = [ 'es', 'fr', 'he', 'fa' ] as const
@@ -58,6 +66,13 @@ export function stripContentLocalePrefix( path: string ): string {
  * @returns Main navigation id from `config/mainNavigation.ts` or a remote source id, or null.
  */
 export function getMainNavigationIdFromPath( path: string ): string | null {
+	// Explorer routes are owned by the APIs tab but do not share its `/apis`
+	// path, so match them explicitly (this also drives the `apis` section-nav
+	// menu on `/explorer`, mirroring `/apis`).
+	if ( isExplorerRoutePath( path ) ) {
+		return API_EXPLORER_NAVIGATION_ID
+	}
+
 	const contentPath = stripContentLocalePrefix( path )
 
 	for ( const remoteSource of REMOTE_CONTENT_SOURCES ) {
