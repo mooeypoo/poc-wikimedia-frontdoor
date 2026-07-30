@@ -788,6 +788,8 @@ The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or
 
 Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
 
+**Dev — Vite `optimizeDeps.include`:** First navigation into `/explorer` (and other cold client mounts) can trigger Vite dependency discovery (`@scalar/api-reference`, Codex, `banana-i18n`, `markdown-it` from Enterprise custom mode, …). That invalidates `/_nuxt/pages/explorer/[[view]].vue` mid-load and surfaces as **500 / Failed to fetch dynamically imported module**. Those packages are listed under `vite.optimizeDeps.include` in `nuxt.config.ts` so they pre-bundle at `nuxt dev` startup. If the error returns after cache clears or new deps, hard-refresh or restart `npm run dev`; extend the include list when Vite logs “discovered new dependencies at runtime”.
+
 ### Opt-in module visibility
 
 Project controls expose **Wikimedia project** (project + language comboboxes), **API to explore** (`CdxSelect`, message key `explorer-rest-api-module-label`), **Beta APIs and endpoints**, and **Internal APIs and endpoints** checkboxes (defaults: beta **on**, internal **off** — `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` in `config/explorerOptIn.ts`). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
