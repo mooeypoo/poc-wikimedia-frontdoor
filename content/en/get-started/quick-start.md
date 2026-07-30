@@ -46,6 +46,6 @@ Visit the [API explorer](/explorer) to try different parameters and explore othe
 
 ## Next steps
 
-- Explore featured apps
-- Learn with tutorials
-- Connect with the community
+- [Explore featured apps](/get-started/featured-apps)
+- [Learn with tutorials](/get-started/tutorials)
+- [Connect with the community](/community)

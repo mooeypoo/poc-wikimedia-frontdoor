@@ -179,7 +179,9 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'get-help',
 				titleMessageKey: 'nav-get-help',
 				items: [
-					{ id: 'get-help-overview', messageKey: 'section-nav-overview', href: '/get-help' }				]
+					{ id: 'get-help-overview', messageKey: 'section-nav-overview', href: '/get-help' },
+					{ id: 'get-help-about', messageKey: 'section-nav-get-help-about', href: '/get-help/about' }
+				]
 			}
 		]
 	}

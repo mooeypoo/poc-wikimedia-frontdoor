@@ -49,7 +49,7 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 ::
 :::
 
-[Explore Wikimedia APIs→](/explorer)
+[**Explore Wikimedia APIs →**](/explorer)
 
 ---
 
@@ -68,7 +68,7 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 ::
 :::
 
-[Discover more apps on Toolhub →](https://toolhub.wikimedia.org/)
+[**Discover more apps on Toolhub →**](https://toolhub.wikimedia.org/)
 
 ---
 

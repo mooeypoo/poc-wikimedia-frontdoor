@@ -1,6 +1,5 @@
 ---
 status: draft 1
-sidebar: false
 ---
 
 # Get help
