@@ -768,7 +768,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Top icon | Optional, above title row; progressive colour |
 | Leading icon | Optional, inline with title |
 | Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
-| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a progressive link to the same destination (external icon when off-platform); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline; **min `--spacing-50` (8px)** from description (`padding-block-start` on `.navigation-card__supporting-text`) |
+| Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a [Codex Link](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) to the same destination (`--color-link` / `--color-link--hover` / visited / active / focus-visible); external icon when off-platform (`color: inherit`); **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline; **min `--spacing-50` (8px)** from description (`padding-block-start` on `.navigation-card__supporting-text`) |
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
 | Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
 
@@ -804,6 +804,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Codex Link states on card / content links | Supporting-text + `.frontdoor-shell__main a` use `--color-link*` (hover colour, visited, active, focus) per [Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) |
 | *(uncommitted)* | Card supporting-text polish | Wikibase plain “Wikidata”; featured content + Compare page metrics use writer supporting-text (title icon hidden) |
 | *(uncommitted)* | Navigation card description↔supporting gap | Min **`--spacing-50` (8px)** via `padding-block-start` on supporting-text; keeps bottom-align |
 | *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |

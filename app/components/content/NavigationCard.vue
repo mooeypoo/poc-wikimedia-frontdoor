@@ -21,8 +21,9 @@ export type { NavigationCardChip }
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
  * - Optional **top** / **leading** title icons
- * - Optional **supporting-text**: when `url` is set, rendered as a progressive
- *   link to the same destination (external icon appended for off-platform URLs);
+ * - Optional **supporting-text**: when `url` is set, rendered as a Codex Link
+ *   (mixin tokens: `--color-link*`) to the same destination (external icon
+ *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon. In equal-height grids,
  *   supporting-text is bottom-aligned (`margin-block-start: auto`) with a Codex
@@ -58,9 +59,9 @@ const props = withDefaults( defineProps<{
 	description?: string
 	/**
 	 * Optional Codex Card supporting-text. When `url` is set, rendered as a
-	 * progressive link to the same destination (with external icon when
-	 * off-platform). Content string — BiDi-isolated. Preserve technical-writer
-	 * labels when converting from prose.
+	 * Codex Link (Link mixin tokens) to the same destination (with external
+	 * icon when off-platform). Content string — BiDi-isolated. Preserve
+	 * technical-writer labels when converting from prose.
 	 */
 	supportingText?: string
 	/**
@@ -510,16 +511,51 @@ const hasBody = computed( () =>
 	margin-block: 0;
 }
 
+/*
+ * Codex Link mixin (`.cdx-mixin-link-base()`) expressed with design tokens —
+ * https://doc.wikimedia.org/codex/latest/components/mixins/link.html
+ * Project CSS is plain CSS (no Less), so tokens mirror the mixin rather than
+ * importing `link.less`. External icon inherits link colour (Codex pattern).
+ */
 .navigation-card__supporting-text-link {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	color: var( --color-progressive );
-	text-decoration: none;
+	color: var( --color-link );
+	border-radius: var( --border-radius-base );
+	text-decoration: var( --text-decoration-none );
+}
+
+.navigation-card__supporting-text-link:visited {
+	color: var( --color-link--visited );
+}
+
+.navigation-card__supporting-text-link:visited:hover {
+	color: var( --color-link--visited--hover );
+}
+
+.navigation-card__supporting-text-link:visited:active {
+	color: var( --color-link--visited--active );
 }
 
 .navigation-card__supporting-text-link:hover {
-	text-decoration: underline;
+	color: var( --color-link--hover );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:active {
+	color: var( --color-link--active );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:focus-visible {
+	outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+}
+
+@supports not selector( :focus-visible ) {
+	.navigation-card__supporting-text-link:focus {
+		outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+	}
 }
 
 .navigation-card__supporting-text-external-icon {
@@ -548,7 +584,12 @@ const hasBody = computed( () =>
 	box-shadow: inset 0 0 0 2px var( --box-shadow-color-progressive--focus, var( --color-progressive ) );
 }
 
-.navigation-card__stretched-link:focus {
+/*
+ * Suppress Codex Link focus outline on the invisible stretched hit target —
+ * the card surface shows focus via inset box-shadow above.
+ */
+.navigation-card__stretched-link:focus,
+.navigation-card__stretched-link:focus-visible {
 	outline: 1px solid transparent;
 }
 </style>

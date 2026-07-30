@@ -106,18 +106,48 @@ body {
 	text-decoration: underline;
 }
 
-/* Content links (prose, explorer copy, etc.) — excludes navigation menus above. */
+/*
+ * Content links (prose, card description links, explorer copy, etc.).
+ * Mirrors Codex Link mixin `.cdx-mixin-link-base()` via design tokens
+ * (https://doc.wikimedia.org/codex/latest/components/mixins/link.html).
+ * Excludes shell brand / account utility links styled above.
+ */
 .frontdoor-shell__main :where( a ) {
-	color: var( --color-progressive );
-	text-decoration: none;
-}
-
-.frontdoor-shell__main :where( a:hover ) {
-	text-decoration: underline;
+	color: var( --color-link );
+	border-radius: var( --border-radius-base );
+	text-decoration: var( --text-decoration-none );
 }
 
 .frontdoor-shell__main :where( a:visited ) {
-	color: var( --color-visited );
+	color: var( --color-link--visited );
+}
+
+.frontdoor-shell__main :where( a:visited:hover ) {
+	color: var( --color-link--visited--hover );
+}
+
+.frontdoor-shell__main :where( a:visited:active ) {
+	color: var( --color-link--visited--active );
+}
+
+.frontdoor-shell__main :where( a:hover ) {
+	color: var( --color-link--hover );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.frontdoor-shell__main :where( a:active ) {
+	color: var( --color-link--active );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.frontdoor-shell__main :where( a:focus-visible ) {
+	outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+}
+
+@supports not selector( :focus-visible ) {
+	.frontdoor-shell__main :where( a:focus ) {
+		outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+	}
 }
 
 h2,
