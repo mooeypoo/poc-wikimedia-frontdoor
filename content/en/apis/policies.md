@@ -8,7 +8,7 @@ Wikimedia's content and infrastructure policies are an important part of how fre
 
 :::navigation-card-grid
 ::navigation-card{url="https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Wikimedia_Foundation_API_Usage_Guidelines" title="API usage guidelines" supporting-text="Read more on Wikimedia Foundation Governance Wiki"}
-To protect access to Wikimedia APIs, make sure to comply with [rate limits](/apis/rate-limits) and include a [user-agent header](/apis/authentication#client-identifiaction).
+To protect access to Wikimedia APIs, make sure to comply with rate limits and authentication methods.
 ::
 ::navigation-card{url="https://wikitech.wikimedia.org/wiki/Robot_policy" title="Robot policy" description="This policy includes guidelines for safely making a significant number of requests." supporting-text="Read more on Wikitech"}
 ::

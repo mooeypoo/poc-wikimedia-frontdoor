@@ -82,7 +82,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				items: [
 					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
 					{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy', href: '/apis/stability' },
-					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting' }
+					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/apis/troubleshooting' }
 				]
 			}
 		]
@@ -138,11 +138,11 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-community',
 				items: [
 					{ id: 'community-overview', messageKey: 'section-nav-overview', href: '/community' },
-					{ id: 'explore-hackathons-and-events', messageKey: 'section-nav-community-explore-hackathons-and-events', href: '/explore-hackathons-and-events' },
-					{ id: 'communicate-with-tech-community', messageKey: 'section-nav-community-communicate-with-tech-community', href: '/communicate-with-tech-community' },
-					{ id: 'learn-and-share-technical-skills', messageKey: 'section-nav-community-learn-and-share-technical-skills', href: '/learn-and-share-technical-skills' },
-					{ id: 'get-tech-project-updates', messageKey: 'section-nav-community-get-tech-project-updates', href: '/get-tech-project-updates' },
-					{ id: 'learn-about-wikimedia-technical-operations', messageKey: 'section-nav-community-learn-about-wikimedia-technical-operations', href: '/learn-about-wikimedia-technical-operations' }
+					{ id: 'explore-hackathons-and-events', messageKey: 'section-nav-community-explore-hackathons-and-events', href: '/community/events' },
+					{ id: 'communicate-with-tech-community', messageKey: 'section-nav-community-communicate-with-tech-community', href: '/community/communicate' },
+					{ id: 'learn-and-share-technical-skills', messageKey: 'section-nav-community-learn-and-share-technical-skills', href: '/community/grow' },
+					{ id: 'get-tech-project-updates', messageKey: 'section-nav-community-get-tech-project-updates', href: '/community/updates' },
+					{ id: 'learn-about-wikimedia-technical-operations', messageKey: 'section-nav-community-learn-about-wikimedia-technical-operations', href: '/community/tech-ops' }
 				]
 			}
 		]
