@@ -42,6 +42,18 @@ These two surfaces have different rules and must not be conflated.
 - Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
 - Scalar chrome Front Door does not own is opted out in `config/scalar.ts`: `hideDarkModeToggle`, **`hideClientButton`** (Open API Client), `agent.disabled` — prefer schema flags over CSS hacks
 
+### Opt-in module visibility (community explorer)
+
+**Decision:** Gate which discovery modules appear in **API to explore** (and therefore which spec Scalar loads) with the Include checkboxes. Defaults: beta **on**, internal **off** (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`). Bootstrap still fetches all modules; filtering is client-side.
+
+**Rules** (in `config/explorerOptIn.ts`):
+- **Beta** — configured name prefixes (`attribution/` today) via `isExplorerBetaOptInModule()`
+- **Internal** — MediaWiki REST audience convention: a discovery path segment ends with `-internal` (e.g. Discord Preview API / `discord/v0-internal`) via `isExplorerInternalOptInModule()`
+
+**Out of scope for this phase:** Hiding individual operations inside an already-selected OpenAPI document.
+
+**Source of truth:** `ARCHITECTURE.md` → Opt-in module visibility; `DESIGN_REQUIREMENTS.md` → Opt-in fieldset; `AGENTS.md` Experiment 1 scope / success signals.
+
 ### Scalar plugin system
 
 Scalar's `ApiReferencePlugin` API accepts Vue components natively. Two mechanisms:

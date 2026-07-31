@@ -24,7 +24,9 @@ interface UseExplorerOptInFilteredModulesOptions {
  * Applies explorer opt-in checkbox rules to bootstrap module lists.
  *
  * Hides beta-gated modules (for example Attribution API) unless beta opt-in is
- * enabled, and re-selects a visible module when the current selection is hidden.
+ * enabled, hides internal-gated modules (for example Discord Preview API) unless
+ * internal opt-in is enabled, and re-selects a visible module when the current
+ * selection is hidden.
  *
  * @param options - Bootstrap module state, opt-in flags, and selection actions.
  * @returns {{

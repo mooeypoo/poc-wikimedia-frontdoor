@@ -1,4 +1,7 @@
-import { isExplorerBetaOptInModule } from '../../config/explorerOptIn'
+import {
+	isExplorerBetaOptInModule,
+	isExplorerInternalOptInModule
+} from '../../config/explorerOptIn.ts'
 
 export interface ExplorerModuleOptInFilterOptions {
 	includeBetaEndpoints: boolean
@@ -9,7 +12,8 @@ export interface ExplorerModuleOptInFilterOptions {
  * Filters explorer bootstrap modules by opt-in checkbox state.
  *
  * Beta-gated modules (for example Attribution API) are removed unless beta opt-in
- * is checked. Internal opt-in is reserved for a later phase.
+ * is checked. Internal-gated modules (for example Discord Preview API /
+ * `discord/v0-internal`) are removed unless internal opt-in is checked.
  *
  * @param modules - Full module list from explorer bootstrap.
  * @param filterOptions - Current opt-in checkbox values.
@@ -21,6 +25,13 @@ export function filterExplorerBootstrapModulesByOptIn<T extends { name: string }
 ): T[] {
 	return modules.filter( ( moduleItem ) => {
 		if ( !filterOptions.includeBetaEndpoints && isExplorerBetaOptInModule( moduleItem.name ) ) {
+			return false
+		}
+
+		if (
+			!filterOptions.includeInternalEndpoints &&
+			isExplorerInternalOptInModule( moduleItem.name )
+		) {
 			return false
 		}
 
