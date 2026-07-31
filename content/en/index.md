@@ -56,7 +56,7 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 ::navigation-card{url="https://paulina.toolforge.org/" title="Paulina" description="A global, multilingual search interface for works and authors in the public domain using Wikidata and Python." media="/images/landing/app-paulina.png" chips="award:Coolest Tool Award 2025" hide-external-icon}
 ::
 
-::navigation-card{url="https://listen.hatnote.com/" title="Listen to Wikipedia" description="Multimedia visualizer which translates recent Wikipedia edits into a display of visuals and sounds." media="/images/landing/app-listen.png" hide-external-icon}
+::navigation-card{url="https://listen.hatnote.com/" title="Listen to Wikipedia" description="Multimedia visualizer which translates recent Wikipedia edits into a display of visuals and sounds." media="/images/landing/app-listen.png" chips="award:Coolest Tool Award 2020" hide-external-icon}
 ::
 :::
 
