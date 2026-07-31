@@ -6,7 +6,7 @@ status: mockup
 :::landing-hero
 # Build with Wikimedia
 
-The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/), powering thousands of apps, tools and services. Explore live APIs, and connect with a global community of contributors.
+The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools and services. Explore live APIs, and connect with a global community of contributors.
 
 ::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}
 ::
