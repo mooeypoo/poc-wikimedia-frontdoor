@@ -209,7 +209,7 @@
 }
 
 /*
- * Hide Scalar's built-in Authentication panel unconditionally.
+ * @hack Hide Scalar's built-in Authentication panel unconditionally.
  *
  * Rationale (docs/adr-wikimedia-oauth-authentication.md §5.9): the auth panel
  * lists cookie-based CentralAuth schemes from the MediaWiki OpenAPI spec that
@@ -229,4 +229,19 @@
  */
 .explorer-page .scalar-reference-intro-auth {
 	display: none;
+}
+
+/*
+ * @hack Hide the Authentication section in Scalar's "try it out" client modal.
+ *
+ * Companion to the .scalar-reference-intro-auth rule above, but for the client
+ * modal — a separate Scalar surface that mounts under `.scalar-client` (not
+ * `.explorer-page`) and whose auth `<section>` has no stable class, id, or
+ * attribute to target directly. `useHideScalarClientAuthSection` finds that
+ * section by its heading text and tags it with this attribute; the actual
+ * hiding lives here so it stays in the style layer. See that composable for the
+ * full rationale and the Scalar-upgrade fragility warning.
+ */
+.scalar-client [data-front-door-hidden-client-auth] {
+	display: none !important;
 }

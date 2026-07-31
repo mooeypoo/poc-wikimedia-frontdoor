@@ -9,6 +9,7 @@ import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
+import { useHideScalarClientAuthSection } from '../../composables/useHideScalarClientAuthSection'
 import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
 import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
@@ -76,6 +77,7 @@ const {
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 
 useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
+useHideScalarClientAuthSection()
 
 watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 	setActiveExplorerWikiInstanceId( wikiInstanceId )
