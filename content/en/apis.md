@@ -63,3 +63,9 @@ Learn how to request and manage API tokens, OAuth 1.0a, and OAuth 2.0 credential
 
 Learn how rate limit tiers work and how to avoid unexpected throttling.
 ::
+
+::highlight
+[**Policies →**](/apis/policies)
+
+Review terms and conditions for using Wikimedia content and APIs.
+::
