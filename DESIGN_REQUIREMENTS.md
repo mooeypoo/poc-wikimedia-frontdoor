@@ -526,9 +526,11 @@ Top to bottom:
 
 **Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
 
+**Test Request sticky titles:** Scalar’s `.request-response-header` (endpoint name in the client modal) is sticky without a z-index, so scrolling parameters paint over it. Override in `explorer-codex-overrides.css`: `.explorer-page .scalar-client .request-response-header { z-index: 1 }` (modal-scoped). See `ARCHITECTURE.md` → Scalar Test Request modal sticky headers.
+
 **Chrome opt-outs:** `config/scalar.ts` → `SCALAR_DEFAULT_CONFIGURATION` sets **`hideClientButton: true`** so the global **Open API Client** control is not shown (community + enterprise). Prefer Scalar’s config flag over CSS `display: none` on Tailwind utility classes. **Test Request** remains available (`hideTestRequestButton: false`). See `ARCHITECTURE.md` → Scalar chrome opt-outs.
 
-**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
+**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers.
 
 ### Write-request production warning (Test Request modal)
 

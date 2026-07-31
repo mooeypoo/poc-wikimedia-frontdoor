@@ -201,6 +201,25 @@
 }
 
 /*
+ * Scalar Test Request modal — sticky section title stacking.
+ *
+ * `.request-response-header` is `sticky top-0` with `bg-b-1` but no z-index
+ * (`ViewLayoutSection.vue`). Request/response body siblings use `position:
+ * relative` and paint over the sticky title on scroll, so the endpoint name
+ * looks transparent and overlaps parameter rows. Raise the header above that
+ * content; keep Scalar’s opaque `bg-b-1` background.
+ *
+ * Scoped to `.scalar-client` (Test Request modal), not the whole reference
+ * panel. FRAGILITY: class names come from @scalar/api-client — re-verify on
+ * Scalar upgrades.
+ *
+ * @see ARCHITECTURE.md → Scalar Test Request modal sticky headers
+ */
+.explorer-page .scalar-client .request-response-header {
+	z-index: 1;
+}
+
+/*
  * Write-request confirm dialog — contain overlay to the Scalar reference panel.
  *
  * Codex `CdxDialog` backdrop defaults to `position: fixed` + `100vw` / `100vh`
