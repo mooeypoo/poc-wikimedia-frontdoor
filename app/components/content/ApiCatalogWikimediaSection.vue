@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CdxCombobox, CdxField } from '@wikimedia/codex'
-import { API_CATALOG_PROJECT_FILTER_COMBOBOX_INLINE_SIZE } from '../../../config/apiCatalogWikimedia'
 import { useApiCatalogProjectFilter } from '../../composables/useApiCatalogProjectFilter'
 import SectionHeading from './SectionHeading.vue'
 import NavigationCard from './NavigationCard.vue'
@@ -17,7 +16,10 @@ import NavigationCardGrid from './NavigationCardGrid.vue'
  *
  * Card data and filter rules live in `config/apiCatalogWikimedia.ts`. Filter
  * chrome labels use banana-i18n. Section `title` / `chip` are **content**
- * strings (author via MDC props; BiDi via {@link SectionHeading}).
+ * strings (author via MDC props; BiDi via {@link SectionHeading}). Combobox
+ * **`inline-size` / `min-inline-size`** use Codex **`--size-1600`** (256px) —
+ * a design-token CSS value (not a `config/` constant); the control does not
+ * shrink under flex.
  *
  * @see ARCHITECTURE.md → API catalog project filter
  * @see DESIGN_REQUIREMENTS.md → API catalog
@@ -39,21 +41,10 @@ const {
 	visibleCards,
 	emptyFilterLabel
 } = useApiCatalogProjectFilter()
-
-/**
- * Figma combobox width from config — exposed as a CSS custom property so the
- * SFC stylesheet does not hardcode a project-level size (AGENTS.md rule 6).
- */
-const sectionStyle = {
-	'--fd-api-catalog-filter-combobox-inline-size': API_CATALOG_PROJECT_FILTER_COMBOBOX_INLINE_SIZE
-}
 </script>
 
 <template>
-	<section
-		class="api-catalog-wikimedia-section"
-		:style="sectionStyle"
-	>
+	<section class="api-catalog-wikimedia-section">
 		<div class="api-catalog-wikimedia-section__header">
 			<SectionHeading
 				class="api-catalog-wikimedia-section__heading"
@@ -138,7 +129,6 @@ const sectionStyle = {
 	flex: 0 0 auto;
 	/* Codex Field adds margin-block-start; that shifts the filter below the h2. */
 	margin-block: 0;
-	min-inline-size: 0;
 	max-inline-size: 100%;
 }
 
@@ -167,33 +157,28 @@ const sectionStyle = {
 .api-catalog-wikimedia-section__filter :deep( .cdx-field__control ) {
 	display: flex;
 	align-items: center;
-	flex: 0 1 auto;
-	min-inline-size: 0;
-	max-inline-size: 100%;
+	flex: 0 0 auto;
 }
 
 /*
- * Figma width from `API_CATALOG_PROJECT_FILTER_COMBOBOX_INLINE_SIZE`. Constraining
- * only `.cdx-combobox` is not enough — Codex’s inner text input keeps a larger
- * min size and overflows past the highlight / content column.
+ * Combobox width: Codex `--size-1600` (16rem / 256px). Use a definite
+ * `inline-size` (not only min) — under flex, `min( …, 100% )` collapsed to the
+ * content width when the parent had `min-inline-size: 0`. Do not shrink.
  */
 .api-catalog-wikimedia-section__combobox {
-	inline-size: var( --fd-api-catalog-filter-combobox-inline-size );
-	max-inline-size: 100%;
-	min-inline-size: 0;
+	inline-size: var( --size-1600 );
+	min-inline-size: var( --size-1600 );
+	flex: 0 0 auto;
 }
 
 .api-catalog-wikimedia-section__combobox :deep( .cdx-combobox__input-wrapper ) {
 	inline-size: 100%;
-	max-inline-size: 100%;
-	min-inline-size: 0;
 }
 
 .api-catalog-wikimedia-section__combobox :deep( .cdx-text-input ) {
 	flex: 1 1 auto;
-	inline-size: auto;
+	inline-size: 100%;
 	min-inline-size: 0;
-	max-inline-size: 100%;
 }
 
 .api-catalog-wikimedia-section__combobox :deep( .cdx-text-input__input ) {

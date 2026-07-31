@@ -79,16 +79,6 @@ export type ApiCatalogWikimediaCard = {
 export const API_CATALOG_PROJECT_FILTER_DEFAULT: ApiCatalogProjectFilterId = 'any'
 
 /**
- * Figma combobox control inline size (171px at 16px root) for “Filter by project”.
- *
- * Applied as `--fd-api-catalog-filter-combobox-inline-size` on
- * `ApiCatalogWikimediaSection` so first-party CSS does not hardcode the value.
- *
- * @see DESIGN_REQUIREMENTS.md → API catalog → Project filter layout
- */
-export const API_CATALOG_PROJECT_FILTER_COMBOBOX_INLINE_SIZE = '10.6875rem'
-
-/**
  * Filter menu options in display order ([Figma 1183:31958](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1183-31958)).
  */
 export const API_CATALOG_PROJECT_FILTER_OPTIONS: readonly ApiCatalogProjectFilterOption[] = [
