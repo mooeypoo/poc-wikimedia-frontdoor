@@ -416,6 +416,8 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 
 **Page grid (tablet+).** Two outer tracks: **start** + **body**. The body band contains a **main:end** sub-grid (`4fr | 1fr` at desktop) in `default.vue`. The site footer lives **inside** `.frontdoor-shell__content` (main track only). **`.frontdoor-shell__body-scroll`** is the vertical scrollport for main + end — scrollbar at the **inline-end** edge of the body band; wheel over the empty end column scrolls central content (Discord-style). On short pages, `.frontdoor-shell__content` uses **`min-block-size: 100%`** plus column flex so the footer sits on the shell bottom. See **Site footer** and **Shell scroll regions** below.
 
+**Landing shell exception:** When `isLandingRoutePath(route.path)` is true, `default.vue` adds **`frontdoor-shell--landing`**: drop page-grid / body-scroll horizontal insets, collapse the end column, and set body-columns **`max-inline-size: none`** so section backgrounds paint full viewport width. Content measure stays inside landing inners (`LANDING_CONTENT_MAX_INLINE_SIZE`). See **Platform landing / home** under Markdown content pages.
+
 **Shell scroll regions.** Reference: [Discord developer docs](https://docs.discord.com/developers/bots/overview) — fixed chrome, independent column scrollports.
 
 | Region | Scroll container | When scrollbar appears |
@@ -984,6 +986,9 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
+| `config/landingSurfaces.ts` | Platform home: band gradient stops (`apis` / `join`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px → `--fd-landing-content-max-inline-size`), committed `LANDING_ASSETS` paths, `LANDING_API_ARTICLE_PREVIEWS` placeholder cards |
+| `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
+| `config/navigationCardTitleLogos.ts` | Allowlisted brand title logos (`gerrit`, `github`, `gitlab`, `wikimediaEnterprise`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
 
 Environment-specific values use Nuxt `runtimeConfig`:
@@ -1026,7 +1031,7 @@ See `docs/adr-multilingual-search.md` for the full decision record and `docs/sea
 
 ### Rendering pipeline
 
-Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. The platform home (`content/[locale]/index.md`) is rendered by `app/pages/index.vue` inside **`.fd-content-page.fd-landing-page`** (landing surfaces in `app/assets/css/landing-page.css`; MDC wrappers `LandingHero`, `LandingBand`, `LandingSection`, `LandingApiDemo`, `LandingArticlePreview`, `LandingSectionCta`; surface tokens / preview copy in `config/landingSurfaces.ts`). Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
 
 ### Content typography (Codex style guide)
 
@@ -1041,6 +1046,40 @@ Markdown page titles and section headings follow the Codex [typography style gui
 **Section spacing:** Content-page `h2` overrides the global heading `margin-block-start` (`--spacing-150` / 24px) with **`--spacing-250` (40px)**. Implemented as `.fd-content-page :where(h2) { margin-block-start: var(--spacing-250); }`. `margin-block-end` remains **`--spacing-75`**. Do not change this for one-off pages — it is the documentation section rhythm for all `.fd-content-page` routes. Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography.
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
+
+#### Platform landing / home
+
+**Route:** `/` (and locale homes such as `/fr`) via `app/pages/index.vue` + `content/[locale]/index.md` (`sidebar: false`). Wrapper classes: **`.fd-content-page.fd-landing-page`**.
+
+**Shell exception (`frontdoor-shell--landing`):** Detected by `isLandingRoutePath()` (`app/utils/landingRoute.ts`) — matches `/` or a single segment that is a `SUPPORTED_LANGUAGES` code (not `/get-started`). On that shell class (`default.vue`):
+
+- Drop `.fd-page-grid` `padding-inline-start` and `.frontdoor-shell__body-scroll` `padding-inline-end`
+- Collapse the end column; set `.frontdoor-shell__body-columns` to a single track with **`max-inline-size: none`** (overrides the ≥ 1680px body-columns lock)
+- Section wrappers (`.landing-hero`, `.landing-band`, `.landing-section`) use **`inline-size: 100%`** so **backgrounds paint full viewport width**
+
+**Content measure:** Centered inners use **`--fd-landing-content-max-inline-size`** set from **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / **1000px**) in `config/landingSurfaces.ts` via inline style on `.fd-landing-page` in `index.vue` (config source of truth — AGENTS rule 6). Inline padding uses **`--fd-layout-page-margin`**.
+
+**Typography exceptions** (`.fd-landing-page` in `landing-page.css`, override `.fd-content-page` serif Heading 1/2):
+
+| Element | Landing treatment |
+|---------|-------------------|
+| `h1` | Monospace, bold, centered (Figma hero) |
+| `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
+| `hr` | Hidden (no Markdown `---` dividers) |
+
+**MDC structure** (`content/en/index.md`):
+
+| Block | Role |
+|-------|------|
+| `:::landing-hero` | Full-bleed dither + H1 / intro / `::app-button` + ascii globe |
+| `:::landing-section` | “What would you like to do?” + 3-up cards (leading icons / Enterprise `title-logo`) |
+| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base` |
+| `:::landing-api-demo` | Two-column curl + article previews from `LANDING_API_ARTICLE_PREVIEWS` |
+| `::landing-section-cta` | Quiet progressive section link + arrow / external icon |
+
+**Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`). Do not invent community-app portrait screenshots or true bitonal dither textures — call out missing assets. Current `hero-dither.svg` is a soft radial gradient export from Figma (not a dot dither).
+
+**Product decision:** `DESIGN_REQUIREMENTS.md` → Platform landing / home. Figma Latest [1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177). Metrics row in Figma is **hidden** — not implemented.
 
 **Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
@@ -1090,9 +1129,15 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
-| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
+| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` (optional `columns="2"` for two-up rows, e.g. landing Join) wrapping `::navigation-card` — equal-height rows; default max **3** columns at desktop |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
-| `AppButton.vue` | Progressive button styling (NuxtLink / `<a>`) | `::app-button{href="…" label="…"}` inline |
+| `AppButton.vue` | Progressive link chrome (NuxtLink / `<a>`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — single interactive element (not nested `CdxButton`); label BiDi-isolated |
+| `LandingHero.vue` | — | `:::landing-hero` — see **Platform landing / home** |
+| `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
+| `LandingSection.vue` | — | `:::landing-section` |
+| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` |
+| `LandingArticlePreview.vue` | — | Used by `LandingApiDemo` (not authored directly in Markdown) |
+| `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` / `cdxIconLinkExternal` | `::landing-section-cta{href label}` |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
 | `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
@@ -1118,7 +1163,7 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 | Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
 | Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
 | Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **Codex Link** to the same destination ([Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) via `--color-link*` tokens — hover/active/visited/focus, not progressive-only). External icon on that link for off-platform destinations (`color: inherit`); title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
-| Title logos | — | Optional `titleLogo` / MDC `title-logo` — allowlisted monochrome brand marks (`gerrit`, `github`, `gitlab` in `config/navigationCardTitleLogos.ts`; SVG sources under `public/images/navigation-card-logos/`). Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub Octicons](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg) — brand fills remapped to `currentColor`. Sized to **`--size-icon-medium`**; inherits title **`--color-base`** (dark mode via tokens). Not Codex icons — brand marks are a documented exception. Demo: `by-language.md` → Browse repositories |
+| Title logos | — | Optional `titleLogo` / MDC `title-logo` — allowlisted monochrome brand marks (`gerrit`, `github`, `gitlab`, **`wikimediaEnterprise`**) in `config/navigationCardTitleLogos.ts`; SVG sources under `public/images/navigation-card-logos/`. Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub Octicons](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg), Wikimedia Enterprise mark from Figma Latest (1179:23269) — brand fills remapped to `currentColor`. Sized to **`--size-icon-medium`**; inherits title **`--color-base`** (dark mode via tokens). When a text `title` is also set, the logo renders before the title (landing commercial card). Not Codex icons — brand marks are a documented exception. Demos: `by-language.md` → Browse repositories; `content/en/index.md` → Enterprise persona card |
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row. **Minimum** **`--spacing-50` (8px)** from the description via **`padding-block-start`** on `.navigation-card__supporting-text` (so the gap never collapses below 8px when free space is zero) |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 

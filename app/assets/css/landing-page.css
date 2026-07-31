@@ -1,0 +1,84 @@
+/*
+ * Platform home / landing page surface (.fd-landing-page).
+ *
+ * Full-bleed gradient bands, hero (monospace H1, centered CTA + ascii globe),
+ * and the API demo two-column layout. Content lives in per-locale index.md.
+ * MDC wrappers: LandingHero, LandingBand, LandingApiDemo, LandingArticlePreview.
+ *
+ * See DESIGN_REQUIREMENTS.md / ARCHITECTURE.md → Platform landing / home
+ * and Figma Latest 1179:23177.
+ */
+
+/*
+ * Landing shell full-bleed rules live in `default.vue` (scoped, so they can
+ * override body-columns max-width). Content measure + section chrome below.
+ */
+
+.fd-landing-page {
+	/*
+	 * --fd-landing-content-max-inline-size is set from
+	 * LANDING_CONTENT_MAX_INLINE_SIZE in app/pages/index.vue (config source of truth).
+	 */
+	overflow-x: clip;
+	/*
+	 * Cancel .frontdoor-shell__main padding-block so hero / last band sit flush
+	 * against the header and footer. Section wrappers use margin-block: 0.
+	 */
+	margin-block: calc( -1 * var( --spacing-200 ) );
+}
+
+/* Landing sections abut; no collapsed gap between hero / bands / sections. */
+.fd-landing-page :where( .landing-hero, .landing-section, .landing-band ) {
+	margin-block: 0;
+}
+
+/* Landing H1 is monospace (Figma), not the content-page serif Heading 1. */
+.fd-landing-page :where( h1 ) {
+	font-family: var( --font-family-monospace );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-xxx-large );
+	text-align: center;
+	margin-block-start: 0;
+}
+
+/*
+ * Landing section titles stay Codex Heading 2 size/weight but use the base
+ * (sans) stack per Figma — not the content-page serif override.
+ */
+.fd-landing-page :where( h2 ) {
+	font-family: var( --font-family-base );
+	font-weight: var( --font-weight-bold );
+	margin-block-start: 0;
+}
+
+/* No Markdown hr section rules on the home page (same product call as get-started). */
+.fd-landing-page :where( hr ) {
+	display: none;
+}
+
+/* Quiet progressive Explore / Discover CTAs under landing sections. */
+.fd-landing-page__section-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-25 );
+	margin-block-start: var( --spacing-150 );
+	font-size: var( --font-size-medium );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-small );
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.fd-landing-page__section-cta:hover {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.fd-landing-page__section-cta:active {
+	color: var( --color-progressive--active );
+}
+
+.fd-landing-page__section-cta .cdx-icon {
+	color: inherit;
+}

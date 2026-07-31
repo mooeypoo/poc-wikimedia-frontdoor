@@ -16,12 +16,14 @@ import {
 	cdxIconDownload,
 	cdxIconEdit,
 	cdxIconImage,
+	cdxIconLabFlask,
 	cdxIconLightbulb,
 	cdxIconLinkExternal,
 	cdxIconMap,
 	cdxIconRobot,
 	cdxIconSearch,
 	cdxIconUserGroup,
+	cdxIconUserTalk,
 	type Icon
 } from '@wikimedia/codex-icons'
 
@@ -38,12 +40,14 @@ export const NAVIGATION_CARD_ICONS: Record<string, Icon> = {
 	download: cdxIconDownload,
 	edit: cdxIconEdit,
 	image: cdxIconImage,
+	labFlask: cdxIconLabFlask,
 	lightbulb: cdxIconLightbulb,
 	linkExternal: cdxIconLinkExternal,
 	map: cdxIconMap,
 	robot: cdxIconRobot,
 	search: cdxIconSearch,
 	userGroup: cdxIconUserGroup,
+	userTalk: cdxIconUserTalk,
 	cdxIconArticle,
 	cdxIconArticles,
 	cdxIconBook,
@@ -53,12 +57,14 @@ export const NAVIGATION_CARD_ICONS: Record<string, Icon> = {
 	cdxIconDownload,
 	cdxIconEdit,
 	cdxIconImage,
+	cdxIconLabFlask,
 	cdxIconLightbulb,
 	cdxIconLinkExternal,
 	cdxIconMap,
 	cdxIconRobot,
 	cdxIconSearch,
-	cdxIconUserGroup
+	cdxIconUserGroup,
+	cdxIconUserTalk
 }
 
 /**

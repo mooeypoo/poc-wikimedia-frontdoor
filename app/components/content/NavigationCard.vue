@@ -506,7 +506,10 @@ const hasBody = computed( () =>
 }
 
 .navigation-card__title {
+	display: flex;
 	flex: 1 1 auto;
+	align-items: flex-start;
+	gap: var( --spacing-25 );
 	min-inline-size: 0;
 	/* Codex base (medium) size for all card copy. */
 	font-size: var( --font-size-medium );

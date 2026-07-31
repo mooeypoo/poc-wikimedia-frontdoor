@@ -3,9 +3,10 @@
  * Grid wrapper for {@link NavigationCard} rows on content pages.
  *
  * Renders slotted cards in up to **three** equal columns (Codex desktop+),
- * stretching each row to the tallest card. Title/description stay top-aligned;
- * when cards include supporting-text, that link is bottom-aligned within each
- * card so links share a baseline across the row. Vertical rhythm uses
+ * or **two** when `columns="2"` (landing “Join the community”). Stretching
+ * each row to the tallest card. Title/description stay top-aligned; when cards
+ * include supporting-text, that link is bottom-aligned within each card so
+ * links share a baseline across the row. Vertical rhythm uses
  * **`--spacing-100` (16px)** `margin-block` above and below the grid; under
  * `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in
  * `main.css` so that gap does not collapse. Use from Markdown as
@@ -14,10 +15,26 @@
  * @see ARCHITECTURE.md → Markdown content pages → Navigation card
  * @see DESIGN_REQUIREMENTS.md → Navigation card
  */
+const props = withDefaults( defineProps<{
+	/**
+	 * Max columns at desktop+. `"2"` keeps a two-up row (landing join band);
+	 * default `"3"` matches the standard content card grid.
+	 */
+	columns?: '2' | '3' | 2 | 3 | string
+}>(), {
+	columns: '3'
+} )
+
+const isTwoColumnGrid = computed( () => {
+	return props.columns === 2 || props.columns === '2'
+} )
 </script>
 
 <template>
-	<div class="navigation-card-grid">
+	<div
+		class="navigation-card-grid"
+		:class="{ 'navigation-card-grid--columns-2': isTwoColumnGrid }"
+	>
 		<slot />
 	</div>
 </template>
@@ -58,7 +75,7 @@
  * page-grid.css — CSS variables are unreliable inside @media).
  */
 @media ( min-width: 1120px ) {
-	.navigation-card-grid {
+	.navigation-card-grid:not( .navigation-card-grid--columns-2 ) {
 		grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
 	}
 }
