@@ -1,5 +1,5 @@
 /**
- * Scalar API client modal write-endpoint warnings (DOM injection + ClientPlugin).
+ * Scalar API client modal write-endpoint warnings (DOM injection under address bar).
  */
 .scalar-client-write-endpoint-warning,
 .scalar-client-write-endpoint-warning-mount,

@@ -2,7 +2,6 @@ import { watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import type { ApiReferenceConfigurationRaw } from '@scalar/types/api-reference'
 import type { ClientPlugin } from '@scalar/oas-utils/helpers'
-import { getScalarClientWriteEndpointPlugins } from './scalarClientWriteEndpointPlugins'
 
 /**
  * Maps Scalar configuration callbacks to API client plugins (Scalar default behaviour).
@@ -10,8 +9,11 @@ import { getScalarClientWriteEndpointPlugins } from './scalarClientWriteEndpoint
  * Inlined from `@scalar/api-reference` so this replacement module does not import the
  * aliased path and create a circular dependency.
  *
+ * Write-endpoint warnings are DOM-injected under the address bar
+ * ({@link useScalarClientWriteEndpointWarnings}), not via ClientPlugin view slots.
+ *
  * @param configuration - Reactive merged Api Reference configuration.
- * @returns Client plugins passed to `createApiClientModal` (hooks plus write-endpoint warnings).
+ * @returns Client plugins passed to `createApiClientModal` (request hooks).
  */
 export function mapConfigPlugins(
 	configuration: ComputedRef<ApiReferenceConfigurationRaw>
@@ -47,8 +49,5 @@ export function mapConfigPlugins(
 		{ immediate: true }
 	)
 
-	return [
-		configurationHookPlugin,
-		...getScalarClientWriteEndpointPlugins()
-	]
+	return [ configurationHookPlugin ]
 }

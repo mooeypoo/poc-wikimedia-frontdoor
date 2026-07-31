@@ -139,7 +139,7 @@
   "explorer-rest-api-module-description": "Select the REST API that you’d like to test on this project",
   "explorer-rest-api-module-label": "API to explore",
   "explorer-scalar-switching": "در حال بارگذاری ماژول انتخاب‌شده در نمای مرجع...",
-  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در $1 را تغییر می‌دهد. برای آزمایش ایمن، انتخاب کنید این endpoint را در برابر $2 اجرا کنید.",
+  "explorer-scalar-write-endpoint-warning": "اجرای این درخواست داده‌های زنده در $1 را تغییر می‌دهد. برای آزمایش ایمن، این endpoint را در برابر $2 اجرا کنید.",
   "explorer-scalar-write-test-wiki-name-commons": "Test Wikimedia Commons",
   "explorer-scalar-write-test-wiki-name-wikidata": "Test Wikidata",
   "explorer-scalar-write-test-wiki-name-wikipedia": "Test Wikipedia",

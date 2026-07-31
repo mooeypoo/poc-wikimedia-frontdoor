@@ -51,6 +51,14 @@ Scalar's `ApiReferencePlugin` API accepts Vue components natively. Two mechanism
 
 Codex components and banana-i18n work inside plugins natively — no bridge pattern required.
 
+### Write-request production warning (Test Request modal)
+
+**Decision:** Warn on write methods in the Scalar Test Request modal; do **not** rewrite requests to a test wiki in this phase. Show a single **`CdxMessage`** under the address bar (DOM injection). Do not use Scalar ClientPlugin `components.request` / `components.response` slots — the response slot mounts under **Response Headers** after Send and duplicated the warning.
+
+**Rationale:** Address-bar placement keeps the warning next to the request URL. Production routing matches the interim product choice (guardrails / discoverable test-wiki switching come later). `$2` in the copy is a mocked progressive link to a test-wiki display name until those instances are selectable via discovery.
+
+**Source of truth:** `ARCHITECTURE.md` → Write-request production warning; `DESIGN_REQUIREMENTS.md` → Write-request production warning; `AGENTS.md` RTL checklist + Experiment 1 scope.
+
 ---
 
 ## Discovery and spec resolution

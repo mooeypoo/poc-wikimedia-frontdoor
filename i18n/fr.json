@@ -142,7 +142,7 @@
   "explorer-rest-api-module-description": "Select the REST API that you’d like to test on this project",
   "explorer-rest-api-module-label": "API to explore",
   "explorer-scalar-switching": "Chargement du module selectionne dans la vue de reference...",
-  "explorer-scalar-write-endpoint-warning": "Exécuter cette requête modifiera les données en direct sur $1. Pour expérimenter en toute sécurité, choisissez d'exécuter ce point de terminaison contre $2.",
+  "explorer-scalar-write-endpoint-warning": "Exécuter cette requête modifiera les données en direct sur $1. Pour expérimenter en toute sécurité, exécutez ce point de terminaison contre $2.",
   "explorer-scalar-write-test-wiki-name-commons": "Test Wikimedia Commons",
   "explorer-scalar-write-test-wiki-name-wikidata": "Test Wikidata",
   "explorer-scalar-write-test-wiki-name-wikipedia": "Test Wikipedia",

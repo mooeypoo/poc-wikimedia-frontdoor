@@ -17,7 +17,7 @@ interface OperationShape {
 }
 
 const props = defineProps<{
-	/** Scalar ClientPlugin slot identifier (for example `components.request`). */
+	/** Placement identifier for the DOM-injected mount (currently `address-bar` only). */
 	slotKey: string
 	/** HTTP method when mounted via DOM injection (address bar or slot probes). */
 	httpMethod?: string
@@ -48,7 +48,11 @@ const warningMessageSegments = computed( () => {
 } )
 
 const shouldShowProductionWarning = computed( () => {
-	return isWriteHttpMethod( resolvedHttpMethod.value ) && hasMappedTestWiki.value
+	// Address-bar DOM injection only. Ignore legacy ClientPlugin request/response slots
+	// (those mount under Response Headers after Send).
+	return props.slotKey === 'address-bar'
+		&& isWriteHttpMethod( resolvedHttpMethod.value )
+		&& hasMappedTestWiki.value
 } )
 
 /**
@@ -88,13 +92,10 @@ onMounted( () => {
 </script>
 
 <template>
-	<!-- Host always mounts so ClientPlugin can read the modal before v-if renders. -->
 	<div class="scalar-client-write-endpoint-warning-host">
 		<div
 			v-if="shouldShowProductionWarning"
-			class="scalar-client-write-endpoint-controls"
-			:class="{ 'scalar-client-write-endpoint-controls--address-bar': slotKey === 'address-bar' }"
-			:data-front-door-scalar-write-warning="slotKey"
+			class="scalar-client-write-endpoint-controls scalar-client-write-endpoint-controls--address-bar"
 		>
 			<div class="scalar-client-write-endpoint-warning">
 				<CdxMessage type="warning">

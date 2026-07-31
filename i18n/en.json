@@ -145,7 +145,7 @@
   "explorer-rest-api-module-description": "Select the REST API that you’d like to test on this project",
   "explorer-rest-api-module-label": "API to explore",
   "explorer-scalar-switching": "Loading selected module in reference view...",
-  "explorer-scalar-write-endpoint-warning": "Executing this request will modify live data on $1. To experiment safely, select to run this endpoint against $2.",
+  "explorer-scalar-write-endpoint-warning": "Executing this request will modify live data on $1. To experiment safely, run this endpoint against $2.",
   "explorer-scalar-write-test-wiki-name-commons": "Test Wikimedia Commons",
   "explorer-scalar-write-test-wiki-name-wikidata": "Test Wikidata",
   "explorer-scalar-write-test-wiki-name-wikipedia": "Test Wikipedia",

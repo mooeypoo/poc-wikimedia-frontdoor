@@ -1,9 +1,9 @@
 /**
- * Test wiki base URLs for write-request safety copy in the Scalar API client.
+ * Production → test wiki mapping for write-request warning copy in the Scalar API client.
  *
- * Production explorer instances map to their corresponding Wikimedia test wikis.
+ * Used to resolve banana-i18n display-name keys for the Test Request modal warning link.
  * Test wikis are not yet selectable explorer instances (discovery wiring pending);
- * the Test Request modal warning links to them as a mock for now.
+ * base URLs remain for that future switch. Write requests currently hit production.
  */
 export const WIKI_INSTANCE_TEST_WIKI_BASE_URLS = {
 	commonswiki: 'https://test-commons.wikimedia.org',

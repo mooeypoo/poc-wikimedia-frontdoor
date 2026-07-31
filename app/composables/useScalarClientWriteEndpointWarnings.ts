@@ -6,7 +6,6 @@ import {
 	SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE
 } from '../../config/scalarClientWriteWarnings'
 import ScalarClientWriteEndpointWarning from '../components/explorer/scalar/ScalarClientWriteEndpointWarning.vue'
-import { SCALAR_CLIENT_MODAL_VIEW_SLOTS } from '../scalar/scalarClientWriteEndpointPlugins'
 import type { ScalarInterfaceHandle } from './useExplorerScalarFocus'
 import { activeExplorerWikiInstanceId } from '../utils/explorerWikiInstanceContext'
 import { createScalarWriteEndpointWarningElement } from '../utils/createScalarWriteEndpointWarningElement'
@@ -21,6 +20,8 @@ import { resolveHttpMethodFromModalElement } from '../utils/scalarClientModalHtt
 import { resolveInterfaceMessage } from '../utils/resolveInterfaceMessage'
 
 const WRITE_WARNING_ATTRIBUTE = 'data-front-door-scalar-write-warning'
+const WRITE_WARNING_MOUNT_SELECTOR = '.scalar-client-write-endpoint-warning-mount'
+const WRITE_WARNING_HOST_SELECTOR = '.scalar-client-write-endpoint-warning-host'
 const MODAL_SCAN_DEBOUNCE_MS = 80
 const MODAL_SCAN_RETRY_INTERVAL_MS = 200
 const MODAL_SCAN_RETRY_MAX_ATTEMPTS = 30
@@ -91,10 +92,12 @@ function mountWriteWarning(
 }
 
 /**
- * Injects a Codex write-endpoint production warning into the Scalar Test Request modal.
+ * Injects a Codex write-endpoint production warning under the Scalar Test Request address bar.
  *
  * Scalar's modal is a separate Vue app; DOM injection mounts {@link ScalarClientWriteEndpointWarning}
- * (`CdxMessage`) in a small Vue root per slot. Plain HTML probe mode is available via config.
+ * (`CdxMessage`) immediately below `.scalar-address-bar` only. Stray warning hosts outside that mount
+ * (e.g. under Response Headers from legacy ClientPlugin slots) are removed on each scan.
+ * Plain HTML probe mode is available via config.
  *
  * @param scalarInterface - Scalar handles from {@link ExplorerScalarReference} (event bus for method).
  * @returns Nothing.
@@ -112,15 +115,67 @@ export function useScalarClientWriteEndpointWarnings(
 	let addressBarAlignResizeListener: (() => void) | null = null
 
 	/**
+	 * Returns the address-bar warning mount in the modal, if present.
+	 *
+	 * @param modalDialog - Scalar modal root element.
+	 * @returns Mount element or null.
+	 */
+	function findAddressBarWarningMount( modalDialog: Element ): HTMLElement | null {
+		const existingMount = modalDialog.querySelector( WRITE_WARNING_MOUNT_SELECTOR )
+
+		return existingMount instanceof HTMLElement ? existingMount : null
+	}
+
+	/**
+	 * Removes warning hosts that are not under the address-bar mount.
+	 *
+	 * Scalar's response ClientPlugin slot sits under "Response Headers". Stray hosts
+	 * can appear there after Send if a stale plugin still mounts the warning component.
+	 *
+	 * @param modalDialog - Scalar modal root element.
+	 * @returns Nothing.
+	 */
+	function removeStrayWriteWarningHosts( modalDialog: Element ): void {
+		const warningHosts = modalDialog.querySelectorAll( WRITE_WARNING_HOST_SELECTOR )
+
+		for ( const warningHost of warningHosts ) {
+			if ( warningHost.closest( WRITE_WARNING_MOUNT_SELECTOR ) ) {
+				continue
+			}
+
+			warningHost.remove()
+		}
+
+		const warningMounts = [ ...modalDialog.querySelectorAll( WRITE_WARNING_MOUNT_SELECTOR ) ]
+
+		if ( warningMounts.length <= 1 ) {
+			return
+		}
+
+		// Keep the first mount; drop duplicates created by remount races.
+		for ( const duplicateMount of warningMounts.slice( 1 ) ) {
+			const trackedWarning = mountedWarnings.find(
+				( mountedWarning ) => mountedWarning.mountElement === duplicateMount
+			)
+
+			trackedWarning?.application?.unmount()
+			duplicateMount.remove()
+			mountedWarnings = mountedWarnings.filter(
+				( mountedWarning ) => mountedWarning.mountElement !== duplicateMount
+			)
+		}
+	}
+
+	/**
 	 * Keeps address-bar write controls aligned with the endpoint URL field after layout changes.
 	 *
 	 * @param modalDialog - Scalar modal root element.
 	 * @returns Nothing.
 	 */
 	function syncAddressBarWarningInlineAlignment( modalDialog: Element ): void {
-		const existingMount = modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="address-bar"]` )
+		const existingMount = findAddressBarWarningMount( modalDialog )
 
-		if ( !( existingMount instanceof HTMLElement ) ) {
+		if ( !existingMount ) {
 			return
 		}
 
@@ -200,36 +255,6 @@ export function useScalarClientWriteEndpointWarnings(
 	}
 
 	/**
-	 * Mounts a warning at a slot when not already present.
-	 *
-	 * @param modalDialog - Scalar modal root element.
-	 * @param parentElement - Parent container for the mount node.
-	 * @param insertBefore - Optional sibling before the warning.
-	 * @param slotKey - Slot identifier for deduplication.
-	 * @param httpMethod - HTTP method for the active operation.
-	 * @returns Nothing.
-	 */
-	function injectWarningAtSlot(
-		modalDialog: Element,
-		parentElement: Element | null | undefined,
-		insertBefore: Element | null,
-		slotKey: string,
-		httpMethod: string
-	): void {
-		if ( !parentElement ) {
-			return
-		}
-
-		if ( modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="${ slotKey }"]` ) ) {
-			return
-		}
-
-		mountedWarnings.push(
-			mountWriteWarning( parentElement, insertBefore, slotKey, httpMethod )
-		)
-	}
-
-	/**
 	 * Mounts or repositions the address-bar write-request warning below the endpoint URL bar.
 	 *
 	 * @param modalDialog - Scalar modal root element.
@@ -240,9 +265,11 @@ export function useScalarClientWriteEndpointWarnings(
 		modalDialog: Element,
 		httpMethod: string
 	): void {
-		const existingMount = modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="address-bar"]` )
+		removeStrayWriteWarningHosts( modalDialog )
 
-		if ( existingMount instanceof HTMLElement ) {
+		const existingMount = findAddressBarWarningMount( modalDialog )
+
+		if ( existingMount ) {
 			ensureScalarClientModalAddressBarWarningPlacement( modalDialog, existingMount )
 			requestAnimationFrame( () => {
 				requestAnimationFrame( () => {
@@ -274,38 +301,6 @@ export function useScalarClientWriteEndpointWarnings(
 				)
 			} )
 		} )
-	}
-
-	/**
-	 * Mounts write warnings for the open modal at each supported placement.
-	 *
-	 * @param modalDialog - Scalar modal root element.
-	 * @param httpMethod - Normalized HTTP method for the active operation.
-	 * @returns Nothing.
-	 */
-	function injectWarningsIntoModal( modalDialog: Element, httpMethod: string ): void {
-		injectAddressBarWarning( modalDialog, httpMethod )
-
-		const requestSection = modalDialog.querySelector( '.request-section-content' )
-		const codeExample = requestSection?.querySelector( '.request-section-content-code-example' )
-
-		injectWarningAtSlot(
-			modalDialog,
-			requestSection,
-			codeExample ?? null,
-			SCALAR_CLIENT_MODAL_VIEW_SLOTS.requestComponent,
-			httpMethod
-		)
-
-		const responseSection = modalDialog.querySelector( '.response-section-content' )
-
-		injectWarningAtSlot(
-			modalDialog,
-			responseSection,
-			responseSection?.querySelector( '.response-section-content-body' ) ?? null,
-			SCALAR_CLIENT_MODAL_VIEW_SLOTS.responseComponent,
-			httpMethod
-		)
 	}
 
 	/**
@@ -349,7 +344,7 @@ export function useScalarClientWriteEndpointWarnings(
 			return
 		}
 
-		injectWarningsIntoModal( modalDialog, httpMethod )
+		injectAddressBarWarning( modalDialog, httpMethod )
 		startAddressBarAlignResizeListener( modalDialog )
 		syncAddressBarWarningInlineAlignment( modalDialog )
 	}

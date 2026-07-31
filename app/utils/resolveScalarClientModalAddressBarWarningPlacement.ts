@@ -51,7 +51,7 @@ export function ensureScalarClientModalAddressBarWarningPlacement(
  * Aligns write-request warning inline-start with the Scalar address bar URL field.
  *
  * Sets `--fd-scalar-address-bar-inline-align-offset` on the mount from layout measurements
- * so checkbox and warning copy line up with the address bar at every viewport width.
+ * so warning copy lines up with the address bar at every viewport width.
  *
  * @param modalRoot - Open Scalar Test Request modal root.
  * @param mountElement - Injected warning mount node.

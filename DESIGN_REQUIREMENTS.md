@@ -490,7 +490,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Decision:** Scalar spec panel sits in a bordered shell (`--border-color-subtle`, `--border-radius-base`) with **inline padding** `--spacing-150` on the shell; inner Scalar layout padding is not globally overridden in the current phase.
 
-**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark fixes, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
+**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (project-controls checkbox checkmark fix, Test Request write-warning mount layout, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
 
 ---
 
@@ -529,6 +529,16 @@ Top to bottom:
 **Chrome opt-outs:** `config/scalar.ts` → `SCALAR_DEFAULT_CONFIGURATION` sets **`hideClientButton: true`** so the global **Open API Client** control is not shown (community + enterprise). Prefer Scalar’s config flag over CSS `display: none` on Tailwind utility classes. **Test Request** remains available (`hideTestRequestButton: false`). See `ARCHITECTURE.md` → Scalar chrome opt-outs.
 
 **Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
+
+### Write-request production warning (Test Request modal)
+
+**Decision:** For write HTTP methods (`POST` / `PUT` / `PATCH` / `DELETE`) on instances with a mapped test wiki, show a Codex **`CdxMessage`** (warning) **only directly under the Test Request address bar**. Do not show the warning in request/response body sections (including under **Response Headers** after Send).
+
+**Copy:** banana-i18n `explorer-scalar-write-endpoint-warning` — `$1` is the production wiki display name; `$2` is the mapped test wiki display name (`Test Wikipedia` / `Test Wikidata` / `Test Wikimedia Commons` via `explorer-scalar-write-test-wiki-name-*`). Both names use `<bdi>`. `$2` is a progressive-styled link; navigation is mocked until test wikis are discoverable in the explorer.
+
+**Routing:** Write requests go to the **production** wiki in this phase (no checkbox, no rewrite to a test host). Further guardrails are expected later.
+
+**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `config/wikiInstanceTestWikis.ts`, `app/assets/css/explorer-codex-overrides.css`.
 
 ---
 
