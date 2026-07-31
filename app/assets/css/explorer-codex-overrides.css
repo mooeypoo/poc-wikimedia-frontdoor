@@ -245,3 +245,18 @@
 .scalar-client [data-front-door-hidden-client-auth] {
 	display: none !important;
 }
+
+/*
+ * @hack Hide Scalar's "Open API Client" button in the Test Request modal.
+ *
+ * Scalar renders this link (OpenApiClientButton.vue) in the client-modal
+ * operation header; it opens the endpoint in Scalar's externally hosted client
+ * at client.scalar.com, which is not a path Front Door wants to send users
+ * down. `open-api-client-button` is a stable, semantic Scalar class (a sibling
+ * of the reference/modal chrome), not a hashed utility. It also appears in the
+ * reference view, so both surfaces are covered. Re-verify on Scalar upgrades.
+ */
+.explorer-page .open-api-client-button,
+.scalar-client .open-api-client-button {
+	display: none;
+}
