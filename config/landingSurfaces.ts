@@ -107,14 +107,24 @@ export const LANDING_HERO_GLOBE_COLOR = {
 /**
  * Coolest Tool award InfoChip colours (Codex palette purple100 / purple600).
  *
- * Not shipped as runtime CSS variables by `@wikimedia/codex-design-tokens` in
- * this project — bind onto `.fd-landing-page` from `app/pages/index.vue`.
+ * Light: purple100 background / purple600 text+icon. Dark: inverted (purple600
+ * background / purple100 text+icon) so the chip stays readable on the apps
+ * band. Not shipped as runtime CSS variables by `@wikimedia/codex-design-tokens`
+ * — bind `-light` / `-dark` onto `.fd-landing-page` from `app/pages/index.vue`;
+ * dark applied in `landing-page.css` under `fd-theme--*` (do not reassign the
+ * light custom property — inline style would win).
  *
  * @see https://doc.wikimedia.org/codex/latest/style-guide/colors.html
  */
 export const LANDING_AWARD_CHIP = {
-	backgroundColor: '#e6e0f0',
-	color: '#7a6db7'
+	light: {
+		backgroundColor: '#e6e0f0',
+		color: '#7a6db7'
+	},
+	dark: {
+		backgroundColor: '#7a6db7',
+		color: '#e6e0f0'
+	}
 } as const
 
 /**

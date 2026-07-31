@@ -95,6 +95,21 @@ html.fd-theme--dark .fd-landing-page .landing-band--join {
 	);
 }
 
+/*
+ * Award InfoChip — invert purple100/purple600 in dark (text→fill, fill→text).
+ * Use distinct -light/-dark custom properties; do not reassign the light var
+ * under fd-theme--dark (inline style on `.fd-landing-page` would win).
+ */
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip {
+	background-color: var( --fd-landing-award-chip-background-color-dark );
+	color: var( --fd-landing-award-chip-color-dark );
+}
+
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-info-chip__text,
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-icon {
+	color: var( --fd-landing-award-chip-color-dark );
+}
+
 @media ( prefers-color-scheme: dark ) {
 	html.fd-theme--auto .fd-landing-page .landing-hero__dither {
 		background-image: var( --fd-landing-hero-dither-dark );
@@ -111,6 +126,16 @@ html.fd-theme--dark .fd-landing-page .landing-band--join {
 			var( --fd-landing-band-start-dark ),
 			var( --fd-landing-band-end-dark )
 		);
+	}
+
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip {
+		background-color: var( --fd-landing-award-chip-background-color-dark );
+		color: var( --fd-landing-award-chip-color-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-info-chip__text,
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-icon {
+		color: var( --fd-landing-award-chip-color-dark );
 	}
 }
 

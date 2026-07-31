@@ -753,18 +753,20 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 
 /*
  * Landing Coolest Tool award chip — Codex purple100 background / purple600
- * text+icon (bound as `--fd-landing-award-chip-*` on `.fd-landing-page`).
- * Codex sets `.cdx-info-chip__text` to `--color-base`; override that too.
+ * text+icon in light (`--fd-landing-award-chip-*-light` on `.fd-landing-page`).
+ * Dark invert is applied in `landing-page.css` via `*-dark` (same pattern as
+ * the hero globe). Codex sets `.cdx-info-chip__text` to `--color-base`;
+ * override that too.
  */
 .navigation-card__chip--award.cdx-info-chip {
-	background-color: var( --fd-landing-award-chip-background-color, #e6e0f0 );
-	color: var( --fd-landing-award-chip-color, #7a6db7 );
+	background-color: var( --fd-landing-award-chip-background-color-light, #e6e0f0 );
+	color: var( --fd-landing-award-chip-color-light, #7a6db7 );
 	border-color: transparent;
 }
 
 .navigation-card__chip--award.cdx-info-chip :deep( .cdx-info-chip__text ),
 .navigation-card__chip--award.cdx-info-chip :deep( .cdx-icon ) {
-	color: var( --fd-landing-award-chip-color, #7a6db7 );
+	color: var( --fd-landing-award-chip-color-light, #7a6db7 );
 }
 
 /*

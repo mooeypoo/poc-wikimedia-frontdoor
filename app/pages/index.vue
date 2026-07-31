@@ -48,8 +48,12 @@ if ( !page.value ) {
  */
 const landingPageStyle = {
 	'--fd-landing-content-max-inline-size': LANDING_CONTENT_MAX_INLINE_SIZE,
-	'--fd-landing-award-chip-background-color': LANDING_AWARD_CHIP.backgroundColor,
-	'--fd-landing-award-chip-color': LANDING_AWARD_CHIP.color
+	// Separate light/dark names (same as hero globe) — inline style would beat a
+	// stylesheet reassignment of the same custom property under fd-theme--dark.
+	'--fd-landing-award-chip-background-color-light': LANDING_AWARD_CHIP.light.backgroundColor,
+	'--fd-landing-award-chip-color-light': LANDING_AWARD_CHIP.light.color,
+	'--fd-landing-award-chip-background-color-dark': LANDING_AWARD_CHIP.dark.backgroundColor,
+	'--fd-landing-award-chip-color-dark': LANDING_AWARD_CHIP.dark.color
 }
 
 /**

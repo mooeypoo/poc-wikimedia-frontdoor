@@ -993,7 +993,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
-| `config/landingSurfaces.ts` | Platform home: light/dark **`LANDING_BAND_GRADIENTS`** (`apis` / `join` dark `#233566` → `#101418`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px), **`LANDING_HERO_GLOBE_COLOR`**, **`LANDING_AWARD_CHIP`** (purple100 / purple600 → `--fd-landing-award-chip-*`), **`LANDING_ASSETS`** (incl. `heroDither` / `heroDitherDark`, app screenshots), `LANDING_API_ARTICLE_PREVIEWS` |
+| `config/landingSurfaces.ts` | Platform home: light/dark **`LANDING_BAND_GRADIENTS`** (`apis` / `join` dark `#233566` → `#101418`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px), **`LANDING_HERO_GLOBE_COLOR`**, **`LANDING_AWARD_CHIP`** (light purple100 fill / purple600 text; dark inverted → `--fd-landing-award-chip-*-light` / `*-dark`), **`LANDING_ASSETS`** (incl. `heroDither` / `heroDitherDark`, app screenshots), `LANDING_API_ARTICLE_PREVIEWS` |
 | `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
 | `config/navigationCardTitleLogos.ts` | Allowlisted brand title logos (`gerrit`, `github`, `gitlab`, `wikimediaEnterprise`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
@@ -1206,11 +1206,11 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 |----------|--------|
 | `chips="Bots and tools\|Wikimedia APIs"` | Labels with default status `subtle` |
 | `chips="notice:All projects\|success:Stable\|warning:Beta"` | `status:label` segments (`StatusType` prefix must be valid) |
-| `chips="award:Coolest Tool Award 2026"` | Landing Coolest Tool chip — `cdxIconStar` + purple100/600 via `LANDING_AWARD_CHIP` (not a Codex `StatusType`) |
+| `chips="award:Coolest Tool Award 2026"` | Landing Coolest Tool chip — `cdxIconStar` + purple100/600 via `LANDING_AWARD_CHIP` (dark: inverted fill/text; not a Codex `StatusType`) |
 
 **API catalog conventions** (`content/en/apis.md`): `notice` = scope, `success` = Stable / Check stability…, `warning` = Beta — stock Codex status colours. Get started overview cards omit chips.
 
-**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. **Landing exception:** `award:` chips keep the star icon and purple fill from `LANDING_AWARD_CHIP` (bound on `.fd-landing-page`). See `AGENTS.md` → Content components (approved exception).
+**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. **Landing exception:** `award:` chips keep the star icon and purple fill from `LANDING_AWARD_CHIP` (bound on `.fd-landing-page`; dark mode inverts fill/text via `fd-theme--*`). See `AGENTS.md` → Content components (approved exception).
 
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
