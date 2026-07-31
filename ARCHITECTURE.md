@@ -1195,7 +1195,27 @@ It renders:
 
 **Filter options (banana):** Any, Wikidata / Wikibase, Wikifunctions, Wikimedia Commons, Wikipedia.
 
-**Visibility (product):** Cards marked `universal` stay visible for **every** project option (not only Any). Project-specific cards show for Any and their matching project(s). Wikipedia currently has no exclusive cards — selecting it shows universal cards only. Visibility helper: `isApiCatalogCardVisibleForProjectFilter()` in config.
+**Visibility (product):** Resolved only in `config/apiCatalogWikimedia.ts` via `isApiCatalogCardVisibleForProjectFilter()` (AGENTS rule 6 — no show/hide logic in the Vue component).
+
+| `visibility.kind` | Behaviour |
+|-------------------|-----------|
+| `universal` | Shown for **Any** and every project **except** optional `excludeProjectIds` |
+| `projects` | Shown for **Any** and the listed `projectIds` only |
+
+Current exclusions / project-specific cards:
+
+| Card | Rule |
+|------|------|
+| Attribution API | `universal` + exclude **Wikifunctions** |
+| Lift Wing API | `universal` + exclude **Wikifunctions**, **Wikimedia Commons** |
+| GrowthExperiments API | `universal` + exclude **Wikifunctions**, **Wikimedia Commons** |
+| Commons analytics API | `projects`: Commons |
+| Wikifunctions API | `projects`: Wikifunctions |
+| Wikibase GraphQL / REST | `projects`: Wikidata |
+
+Scope InfoChip labels are **content** in config (`notice`): **All projects** (broad coverage), **Multi-project** (subset / not every filter project), or a named project. ReadingLists, CampaignEvents, Devices / Edit / Editors / Page views analytics use **All projects**; Attribution / Lift Wing / GrowthExperiments keep **Multi-project**.
+
+Wikipedia currently has no exclusive cards — selecting it shows universal cards that do not exclude Wikipedia.
 
 **i18n split:** Filter chrome → banana-i18n (`api-catalog-filter-*`). Section heading title / chip → content (MDC props). Card title / description / chips / supporting-text → English content in config (v0; per-locale card catalogs can follow).
 

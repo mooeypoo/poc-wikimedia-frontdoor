@@ -90,7 +90,7 @@ Discover our curated selection of production-ready APIs…
 ::
 ```
 
-`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility, and the Figma combobox width live in `config/apiCatalogWikimedia.ts`. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter layout.
+`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility (`universal` / `projects` / optional `excludeProjectIds`), scope chip labels, and the Figma combobox width live in `config/apiCatalogWikimedia.ts` — do not encode filter show/hide in the Markdown body. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter visibility.
 
 ### Navigation cards (destination tiles)
 

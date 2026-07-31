@@ -9,8 +9,8 @@ import type { StatusType } from '@wikimedia/codex'
  * catalogs can follow later).
  *
  * Visibility rules (product):
- * - `universal` cards stay visible for **every** project filter (including
- *   Wikipedia), not only “Any”.
+ * - `universal` cards stay visible for every project filter **except** any
+ *   ids listed in optional `excludeProjectIds` (still always shown for “Any”).
  * - Project-specific cards appear for “Any” and their matching project(s).
  */
 
@@ -44,6 +44,17 @@ export type ApiCatalogCardChip = {
 }
 
 /**
+ * Filter visibility for a catalog card.
+ *
+ * - `universal` — shown for “Any” and every project, unless the selected
+ *   project is listed in `excludeProjectIds`.
+ * - `projects` — shown for “Any” and the listed project id(s) only.
+ */
+export type ApiCatalogCardVisibility =
+	| { kind: 'universal'; excludeProjectIds?: readonly ApiCatalogProjectId[] }
+	| { kind: 'projects'; projectIds: readonly ApiCatalogProjectId[] }
+
+/**
  * One Wikimedia APIs catalog card.
  *
  * @property id - Stable card id.
@@ -61,9 +72,7 @@ export type ApiCatalogWikimediaCard = {
 	url: string
 	chips: ApiCatalogCardChip[]
 	supportingText?: string
-	visibility:
-		| { kind: 'universal' }
-		| { kind: 'projects'; projectIds: ApiCatalogProjectId[] }
+	visibility: ApiCatalogCardVisibility
 }
 
 /** Default combobox selection — show all cards. */
@@ -116,7 +125,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 			{ label: 'Multi-project', status: 'notice' },
 			{ label: 'Beta', status: 'warning' }
 		],
-		visibility: { kind: 'universal' }
+		visibility: { kind: 'universal', excludeProjectIds: [ 'wikifunctions' ] }
 	},
 	{
 		id: 'lift-wing',
@@ -127,7 +136,10 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 			{ label: 'Multi-project', status: 'notice' },
 			{ label: 'Check stability at endpoint level', status: 'success' }
 		],
-		visibility: { kind: 'universal' }
+		visibility: {
+			kind: 'universal',
+			excludeProjectIds: [ 'wikifunctions', 'commons' ]
+		}
 	},
 	{
 		id: 'growth-experiments',
@@ -138,7 +150,10 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 			{ label: 'Multi-project', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
-		visibility: { kind: 'universal' }
+		visibility: {
+			kind: 'universal',
+			excludeProjectIds: [ 'wikifunctions', 'commons' ]
+		}
 	},
 	{
 		id: 'reading-lists',
@@ -146,7 +161,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Store and retrieve private lists of pages, such as bookmarks or read-it-later feature.',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
+			{ label: 'All projects', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -157,7 +172,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'REST API for the CampaignEvents extension. Create and manage campaign events, invite and track participants, and associate wiki contributions with events.',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
+			{ label: 'All projects', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -179,7 +194,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides data about the number of unique devices that access Wikimedia projects. This endpoint only returns data for projects that have at least 1,000 unique devices for the requested time period.',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
+			{ label: 'All projects', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -269,8 +284,9 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 /**
  * Whether a catalog card is visible for the selected project filter.
  *
- * Universal cards stay visible for every project option (product decision).
- * Project-specific cards show for “Any” and their listed projects.
+ * “Any” shows every card. Universal cards show for every project except those
+ * listed in `excludeProjectIds`. Project-specific cards show for their listed
+ * projects only.
  *
  * @param card - Catalog card definition.
  * @param selectedProjectFilterId - Active combobox filter id.
@@ -285,7 +301,7 @@ export function isApiCatalogCardVisibleForProjectFilter(
 	}
 
 	if ( card.visibility.kind === 'universal' ) {
-		return true
+		return !card.visibility.excludeProjectIds?.includes( selectedProjectFilterId )
 	}
 
 	return card.visibility.projectIds.includes( selectedProjectFilterId )

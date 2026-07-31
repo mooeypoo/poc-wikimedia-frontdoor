@@ -41,7 +41,7 @@ export function useApiCatalogProjectFilter(): {
 	selectedProjectFilterId: Ref<ApiCatalogProjectFilterId>
 	/** Codex Combobox `selected` bridge (translated label ↔ filter id). */
 	projectFilterComboboxSelected: WritableComputedRef<string>
-	/** Cards visible for the current filter (universal + matching). */
+	/** Cards visible for the current filter (respects excludeProjectIds / projects). */
 	visibleCards: ComputedRef<ApiCatalogWikimediaCard[]>
 	/** banana-i18n empty-state copy when no cards match. */
 	emptyFilterLabel: ComputedRef<string>
