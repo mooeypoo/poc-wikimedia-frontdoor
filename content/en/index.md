@@ -37,8 +37,7 @@ Query analytics, articles, media, page history, and more across languages. Send 
 
 :::code-block
 ```bash
-curl -X GET "https://wikimedia.org/api/rest_v1/metrics/
-pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
+curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
   -H "accept: application/json"
 ```
 :::

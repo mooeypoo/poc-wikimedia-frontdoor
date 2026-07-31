@@ -70,8 +70,8 @@ const thumbnail = computed( (): Thumbnail => ( {
 }
 
 /*
- * Clamp description to two lines so the stacked column keeps a stable height
- * while free space is distributed between cards (space-between).
+ * Clamp description to two lines so the stacked results column keeps a stable
+ * height for the example column to stretch against.
  */
 .landing-article-preview__description {
 	display: -webkit-box;

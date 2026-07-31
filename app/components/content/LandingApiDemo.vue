@@ -9,9 +9,10 @@ import LandingArticlePreview from './LandingArticlePreview.vue'
  *
  * Left: slotted band intro + subheading + `:::code-block` sample from Markdown.
  * Right: Codex {@link CdxCard} article previews from
- * {@link LANDING_API_ARTICLE_PREVIEWS}. At desktop, the results column stretches
- * to the example column height; first/last cards pin to the top/bottom with
- * free space distributed between them (`justify-content: space-between`).
+ * {@link LANDING_API_ARTICLE_PREVIEWS} stacked with a fixed gap. At desktop, the
+ * example column stretches to the results column height; free space sits between
+ * the intro `p` and the `h3` + code-block group (`margin-block-start: auto` on
+ * `h3` so the heading stays with the sample).
  *
  * MDC: `:::landing-api-demo{explore-href="/explorer" explore-label="…"}` … `:::`.
  *
@@ -99,7 +100,7 @@ const isInternalExploreHref = computed( () => {
 @media ( min-width: 1120px ) {
 	.landing-api-demo__columns {
 		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
-		/* Equal column height so results can pin first/last cards to example edges. */
+		/* Equal column height so the example can stretch to the stacked cards. */
 		align-items: stretch;
 	}
 }
@@ -128,24 +129,27 @@ const isInternalExploreHref = computed( () => {
 	inline-size: 100%;
 }
 
+@media ( min-width: 1120px ) {
+	.landing-api-demo__example {
+		/* Match the stacked preview cards; free space goes below the intro. */
+		min-block-size: 100%;
+	}
+
+	.landing-api-demo__example :deep( h3 ) {
+		/*
+		 * Markdown slot is flat (`p`, `h3`, `.code-block`). Auto margin on `h3`
+		 * keeps the heading with the code sample as one group and auto-spaces
+		 * that group against the intro paragraph (Figma 1181:25138).
+		 */
+		margin-block-start: auto;
+	}
+}
+
 .landing-api-demo__results {
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-75 );
 	min-inline-size: 0;
-}
-
-@media ( min-width: 1120px ) {
-	.landing-api-demo__results {
-		/*
-		 * First card top-aligns with `.landing-api-demo__example`; last card
-		 * bottom-aligns; remaining space is distributed between cards.
-		 */
-		justify-content: space-between;
-		/* Minimum rhythm when the example column is short. */
-		gap: var( --spacing-75 );
-		min-block-size: 100%;
-	}
 }
 
 .landing-api-demo__cta {

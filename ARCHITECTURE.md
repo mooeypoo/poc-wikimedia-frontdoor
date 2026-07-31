@@ -1087,7 +1087,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `:::landing-hero` | Full-bleed dither + H1 / intro / `::app-button` + ascii globe |
 | `:::landing-section` | “What would you like to do?” + 3-up cards (leading icons / Enterprise `title-logo`) |
 | `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base`; community app cards use Portrait-card media (`media` + **`--spacing-75` (12px)** image inset — Codex Portrait card not shipped yet, [T310632](https://phabricator.wikimedia.org/T310632) / [Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634)) + optional `chips="award:…"` + `hide-external-icon` |
-| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + Codex `CdxCard` article previews from `LANDING_API_ARTICLE_PREVIEWS` (desktop: first/last cards align to example column top/bottom with auto space between) |
+| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + Codex `CdxCard` article previews from `LANDING_API_ARTICLE_PREVIEWS` (desktop: example column stretches to stacked cards; auto space between intro `p` and `h3` + code-block) |
 | `::landing-section-cta` | Quiet progressive section link + trailing arrow (always `cdxIconArrowNext`, including external Toolhub CTA — not the external glyph) |
 
 **Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`) — hero dither (light + dark) / ascii globe, API article-preview thumbs, and community-app screenshots (`app-lexica` / `app-paulina` / `app-listen`). Do not invent replacements; call out still-missing assets (e.g. true bitonal dither texture — current dither SVGs are soft radial gradient exports from Figma).
@@ -1167,7 +1167,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `LandingHero.vue` | — | `:::landing-hero` — dither + globe; intro `p` **`--font-size-x-large`** (scoped); H1 type in `landing-page.css` (exploratory **2rem**). See **Platform landing / home** |
 | `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
 | `LandingSection.vue` | — | `:::landing-section` |
-| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` — desktop results column `space-between` pins first/last cards to example column edges |
+| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` — desktop example column stretches to stacked preview cards; `h3` `margin-block-start: auto` spaces intro vs `h3` + code-block |
 | `LandingArticlePreview.vue` | `CdxCard` + thumbnail | Used by `LandingApiDemo` (not authored in Markdown); landscape Codex [Card](https://doc.wikimedia.org/codex/latest/components/demos/card.html). **Codex exception:** muted resting border + exploratory **4px** radius (stock Card has no framed border in this surface) — see Platform landing |
 | `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` | `::landing-section-cta{href label}` — arrow for internal and external; external still `target="_blank"` |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
