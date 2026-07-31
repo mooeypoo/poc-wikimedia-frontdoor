@@ -1071,7 +1071,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 | Element | Landing treatment |
 |---------|-------------------|
-| `h1` | Monospace, bold, centered (Figma hero) |
+| Hero `h1` | Monospace, bold, centered; **`font-size: 2rem`** (exploratory — not a Codex `--font-size-*` token; xxx-large is 1.75rem) |
+| Hero intro `p` | **`--font-size-x-large`** (Codex) |
 | `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
 | Heading anchors | Not rendered (`ProseHeading` skips anchors when `isLandingRoutePath`) |
 | Section `h2` → content | **`--spacing-150` (24px)** end margin; next sibling start margin zeroed |
