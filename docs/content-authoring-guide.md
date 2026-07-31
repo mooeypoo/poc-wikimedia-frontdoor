@@ -90,7 +90,7 @@ Discover our curated selection of production-ready APIs…
 ::
 ```
 
-`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility (`universal` / `projects` / optional `excludeProjectIds`), and scope chip labels live in `config/apiCatalogWikimedia.ts` — do not encode filter show/hide in the Markdown body. Combobox **`inline-size` / `min-inline-size`** use Codex **`--size-1600`** (256px) in the section component CSS. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter layout.
+`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility (`universal` / `projects` / optional `excludeProjectIds`), and scope chip labels live in `config/apiCatalogWikimedia.ts` — do not encode filter show/hide or add Wikimedia APIs cards in the Markdown body (e.g. Math API, Wikimedia REST APIs). Explorer destinations use `url: '/explorer'`. Combobox **`inline-size` / `min-inline-size`** use Codex **`--size-1600`** (256px) in the section component CSS. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter layout.
 
 ### Navigation cards (destination tiles)
 

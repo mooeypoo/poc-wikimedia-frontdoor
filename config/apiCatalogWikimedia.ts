@@ -92,7 +92,9 @@ export const API_CATALOG_PROJECT_FILTER_OPTIONS: readonly ApiCatalogProjectFilte
 /**
  * Wikimedia APIs cards for the catalog filterable grid.
  *
- * Order matches the previous `content/en/apis.md` navigation-card list.
+ * Display order is curated here (not Markdown). Internal explorer destinations
+ * use `/explorer`; off-platform cards set `supportingText` + absolute `url`.
+ * Card copy and chips are **content** (AGENTS.md — not banana-i18n).
  */
 export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 	{
@@ -103,6 +105,17 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		chips: [
 			{ label: 'All projects', status: 'notice' },
 			{ label: 'Check stability at endpoint level', status: 'success' }
+		],
+		visibility: { kind: 'universal' }
+	},
+	{
+		id: 'wikimedia-rest',
+		title: 'Wikimedia REST APIs',
+		description: 'Provides cacheable and straightforward access to Wikimedia content and data, in machine-readable formats.',
+		url: '/explorer',
+		chips: [
+			{ label: 'All projects', status: 'notice' },
+			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
 	},
@@ -226,6 +239,17 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		id: 'page-views-analytics',
 		title: 'Page views analytics API',
 		description: 'Page view analytics provides data about page views for Wikimedia projects.',
+		url: '/explorer',
+		chips: [
+			{ label: 'All projects', status: 'notice' },
+			{ label: 'Stable', status: 'success' }
+		],
+		visibility: { kind: 'universal' }
+	},
+	{
+		id: 'math',
+		title: 'Math API',
+		description: 'Provides support for rendering mathematical formulae. It allows callers to convert various forms of math input into MathML + SVG or PNG outputs, which can be used across Wikimedia projects.',
 		url: '/explorer',
 		chips: [
 			{ label: 'All projects', status: 'notice' },
