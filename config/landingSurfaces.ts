@@ -11,19 +11,56 @@
  * Soft radial / linear band colours from Figma section backgrounds.
  * Community apps uses Codex `--background-color-base` (not a gradient) — see
  * {@link LandingBand} `apps` variant.
+ *
+ * Hero light stops match `hero-dither.svg` (1179:23177). Hero dark stops match
+ * `hero-dither-dark.svg` ([1202:27291](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27291))
+ * — progressive blue glow at bottom-center over Codex dark base `#101418`.
+ * The hero paints via committed SVGs (`LANDING_ASSETS`); these stops document
+ * the export for CSS migration / band work.
+ *
+ * APIs / join dark stops both run progressive--active (`#233566`) → inverted
+ * (`#101418`) per Figma. Do not use `var(--background-color-inverted)` under
+ * `fd-theme--dark` (that token flips to `#f8f9fa`). Theme swap is in
+ * `landing-page.css` via `--fd-landing-band-*-dark`.
+ *
+ * @see APIs dark [1202:27489](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27489)
+ * @see Join dark [1202:28482](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-28482)
  */
 export const LANDING_BAND_GRADIENTS = {
 	hero: {
-		start: '#E6E0F0',
-		end: '#D9E2FF'
+		light: {
+			start: '#E6E0F0',
+			end: '#D9E2FF'
+		},
+		dark: {
+			/** Bottom-center glow (`#3366CC` at 60% opacity in the SVG stop). */
+			start: '#3366CC',
+			startOpacity: 0.6,
+			mid: '#1B223D',
+			end: '#101418'
+		}
 	},
 	apis: {
-		start: '#f0ecf6',
-		end: '#e8eeff'
+		light: {
+			start: '#f0ecf6',
+			end: '#e8eeff'
+		},
+		dark: {
+			/** `background-color-progressive--active` → `background-color-inverted`. */
+			start: '#233566',
+			end: '#101418'
+		}
 	},
 	join: {
-		start: '#f0ecf6',
-		end: '#eef2ff'
+		light: {
+			start: '#f0ecf6',
+			end: '#eef2ff'
+		},
+		dark: {
+			/** Same direction as APIs: progressive--active → inverted (Figma 1202:28482). */
+			start: '#233566',
+			end: '#101418'
+		}
 	}
 } as const
 
@@ -39,6 +76,12 @@ export const LANDING_CONTENT_MAX_INLINE_SIZE = '62.5rem'
 /** Committed public paths for landing imagery (do not invent replacements). */
 export const LANDING_ASSETS = {
 	heroDither: '/images/landing/hero-dither.svg',
+	/** Dark-mode hero radial (Figma 1202:27291). Swapped via `fd-theme--*` in CSS. */
+	heroDitherDark: '/images/landing/hero-dither-dark.svg',
+	/**
+	 * Scanline puzzle-globe mask (RGBA PNG). Figma ships this as a raster, not
+	 * SVG — tinted via CSS `mask-image` + {@link LANDING_HERO_GLOBE_COLOR}.
+	 */
 	heroAsciiGlobe: '/images/landing/hero-ascii-globe.png',
 	apiPreviewBonnie: '/images/landing/api-preview-bonnie.jpg',
 	apiPreviewHaaland: '/images/landing/api-preview-haaland.jpg',
@@ -46,6 +89,19 @@ export const LANDING_ASSETS = {
 	appLexica: '/images/landing/app-lexica.png',
 	appPaulina: '/images/landing/app-paulina.png',
 	appListen: '/images/landing/app-listen.png'
+} as const
+
+/**
+ * Hero ascii-globe fill colours (CSS mask tint over {@link LANDING_ASSETS.heroAsciiGlobe}).
+ *
+ * Light: Wikimedia black (`#202122`) on the lavender dither. Dark: Codex dark
+ * `--color-base` (`#eaecf0`) — `#202122` on the blue dither fails contrast; the
+ * globe must read as a light scanline mark (same role as body text colour). Prefer
+ * an inline SVG + `currentColor` if design ships one.
+ */
+export const LANDING_HERO_GLOBE_COLOR = {
+	light: '#202122',
+	dark: '#eaecf0'
 } as const
 
 /**

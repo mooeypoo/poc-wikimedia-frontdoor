@@ -4,12 +4,13 @@ import { LANDING_BAND_GRADIENTS } from '../../../config/landingSurfaces'
 /**
  * Full-bleed landing section band.
  *
- * Gradient variants (`apis`, `join`) use stops from {@link LANDING_BAND_GRADIENTS}.
- * The `apps` variant uses Codex `--background-color-base` (no gradient).
- * Content is slotted Markdown — not banana-i18n. Use from MDC as
- * `:::landing-band{variant="apis"}` … `:::`.
+ * Gradient variants (`apis`, `join`) use light / dark stops from
+ * {@link LANDING_BAND_GRADIENTS}. Dark stops swap under `html.fd-theme--*` in
+ * `landing-page.css` (same pattern as the hero dither). The `apps` variant uses
+ * Codex `--background-color-base` (no gradient). Content is slotted Markdown —
+ * not banana-i18n. Use from MDC as `:::landing-band{variant="apis"}` … `:::`.
  *
- * @see Figma Latest frame 1179:23177
+ * @see Figma Latest light 1179:23177 / APIs dark 1202:27489 / join dark 1202:28482
  */
 const props = withDefaults( defineProps<{
 	/**
@@ -31,14 +32,21 @@ const bandClass = computed( () => {
 	]
 } )
 
+/**
+ * Binds light and dark gradient stops from config for CSS theme swap.
+ *
+ * @returns Inline style with `--fd-landing-band-*` custom properties, or undefined for `apps`.
+ */
 const bandStyle = computed( () => {
 	if ( !isGradientBand.value ) {
 		return undefined
 	}
 	const gradientStops = LANDING_BAND_GRADIENTS[ props.variant as 'apis' | 'join' ]
 	return {
-		'--fd-landing-band-start': gradientStops.start,
-		'--fd-landing-band-end': gradientStops.end
+		'--fd-landing-band-start': gradientStops.light.start,
+		'--fd-landing-band-end': gradientStops.light.end,
+		'--fd-landing-band-start-dark': gradientStops.dark.start,
+		'--fd-landing-band-end-dark': gradientStops.dark.end
 	}
 } )
 </script>
@@ -65,6 +73,7 @@ const bandStyle = computed( () => {
 
 .landing-band--apis,
 .landing-band--join {
+	/* Default light; dark override in landing-page.css under fd-theme--*. */
 	background-image: linear-gradient(
 		to bottom,
 		var( --fd-landing-band-start ),

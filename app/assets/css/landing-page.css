@@ -68,6 +68,53 @@
 }
 
 /*
+ * Hero dither — light SVG by default (bound on `.landing-hero` from config).
+ * Dark SVG (Figma 1202:27291: progressive blue glow → #1B223D → #101418)
+ * follows the same `fd-theme--*` split as `color-modes.css`.
+ */
+html.fd-theme--dark .fd-landing-page .landing-hero__dither {
+	background-image: var( --fd-landing-hero-dither-dark );
+}
+
+html.fd-theme--dark .fd-landing-page .landing-hero__globe-mark {
+	background-color: var( --fd-landing-hero-globe-color-dark );
+}
+
+/*
+ * APIs / join bands — dark linear gradients from config
+ * (`#233566` progressive--active ↔ `#101418` inverted). Bound on each band as
+ * `--fd-landing-band-*-dark` (do not use var(--background-color-inverted) here —
+ * that token flips to light under fd-theme--dark).
+ */
+html.fd-theme--dark .fd-landing-page .landing-band--apis,
+html.fd-theme--dark .fd-landing-page .landing-band--join {
+	background-image: linear-gradient(
+		to bottom,
+		var( --fd-landing-band-start-dark ),
+		var( --fd-landing-band-end-dark )
+	);
+}
+
+@media ( prefers-color-scheme: dark ) {
+	html.fd-theme--auto .fd-landing-page .landing-hero__dither {
+		background-image: var( --fd-landing-hero-dither-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .landing-hero__globe-mark {
+		background-color: var( --fd-landing-hero-globe-color-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .landing-band--apis,
+	html.fd-theme--auto .fd-landing-page .landing-band--join {
+		background-image: linear-gradient(
+			to bottom,
+			var( --fd-landing-band-start-dark ),
+			var( --fd-landing-band-end-dark )
+		);
+	}
+}
+
+/*
  * Hero intro links (Wikipedia / other Wikimedia projects): no external glyph
  * and no visited colour — keep progressive link states only.
  */

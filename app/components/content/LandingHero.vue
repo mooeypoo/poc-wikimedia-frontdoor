@@ -1,30 +1,50 @@
 <script setup lang="ts">
-import { LANDING_ASSETS } from '../../../config/landingSurfaces'
+import {
+	LANDING_ASSETS,
+	LANDING_HERO_GLOBE_COLOR
+} from '../../../config/landingSurfaces'
 
 /**
  * Platform landing hero — dither gradient band, slotted title/intro/CTA, ascii globe.
  *
  * Full-bleed soft radial gradient (Figma `dither-background`) with the content
- * column constrained to the prose measure. The globe is a committed asset under
- * `public/images/landing/`; alt text is empty because it is decorative.
+ * column constrained to the prose measure. Light and dark dither SVGs are bound
+ * as CSS custom properties; `landing-page.css` swaps under `html.fd-theme--dark`
+ * / `fd-theme--auto` + `prefers-color-scheme: dark` (same pattern as color-modes).
+ *
+ * The ascii globe is a committed **RGBA PNG** used as a CSS mask (Figma does not
+ * ship an SVG for this art). Fill colours come from {@link LANDING_HERO_GLOBE_COLOR}
+ * (light `#202122`, dark `#eaecf0`) so the mark stays readable on each dither.
+ * Decorative — no accessible name.
  *
  * MDC: `:::landing-hero` … `:::`. Slot content is page copy — not banana-i18n.
  *
  * @see DESIGN_REQUIREMENTS.md → Platform landing / home
  * @see ARCHITECTURE.md → Platform landing / home
- * @see Figma hero 1179:23219
+ * @see Figma hero light 1179:23219 / dark dither 1202:27291
  */
 
-const heroAsciiGlobeSrc = LANDING_ASSETS.heroAsciiGlobe
-const heroDitherSrc = LANDING_ASSETS.heroDither
+/**
+ * Hero surface CSS variables — dither + globe mask / tints from config (not
+ * hardcoded in stylesheets). Theme swaps live in `landing-page.css`.
+ */
+const heroSurfaceStyle = {
+	'--fd-landing-hero-dither-light': `url(${ LANDING_ASSETS.heroDither })`,
+	'--fd-landing-hero-dither-dark': `url(${ LANDING_ASSETS.heroDitherDark })`,
+	'--fd-landing-hero-globe-mask': `url(${ LANDING_ASSETS.heroAsciiGlobe })`,
+	'--fd-landing-hero-globe-color-light': LANDING_HERO_GLOBE_COLOR.light,
+	'--fd-landing-hero-globe-color-dark': LANDING_HERO_GLOBE_COLOR.dark
+}
 </script>
 
 <template>
-	<section class="landing-hero">
+	<section
+		class="landing-hero"
+		:style="heroSurfaceStyle"
+	>
 		<div
 			class="landing-hero__dither"
 			aria-hidden="true"
-			:style="{ backgroundImage: `url(${ heroDitherSrc })` }"
 		/>
 		<div class="landing-hero__inner">
 			<div class="landing-hero__text">
@@ -34,14 +54,7 @@ const heroDitherSrc = LANDING_ASSETS.heroDither
 				class="landing-hero__globe"
 				aria-hidden="true"
 			>
-				<img
-					class="landing-hero__globe-image"
-					:src="heroAsciiGlobeSrc"
-					alt=""
-					width="970"
-					height="806"
-					decoding="async"
-				>
+				<span class="landing-hero__globe-mark" />
 			</div>
 		</div>
 	</section>
@@ -54,6 +67,11 @@ const heroDitherSrc = LANDING_ASSETS.heroDither
 	inline-size: 100%;
 	margin-block: 0;
 	overflow: clip;
+	/*
+	 * Base under the dither so the dark SVG’s translucent progressive stop
+	 * composites over Codex `--background-color-base` (#101418 in dark).
+	 */
+	background-color: var( --background-color-base );
 }
 
 .landing-hero__dither {
@@ -64,6 +82,8 @@ const heroDitherSrc = LANDING_ASSETS.heroDither
 	background-position: center;
 	background-size: cover;
 	pointer-events: none;
+	/* Default light; dark override in landing-page.css under fd-theme--*. */
+	background-image: var( --fd-landing-hero-dither-light );
 }
 
 .landing-hero__inner {
@@ -116,13 +136,24 @@ const heroDitherSrc = LANDING_ASSETS.heroDither
 	overflow: hidden;
 }
 
-.landing-hero__globe-image {
+/*
+ * RGBA PNG as alpha mask + solid fill (themeable). Preserves scanline texture
+ * via varying alpha; colour comes from config, not the raster pixels.
+ */
+.landing-hero__globe-mark {
 	display: block;
 	inline-size: 100%;
 	block-size: 100%;
-	object-fit: cover;
-	/* Crop from the top so the unfinished puzzle crown stays visible. */
-	object-position: top center;
+	background-color: var( --fd-landing-hero-globe-color-light );
 	pointer-events: none;
+	mask-image: var( --fd-landing-hero-globe-mask );
+	mask-size: cover;
+	/* Crop from the top so the unfinished puzzle crown stays visible. */
+	mask-position: top center;
+	mask-repeat: no-repeat;
+	-webkit-mask-image: var( --fd-landing-hero-globe-mask );
+	-webkit-mask-size: cover;
+	-webkit-mask-position: top center;
+	-webkit-mask-repeat: no-repeat;
 }
 </style>
