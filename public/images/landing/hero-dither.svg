@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1440" height="543" viewBox="0 0 1440 543" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="dither-background" d="M0 0H1440V543H0V0Z" fill="url(#paint0_radial_0_20)"/>
+<defs>
+<radialGradient id="paint0_radial_0_20" cx="0" cy="0" r="1" gradientTransform="matrix(3.30439e-05 -543 1439.85 -3.82605 720 543)" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E6E0F0"/>
+<stop offset="1" stop-color="#D9E2FF"/>
+</radialGradient>
+</defs>
+</svg>

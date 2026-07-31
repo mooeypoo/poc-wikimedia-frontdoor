@@ -98,7 +98,10 @@ export default defineNuxtConfig( {
 						'typescript',
 						'python',
 						'php',
+						// Shell aliases — fences may use `bash`, `sh`, or `shell`
 						'bash',
+						'shell',
+						'shellscript',
 						'json',
 						'html',
 						'css',
@@ -133,6 +136,8 @@ export default defineNuxtConfig( {
 	css: [
 		'@wikimedia/codex/dist/codex.style-bidi.css',
 		'~/assets/css/main.css',
+		// Platform home / landing page surface (full-bleed bands, hero typography).
+		'~/assets/css/landing-page.css',
 		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
 		// Loads after main.css so it overrides the light :root token defaults.
 		'~/assets/css/color-modes.css'

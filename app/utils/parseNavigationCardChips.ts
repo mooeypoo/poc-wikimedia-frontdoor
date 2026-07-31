@@ -9,10 +9,14 @@ import type { StatusType } from '@wikimedia/codex'
  *
  * @property label - Visible chip text (BiDi-isolated in the template).
  * @property status - Codex {@link CdxInfoChip} status (default `subtle`).
+ * @property icon - Optional allowlisted Codex icon name (`config/navigationCardIcons.ts`).
+ * @property variant - Optional visual variant (`award` = purple Coolest Tool chip).
  */
 export type NavigationCardChip = {
 	label: string
 	status?: StatusType
+	icon?: string
+	variant?: 'award'
 }
 
 /** Codex InfoChip statuses — mirrored from `@wikimedia/codex` `StatusTypes`. */
@@ -33,9 +37,11 @@ const STATUS_TYPE_SET = new Set<string>( STATUS_TYPES )
  * MDC examples:
  * - `chips="Bots and tools|Wikimedia APIs"` — labels, default status `subtle`
  * - `chips="subtle:Optional tag|success:Optional tag"` — status-prefixed labels
+ * - `chips="award:Coolest Tool Award 2026"` — landing award chip (star + purple)
  *
  * Segments are split on `|`. A leading `status:` uses a Codex {@link StatusType}
- * when the prefix is valid; otherwise the whole segment is the label.
+ * when the prefix is valid; `award:` sets the award variant. Otherwise the whole
+ * segment is the label.
  *
  * @param chipsProp - Array from Vue, pipe-separated string from MDC, or empty.
  * @returns Normalized chip list for `CdxInfoChip`.
@@ -51,7 +57,9 @@ export function parseNavigationCardChips(
 			.filter( ( chip ) => chip && String( chip.label ?? '' ).trim().length > 0 )
 			.map( ( chip ) => ( {
 				label: String( chip.label ).trim(),
-				status: chip.status
+				status: chip.status,
+				icon: chip.icon,
+				variant: chip.variant
 			} ) )
 	}
 
@@ -62,12 +70,20 @@ export function parseNavigationCardChips(
 		.map( ( segment ) => {
 			const separatorIndex = segment.indexOf( ':' )
 			if ( separatorIndex > 0 ) {
-				const statusCandidate = segment.slice( 0, separatorIndex ).trim()
+				const prefix = segment.slice( 0, separatorIndex ).trim()
 				const label = segment.slice( separatorIndex + 1 ).trim()
-				if ( label && STATUS_TYPE_SET.has( statusCandidate ) ) {
+				if ( label && prefix === 'award' ) {
 					return {
 						label,
-						status: statusCandidate as StatusType
+						status: 'subtle' as StatusType,
+						icon: 'star',
+						variant: 'award' as const
+					}
+				}
+				if ( label && STATUS_TYPE_SET.has( prefix ) ) {
+					return {
+						label,
+						status: prefix as StatusType
 					}
 				}
 			}

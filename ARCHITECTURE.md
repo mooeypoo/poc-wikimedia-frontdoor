@@ -59,7 +59,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── content/            # Components used only in content pages
 │   │   └── shared/             # Components used across both surfaces
 │   │       ├── PageGrid.vue            # Shell responsive grid wrapper
-│   │       ├── ShellHeaderBrand.vue    # Header brand (32px inlined Wikimedia mark + Montserrat banana wordmark)
+│   │       ├── ShellHeaderBrand.vue    # Header brand (mark + Montserrat wordmark; no focus outline)
 │   │       ├── WikimediaLogoMark.vue   # Commons Wikimedia logo (currentColor) for header/footer
 │   │       ├── ShellHeaderUtilityActions.vue  # Search, settings→color-theme popover, language, Log in / username→account
 │   │       ├── ShellSidePanelNav.vue   # Start-column section menu (when sections exist)
@@ -75,8 +75,9 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── accountTokenSecret.ts # Masking helpers for account API key secrets
 │   │   ├── oauthHandoff.ts      # sessionStorage key for callback → destination token handoff
 │   │   ├── explorerRoute.ts     # isExplorerRoutePath() for layout and plugins
+│   │   ├── landingRoute.ts      # isLandingRoutePath() for frontdoor-shell--landing
 │   │   ├── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
-│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props (label-only in NavigationCard)
+│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props (label-only / award in NavigationCard)
 │   ├── middleware/
 │   │   └── content-sidebar.global.ts  # Content `sidebar` frontmatter; forces `/account` sidebar off
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
@@ -95,9 +96,10 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
-│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard)
+│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
-│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab) for NavigationCard
+│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab/wikimediaEnterprise)
+│   ├── landingSurfaces.ts      # Platform home gradients, assets, globe tints, award chips, API previews
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
@@ -191,7 +193,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `label` + `supportingText` (beta/version) + `description` (OpenAPI or config fallback); `default-label`, `menu-config`; calls `selectModule` with `source: 'module-select'` |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab → catalog `/apis`; explorer `/explorer` stays never locale-prefixed (`i18n: false`) |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route (`apis` on explorer); pairs with `ShellPrimaryNav` |
-| `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
+| `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`); also `isNavDrawerExpanding` for gated drawer CSS (viewport expand only — not landing / `sidebar: false` route changes) |
 | `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs (primary crumb uses active tab label, including **APIs** on explorer) |
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). **APIs** section (`apis`: catalog + explorer) from `config/explorerSideNav.js`; other content IA from `config/sectionNavigation.js`; fallback `section-nav-site-label` when no config entry. APIs items: `mode` → `pathForExplorerMode()` / `explorerModeFromPath()`; `href` → content routes; `enabled: false` omitted. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
@@ -313,13 +315,13 @@ When the primary nav row (quiet tabs + API Explorer link) does not fit, **`useSh
 
 **Collapsed (instant).** `ShellCollapsedNavigation` replaces visible quiet tabs (expanded row kept in DOM, `visibility: hidden`, for measurement). Start grid track → **`grid-template-columns: 0 minmax(0, 1fr)`**, **`column-gap: 0`**. Start panel **`border-inline-end-width: 0`**. Brand loses **`--spacing-75`** inline-start padding (aligns with hamburger row). Section nav panel: **`inert`** + **`aria-hidden`**.
 
-**Expanded (drawer on widen).** `app/assets/css/shell-start-nav-reveal.css` animates the element with class **`shell-side-panel--start`** (must be present on the start panel wrapper in `default.vue`):
+**Expanded (drawer on widen).** `app/assets/css/shell-start-nav-reveal.css` animates the element with class **`shell-side-panel--start`** (must be present on the start panel wrapper in `default.vue`) **only** while **`.frontdoor-shell--nav-drawer-expanding`** is set (`useShellNavigationCollapse` → true for `SHELL_NAV_DRAWER_EXPAND_DURATION_MS` after collapsed → expanded):
 
 1. **Grid track** grows `0` → `281px` + gutter restored — **pushes** `.fd-page-grid__body`.
 2. **Fixed-width panel** (281px) slides in from inline-start inside the clipping track (`transform: translate3d(±100%, 0, 0)` → `0`; RTL mirrored).
 3. **Border** width `0` → `1px` on **`.frontdoor-shell__side-panel--start`** (scrollport panel, not the grid track).
 
-Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transition-timing-function-user` (`ease-out`). `prefers-reduced-motion: reduce` disables transitions. Collapse does **not** animate.
+Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transition-timing-function-user` (`ease-out`). `prefers-reduced-motion: reduce` disables transitions. Collapse does **not** animate. **Route / `sidebar: false` changes are also instant** — platform landing and other `sidebar: false` pages use a zero-width start track like collapse, but must not reuse the drawer expand transition when navigating to/from them (content must not slide to make room for section nav).
 
 **Drawer vs scroll (do not conflate).** Drawer animation requires a **clipping track** and fixed **281px** panel width, but must not disable the section-nav **scrollport**. Rules:
 
@@ -328,7 +330,7 @@ Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transiti
 | **Tablet+** | `.frontdoor-shell__side-panel--start` (`overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`) | `.fd-page-grid__start` (`overflow: hidden`); panel `transform` slide |
 | **Mobile** | `.fd-page-grid__start` (`overflow-y: auto`, `max-block-size: 40dvh`) | `overflow-inline: hidden` when expanded; `overflow: hidden` when collapsed |
 
-**Collapsed overlay (click).** When collapsed, the hamburger toggles **`ShellCollapsedNavMenuOverlay`** (`useShellCollapsedNavMenu`) — teleported to `<body>`, **`z-index: 20`** (above `.frontdoor-shell__chrome-band` at **10**). Full-viewport **`--background-color-backdrop-light`** mask; start-side panel at **`--fd-layout-start-panel-inline-size` (281px)** with **`border-inline-end`** (`--border-color-muted`), **`padding-block-start: --spacing-100`**, **`::after` scroll-end spacer (`--spacing-200`)** on the panel scrollport (symmetric with in-shell start nav). **Section view (default when sections exist):** quiet small back `CdxButton` with **`cdxIconPrevious`** (`flip-for-rtl`) showing the active primary section label; **`gap: var(--spacing-50)`** between back control and first menu item; **`ShellSidePanelNav`** reuses start-column links with **`omitSectionTitleMatching`** so the primary section heading is not duplicated. **Primary view:** flat `CdxMenuItem` list of main tabs (including **APIs** → `/explorer`) — same **Codex exception** as `ShellSidePanelNav`. Selection calls `navigateTo()` from `default.vue` then closes the overlay. **Dismiss:** backdrop click, Escape, route change, or nav expand. Document scroll lock: `html.shell-collapsed-nav-menu-open` in `shell-collapsed-nav-menu.css`. Figma [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
+**Collapsed overlay (click).** When collapsed, the hamburger toggles **`ShellCollapsedNavMenuOverlay`** (`useShellCollapsedNavMenu`) — teleported to `<body>`, **`z-index: 20`** (above `.frontdoor-shell__chrome-band` at **10**). Full-viewport **`--background-color-backdrop-light`** mask; start-side panel at **`--fd-layout-start-panel-inline-size` (281px)** with **`border-inline-end`** (`--border-color-muted`), **`padding-block-start: --spacing-100`**, **`::after` scroll-end spacer (`--spacing-200`)** on the panel scrollport (symmetric with in-shell start nav). **Section view (default when sections exist):** quiet small back `CdxButton` with **`cdxIconPrevious`** (`flip-for-rtl`) showing the active primary section label; **`gap: var(--spacing-50)`** between back control and first menu item; **`ShellSidePanelNav`** reuses start-column links with **`omitSectionTitleMatching`** so the primary section heading is not duplicated. **Primary view:** flat `CdxMenuItem` list of main tabs (including **APIs** → `/apis`) — same **Codex exception** as `ShellSidePanelNav`. Selection calls `navigateTo()` from `default.vue` then closes the overlay. **Dismiss:** backdrop click, Escape, route change, or nav expand. Document scroll lock: `html.shell-collapsed-nav-menu-open` in `shell-collapsed-nav-menu.css`. Figma [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
 **Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
@@ -359,7 +361,7 @@ The rail lists **endpoints for `visibleSelectedModule` only** — not every disc
 
 **Rendering.**
 
-- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards and the Reset credentials panel consume the same border-radius variable.
+- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards, the Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** consume the same border-radius variable.
 - Heading: selected module **`headingTitle`** in `<bdi>` at **`--font-size-medium`** (no beta/version chips in the rail header).
 - Endpoint rows: **`CdxMenuItem`** outside `CdxMenu` — same Codex shell exception as **`ShellSidePanelNav`**. Default slot renders HTTP method (`dir="ltr"`, method colours) + **name** (`<bdi>`, OpenAPI `summary` via `resolveEndpointNameLabel()`; path only as fallback); `:label` supplies the accessible name (includes path when it differs); **`:selected`** binds to **`selectedEndpointOperationId`**. Non-selected **name** hover uses **`--color-progressive`**; HTTP method tags **keep semantic colours** on hover and when selected. Selected rows override Codex **`progressive-subtle`** background to **transparent** (name colour only).
 - Scroll divider: when **`.explorer-module-rail__endpoint-scrollport`** has `scrollTop > 0`, a sticky **`.explorer-module-rail__scroll-divider`** (real DOM element, not `::before`) pins a **`--border-color-subtle`** line at the scrollport top; end-column insets with **`margin-inline: var(--spacing-75)`**, inline layout via rail **`padding-inline: var(--spacing-50)`**.
@@ -415,6 +417,8 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
 
 **Page grid (tablet+).** Two outer tracks: **start** + **body**. The body band contains a **main:end** sub-grid (`4fr | 1fr` at desktop) in `default.vue`. The site footer lives **inside** `.frontdoor-shell__content` (main track only). **`.frontdoor-shell__body-scroll`** is the vertical scrollport for main + end — scrollbar at the **inline-end** edge of the body band; wheel over the empty end column scrolls central content (Discord-style). On short pages, `.frontdoor-shell__content` uses **`min-block-size: 100%`** plus column flex so the footer sits on the shell bottom. See **Site footer** and **Shell scroll regions** below.
 
+**Landing shell exception:** When `isLandingRoutePath(route.path)` is true, `default.vue` adds **`frontdoor-shell--landing`**: drop page-grid / body-scroll horizontal insets, collapse the end column, and set body-columns **`max-inline-size: none`** so section backgrounds paint full viewport width. Content measure stays inside landing inners (`LANDING_CONTENT_MAX_INLINE_SIZE`). See **Platform landing / home** under Markdown content pages.
+
 **Shell scroll regions.** Reference: [Discord developer docs](https://docs.discord.com/developers/bots/overview) — fixed chrome, independent column scrollports.
 
 | Region | Scroll container | When scrollbar appears |
@@ -469,7 +473,7 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
 | `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
 | `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
-| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, and Reset credentials panel (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
+| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
 | `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `560px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row (search min + controls + **16px** search→preferences + **8px**×2 remaining gaps) |
 | `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
@@ -485,7 +489,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | Component | Role | Config / composable |
 |-----------|------|---------------------|
 | `ShellHeaderUtilityActions.vue` | Utility row (search, settings→preferences / color theme, language, Log in or username→`/account`; responsive collapse) | `useShellAuthNavigation`, `useShellHeaderUtilityMenu`, `useColorMode`, `useContentSearch`, `config/headerChrome.ts`, `config/colorMode.ts` |
-| `ShellHeaderBrand.vue` | Header brand (32px inlined Wikimedia mark + two-line banana wordmark in Montserrat); links to Get started | `useMainNavigationLinks()`, `WikimediaLogoMark`, `config/brandTypography.ts` |
+| `ShellHeaderBrand.vue` | Header brand (32px inlined Wikimedia mark + two-line banana wordmark in Montserrat); links to locale home; **no focus/active outline** (Codex exception #6) | `useMainNavigationLinks()`, `WikimediaLogoMark`, `config/brandTypography.ts` |
 | `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` (`to`, `isActive`); `navigateTo` on click when `to` set; optional `omitSectionTitleMatching` in collapsed overlay |
 | `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
 | `ShellCollapsedNavigation.vue` | Collapsed header nav (hamburger + breadcrumbs) | `useShellNavigationBreadcrumbs()`; emits menu toggle; `aria-expanded` when overlay open |
@@ -503,7 +507,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 3. **Start column edge** — **`border-inline-end`** with `--border-color-muted` on **`.frontdoor-shell__side-panel--start`** when expanded (scrollport panel, not grid track); section dividers in **`ShellSidePanelNav`** use the same token; **`border-inline-end-width: 0`** when collapsed. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
 5. **Start nav scrollbar (WebKit physical `width`)** — **`shell-start-nav-scroll.css`** styles `::-webkit-scrollbar` with physical **`width`** because the pseudo-element API has no logical equivalent. **Single scrollport per breakpoint** (panel tablet+, grid track mobile). Transparent track + thin thumb; body band keeps browser-default scrollbars. **Scroll-end inset:** **`::after` block spacer** (`--spacing-200`) on each scrollport — see **Shell section navigation** (scroll-end inset). See **Shell scroll regions**.
-6. **`ShellHeaderBrand` wordmark** — **Montserrat** via `--font-family-brand-wordmark` (Google Fonts, `config/brandTypography.ts`); banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (translatable). Mark: inlined **`WikimediaLogoMark`** ([Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` / `--color-base` for light+dark — not `<img>`, which cannot inherit colour).
+6. **`ShellHeaderBrand` wordmark** — **Montserrat** via `--font-family-brand-wordmark` (Google Fonts, `config/brandTypography.ts`); banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (translatable). Mark: inlined **`WikimediaLogoMark`** ([Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` / `--color-base` for light+dark — not `<img>`, which cannot inherit colour). **No outline on `:focus` / `:focus-visible` / `:active` / router-active** — product quiet-chrome exception (`ShellHeaderBrand.vue`); `aria-label` from `app-title` remains. Do not reintroduce a focus ring without updating `DESIGN_REQUIREMENTS.md` → Brand logo.
 7. **Search field** — `CdxSearchInput` in `ShellHeaderUtilityActions` (`flex: 1 1 auto`, max **40rem**, **256px** min when expanded). `useHeaderUtilityCollapse` (`ResizeObserver` on the utility track) switches to compact mode below `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`config/headerChrome.ts`): search icon, compact language select (icon + code), and `CdxMenuButton` for settings/log in. Collapsed search activation is **deferred**. **Utility option spacing:** `column-gap: var(--spacing-50)` (8px) between options; search → preferences is **`--spacing-100` (16px)** via an extra search-wrap `margin-inline-end`. Brand + utilities share a vertical centerline. **Color theme preferences:** see **Color theme preferences (shell)** below — quiet settings gear (or collapsed menu Settings) opens a content-only `CdxPopover`; former header `CdxToggleButtonGroup` removed.
 8. **Interface language `CdxLookup`** — globe + uppercase code `CdxButton` mounts `.shell-header-utility-actions__language-popover` (`v-if`) wrapping the whole Lookup (input + native menu). **`clearable`** enables Codex TextInput clear (attr fallthrough; filter only — committed locale unchanged). **`menu-config.renderInPlace: true`** keeps the menu in the Lookup DOM; first-party CSS then cancels Floating UI **absolute placement** and viewport **`maxHeight`** (those pull the menu out of the popover box and can show “as many rows as fit the screen” when Codex’s `visibleItemLimit` measure races on open). Overrides do **not** restyle Codex menu chrome, TextInput, clear, or start-icon, and do **not** add vertical gap between input and menu (flush / Codex default). Physical **`max-height: none`** appears only to clear Floating UI’s inline physical style. Fallback **`max-block-size`** on `.cdx-menu__listbox` (~7 supportingText rows) if measure has not run. Open waits for popover layout (double `requestAnimationFrame`) before focusing the input. **`visibleItemLimit: 7`** / render cap **50** from `config/headerChrome.ts`. Direction chrome for clearable/start-icon comes from **`codex.style-bidi.css`**, not per-component CSS. See **Interface locale picker** and `DESIGN_REQUIREMENTS.md` → Interface language picker.
 9. **`ShellSiteFooter` wordmark** — **Montserrat** via `--font-family-brand-wordmark`; banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (shared with header, single horizontal line).
@@ -985,10 +989,13 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
-| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards and Reset credentials panel |
+| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, and CodeTabs |
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
+| `config/landingSurfaces.ts` | Platform home: light/dark **`LANDING_BAND_GRADIENTS`** (`apis` / `join` dark `#233566` → `#101418`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px), **`LANDING_HERO_GLOBE_COLOR`**, **`LANDING_AWARD_CHIP`** (light purple100 fill / purple600 text; dark inverted → `--fd-landing-award-chip-*-light` / `*-dark`), **`LANDING_ASSETS`** (incl. `heroDither` / `heroDitherDark`, app screenshots), `LANDING_API_ARTICLE_PREVIEWS` |
+| `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
+| `config/navigationCardTitleLogos.ts` | Allowlisted brand title logos (`gerrit`, `github`, `gitlab`, `wikimediaEnterprise`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
 
 Environment-specific values use Nuxt `runtimeConfig`:
@@ -1031,7 +1038,7 @@ See `docs/adr-multilingual-search.md` for the full decision record and `docs/sea
 
 ### Rendering pipeline
 
-Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
+Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/pages/[...slug].vue` fetches the appropriate file via `useLocalizedContentPage()` and passes it to `<ContentRenderer>` inside **`.fd-content-page`**. The platform home (`content/[locale]/index.md`) is rendered by `app/pages/index.vue` inside **`.fd-content-page.fd-landing-page`** (landing surfaces in `app/assets/css/landing-page.css`; MDC wrappers `LandingHero`, `LandingBand`, `LandingSection`, `LandingApiDemo`, `LandingArticlePreview`, `LandingSectionCta`; surface tokens / preview copy in `config/landingSurfaces.ts`). Nuxt Content handles parsing (micromark → unified AST) and rendering. Shiki provides syntax highlighting automatically for all fenced code blocks.
 
 ### Content typography (Codex style guide)
 
@@ -1046,6 +1053,60 @@ Markdown page titles and section headings follow the Codex [typography style gui
 **Section spacing:** Content-page `h2` overrides the global heading `margin-block-start` (`--spacing-150` / 24px) with **`--spacing-250` (40px)**. Implemented as `.fd-content-page :where(h2) { margin-block-start: var(--spacing-250); }`. `margin-block-end` remains **`--spacing-75`**. Do not change this for one-off pages — it is the documentation section rhythm for all `.fd-content-page` routes. Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography.
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
+
+#### Platform landing / home
+
+**Route:** `/` (and locale homes such as `/fr`) via `app/pages/index.vue` + `content/[locale]/index.md` (`sidebar: false`). Wrapper classes: **`.fd-content-page.fd-landing-page`**.
+
+**Shell exception (`frontdoor-shell--landing`):** Detected by `isLandingRoutePath()` (`app/utils/landingRoute.ts`) — matches `/` or a single segment that is a `SUPPORTED_LANGUAGES` code (not `/get-started`). On that shell class (`default.vue`):
+
+- Drop `.fd-page-grid` `padding-inline-start` and `.frontdoor-shell__body-scroll` `padding-inline-end`
+- Collapse the end column; set `.frontdoor-shell__body-columns` to a single track with **`max-inline-size: none`** (overrides the ≥ 1680px body-columns lock)
+- Section wrappers (`.landing-hero`, `.landing-band`, `.landing-section`) use **`inline-size: 100%`** so **backgrounds paint full viewport width**
+- Home uses `sidebar: false` (zero-width start track). Navigating to/from landing must **not** run the start-drawer expand animation — see **Responsive navigation collapse and start drawer** (`.frontdoor-shell--nav-drawer-expanding` gate)
+
+**Content measure:** Centered inners use **`--fd-landing-content-max-inline-size`** set from **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / **1000px**) in `config/landingSurfaces.ts` via inline style on `.fd-landing-page` in `index.vue` (config source of truth — AGENTS rule 6). Inline padding uses **`--fd-layout-page-margin`**.
+
+**Typography / chrome exceptions** (`.fd-landing-page` in `landing-page.css`, override `.fd-content-page` serif Heading 1/2):
+
+| Element | Landing treatment |
+|---------|-------------------|
+| Hero `h1` | Monospace, bold, centered; **`font-size: 2rem`** (exploratory — not a Codex `--font-size-*` token; xxx-large is 1.75rem) |
+| Hero intro `p` | **`--font-size-x-large`** (Codex) in `LandingHero.vue` (scoped `:deep(p)` — not `landing-page.css` `:where`, which loses on specificity) |
+| `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
+| Heading anchors | Not rendered (`ProseHeading` skips anchors when `isLandingRoutePath`) |
+| Section `h2` → content | **`--spacing-150` (24px)** end margin; next sibling start margin zeroed |
+| All home links | No `:visited` colour (hero prose, card supporting-text, section CTAs) — keep link / progressive hover / active only (`landing-page.css`) |
+| Hero prose links | No ProseA external icon |
+| `hr` | Hidden (no Markdown `---` dividers) |
+
+**MDC structure** (`content/en/index.md`):
+
+| Block | Role |
+|-------|------|
+| `:::landing-hero` | Full-bleed dither + H1 / intro / `::app-button` + ascii globe |
+| `:::landing-section` | “What would you like to do?” + 3-up cards (leading icons / Enterprise `title-logo`) |
+| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base`; community app cards use Portrait-card media (`media` + **`--spacing-75` (12px)** image inset — Codex Portrait card not shipped yet, [T310632](https://phabricator.wikimedia.org/T310632) / [Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634)) + optional `chips="award:…"` + `hide-external-icon` |
+| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + Codex `CdxCard` article previews from `LANDING_API_ARTICLE_PREVIEWS` (desktop: example column stretches to stacked cards; auto space between intro `p` and `h3` + code-block) |
+| `::landing-section-cta` | Quiet progressive section link + trailing arrow (always `cdxIconArrowNext`, including external Toolhub CTA — not the external glyph) |
+
+**Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`) — hero dither (light + dark) / ascii globe, API article-preview thumbs, and community-app screenshots (`app-lexica` / `app-paulina` / `app-listen`). Do not invent replacements; call out still-missing assets (e.g. true bitonal dither texture — current dither SVGs are soft radial gradient exports from Figma).
+
+**Hero dark mode:** `LandingHero` binds `--fd-landing-hero-dither-light` / `--fd-landing-hero-dither-dark` from config. `landing-page.css` swaps to `hero-dither-dark.svg` under `html.fd-theme--dark` and `html.fd-theme--auto` + `prefers-color-scheme: dark` (same pattern as `color-modes.css`). Dark export ([Figma 1202:27291](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27291)): bottom-center `#3366CC` @ 60% → `#1B223D` → `#101418`. Hero `background-color: var(--background-color-base)` so the translucent progressive stop composites correctly.
+
+**APIs / join band dark mode:** `LandingBand` binds light + dark stops from `LANDING_BAND_GRADIENTS`. Dark APIs ([1202:27489](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27489)) and dark join ([1202:28482](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-28482)): both `#233566` → `#101418` (Codex light `background-color-progressive--active` → `background-color-inverted`). Hex is intentional — do not use `var(--background-color-inverted)` under dark theme (that token flips to `#f8f9fa`). Gradient axis uses physical **`to bottom`** — `linear-gradient` has no shipped logical sides (`to block-end` invalidates the rule).
+
+**Hero ascii globe:** Figma / current exports are an **RGBA PNG** (`hero-ascii-globe.png`), not SVG — painted as a CSS **`mask-image`** with fill from `LANDING_HERO_GLOBE_COLOR` (light `#202122`, dark `#eaecf0` / Codex dark `color-base`) so dark mode stays readable on the blue dither. The PNG alpha was contrast-boosted for mask use; if design ships a true SVG, prefer inlining with `currentColor` (same pattern as `WikimediaLogoMark`).
+
+**MDC nesting:** Nested landing containers must use **increasing colon counts** on outer wrappers (Nuxt Content / MDC rule) — e.g. `:::::landing-band` → `::::landing-api-demo` → `:::code-block`. Same-level `:::` openers close the previous container and can leave orphan `:::` markers as visible paragraphs.
+
+**Codex exception — landing API `CdxCard` border:** `LandingArticlePreview` wraps Codex `CdxCard` but adds a resting **`--border-color-muted`** border and exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`). Stock Card chrome does not provide that framed tile look on the API band; do not apply this override to other `CdxCard` usages without a documented exception.
+
+**API preview thumbnail preload:** Codex `CdxThumbnail` (inside `CdxCard`) shows a placeholder until `onMounted` + `Image.onload`. `app/pages/index.vue` emits `<link rel="preload" as="image">` for each `LANDING_API_ARTICLE_PREVIEWS` `thumbnailSrc` so those requests start with the document and Codex’s later `new Image()` hits cache — keeps Codex Card, avoids a custom `<img>` bypass.
+
+**Award InfoChip dark mode:** `LANDING_AWARD_CHIP` light = purple100 fill / purple600 text+icon; dark = inverted. Bound as `--fd-landing-award-chip-*-light` / `*-dark` on `.fd-landing-page`. `landing-page.css` paints `.navigation-card__chip--award` with the dark vars under `fd-theme--*` (same split as hero globe). Do **not** reassign the light custom property in the stylesheet — inline style on `.fd-landing-page` would win.
+
+**Product decision:** `DESIGN_REQUIREMENTS.md` → Platform landing / home. Figma Latest [1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177). Metrics row in Figma is **hidden** — not implemented.
 
 **API catalog** (`content/en/apis.md`): section overview for the primary **APIs** tab (`API_CATALOG_NAVIGATION_PATH` `/apis` — same landing role as `/get-started`). Start-column menu is `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID.apis` in `config/sectionNavigation.js` (shared with `/apis/…` and explorer). Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** via `::api-catalog-wikimedia-section` (Recommended chip + project filter + cards); **Wikimedia Enterprise APIs** / **Classic APIs** `:::navigation-card-grid`s with optional `CdxInfoChip` rows (see Navigation card → Info chips); stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Mixed internal (`/explorer`, `/apis/…`) and external cards; external cards keep writer-authored `supporting-text`. Deferred: end-column page nav, curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`). See `DESIGN_REQUIREMENTS.md` → API catalog.
 
@@ -1093,15 +1154,22 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
-| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`, including `--color-link--hover`) |
+| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external; external links default to `target="_blank"` + `rel="noopener noreferrer"`. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`). On `.fd-landing-page`, hero hides the external icon and **all** home links suppress `:visited` via `landing-page.css` |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
 | `SectionHeading.vue` | `CdxInfoChip` + `ProseHeading` | `::section-heading{title="…" chip="…"}` — see **Section heading** below |
 | `ApiCatalogWikimediaSection.vue` | `CdxField` + `CdxCombobox` + `SectionHeading` + `NavigationCard` | `::api-catalog-wikimedia-section` — see **API catalog project filter** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
-| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
+| `NavigationCardGrid.vue` | — | `:::navigation-card-grid` (optional `columns="2"` for two-up rows, e.g. landing Join) wrapping `::navigation-card` — equal-height rows; default max **3** columns at desktop |
+| `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap; `dir="ltr"`); see **Code block** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
-| `AppButton.vue` | Progressive button styling (NuxtLink / `<a>`) | `::app-button{href="…" label="…"}` inline |
+| `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — `/…` paths always `navigateTo` (path wins over MDC `external` / `external=""`); absolute `http(s):` (or `external` on non-path hrefs) open in a new tab; label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
+| `LandingHero.vue` | — | `:::landing-hero` — dither + globe; intro `p` **`--font-size-x-large`** (scoped); H1 type in `landing-page.css` (exploratory **2rem**). See **Platform landing / home** |
+| `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
+| `LandingSection.vue` | — | `:::landing-section` |
+| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` — desktop example column stretches to stacked preview cards; `h3` `margin-block-start: auto` spaces intro vs `h3` + code-block |
+| `LandingArticlePreview.vue` | `CdxCard` + thumbnail | Used by `LandingApiDemo` (not authored in Markdown); landscape Codex [Card](https://doc.wikimedia.org/codex/latest/components/demos/card.html). **Codex exception:** muted resting border + exploratory **4px** radius (stock Card has no framed border in this surface) — see Platform landing |
+| `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` | `::landing-section-cta{href label}` — arrow for internal and external; external still `target="_blank"` |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
 | `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
@@ -1116,22 +1184,23 @@ Markdown page titles and section headings follow the Codex [typography style gui
 |-------|------|-----------|--------------------|
 | **Internal** | Same-origin path (`/get-started/…`, `/explorer`, …) | `url` + `title` + `description` only — **no** `supporting-text` | `get-started.md`, `build-for-communities.md` |
 | **External** | Off-platform `https://…` | `url` + `title` + `description` + **`supporting-text`** (writer label; external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+| **Platform home (exception)** | Persona / join on `index.md` | Internal `url` **with** writer `supporting-text`; apps band = Portrait `media` + optional `award:` chips + `hide-external-icon` | `content/en/index.md` — see **Platform landing / home** |
 
 Mixed pages apply the table **per card**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
 
 | Aspect | Stock `CdxCard` | `NavigationCard` |
 |--------|-----------------|------------------|
-| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; no thumbnail |
+| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; optional Portrait **`media`** screenshot (landing apps) |
 | Background | Base (white) | Neutral-subtle via `--fd-explorer-controls-surface-background-color` |
 | Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
 | Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
 | Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
-| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **Codex Link** to the same destination ([Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) via `--color-link*` tokens — hover/active/visited/focus, not progressive-only). External icon on that link for off-platform destinations (`color: inherit`); title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
-| Title logos | — | Optional `titleLogo` / MDC `title-logo` — allowlisted monochrome brand marks (`gerrit`, `github`, `gitlab` in `config/navigationCardTitleLogos.ts`; SVG sources under `public/images/navigation-card-logos/`). Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub Octicons](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg) — brand fills remapped to `currentColor`. Sized to **`--size-icon-medium`**; inherits title **`--color-base`** (dark mode via tokens). Not Codex icons — brand marks are a documented exception. Demo: `by-language.md` → Browse repositories |
+| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **Codex Link** to the same destination ([Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) via `--color-link*` tokens — hover/active/visited/focus, not progressive-only). **Platform landing exception:** `.fd-landing-page` suppresses `:visited` (unvisited / hover / active only). External icon on that link for off-platform destinations (`color: inherit`) unless `hideExternalIcon`; title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
+| Title logos | — | Optional `titleLogo` / MDC `title-logo` — allowlisted monochrome brand marks (`gerrit`, `github`, `gitlab`, **`wikimediaEnterprise`**) in `config/navigationCardTitleLogos.ts`; SVG sources under `public/images/navigation-card-logos/`. Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub Octicons](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg), Wikimedia Enterprise mark from Figma Latest (1179:23269) — brand fills remapped to `currentColor`. Sized to **`--size-icon-medium`**; inherits title **`--color-base`** (dark mode via tokens). When a text `title` is also set, the logo renders before the title (landing commercial card). Not Codex icons — brand marks are a documented exception. Demos: `by-language.md` → Browse repositories; `content/en/index.md` → Enterprise persona card |
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row. **Minimum** **`--spacing-50` (8px)** from the description via **`padding-block-start`** on `.navigation-card__supporting-text` (so the gap never collapses below 8px when free space is zero) |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 
-**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
+**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `media` (public image path for Portrait-card screenshot; **`--spacing-75` (12px)** inset — Codex Portrait card not shipped, [T310632](https://phabricator.wikimedia.org/T310632) / [Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634)), `chips` (Vue array or MDC pipe-separated string; `award:Label` → star + purple Coolest Tool chip), `hideExternalIcon`, `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
 
 **Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose. Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 
@@ -1141,10 +1210,11 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 |----------|--------|
 | `chips="Bots and tools\|Wikimedia APIs"` | Labels with default status `subtle` |
 | `chips="notice:All projects\|success:Stable\|warning:Beta"` | `status:label` segments (`StatusType` prefix must be valid) |
+| `chips="award:Coolest Tool Award 2026"` | Landing Coolest Tool chip — `cdxIconStar` + purple100/600 via `LANDING_AWARD_CHIP` (dark: inverted fill/text; not a Codex `StatusType`) |
 
 **API catalog conventions** (`content/en/apis.md`): `notice` = scope, `success` = Stable / Check stability…, `warning` = Beta — stock Codex status colours. Get started overview cards omit chips.
 
-**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. See `AGENTS.md` → Content components (approved exception).
+**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. **Landing exception:** `award:` chips keep the star icon and purple colours from `LANDING_AWARD_CHIP` (bound as `--fd-landing-award-chip-*-light` / `*-dark` on `.fd-landing-page`). Light = purple100 fill / purple600 text+icon; dark = inverted. Dark styles are applied in `landing-page.css` under `fd-theme--*` **directly on the chip** (do not reassign the light custom property — inline style on `.fd-landing-page` would win). See `AGENTS.md` → Content components (approved exception).
 
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
@@ -1170,7 +1240,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted Codex icon names for MDC), `config/navigationCardTitleLogos.ts` (allowlisted brand title logos), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/index.md` (platform home — persona/join with internal supporting-text exception; Portrait app cards + `award:` chips); `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 
 #### Section heading
 
@@ -1254,9 +1324,19 @@ Highlight copy is **page content** (per-locale Markdown or Vue slots) — not ba
 
 Imported wiki message boxes map to `::callout{type=…}` via the remote-content conversion registry (`docs/adr-remote-content-fetching.md`).
 
+#### Code block
+
+`CodeBlock.vue` is the standalone (non-tabbed) code module. It reuses the same bordered panel chrome as framed **Code tabs** — muted border, exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`), `--background-color-base`, and `--spacing-75` padding on `pre` — without a `CdxTabs` header.
+
+**MDC:** `:::code-block` wrapping a normal fenced code block (Shiki highlighting, line numbers, and diffs still apply). Use a language tag present in `nuxt.config.ts` `content.build.markdown.highlight.langs` (e.g. `bash` / `shell` for curl — not an unknown tag, or highlighting is skipped). The wrapper pins `dir="ltr"` because code / shell / curl samples are inherently LTR. Long lines **soft-wrap** inside the panel (`white-space: pre-wrap`); authors still use `\` + indent for intentional multi-line commands.
+
+**When to use:** One sample (landing API curl, a single language example). Prefer **Code tabs** when authors need language or variant switching.
+
+**Demo / polish surface:** `content/en/index.md` (API band) and `content/en/use-content-and-data.md` → Code block.
+
 #### Code tabs
 
-`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`).
+`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`). Panel border / radius / `pre` padding tokens match **Code block** — keep them in sync when polishing.
 
 **Why framed:** Tabbed code blocks are self-contained modules on prose pages, not page-level navigation. Framed tabs supply the gray header row, white selected-tab label, and content panel chrome without reimplementing tab interaction states.
 
@@ -1267,7 +1347,7 @@ Imported wiki message boxes map to `::callout{type=…}` via the remote-content 
 | Rule | Token / value | Rationale |
 |---|---|---|
 | Module border | `1px solid var(--border-color-muted)` | Muted module edge per Codex framed-tabs-in-a-box pattern |
-| Module radius | `var(--border-radius-base)` | Matches Codex framed tab label corner radius |
+| Module radius | `var(--fd-explorer-controls-surface-border-radius)` (**4px**) | Matches CodeBlock / NavigationCard / explorer surfaces (not Codex 2px base) |
 | Code padding | `var(--spacing-75)` (12px) on `pre` | Inset code inside the white content panel |
 | Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM for find-in-page across tabs |
 
