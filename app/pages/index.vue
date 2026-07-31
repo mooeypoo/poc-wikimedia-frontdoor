@@ -14,7 +14,9 @@ import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
  * content in `.fd-content-page.fd-landing-page` so Codex content typography and
  * landing-specific surfaces (hero, full-bleed bands) apply. Content max width
  * and award-chip colours come from {@link LANDING_CONTENT_MAX_INLINE_SIZE} /
- * {@link LANDING_AWARD_CHIP} (config — not hardcoded in CSS).
+ * {@link LANDING_AWARD_CHIP} (config — not hardcoded in CSS). Award chip binds
+ * separate `-light` / `-dark` custom properties; dark invert is applied in
+ * `landing-page.css` (do not reassign the light inline property).
  *
  * Preloads API article-preview thumbnail URLs from
  * {@link LANDING_API_ARTICLE_PREVIEWS} so Codex `CdxThumbnail` (which only
