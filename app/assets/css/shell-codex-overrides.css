@@ -34,3 +34,27 @@
 .cdx-popover.shell-header-utility-actions__preferences-popover .cdx-popover__body {
 	padding: var( --spacing-100 );
 }
+
+/*
+ * CdxDialog titles are `<h2 class="cdx-dialog__header__title">`. Global `h2` rules in
+ * `main.css` (margin / line-height) also match that element and can make dialogs look
+ * oversized vs the Codex demo. Re-assert Codex Dialog typography for teleported dialogs
+ * (title x-large / body medium). The explorer write-confirm dialog overrides title to
+ * large (18px) in `explorer-codex-overrides.css` — Codex exception #13.
+ *
+ * @see https://doc.wikimedia.org/codex/latest/components/demos/dialog.html
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #12 / #13
+ */
+.cdx-dialog .cdx-dialog__header__title {
+	margin-block: 0;
+	margin-inline: 0;
+	font-size: var( --font-size-x-large );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-x-large );
+}
+
+.cdx-dialog .cdx-dialog__body {
+	font-size: var( --font-size-medium );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-medium );
+}

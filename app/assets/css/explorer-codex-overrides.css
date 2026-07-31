@@ -1,5 +1,5 @@
 /**
- * Scalar API client modal write-endpoint warnings (DOM injection + ClientPlugin).
+ * Scalar API client modal write-endpoint warnings (DOM injection under address bar).
  */
 .scalar-client-write-endpoint-warning,
 .scalar-client-write-endpoint-warning-mount,
@@ -76,37 +76,6 @@
 }
 
 .explorer-page .explorer-project-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
-	content: ' ' !important;
-	display: block !important;
-	box-sizing: border-box !important;
-	position: relative !important;
-	inset: auto !important;
-	margin: 0 !important;
-	inline-size: 0.25rem !important;
-	block-size: calc( 100% - 6px ) !important;
-	max-block-size: calc( 100% - 6px ) !important;
-	border-block-start-width: 0 !important;
-	border-inline-start-width: 0 !important;
-	border-inline-end-width: 2px !important;
-	border-inline-end-style: solid !important;
-	border-block-end-width: 2px !important;
-	border-block-end-style: solid !important;
-	border-inline-end-color: var( --border-color-inverted-fixed, #fff ) !important;
-	border-block-end-color: var( --border-color-inverted-fixed, #fff ) !important;
-	transform: rotate( 45deg ) !important;
-}
-
-/*
- * Test Request modal write-request checkbox (teleported Scalar client).
- * Same Scalar preflight checkmark fix as explorer-project-controls above.
- */
-.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.scalar-client .scalar-client-write-endpoint-controls .cdx-checkbox__input:enabled:checked:not( :indeterminate ) + .cdx-checkbox__icon::before {
 	content: ' ' !important;
 	display: block !important;
 	box-sizing: border-box !important;
@@ -232,7 +201,159 @@
 }
 
 /*
- * @hack Hide the Authentication section in Scalar's "try it out" client modal.
+ * Scalar Test Request modal — sticky section title stacking.
+ *
+ * `.request-response-header` is `sticky top-0` with `bg-b-1` but no z-index
+ * (`ViewLayoutSection.vue`). Request/response body siblings use `position:
+ * relative` and paint over the sticky title on scroll, so the endpoint name
+ * looks transparent and overlaps parameter rows. Raise the header above that
+ * content; keep Scalar’s opaque `bg-b-1` background.
+ *
+ * Scoped to `.scalar-client` (Test Request modal), not the whole reference
+ * panel. FRAGILITY: class names come from @scalar/api-client — re-verify on
+ * Scalar upgrades.
+ *
+ * @see ARCHITECTURE.md → Scalar Test Request modal sticky headers
+ */
+.explorer-page .scalar-client .request-response-header {
+	z-index: 1;
+}
+
+/*
+ * Test Request modal — pin into the visible Scalar shell client box.
+ *
+ * Scalar mounts the client modal inside `.explorer-page__scalar-shell`
+ * (`transform: translateZ(0)` containing block). After the reference scrolls,
+ * `position: fixed` chrome can sit above the visible client area; combined with
+ * scroll freeze that traps the close control. JS snaps `scrollTop` to 0 on open
+ * (restored on close). These rules then pin the overlay with `absolute` + shell
+ * percentages (not Scalar’s `100vh` / `90svh`) so the dialog fits the shell.
+ *
+ * Physical `top` / `right` / `bottom` / `left` / `width` / `height` / `max-height`
+ * override Scalar’s physical modal rules (no logical equivalents for those resets).
+ * Do **not** set `overflow: hidden` on the shell itself (double scrollbar).
+ * Page body scroll stays unlocked.
+ *
+ * FRAGILITY: `.scalar-container` / `.scalar-app-layout` / `.scalar-app-exit` are
+ * @scalar/api-client class names — re-verify on upgrades.
+ *
+ * @see ARCHITECTURE.md → Scalar Test Request modal background scroll lock
+ * @see DESIGN_REQUIREMENTS.md → Scalar shell containment → Test Request reference scroll lock
+ */
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app {
+	position: absolute;
+	inset: 0;
+	/*
+	 * Must beat Scalar’s `.t-doc__sidebar { z-index: 10 }` (internal endpoint
+	 * nav). Keep Scalar’s own overlay scale (`z-overlay` = 10000) — our earlier
+	 * `z-index: 5` painted the Test Request modal behind the sidebar.
+	 */
+	z-index: 10000;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar-container {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar .scalar-app-layout {
+	block-size: calc( 100% - var( --spacing-200 ) );
+	max-block-size: calc( 100% - var( --spacing-200 ) );
+	height: calc( 100% - var( --spacing-200 ) );
+	max-height: none;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar-app-exit {
+	inline-size: 100%;
+	block-size: 100%;
+	width: 100%;
+	height: 100%;
+}
+
+/*
+ * Write-request confirm dialog — contain overlay to the Scalar reference panel.
+ *
+ * Codex `CdxDialog` backdrop defaults to `position: fixed` + `100vw` / `100vh`
+ * (full viewport). The dialog teleports to `#explorer-reference-panel`
+ * (`target` prop). Override to `position: absolute` + `inset: 0` so the backdrop
+ * circumscribes the embed section only (shell chrome / project controls stay
+ * interactable). Physical `width` / `height` / `top` / `left` / `right` clear
+ * Codex’s viewport rules (no logical equivalents for those resets).
+ *
+ * @see ARCHITECTURE.md → Write-request confirm dialog; Codex exceptions #13
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop {
+	position: absolute !important;
+	inset: 0 !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	z-index: 400;
+	inline-size: 100% !important;
+	block-size: 100% !important;
+	min-block-size: 0 !important;
+	width: auto !important;
+	height: auto !important;
+}
+
+#explorer-reference-panel > .cdx-dialog-backdrop .cdx-dialog {
+	inline-size: calc( 100% - 2rem ) !important;
+	max-inline-size: 32rem;
+	max-block-size: calc( 100% - 2rem ) !important;
+	width: calc( 100% - 2rem ) !important;
+	max-width: 32rem !important;
+	max-height: calc( 100% - 2rem ) !important;
+}
+
+/*
+ * Write-request confirm dialog title — product size (not Codex Dialog default).
+ *
+ * Codex Dialog title is `--font-size-x-large` (20px). This mock uses
+ * `--font-size-large` (18px). Body stays Codex `--font-size-medium` (16px).
+ * Global rules in `shell-codex-overrides.css` (#12) re-assert Codex defaults for
+ * other teleported dialogs; this selector wins for the title only.
+ *
+ * @see ARCHITECTURE.md → Write-request confirm dialog
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop .cdx-dialog.scalar-write-request-confirm-dialog .cdx-dialog__header__title {
+	font-size: var( --font-size-large );
+	line-height: var( --line-height-large );
+}
+
+/*
+ * Codex exception #13 — Confirm left of Cancel; action group stays at inline-end.
+ *
+ * Codex footer actions use `flex-direction: row-reverse` (progressive primary at
+ * inline-end of the pair). Keep the action group end-aligned like the default
+ * Dialog, but use `row` + `justify-content: end` so Confirm sits to the
+ * left of Cancel within that group (harder to hit by habit). Narrow screens
+ * keep Codex’s column stack.
+ *
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #13
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop .scalar-write-request-confirm-dialog .cdx-dialog__footer__actions {
+	flex-direction: row;
+	/* `end` follows writing mode (same end-align intent as Codex’s reversed pair). */
+	justify-content: end;
+}
+
+@media ( max-width: 639px ) {
+	#explorer-reference-panel > .cdx-dialog-backdrop .scalar-write-request-confirm-dialog .cdx-dialog__footer__actions {
+		flex-direction: column;
+		justify-content: stretch;
+	}
+}
+
+/* @hack Hide the Authentication section in Scalar's "try it out" client modal.
  *
  * Companion to the .scalar-reference-intro-auth rule above, but for the client
  * modal — a separate Scalar surface that mounts under `.scalar-client` (not

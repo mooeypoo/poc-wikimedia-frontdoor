@@ -8,13 +8,14 @@ import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOp
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import { useScalarClientModalBackgroundScrollLock } from '../../composables/useScalarClientModalBackgroundScrollLock'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
+import { useScalarClientWriteRequestConfirmDialog } from '../../composables/useScalarClientWriteRequestConfirmDialog'
 import { useHideScalarClientAuthSection } from '../../composables/useHideScalarClientAuthSection'
-import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
-import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import ExplorerEnterpriseCustom from '../../components/explorer/ExplorerEnterpriseCustom.vue'
+import ScalarClientWriteRequestConfirmDialog from '../../components/explorer/scalar/ScalarClientWriteRequestConfirmDialog.vue'
 import { useScalarConfig } from '../../composables/useScalarConfig'
 import { useExplorerMode } from '../../composables/useExplorerMode'
 import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
@@ -22,6 +23,7 @@ import { isExplorerRoutePath } from '../../utils/explorerRoute'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorerOptIn'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../../config/explorerInternalSidebarExperiment'
+import { SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED } from '../../../config/scalarClientWriteWarnings'
 
 definePageMeta( {
 	i18n: false,
@@ -75,7 +77,20 @@ const {
 } )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
+const scalarShellRef = ref<HTMLElement | null>( null )
 
+useScalarClientWriteEndpointWarnings( scalarInterface )
+useScalarClientModalBackgroundScrollLock( scalarShellRef, scalarInterface )
+
+const {
+	isWriteRequestConfirmDialogOpen,
+	productionWikiDisplayName: writeConfirmProductionWikiDisplayName,
+	confirmDialogPrimaryAction,
+	confirmDialogDefaultAction,
+	confirmDialogCloseButtonLabel,
+	onWriteRequestConfirmDialogPrimary,
+	onWriteRequestConfirmDialogCancel
+} = useScalarClientWriteRequestConfirmDialog()
 useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
 useHideScalarClientAuthSection()
 
@@ -83,7 +98,6 @@ watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 	setActiveExplorerWikiInstanceId( wikiInstanceId )
 }, { immediate: true } )
 
-const scalarShellRef = ref<HTMLElement | null>( null )
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(
@@ -162,9 +176,6 @@ const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
 		? communityScalarConfiguration as unknown as Record<string, unknown>
 		: enterpriseScalarConfiguration.value
 )
-
-useScalarWriteRequestTestWiki( communityScalarConfiguration )
-useScalarWriteRequestAddressBarSync( scalarInterface, selectedWikiInstanceId )
 
 /**
  * Forces ApiReference remount when the spec context changes.
@@ -327,7 +338,14 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			</CdxMessage>
 
 			<template v-else>
-				<section class="explorer-page__reference-panel">
+				<!--
+					id is the CdxDialog teleport target for the write-confirm dialog
+					so the overlay circumscribes this Scalar embed section only.
+				-->
+				<section
+					id="explorer-reference-panel"
+					class="explorer-page__reference-panel"
+				>
 					<CdxMessage
 						v-if="isCommunityMode && !visibleOpenApiSpecUrl"
 						type="warning"
@@ -375,6 +393,22 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 						</template>
 					</ClientOnly>
 				</section>
+
+				<!--
+					Sibling of (not inside) #explorer-reference-panel: Vue Teleport
+					cannot target an ancestor of the Teleport source. CdxDialog still
+					teleports into the panel via `target="#explorer-reference-panel"`.
+				-->
+				<ScalarClientWriteRequestConfirmDialog
+					v-if="SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED"
+					v-model:open="isWriteRequestConfirmDialogOpen"
+					:production-wiki-display-name="writeConfirmProductionWikiDisplayName"
+					:primary-action="confirmDialogPrimaryAction"
+					:default-action="confirmDialogDefaultAction"
+					:close-button-label="confirmDialogCloseButtonLabel"
+					@primary="onWriteRequestConfirmDialogPrimary"
+					@cancel="onWriteRequestConfirmDialogCancel"
+				/>
 			</template>
 		</template>
 	</section>
@@ -443,6 +477,8 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 }
 
 .explorer-page__reference-panel {
+	/* Containing block for the write-confirm CdxDialog backdrop (absolute, not viewport-fixed). */
+	position: relative;
 	display: grid;
 	gap: var( --spacing-100 );
 	min-inline-size: 0;

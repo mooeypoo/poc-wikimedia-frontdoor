@@ -1,5 +1,5 @@
 /**
- * Resolves where to mount write-request controls immediately below the Scalar address bar.
+ * Resolves where to mount the write-request warning immediately below the Scalar address bar.
  *
  * @param modalRoot - Open Scalar Test Request modal root.
  * @returns Parent element and sibling before which to insert, or null when the address bar is not mounted yet.
@@ -21,7 +21,7 @@ export function resolveScalarClientModalAddressBarWarningPlacement(
 }
 
 /**
- * Moves an existing write-request control mount to sit directly after the address bar.
+ * Moves an existing write-request warning mount to sit directly after the address bar.
  *
  * @param modalRoot - Open Scalar Test Request modal root.
  * @param mountElement - Injected warning mount node.
@@ -48,10 +48,10 @@ export function ensureScalarClientModalAddressBarWarningPlacement(
 }
 
 /**
- * Aligns write-request control inline-start with the Scalar address bar URL field.
+ * Aligns write-request warning inline-start with the Scalar address bar URL field.
  *
  * Sets `--fd-scalar-address-bar-inline-align-offset` on the mount from layout measurements
- * so checkbox and warning copy line up with the address bar at every viewport width.
+ * so warning copy lines up with the address bar at every viewport width.
  *
  * @param modalRoot - Open Scalar Test Request modal root.
  * @param mountElement - Injected warning mount node.

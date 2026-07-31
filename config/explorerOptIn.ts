@@ -36,3 +36,22 @@ export function isExplorerBetaOptInModule( moduleName: string ): boolean {
 		return normalizedModuleName.startsWith( moduleNamePrefix )
 	} )
 }
+
+/**
+ * Returns whether a discovery module is hidden until internal opt-in is enabled.
+ *
+ * Matches MediaWiki REST audience version segments that end with `-internal`
+ * (for example `discord/v0-internal` — Discord Preview API). Convention is
+ * documented in `content/en/apis/stability.md` (Internal audience / `vN-internal`).
+ * Gate rules belong in this config file per AGENTS.md rule 6.
+ *
+ * @param moduleName - Discovery module id from bootstrap (e.g. `discord/v0-internal`).
+ * @returns True when the module requires the internal opt-in checkbox.
+ */
+export function isExplorerInternalOptInModule( moduleName: string ): boolean {
+	const normalizedModuleName = moduleName.trim().toLowerCase()
+
+	return normalizedModuleName.split( '/' ).some( ( pathSegment ) => {
+		return pathSegment.endsWith( '-internal' )
+	} )
+}

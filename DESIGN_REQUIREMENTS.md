@@ -33,7 +33,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Account dashboard at `/account` (no start-column section nav); unauthenticated visits show the logged-out gate (Figma 1001:18723) with real OAuth Log in; after OAuth login the header shows the Meta username as a progressive link to that dashboard. **API key rows and Reset credentials are placeholders for usability testing — not real Meta data; backend list/reset/revoke is pending** (see `ARCHITECTURE.md`)
 - API Explorer **mode** links in the start column navigate to `/explorer` sub-routes (`usePageSectionNav` + `pathForExplorerMode`); **Overview** section links remain `href="#"` placeholders
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
-- Opt-in filters (beta / internal endpoints) are **UI only** — not wired to spec filtering
+- Opt-in filters gate **module** visibility in **API to explore** (beta prefixes; `*-internal` path segments); per-**endpoint** filtering inside a selected OpenAPI spec is not wired yet
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
 - **Shell chrome layout** (`design-chrome` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; start column **always mounted** (empty panel when no section links); **transparent** panel with **`border-inline-end`** on the scrollport panel (`--border-color-muted`, hidden when collapsed); **281px** drawer panel / **0** grid track when nav collapsed; **single start-nav scrollport** + thin overlay-style thumb + **`::after` scroll-end spacer** (`shell-start-nav-scroll.css`); **viewport-driven collapse** + **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (`padding-block-end`; symmetric with start nav / overlay scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
 
@@ -492,7 +492,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Decision:** Scalar spec panel sits in a bordered shell (`--border-color-subtle`, `--border-radius-base`) with **inline padding** `--spacing-150` on the shell; inner Scalar layout padding is not globally overridden in the current phase.
 
-**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark fixes, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
+**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (project-controls checkbox checkmark fix, Test Request write-warning mount layout, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
 
 ---
 
@@ -528,7 +528,23 @@ Top to bottom:
 
 **Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
 
-**Source:** `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
+**Test Request sticky titles:** Scalar’s `.request-response-header` (endpoint name in the client modal) is sticky without a z-index, so scrolling parameters paint over it. Override in `explorer-codex-overrides.css`: `.explorer-page .scalar-client .request-response-header { z-index: 1 }` (modal-scoped). See `ARCHITECTURE.md` → Scalar Test Request modal sticky headers.
+
+**Test Request reference scroll lock + shell fit:** While the Test Request modal is open, the dialog must stay **fully inside the visible Scalar shell** (close control and address bar reachable). **Reference docs** must not scroll behind the modal; the **page** scrollport (`.frontdoor-shell__body-scroll`) **must remain scrollable**. Do **not** use `overflow: hidden` on the shell (second scrollbar inside Test Request). Implementation: snap shell scroll to top on open (restore on close), freeze + wheel/touch lock outside the modal, and CSS-pin the Scalar overlay into the shell client box (`useScalarClientModalBackgroundScrollLock` + `explorer-codex-overrides.css`). See `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock.
+
+**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal background scroll lock.
+
+### Write-request production warning (Test Request modal)
+
+**Decision:** For write HTTP methods (`POST` / `PUT` / `PATCH` / `DELETE`) on instances with a mapped test wiki, show a Codex **`CdxMessage`** (warning) **only directly under the Test Request address bar**. Do not show the warning in request/response body sections (including under **Response Headers** after Send).
+
+**Copy:** banana-i18n `explorer-scalar-write-endpoint-warning` — `$1` is the production wiki display name; `$2` is the mapped test wiki display name (`Test Wikipedia` / `Test Wikidata` / `Test Wikimedia Commons` via `explorer-scalar-write-test-wiki-name-*`). Both names use `<bdi>`. `$2` is a progressive-styled link; navigation is mocked until test wikis are discoverable in the explorer.
+
+**Routing:** Write requests go to the **production** wiki in this phase (no checkbox, no rewrite to a test host). Further guardrails are expected later.
+
+**Confirm dialog (mock):** Before address-bar **Send** on write methods, a **`CdxDialog`** asks for confirmation (title / body with production wiki `$1`). Action buttons stay **end-aligned** like the default Dialog; within that group, progressive **Confirm** sits to the **left** of neutral **Cancel** — **Codex exception #13** (Codex defaults primary to the end of the pair via `row-reverse`; Confirm is swapped leftward to prevent habitual error clicks on live writes). Title **18px** (`--font-size-large`); body **16px** (`--font-size-medium`, Codex default). The dialog component is a **sibling** of **`#explorer-reference-panel`** and teleports into that panel so the backdrop circumscribes the Scalar embed section only (not the whole viewport / shell chrome; physical viewport clears documented in AGENTS.md rule 8). Gated by `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` — set `false` to undo quickly. See `ARCHITECTURE.md` → Write-request confirm dialog and Codex exceptions #13.
+
+**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `ScalarClientWriteRequestConfirmDialog.vue`, `useScalarClientWriteRequestConfirmDialog.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`.
 
 ---
 
@@ -564,7 +580,8 @@ Top to bottom:
 | Control | Pattern |
 |---------|---------|
 | **API module** | `CdxSelect` — field label banana `explorer-rest-api-module-label` (“API to explore”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
-| **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
+| **Menu supporting text** | Codex MenuItem **`supportingText`** — **version only** (`versionChipLabel`, e.g. `v0.1.0`) via `formatExplorerModuleSelectSupportingText()`; trailing `-beta` / `-internal` stripped. Omitted when no version |
+| **Menu audience chips** | **Label-only** warning **`CdxInfoChip`** (**beta** / **internal**) beside the module name — Codex exception #14 (`ExplorerModuleSelectOptionContent` in Select `#menu-item` / `#label` slots). Banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`. Status icons hidden (Codex forces them on `warning`). Do **not** put audience markers in `supportingText` |
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Select the REST API that you’d like to test on this project” |
 
@@ -583,13 +600,13 @@ Top to bottom:
 
 **Layout:** Opt-in group sits beside the **API to explore** select with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only).
+**Source:** `ExplorerProjectControls.vue`, `ExplorerModuleSelectOptionContent.vue` (Codex exception #14), `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only), `i18n/*` (`explorer-module-*-chip-label`).
 
-**Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. Internal opt-in UI is present; module filtering for internal ids is not wired yet.
+**Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. **Internal** opt-in gates discovery modules whose version path segment ends with `-internal` (for example **Discord Preview API** / `discord/v0-internal`); default **off** so they stay out of **API to explore** until checked.
 
 **Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes; Attribution API `attribution/v0-beta` docs / framework / beta-talk links, leaving the one-line product summary). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
-**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented exceptions.
+**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): custom `#menu-item` / `#label` slots insert **label-only** warning audience chips (icons hidden) while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented shell exceptions.
 
 ---
 
@@ -828,9 +845,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Landing hero type sizes | H1 exploratory **2rem**; intro `p` **`--font-size-x-large`** in `LandingHero.vue` (not `:where` in landing-page.css) |
-| *(uncommitted)* | Landing ↔ section-nav layout instant | Drawer expand gated by `.frontdoor-shell--nav-drawer-expanding` (viewport only); landing / `sidebar: false` snaps |
-| *(uncommitted)* | Landing home polish | Award chip dark invert; API thumb preload; no `:visited`; brand no focus outline; Lexica `https` |
+| *(uncommitted)* | Test Request modal shell fit | Pin Test Request into visible Scalar shell (scroll snap + absolute overlay); freeze reference only; keep page body scroll; no shell `overflow: hidden` |
+| *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |
+| *(uncommitted)* | Internal opt-in module gate | Hide `*-internal` discovery modules (e.g. Discord Preview / `discord/v0-internal`) from **API to explore** until Internal checkbox is on |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |
 | *(uncommitted)* | API catalog Math + Wikimedia REST cards | `config/apiCatalogWikimedia.ts` — Math API (before Wikifunctions) + Wikimedia REST APIs → `/explorer`; All projects / Stable; `universal` |
 | *(uncommitted)* | API catalog filter combobox min size | Combobox `inline-size` / `min-inline-size: var(--size-1600)` (256px) + `flex: 0 0 auto`; avoid `min(…, 100%)` flex collapse |
@@ -896,7 +913,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 3. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
 5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
-6. **Apply opt-in filters** to module/endpoint lists and Scalar display.
+6. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
 7. **Mobile explorer** — inline collapsible module rail below project controls is **implemented** (&lt; 1120px); remaining mobile polish (reference panel sticky, Scalar height) may still evolve.
 8. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
 9. **Editorial content** for Use content and data, Community, Contribute, Get help.

@@ -185,7 +185,7 @@ The project controls panel contains:
 
 - **Wikimedia project** fieldset — project combobox (Wikipedia, Wikimedia Commons, Wikidata) and language combobox (English, Spanish, Hebrew, Farsi; disabled for Commons/Wikidata); resolves to wiki instance ids via `config/explorerProjectPicker.ts`
 - **API to explore** select — lists opt-in-filtered bootstrap modules in discovery order via `useExplorerModuleSelect`; default is the first healthy module in that order (`resolveFirstExplorerRailModule`); menu items show beta/version chip metadata via Codex MenuItem **`supportingText`**
-- Opt-in checkboxes (**Beta APIs and endpoints** default on; **Internal APIs and endpoints** default off)
+- Opt-in checkboxes (**Beta APIs and endpoints** default on; **Internal APIs and endpoints** default off) — client-side module gates in `config/explorerOptIn.ts` (beta prefixes; `*-internal` path segments such as `discord/v0-internal`)
 
 Neither of these applies to the Enterprise API, which is a single global API with no per-wiki variation.  In enterprise mode, the project controls panel should be hidden entirely.
 

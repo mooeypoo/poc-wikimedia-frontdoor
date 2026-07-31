@@ -41,6 +41,26 @@ These two surfaces have different rules and must not be conflated.
 - Reactive configuration updated via `Object.assign()` on a `reactive()` config object
 - Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
 
+### API to explore audience chips
+
+**Decision:** Show beta and internal as **label-only** warning **`CdxInfoChip`**s beside the module name in the **API to explore** Select (menu + closed handle). Keep **version** as Codex MenuItem `supportingText` only (strip trailing `-beta` / `-internal` from the version string). Do not show Codex status icons on these chips.
+
+**Implementation:** Custom `CdxSelect` `#menu-item` / `#label` slots (`ExplorerModuleSelectOptionContent`) — Codex exception #14. Hide `.cdx-info-chip__icon--vue` in CSS (Codex forces icons on `warning` and ignores null `icon`; same pattern as NavigationCard). Interaction states stay native Codex.
+
+**Source of truth:** `ARCHITECTURE.md` → Codex exceptions #14 and REST API module select; `DESIGN_REQUIREMENTS.md` → REST API module select + opt-in; `AGENTS.md` InfoChip label-only exception + RTL checklist.
+
+### Opt-in module visibility (community explorer)
+
+**Decision:** Gate which discovery modules appear in **API to explore** (and therefore which spec Scalar loads) with the Include checkboxes. Defaults: beta **on**, internal **off** (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`). Bootstrap still fetches all modules; filtering is client-side.
+
+**Rules** (in `config/explorerOptIn.ts`):
+- **Beta** — configured name prefixes (`attribution/` today) via `isExplorerBetaOptInModule()`
+- **Internal** — MediaWiki REST audience convention: a discovery path segment ends with `-internal` (e.g. Discord Preview API / `discord/v0-internal`) via `isExplorerInternalOptInModule()`
+
+**Out of scope for this phase:** Hiding individual operations inside an already-selected OpenAPI document.
+
+**Source of truth:** `ARCHITECTURE.md` → Opt-in module visibility; `DESIGN_REQUIREMENTS.md` → Opt-in fieldset; `AGENTS.md` Experiment 1 scope / success signals.
+
 ### Scalar plugin system
 
 Scalar's `ApiReferencePlugin` API accepts Vue components natively. Two mechanisms:
@@ -49,6 +69,24 @@ Scalar's `ApiReferencePlugin` API accepts Vue components natively. Two mechanism
 - **`extensions`** — inject a Vue component tied to an `x-*` vendor extension field in the spec. Requires the spec to contain the field. Used for per-operation metadata where spec ownership permits.
 
 Codex components and banana-i18n work inside plugins natively — no bridge pattern required.
+
+### Write-request production warning (Test Request modal)
+
+**Decision:** Warn on write methods in the Scalar Test Request modal; do **not** rewrite requests to a test wiki in this phase. Show a single **`CdxMessage`** under the address bar (DOM injection). Do not use Scalar ClientPlugin `components.request` / `components.response` slots — the response slot mounts under **Response Headers** after Send and duplicated the warning.
+
+**Rationale:** Address-bar placement keeps the warning next to the request URL. Production routing matches the interim product choice (guardrails / discoverable test-wiki switching come later). `$2` in the copy is a mocked progressive link to a test-wiki display name until those instances are selectable via discovery.
+
+**Source of truth:** `ARCHITECTURE.md` → Write-request production warning; `DESIGN_REQUIREMENTS.md` → Write-request production warning; `AGENTS.md` RTL checklist + Experiment 1 scope.
+
+**Confirm-before-Send mock:** A Codex `CdxDialog` intercepts address-bar Send for write methods. Overlay is contained to `#explorer-reference-panel` (Scalar embed; dialog component is a sibling of that panel). Action group stays end-aligned; progressive **Confirm** is left of **Cancel** within the pair (Codex exception #13 — reduces accidental confirms). Title 18px / body 16px. Easy undo: `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED = false` in `config/scalarClientWriteWarnings.ts`.
+
+### Test Request modal — shell fit + reference scroll lock (not page lock)
+
+**Decision:** Keep the Test Request dialog fully inside the **visible Scalar shell** while open (close control reachable). Freeze **`.explorer-page__scalar-shell`** only; leave **`.frontdoor-shell__body-scroll`** unlocked. On open, snap shell `scrollTop` to `0` (restore on close), freeze + block wheel/touch outside `.scalar-client`, and CSS-pin the overlay into the shell client box (`absolute` + shell `%` sizing — not Scalar `100vh` / `90svh`). Do **not** use `overflow: hidden` on the shell.
+
+**Rationale:** The modal is transform-contained inside the scrollable shell. After the reference scrolls, fixed modal chrome can sit above the visible client box; freezing scroll then traps the close control off-screen. Shell `overflow: hidden` caused a second scrollbar inside Test Request. Page-level lock was rejected — project controls should stay scrollable.
+
+**Source of truth:** `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock; `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock; `AGENTS.md` RTL checklist.
 
 ---
 

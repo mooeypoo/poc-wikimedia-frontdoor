@@ -91,16 +91,15 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── contentRedirects.ts     # Legacy URL 301 redirects (learn, about, enterprise)
 │   ├── sectionNavigation.js    # Content-page left-rail sections (keyed by main nav id)
 │   ├── explorerSideNav.js      # Explorer left-rail section structure (banana keys)
-│   ├── explorerOptIn.ts        # Explorer opt-in checkbox input values
+│   ├── explorerOptIn.ts        # Opt-in checkbox tokens, defaults, beta/internal module gates
 │   ├── auth.ts                 # Account path, Meta-Wiki OAuth URLs, prototype defaults
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
 │   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
-│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab/wikimediaEnterprise)
-│   ├── landingSurfaces.ts      # Platform home gradients, assets, globe tints, award chips, API previews
-│   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
+│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab) for NavigationCard
+│   ├── wikiInstanceTestWikis.ts # Production → test wiki mapping + display-name keys for write-request warning
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
 │   └── scalar.js               # Scalar component defaults
@@ -187,10 +186,10 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
 | `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules with `headingTitle`, `moduleDescription`, operations, spec URLs, selection, Scalar switch state) via `/api/explorer-bootstrap`; exposes **`selectedEndpointOperationId`** for module rail `:selected` state |
-| `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes; exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
+| `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes (beta prefixes + `*-internal` path segments); exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
-| `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `label` + `supportingText` (beta/version) + `description` (OpenAPI or config fallback); `default-label`, `menu-config`; calls `selectModule` with `source: 'module-select'` |
+| `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `label` + version-only `supportingText` + `description`; `resolveModuleSelectOptionDisplay` for audience warning chips (Codex exception #14); `default-label`, `menu-config`; calls `selectModule` with `source: 'module-select'` |
 | `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab → catalog `/apis`; explorer `/explorer` stays never locale-prefixed (`i18n: false`) |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route (`apis` on explorer); pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`); also `isNavDrawerExpanding` for gated drawer CSS (viewport expand only — not landing / `sidebar: false` route changes) |
@@ -213,9 +212,9 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useCopyWithCopiedTooltip()` | Clipboard copy + brief focus/blur so `CdxTooltip` shows “Copied!” (Reset success quiet copy; keeps trigger mounted) |
 | `useShellAuthNavigation()` | Shell header session control: OAuth `login`/`logout`, username, locale-aware `/account` path, `header-auth-link-aria` |
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items; exports `SHELL_HEADER_UTILITY_MENU_VALUE` (settings→preferences popover handled in parent; username→account; log in/out) |
-| `useScalarClientWriteEndpointWarnings(scalarInterface, selectedWikiInstanceId)` | Injects write-request **`CdxCheckbox`** and production **`CdxMessage`** into the Scalar Test Request modal (DOM mount after `.scalar-address-bar` + `ClientPlugin` slots); resets preference on modal open |
-| `useScalarWriteRequestTestWiki(scalarConfiguration)` | Registers Scalar `onBeforeRequest` to rewrite write HTTP methods to the mapped test wiki when the modal checkbox is checked (`config/wikiInstanceTestWikis.ts`) |
-| `useScalarWriteRequestAddressBarSync(scalarInterface, selectedWikiInstanceId)` | Debounced sync of the modal address bar server URL with checkbox state via Scalar `server:update:server` events |
+| `useScalarClientWriteEndpointWarnings(scalarInterface)` | Injects write-request production **`CdxMessage`** into the Scalar Test Request modal **only** after `.scalar-address-bar`; removes stray warning hosts (e.g. under Response Headers); `$2` test-wiki link is mocked until test instances are discoverable |
+| `useScalarClientWriteRequestConfirmDialog()` | **Mock** Codex confirm before Scalar address-bar Send on write methods; disable via `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` in `config/scalarClientWriteWarnings.ts` |
+| `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` | Keeps Test Request usable in the visible shell: snap shell `scrollTop` to 0 on open (restore on close), freeze + wheel/touch lock outside `.scalar-client`; CSS pins overlay into the shell client box; does **not** lock page body scroll |
 
 **Account dashboard** (`app/pages/account.vue`):
 
@@ -513,6 +512,13 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 9. **`ShellSiteFooter` wordmark** — **Montserrat** via `--font-family-brand-wordmark`; banana-i18n `brand-wordmark-wikimedia` + **`brand-wordmark-developer-portal`** (shared with header, single horizontal line).
 10. **`ShellSiteFooter` brand lockup** — Figma uses a horizontal **227×14px** lockup; shell composes **14px inlined `WikimediaLogoMark` + translatable wordmark parts** (`currentColor` / `--color-subtle`) until the footer logo asset ships.
 11. **`CdxPopover` arrow/body seam** — Codex places `.cdx-popover__arrow` with Floating UI `top: -9px` (bottom-* placements), which leaves the panel’s top `border` visible across the pointer base. Shared global class **`fd-cdx-popover--arrow-seam-fix`** in `app/assets/css/shell-codex-overrides.css` nudges the arrow to **`top: -8px`** and sets **`box-shadow: none`** so the arrow fill covers that border. Physical **`top`** clears Floating UI’s inline physical style; global CSS is required because `CdxPopover` teleports to `<body>`. Used by header preferences and explorer opt-in help. See **Color theme preferences (shell)**.
+12. **`CdxDialog` title/body type** — Dialog titles are `<h2 class="cdx-dialog__header__title">`. Global `h2` rules in `main.css` (margin / line-height) also match that element and can make teleported dialogs look oversized vs the [Codex Dialog demo](https://doc.wikimedia.org/codex/latest/components/demos/dialog.html). `shell-codex-overrides.css` re-asserts Codex title (`--font-size-x-large` / `--line-height-x-large`, zero margin) and body (`--font-size-medium` / `--line-height-medium`) on `.cdx-dialog`.
+13. **Write-request confirm dialog (explorer)** — Three product deviations from default `CdxDialog`, all in `explorer-codex-overrides.css` / `ScalarClientWriteRequestConfirmDialog`:
+    - **Actions:** Codex footers use `flex-direction: row-reverse` (progressive primary at the **end** of the pair). Keep the action **group end-aligned**, but swap order within the pair: progressive **Confirm** left of neutral **Cancel** (`flex-direction: row` + `justify-content: end`; column stack unchanged below 640px). Rationale: Confirm is harder to hit by habit (reduces accidental live writes) while the footer still reads as end-aligned actions.
+    - **Containment:** Teleport `target="#explorer-reference-panel"` (dialog component is a **sibling** of that panel — Vue Teleport cannot target an ancestor of the Teleport source). Backdrop overridden from Codex viewport-`fixed` / `100vw` / `100vh` to `position: absolute; inset: 0` so the overlay circumscribes the Scalar embed only. Physical `width` / `height` / `top` / `left` / `right` / `max-width` / `max-height` clears are required to beat Codex rules (documented in AGENTS.md rule 8).
+    - **Title size:** `--font-size-large` (18px) instead of Codex / shell exception #12 `--font-size-x-large` (20px). Body remains `#12` / Codex `--font-size-medium` (16px).
+    See **Write-request confirm dialog**.
+14. **API to explore audience chips** — Default Codex MenuItem layout can only put audience markers in subtle `supportingText`. Product needs **warning** `CdxInfoChip`s (**beta** / **internal**) beside the module name, with **version** remaining as `supportingText`. `ExplorerProjectControls` therefore uses `CdxSelect` `#menu-item` and `#label` slots with `ExplorerModuleSelectOptionContent`, which recreates Codex `cdx-menu-item__*` text classes and inserts the chips. Chips are **label-only**: Codex forces icons on `warning` status (null `icon` ignored), so `.cdx-info-chip__icon--vue` is hidden in CSS (same pattern as NavigationCard). Hover / highlighted / selected colours stay native Codex (no MenuItem state CSS overrides). Menu teleports to `<body>`, so option layout CSS is unscoped on that component. See **REST API module select**.
 
 ### Color theme preferences (shell)
 
@@ -690,15 +696,17 @@ useExplorerBootstrap.selectModule(moduleName, { source: 'module-select' })
 visibleOpenApiSpecUrl → useScalarConfig → Scalar reload (when module name changes)
 ```
 
-**Default module:** On bootstrap and when opt-in hides the current module, **`resolveFirstExplorerRailModule()`** (`app/utils/explorerModuleOptInFilter.ts`) picks the first module **without `hasSpecError`** in discovery order, using **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** from `config/explorerOptIn.ts` on initial load. This keeps the select default and Scalar spec aligned.
+**Default module:** On bootstrap and when opt-in hides the current module, **`resolveFirstExplorerRailModule()`** (`app/utils/explorerModuleOptInFilter.ts`) picks the first module **without `hasSpecError`** in discovery order, using **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** from `config/explorerOptIn.ts` on initial load (beta **on**, internal **off**). Internal-audience modules such as `discord/v0-internal` are therefore excluded from the default select and Scalar target. This keeps the select default and Scalar spec aligned.
 
-Select menu labels use each module’s **`headingTitle`** (external string) via `isolatePickerLabel()`. Stored value is the discovery **module name** (for example `-`, `readinglists/v0`, `attribution/v0-beta`).
+Select menu labels use each module’s **`headingTitle`** (external string) via `isolatePickerLabel()`. Stored value is the discovery **module name** (for example `-`, `readinglists/v0`, `attribution/v0-beta`, `discord/v0-internal` when internal opt-in is on).
 
 **Menu item description:** Summary in Codex MenuItem **`description`**. Extracted from each module spec’s OpenAPI **`info.description`** during bootstrap (`normalizeOpenApiModuleDescription(moduleDescription, moduleName)` in `app/utils/explorerModuleDescription.ts`); not truncated — long text wraps in the dropdown. Configured **suffix strip patterns** in `config/explorerModuleDescriptions.ts` (`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`, for example `site/v1` access boilerplate and `attribution/v0-beta` docs / framework links) run after markdown normalization. Curated banana-i18n fallbacks in the same config file when the spec omits a description. Display strings use `isolatePickerLabel()` for BiDi isolation.
 
 **Project controls row 2 spacing:** REST API module **`CdxSelect`** and Opt-in fieldset sit in **`.explorer-project-controls__module-row`** with **`column-gap: var(--spacing-150)`** (24px) and **`row-gap: var(--spacing-100)`** when wrapped. See `DESIGN_REQUIREMENTS.md` → REST API module select + opt-in.
 
-**Menu item supporting text:** Each option may include Codex MenuItem **`supportingText`** — beta and version metadata formatted by **`formatExplorerModuleSelectSupportingText()`** in `app/utils/explorerModuleRailHeading.ts`. Beta uses banana-i18n `explorer-module-beta-chip-label`; version uses isolated `versionChipLabel` (external). Omitted when neither applies.
+**Menu item supporting text:** Version only — isolated `versionChipLabel` via **`formatExplorerModuleSelectSupportingText()`** (`app/utils/explorerModuleRailHeading.ts`). Trailing `-beta` / `-internal` audience suffixes are stripped from the version label because those audiences render as warning chips instead.
+
+**Menu item audience chips (Codex exception #14):** Beta and internal modules show warning **`CdxInfoChip`**s beside the module name (banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`) via custom Select slots in `ExplorerProjectControls` / `ExplorerModuleSelectOptionContent`. Chips are **label-only** — hide `.cdx-info-chip__icon--vue` under `.explorer-module-select-option__audience-chip` (Codex forces icons on `warning` and ignores null `icon`; same pattern as NavigationCard catalog chips). Beta when `showBetaChip` or `isExplorerBetaOptInModule()`; internal when `isExplorerInternalOptInModule()` (e.g. `discord/v0-internal`). Module title and version use `<bdi>`; chip labels are banana interface strings (no `<bdi>`).
 
 **Codex Select configuration:** **`default-label`** from banana-i18n `explorer-module-placeholder`. **`menu-config`**: `{ boldLabel: true, hideDescriptionOverflow: false }` — descriptions wrap to multiple lines in the dropdown ([Codex Select demos](https://doc.wikimedia.org/codex/latest/components/demos/select.html)). Menu item state (hover background, keyboard **`highlighted`**, **`selected`** progressive text) is owned by Codex; **`app/assets/css/main.css`** may only adjust floating-menu **z-index** and list-style resets under `.explorer-page` — **do not** override `.cdx-menu-item__content` or highlighted/selected colours (regression fixed after descriptions landed).
 
@@ -792,6 +800,40 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: a
 
 **UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
 
+### Scalar Test Request modal sticky headers
+
+**Issue.** In Scalar’s API client modal (`.scalar-client`), section titles use `.request-response-header` with `sticky top-0` and `bg-b-1` but **no z-index** (`@scalar/api-client` `ViewLayoutSection`). Request/response body siblings (`position: relative`) paint over the sticky title on scroll, so the endpoint name looks transparent and overlaps parameter rows.
+
+**Workaround.** `app/assets/css/explorer-codex-overrides.css` sets `z-index: 1` on `.explorer-page .scalar-client .request-response-header`, keeping Scalar’s opaque `bg-b-1` background. Scoped to the Test Request modal only.
+
+**FRAGILITY:** Class names are Scalar Tailwind / component classes — re-verify on `@scalar/api-client` / `@scalar/api-reference` upgrades.
+
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
+
+### Scalar Test Request modal background scroll lock
+
+**Issue.** Scalar’s `ApiClientModal` locks background scroll by setting `document.documentElement.style.overflow = 'hidden'`. Front Door does **not** scroll the document for the explorer reference panel — at ≥ 960px the scrollport is **`.explorer-page__scalar-shell`** (containing `.references-rendered`). Wheel / trackpad input therefore still scrolls the docs behind the open Test Request modal.
+
+**Product intent.** Keep the Test Request dialog **fully inside the visible Scalar shell** (close control reachable). Lock **reference docs only**. Keep **`.frontdoor-shell__body-scroll`** scrollable.
+
+**Workaround.** `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` (wired from `app/pages/explorer/[[view]].vue`) + CSS in `explorer-codex-overrides.css`:
+
+| Mechanism | Role |
+|-----------|------|
+| Scalar `ui:open:client-modal` / `ui:close:client-modal` | Sole open/close signal — **no** body-wide MutationObserver (that freezes the explorer tab during Scalar mount) |
+| Snap shell `scrollTop` → `0` on open; restore on close | Modal is transform-contained; after the reference scrolls, fixed chrome can sit **above** the visible client box — freeze alone trapped the close control off-screen |
+| `scrollTop` freeze at `0` while open | Holds the shell so the pinned overlay stays aligned |
+| Capture-phase `wheel` / `touchmove` `preventDefault` | Blocks gestures over the shell **outside** `.scalar-client[role="dialog"]` |
+| Class `explorer-page__scalar-shell--client-modal-open` | Pins `.scalar.scalar-app` / `.scalar-container` with `position: absolute; inset: 0`, **`z-index: 10000`** (must beat Scalar `.t-doc__sidebar` at `10`), sizes `.scalar-app-layout` to the shell (not `90svh`), and sizes `.scalar-app-exit` to `100%` (not `100vh`) |
+
+**Why not `overflow: hidden` on the shell.** Clipping the transform containing block produced a **second scrollbar inside the Test Request modal**. Geometry pin + scroll snap avoid that.
+
+**Does not** lock `.frontdoor-shell__body-scroll`.
+
+**FRAGILITY:** Depends on `.scalar-client[role="dialog"]` and Scalar modal class names (`.scalar-container`, `.scalar-app-layout`, `.scalar-app-exit`) — re-verify on `@scalar/api-client` upgrades.
+
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock.
+
 ### Explorer modes and start-column routing
 
 Enterprise explorer experiences share the unified start column with community mode. Mode is encoded in the URL (`app/utils/explorerRoute.ts`):
@@ -825,25 +867,28 @@ Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (aft
 
 ### Opt-in module visibility
 
-Project controls expose **Wikimedia project** (project + language comboboxes), **API to explore** (`CdxSelect`, message key `explorer-rest-api-module-label`), **Beta APIs and endpoints**, and **Internal APIs and endpoints** checkboxes (defaults: beta **on**, internal **off** — `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` in `config/explorerOptIn.ts`). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`).
+Project controls expose **Wikimedia project** (project + language comboboxes), **API to explore** (`CdxSelect`, message key `explorer-rest-api-module-label`), **Beta APIs and endpoints**, and **Internal APIs and endpoints** checkboxes (defaults: beta **on**, internal **off** — `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` in `config/explorerOptIn.ts`). Bootstrap still fetches every discovery module server-side; filtering is **client-side** in `useExplorerOptInFilteredModules` via `filterExplorerBootstrapModulesByOptIn()` (`app/utils/explorerModuleOptInFilter.ts`). Gate rules live in `config/explorerOptIn.ts` (AGENTS rule 6): beta uses configured name prefixes; internal uses the MediaWiki REST audience convention that a discovery path segment ends with `-internal` (see `content/en/apis/stability.md`).
 
 ```
 includeBetaEndpoints / includeInternalEndpoints (explorer page refs)
        ↓
 useExplorerOptInFilteredModules
        ↓
-filterExplorerBootstrapModulesByOptIn(modules, { includeBetaEndpoints, … })
+filterExplorerBootstrapModulesByOptIn(modules, { includeBetaEndpoints, includeInternalEndpoints })
        ↓
 isExplorerBetaOptInModule(name)?  ← config/explorerOptIn.ts (prefix `attribution/`)
+isExplorerInternalOptInModule(name)?  ← path segment ends with `-internal` (e.g. `discord/v0-internal`)
        ↓
-visibleModules → REST API module select
+visibleModules → REST API module select (**API to explore**)
 visibleSelectedModule → ExplorerModuleRail (endpoint list)
 visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
 ```
 
-When the active module becomes hidden (for example Attribution API with beta off), **`resolveFirstExplorerRailModule()`** selects the first remaining healthy module in **discovery order** through `useExplorerBootstrap.selectModule()`. Bootstrap initial selection uses the same helper with **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`**. Internal opt-in rules are reserved until internal module ids are defined in config.
+When the active module becomes hidden (for example Attribution API with beta off, or Discord Preview API with internal off), **`resolveFirstExplorerRailModule()`** selects the first remaining healthy module in **discovery order** through `useExplorerBootstrap.selectModule()`. Bootstrap initial selection uses the same helper with **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** (beta **on**, internal **off**), so `*-internal` modules stay out of the **API to explore** menu until the internal checkbox is checked.
 
-The reference panel `h2` and module rail heading use `headingTitle` from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`); beta and version chips appear on the reference panel and as REST API module select **`supportingText`** via `formatExplorerModuleSelectSupportingText()`. Version chips strip a trailing `-beta` from discovery versions (for example `0.1.0-beta` → `v0.1.0`).
+**Scope note:** Opt-in currently gates **module** visibility (which specs appear in the select / rail / Scalar). Filtering individual operations inside a selected OpenAPI document is not implemented yet.
+
+The reference panel `h2` and module rail heading use `headingTitle` from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`). In **API to explore**, audience markers are warning InfoChips (Codex exception #14) and version is MenuItem **`supportingText`** (suffixes `-beta` / `-internal` stripped, for example `0.1.0-internal` → `v0.1.0`).
 
 ### Scalar plugin layer
 
@@ -853,29 +898,26 @@ Two mechanisms:
 - **`views`**: inject a Vue component at `content.end` (after the Models section). Use for: token display panel, instance/language context notice, fallback language notice.
 - **`extensions`**: inject a Vue component tied to an `x-*` vendor extension field in the spec. Use for: per-endpoint or per-operation metadata. Requires the spec to contain the `x-*` field — only possible if the spec is under our control or can be augmented at fetch time.
 
-**Write-request test wiki (Test Request modal).** For write HTTP methods (`POST`, `PUT`, `PATCH`, `DELETE` — `config/scalarWriteHttpMethods.ts`) on wiki instances with a mapped test wiki (`config/wikiInstanceTestWikis.ts`), the explorer injects a **`CdxCheckbox`** and optional production **`CdxMessage`** into Scalar’s Test Request modal. This is **not** a Scalar `ClientPlugin` alone — the address-bar slot uses **DOM injection** because Scalar’s modal header (`.t-app__top-container`) is flex-wrapped and the checkbox must sit immediately below the address bar.
+**Write-request production warning (Test Request modal).** For write HTTP methods (`POST`, `PUT`, `PATCH`, `DELETE` — `config/scalarWriteHttpMethods.ts`) on wiki instances with a mapped test wiki (`config/wikiInstanceTestWikis.ts`), the explorer injects a production **`CdxMessage`** **only under the address bar** in Scalar’s Test Request modal. Write requests hit the **production** wiki; there is no checkbox and no URL rewrite to a test wiki. The warning’s `$2` test-wiki display name (e.g. Test Wikipedia) is a progressive link that is currently a **mock** (`preventDefault`) until test wikis are selectable via discovery.
+
+Placement uses **DOM injection** after `.scalar-address-bar` (not ClientPlugin `components.request` / `components.response` view slots). Scalar’s response plugin slot renders immediately under **Response Headers** after Send — that path must not show this warning. `explorerMapConfigPlugins.client.ts` therefore registers only request-hook ClientPlugins; `ScalarClientWriteEndpointWarning` no-ops unless `slotKey === 'address-bar'`; and each modal scan calls `removeStrayWriteWarningHosts()` to drop any host nodes outside `.scalar-client-write-endpoint-warning-mount`.
 
 ```
 Write endpoint opened in Test Request modal
     ↓
 useScalarClientWriteEndpointWarnings
-    ├── resetScalarWriteRequestTestWikiPreference() (checkbox default: checked)
-    ├── injectAddressBarWarning() → mount after .scalar-address-bar
-    │       └── ScalarClientWriteEndpointWarning.vue (slotKey: address-bar)
-    └── ClientPlugin slots for request/response views (same component, other slotKeys)
-    ↓
-isTestWikiEnabledForWriteRequests (shared ref in explorerScalarWriteRequestContext.ts)
-    ├── useScalarWriteRequestTestWiki → onBeforeRequest URL rewrite when checked
-    └── useScalarWriteRequestAddressBarSync → address bar server URL via eventBus
+    ├── removeStrayWriteWarningHosts() (drop hosts outside address-bar mount)
+    └── injectAddressBarWarning() → mount after .scalar-address-bar
+            └── ScalarClientWriteEndpointWarning.vue (slotKey: address-bar)
 ```
 
-**Placement and layout.** `resolveScalarClientModalAddressBarWarningPlacement.ts` inserts the mount node as the **next sibling** after `.scalar-address-bar`. `syncScalarClientModalAddressBarWarningInlineAlignment()` measures the URL field’s inline-start offset and sets `--fd-scalar-address-bar-inline-align-offset` so checkbox and warning align with the address bar input. **`app/assets/css/explorer-codex-overrides.css`** sets `order: 10000` on `.scalar-address-bar + .scalar-client-write-endpoint-warning-mount` below Scalar’s `lg` breakpoint where the address bar uses `order-last` (9999) — without this, flex order can place controls above the URL row on narrow viewports. At `lg+`, `order` resets but the mount remains full-width on its own row.
+**Placement and layout.** `resolveScalarClientModalAddressBarWarningPlacement.ts` inserts the mount node as the **next sibling** after `.scalar-address-bar`. `syncScalarClientModalAddressBarWarningInlineAlignment()` measures the URL field’s inline-start offset and sets `--fd-scalar-address-bar-inline-align-offset` so the warning aligns with the address bar input. **`app/assets/css/explorer-codex-overrides.css`** sets `order: 10000` on `.scalar-address-bar + .scalar-client-write-endpoint-warning-mount` below Scalar’s `lg` breakpoint where the address bar uses `order-last` (9999) — without this, flex order can place the warning above the URL row on narrow viewports. At `lg+`, `order` resets but the mount remains full-width on its own row.
 
-**Copy and BiDi.** Interface strings use banana-i18n (`explorer-scalar-write-test-wiki-toggle-*`, `explorer-scalar-write-endpoint-warning`). The warning message splits on `$1` (production wiki display name) and `$2` (test wiki hostname) via `splitMessageAtTwoPositionalParameters()` in `getInterfaceMessageTemplate.ts` so each segment can be wrapped in `<bdi>`; hostnames use `dir="ltr"` and monospace styling.
+**Copy and BiDi.** Interface strings use banana-i18n (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-test-wiki-name-*` via `getTestWikiDisplayNameMessageKey()`). The warning message splits on `$1` (production wiki **display name** from `config/instances.ts`) and `$2` (test wiki **display name**) via `splitMessageAtTwoPositionalParameters()` in `getInterfaceMessageTemplate.ts` so each segment can be wrapped in `<bdi>`; `$2` is rendered as a progressive link (navigation mocked). Production display names are external config strings; test-wiki names are interface strings.
 
-**Codex checkbox checkmark.** Scalar’s Tailwind preflight can break Codex checkbox pseudo-elements inside the teleported modal. `explorer-codex-overrides.css` re-asserts checkmark layout for `.scalar-client-write-endpoint-controls` (same pattern as `.explorer-project-controls`).
+**Plain HTML probe.** `SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE` in `config/scalarClientWriteWarnings.ts` swaps the Vue mount for a plain HTML banner when debugging address-bar DOM injection without Codex.
 
-**Plain HTML probe.** `SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE` in `config/scalarClientWriteWarnings.ts` swaps the Vue mount for a plain HTML banner when debugging slot injection without Codex.
+**Write-request confirm dialog (mock).** When `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` is true, `useScalarClientWriteRequestConfirmDialog` capture-phase intercepts the address-bar **Send** button for write HTTP methods and opens `ScalarClientWriteRequestConfirmDialog` (`CdxDialog`). Title: `explorer-scalar-write-confirm-title` (`$1` = production wiki display name, FSI/PDI in the title string). Body: `explorer-scalar-write-confirm-body` with `$1` in `<bdi>`. **Actions:** end-aligned group like the default Dialog; within the pair, progressive **Confirm** left of neutral **Cancel** — **Codex exception #13** (`row` + `justify-content: end`; Codex default is `row-reverse` with primary at the end of the pair). **Containment:** `CdxDialog` `target="#explorer-reference-panel"`; the dialog component is a **sibling** of that panel (Vue Teleport cannot target an ancestor of the Teleport source). `explorer-codex-overrides.css` overrides the Codex viewport-fixed backdrop to `position: absolute; inset: 0` inside that panel (physical `width` / `height` / `top` / `left` / `right` / `max-width` / `max-height` clears — see AGENTS.md rule 8) so the overlay covers only the Scalar reference embed (not the full shell). **Type:** title `--font-size-large` (18px) — product size vs Codex Dialog / shell override #12 x-large (20px); body stays Codex `--font-size-medium` (16px). Labels via `resolveInterfaceMessage` / `getInterfaceMessageTemplate` (empty `<html lang="">` on explorer `i18n: false` is handled by `resolveActiveInterfaceLocale`). Confirm re-clicks Send once; Cancel / close does not send. **Undo:** set the flag to `false`.
 
 ---
 
@@ -986,7 +1028,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
-| `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
+| `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `isExplorerInternalOptInModule()` (`*-internal` path segments), `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
 | `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, and CodeTabs |
@@ -1214,7 +1256,7 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 
 **API catalog conventions** (`content/en/apis.md`): `notice` = scope, `success` = Stable / Check stability…, `warning` = Beta — stock Codex status colours. Get started overview cards omit chips.
 
-**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. **Landing exception:** `award:` chips keep the star icon and purple colours from `LANDING_AWARD_CHIP` (bound as `--fd-landing-award-chip-*-light` / `*-dark` on `.fd-landing-page`). Light = purple100 fill / purple600 text+icon; dark = inverted. Dark styles are applied in `landing-page.css` under `fd-theme--*` **directly on the chip** (do not reassign the light custom property — inline style on `.fd-landing-page` would win). See `AGENTS.md` → Content components (approved exception).
+**Label-only (approved exception):** Catalog chips and explorer **API to explore** audience chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so first-party CSS hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` and `.explorer-module-select-option__audience-chip` (documented inline in the SFCs). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. See `AGENTS.md` → Content components (approved exception) and Codex exceptions #14.
 
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
@@ -1446,10 +1488,13 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
-| Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `config/explorerSurfaces.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `app/assets/css/main.css` (explorer picker menu stacking only), `app/assets/css/page-grid.css` (`--fd-explorer-controls-surface-*`) |
+| Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/components/explorer/ExplorerModuleSelectOptionContent.vue` (label-only audience warning chips; Codex exception #14), `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `config/explorerSurfaces.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `tests/explorerModuleRailHeading.test.mjs`, `app/assets/css/main.css` (explorer picker menu stacking only), `app/assets/css/page-grid.css` (`--fd-explorer-controls-surface-*`), `i18n/*` (`explorer-module-beta-chip-label`, `explorer-module-internal-chip-label`) |
 | Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/composables/useExplorerModuleRailPlacement.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `config/explorerSurfaces.ts`, `app/pages/explorer/[[view]].vue` (`#explorer-module-rail-anchor`), `tests/explorerModuleDescription.test.mjs` |
-| Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `config/explorerOptIn.ts` |
-| Write-request test wiki (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/composables/useScalarWriteRequestTestWiki.ts`, `app/composables/useScalarWriteRequestAddressBarSync.ts`, `app/utils/explorerScalarWriteRequestContext.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/applyTestWikiToggleToServerUrl.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css` |
+| Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `app/composables/useExplorerOptInCheckboxGroup.ts`, `app/utils/explorerModuleOptInFilter.ts`, `config/explorerOptIn.ts` (`isExplorerBetaOptInModule`, `isExplorerInternalOptInModule`), `tests/explorerModuleOptInFilter.test.mjs` |
+| Write-request production warning (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/createScalarWriteEndpointWarningElement.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `app/scalar/explorerMapConfigPlugins.client.ts` (hooks only — no warning view slots), `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`, `i18n/*` (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-test-wiki-name-*`) |
+| Test Request modal sticky section titles | `app/assets/css/explorer-codex-overrides.css` (`.explorer-page .scalar-client .request-response-header { z-index: 1 }`) — see **Scalar Test Request modal sticky headers** |
+| Test Request modal background scroll lock | `app/composables/useScalarClientModalBackgroundScrollLock.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css` (shell-pinned modal geometry under `--client-modal-open`) — see **Scalar Test Request modal background scroll lock** |
+| Write-request confirm dialog (Test Request Send, mock) | `app/components/explorer/scalar/ScalarClientWriteRequestConfirmDialog.vue`, `app/composables/useScalarClientWriteRequestConfirmDialog.ts`, `config/scalarClientWriteWarnings.ts` (`SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED`), `app/assets/css/explorer-codex-overrides.css` (containment + actions + title 18px; Codex exception #13), `app/pages/explorer/[[view]].vue` (`#explorer-reference-panel` sibling mount), `app/utils/resolveInterfaceMessage.ts` / `resolveActiveInterfaceLocale.ts` / `getInterfaceMessageTemplate.ts`, `i18n/*` (`explorer-scalar-write-confirm-*`) |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css`, `app/assets/css/shell-codex-overrides.css` (`fd-cdx-popover--arrow-seam-fix`, preferences body padding), `app/composables/useColorMode.ts`, `config/colorMode.ts`, `app/assets/css/color-modes.css` |
 | Header auth (Log in / username→account) | `app/composables/useShellAuthNavigation.ts`, `app/composables/useShellHeaderUtilityMenu.ts` (`SHELL_HEADER_UTILITY_MENU_VALUE`), `app/composables/useOAuthSession.ts`, `app/stores/oauthSession.js` |
@@ -1466,4 +1511,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Write-request Test Request modals include the test-wiki **`CdxCheckbox`**, production warning, and URL rewrite path documented under **Scalar plugin layer → Write-request test wiki**. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Write-request Test Request modals include the production **`CdxMessage`** (address-bar only; mocked test-wiki link) documented under **Scalar plugin layer → Write-request production warning**. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
