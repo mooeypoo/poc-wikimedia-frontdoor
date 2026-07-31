@@ -7,12 +7,14 @@ import LandingArticlePreview from './LandingArticlePreview.vue'
 /**
  * Landing “Build and learn with Wikimedia APIs” two-column demo.
  *
- * Left: slotted intro subheading + code block from Markdown. Right: stacked
- * article-preview cards from {@link LANDING_API_ARTICLE_PREVIEWS}. Optional
- * explore CTA uses Codex quiet progressive styling (content label — BiDi).
+ * Left: slotted band intro + subheading + `:::code-block` sample from Markdown
+ * (top-aligned with the right column). Right: stacked article-preview cards from
+ * {@link LANDING_API_ARTICLE_PREVIEWS}. Optional explore CTA uses Codex quiet
+ * progressive styling (content label — BiDi).
  *
  * MDC: `:::landing-api-demo{explore-href="/explorer" explore-label="…"}` … `:::`.
  *
+ * @see CodeBlock.vue
  * @see Figma API band 1181:25138
  */
 const props = withDefaults( defineProps<{
@@ -80,14 +82,16 @@ const isInternalExploreHref = computed( () => {
 	flex-direction: column;
 	gap: var( --spacing-150 );
 	inline-size: 100%;
-	margin-block-start: var( --spacing-150 );
+	/* Spacing from section h2 comes from landing-page.css (`--spacing-150`). */
+	margin-block-start: 0;
 }
 
 .landing-api-demo__columns {
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: var( --spacing-200 );
-	align-items: end;
+	/* Intro + curl top-align with the article-preview stack (Figma). */
+	align-items: start;
 	inline-size: 100%;
 }
 
@@ -104,6 +108,10 @@ const isInternalExploreHref = computed( () => {
 	min-inline-size: 0;
 }
 
+.landing-api-demo__example :deep( p ) {
+	margin-block: 0;
+}
+
 .landing-api-demo__example :deep( h3 ) {
 	margin-block: 0;
 	font-size: var( --font-size-large );
@@ -111,17 +119,15 @@ const isInternalExploreHref = computed( () => {
 	line-height: var( --line-height-xx-large );
 }
 
-.landing-api-demo__example :deep( pre ) {
+/* CodeBlock owns bordered chrome; flex gap supplies vertical rhythm here. */
+.landing-api-demo__example :deep( .code-block ) {
 	margin-block: 0;
-	border: var( --border-width-base ) solid var( --border-color-muted );
-	border-radius: var( --fd-explorer-controls-surface-border-radius );
-	background-color: var( --background-color-base );
+	inline-size: 100%;
 }
 
 .landing-api-demo__results {
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
 	gap: var( --spacing-75 );
 	min-inline-size: 0;
 }

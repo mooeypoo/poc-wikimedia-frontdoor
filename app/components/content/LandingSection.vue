@@ -35,6 +35,7 @@
 }
 
 .landing-section__inner :deep( h2 ) {
-	margin-block: 0;
+	/* End margin owned by landing-page.css (`--spacing-150`). */
+	margin-block-start: 0;
 }
 </style>

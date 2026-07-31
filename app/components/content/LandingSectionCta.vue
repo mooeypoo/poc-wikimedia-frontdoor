@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { CdxIcon } from '@wikimedia/codex'
-import { cdxIconArrowNext, cdxIconLinkExternal } from '@wikimedia/codex-icons'
+import { cdxIconArrowNext } from '@wikimedia/codex-icons'
 
 /**
  * Quiet progressive section CTA with trailing arrow (landing bands).
  *
  * Content label is BiDi-isolated. Internal paths use `NuxtLink`; absolute
- * http(s) URLs open externally with the Codex external icon instead of arrow.
+ * http(s) URLs open in a new tab. Always uses `cdxIconArrowNext` (not the
+ * external-link glyph) — landing CTAs read as “continue”, not “leaves site”.
  *
  * MDC: `::landing-section-cta{href="/explorer" label="Explore Wikimedia APIs"}`
  */
@@ -36,12 +37,6 @@ const isExternalHttp = computed( () => /^https?:/i.test( props.href ) )
 		>
 			<bdi>{{ label }}</bdi>
 			<CdxIcon
-				v-if="isExternalHttp"
-				:icon="cdxIconLinkExternal"
-				size="medium"
-			/>
-			<CdxIcon
-				v-else
 				:icon="cdxIconArrowNext"
 				size="medium"
 				:flip-for-rtl="true"

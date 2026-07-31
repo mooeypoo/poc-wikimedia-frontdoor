@@ -9,11 +9,35 @@ const props = defineProps<{
 }>()
 
 const isExternal = computed( () => /^https?:\/\//.test( props.href ?? '' ) )
+
+/**
+ * External prose links open in a new tab unless the author set `target`.
+ * Matches NavigationCard / AppButton off-platform behaviour.
+ */
+const resolvedTarget = computed( () => {
+	if ( props.target !== undefined && props.target !== null && props.target !== '' ) {
+		return props.target
+	}
+	return isExternal.value ? '_blank' : undefined
+} )
+
+const resolvedRel = computed( () => {
+	if ( props.rel !== undefined && props.rel !== null && props.rel !== '' ) {
+		return props.rel
+	}
+	return isExternal.value ? 'noopener noreferrer' : undefined
+} )
+
 const { $bananaI18n } = useNuxtApp()
 </script>
 
 <template>
-	<a :href="href" :target="target" :rel="rel" class="prose-link">
+	<a
+		:href="href"
+		:target="resolvedTarget"
+		:rel="resolvedRel"
+		class="prose-link"
+	>
 		<slot />
 		<CdxIcon
 			v-if="isExternal"

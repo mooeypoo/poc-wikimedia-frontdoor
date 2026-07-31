@@ -98,7 +98,10 @@ export default defineNuxtConfig( {
 						'typescript',
 						'python',
 						'php',
+						// Shell aliases — fences may use `bash`, `sh`, or `shell`
 						'bash',
+						'shell',
+						'shellscript',
 						'json',
 						'html',
 						'css',

@@ -17,25 +17,25 @@ export type { NavigationCardChip }
  * ([79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)).
  *
  * Differences from stock `CdxCard`:
- * - Vertical stack (no thumbnail)
+ * - Vertical stack; optional top **media** screenshot (`media` public path)
  * - Neutral-subtle background; transparent border that uses
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
  * - Optional **top** / **leading** title icons (Codex allowlist)
  * - Optional **title-logo** — allowlisted monochrome brand SVG
- *   (`gerrit` / `github` / `gitlab`) in the title position at
- *   `--size-icon-medium`, `currentColor` / `--color-base` (dark mode via tokens).
- *   Prefer over a text `title` for logo-led cards (e.g. Browse repositories).
+ *   (`gerrit` / `github` / `gitlab` / `wikimediaEnterprise`) in the title
+ *   position at `--size-icon-medium`, `currentColor` / `--color-base`
  * - Optional **supporting-text**: when `url` is set, rendered as a Codex Link
  *   (mixin tokens: `--color-link*`) to the same destination (external icon
  *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
- *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`) with a Codex
- *   **minimum** `--spacing-50` (8px) from the description via
- *   `padding-block-start`. When converting from prose, **keep the technical
- *   writer’s supporting-text / link labels** — do not rewrite them
- * - Optional `CdxInfoChip` row
+ *   off-platform cards still show the title trailing icon unless
+ *   `hide-external-icon` is set. In equal-height grids, supporting-text is
+ *   bottom-aligned (`margin-block-start: auto`) with a Codex **minimum**
+ *   `--spacing-50` (8px) from the description via `padding-block-start`.
+ *   When converting from prose, **keep the technical writer’s supporting-text
+ *   / link labels** — do not rewrite them
+ * - Optional `CdxInfoChip` row (`chips="award:…"` for purple Coolest Tool chips)
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
  *   MDC named slots do not nest under `:::navigation-card-grid`)
@@ -87,16 +87,27 @@ const props = withDefaults( defineProps<{
 	leadingIcon?: Icon | string
 	/**
 	 * Optional InfoChips under the description. Vue: chip objects. MDC: pipe-separated
-	 * labels (`chips="A|B"`) or `status:label` segments (`chips="subtle:A|success:B"`).
+	 * labels (`chips="A|B"`), `status:label` (`chips="subtle:A|success:B"`), or
+	 * `award:label` for landing Coolest Tool chips (star + purple100/600).
 	 * Ignored when the `#chips` slot is provided.
 	 */
 	chips?: NavigationCardChip[] | string
+	/**
+	 * Optional top-of-card screenshot / media (public path, e.g.
+	 * `/images/landing/app-lexica.png`). Decorative — empty `alt`.
+	 */
+	media?: string
 	/**
 	 * Force external link behaviour (`target="_blank"`, trailing external icon)
 	 * even for path-like URLs. Absolute `http(s):` URLs are treated as external
 	 * automatically.
 	 */
 	external?: boolean | string
+	/**
+	 * When true, omit the trailing / supporting-text external-link icon
+	 * (community app cards on the landing page).
+	 */
+	hideExternalIcon?: boolean | string
 }>(), {
 	url: '',
 	title: '',
@@ -104,7 +115,9 @@ const props = withDefaults( defineProps<{
 	supportingText: '',
 	titleLogo: '',
 	chips: () => [],
-	external: false
+	media: '',
+	external: false,
+	hideExternalIcon: false
 } )
 
 const slots = useSlots()
@@ -117,7 +130,16 @@ const isExternalFlag = computed( () => {
 	return flag === true || flag === '' || flag === 'true'
 } )
 
+const shouldHideExternalIcon = computed( () => {
+	const flag = props.hideExternalIcon
+	return flag === true || flag === '' || flag === 'true'
+} )
+
 const isLink = computed( () => props.url.trim().length > 0 )
+
+const mediaSrc = computed( () => props.media.trim() )
+
+const hasMedia = computed( () => mediaSrc.value.length > 0 )
 
 /**
  * True when the primary `url` is off-platform (drives trailing icon + link attrs).
@@ -186,6 +208,9 @@ const showSupportingTextAsLink = computed( () =>
  * supporting-text is present (the external affordance moves onto that link).
  */
 const resolvedTrailingIcon = computed( (): Icon | undefined => {
+	if ( shouldHideExternalIcon.value ) {
+		return undefined
+	}
 	const hasSupportingTextContent =
 		Boolean( slots[ 'supporting-text' ] ) ||
 		props.supportingText.trim().length > 0
@@ -234,12 +259,25 @@ const hasBody = computed( () =>
 	hasSupportingText.value ||
 	hasChips.value
 )
+
+/**
+ * Resolves an optional chip icon from the allowlisted NavigationCard icons.
+ *
+ * @param chip - Parsed chip descriptor.
+ * @returns Codex icon, or `undefined` when the chip has no icon.
+ */
+function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
+	return resolveNavigationCardIcon( chip.icon )
+}
 </script>
 
 <template>
 	<div
 		class="navigation-card"
-		:class="{ 'navigation-card--is-link': isLink }"
+		:class="{
+			'navigation-card--is-link': isLink,
+			'navigation-card--has-media': hasMedia
+		}"
 	>
 		<!--
 			Stretched link: whole-card click without wrapping body in <a>, so
@@ -255,6 +293,18 @@ const hasBody = computed( () =>
 				{{ title || supportingText || url }}
 			</span>
 		</component>
+		<div
+			v-if="hasMedia"
+			class="navigation-card__media"
+			aria-hidden="true"
+		>
+			<img
+				class="navigation-card__media-image"
+				:src="mediaSrc"
+				alt=""
+				decoding="async"
+			>
+		</div>
 		<div
 			v-if="hasBody"
 			class="navigation-card__body"
@@ -376,7 +426,7 @@ const hasBody = computed( () =>
 						>
 							<bdi>{{ supportingText }}</bdi>
 							<CdxIcon
-								v-if="isExternalDestination"
+								v-if="isExternalDestination && !shouldHideExternalIcon"
 								:icon="cdxIconLinkExternal"
 								size="x-small"
 								aria-hidden="true"
@@ -396,6 +446,10 @@ const hasBody = computed( () =>
 						v-for="( chip, chipIndex ) in parsedChips"
 						:key="`${chip.label}-${chipIndex}`"
 						:status="chip.status ?? 'subtle'"
+						:icon="resolveChipIcon( chip )"
+						:class="{
+							'navigation-card__chip--award': chip.variant === 'award'
+						}"
 					>
 						<bdi>{{ chip.label }}</bdi>
 					</CdxInfoChip>
@@ -422,6 +476,30 @@ const hasBody = computed( () =>
 	text-decoration: none;
 	color: inherit;
 	box-sizing: border-box;
+	overflow: clip;
+}
+
+.navigation-card--has-media {
+	/* Media bleeds to the card’s top / inline edges; body keeps padding. */
+	padding-block-start: 0;
+	padding-inline: 0;
+}
+
+.navigation-card__media {
+	position: relative;
+	z-index: 1;
+	inline-size: 100%;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.navigation-card__media-image {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	object-position: top center;
 }
 
 .navigation-card__stretched-link {
@@ -457,6 +535,11 @@ const hasBody = computed( () =>
 	min-block-size: 0;
 	/* Let clicks fall through to the stretched link except on nested anchors. */
 	pointer-events: none;
+}
+
+.navigation-card--has-media .navigation-card__body {
+	padding-block: var( --spacing-75 );
+	padding-inline: var( --spacing-75 );
 }
 
 .navigation-card__description :deep( a ),
@@ -499,10 +582,19 @@ const hasBody = computed( () =>
 
 .navigation-card__title-row {
 	display: flex;
-	align-items: center;
+	/* Top-align leading icons with the first line of the title (wrap-safe). */
+	align-items: flex-start;
 	gap: var( --spacing-50 );
 	inline-size: 100%;
 	min-inline-size: 0;
+}
+
+/*
+ * Optical nudge: Codex medium icons sit slightly high vs bold title
+ * cap-height when top-aligned; 2px matches Figma landing persona cards.
+ */
+.navigation-card__title-icon--leading {
+	padding-block-start: 2px;
 }
 
 .navigation-card__title {
@@ -637,6 +729,24 @@ const hasBody = computed( () =>
 	align-items: center;
 	gap: var( --spacing-50 );
 	inline-size: 100%;
+	/* Pin chips under copy in equal-height grids (with or without supporting-text). */
+	margin-block-start: auto;
+}
+
+/*
+ * Landing Coolest Tool award chip — Codex purple100 background / purple600
+ * text+icon (bound as `--fd-landing-award-chip-*` on `.fd-landing-page`).
+ * Codex sets `.cdx-info-chip__text` to `--color-base`; override that too.
+ */
+.navigation-card__chip--award.cdx-info-chip {
+	background-color: var( --fd-landing-award-chip-background-color, #e6e0f0 );
+	color: var( --fd-landing-award-chip-color, #7a6db7 );
+	border-color: transparent;
+}
+
+.navigation-card__chip--award.cdx-info-chip :deep( .cdx-info-chip__text ),
+.navigation-card__chip--award.cdx-info-chip :deep( .cdx-icon ) {
+	color: var( --fd-landing-award-chip-color, #7a6db7 );
 }
 
 .navigation-card--is-link {

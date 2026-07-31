@@ -22,6 +22,7 @@ import {
 	cdxIconMap,
 	cdxIconRobot,
 	cdxIconSearch,
+	cdxIconStar,
 	cdxIconUserGroup,
 	cdxIconUserTalk,
 	type Icon
@@ -46,6 +47,7 @@ export const NAVIGATION_CARD_ICONS: Record<string, Icon> = {
 	map: cdxIconMap,
 	robot: cdxIconRobot,
 	search: cdxIconSearch,
+	star: cdxIconStar,
 	userGroup: cdxIconUserGroup,
 	userTalk: cdxIconUserTalk,
 	cdxIconArticle,
@@ -63,6 +65,7 @@ export const NAVIGATION_CARD_ICONS: Record<string, Icon> = {
 	cdxIconMap,
 	cdxIconRobot,
 	cdxIconSearch,
+	cdxIconStar,
 	cdxIconUserGroup,
 	cdxIconUserTalk
 }

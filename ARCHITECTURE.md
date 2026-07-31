@@ -95,7 +95,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
-│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard)
+│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
 │   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab) for NavigationCard
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
@@ -360,7 +360,7 @@ The rail lists **endpoints for `visibleSelectedModule` only** — not every disc
 
 **Rendering.**
 
-- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards and the Reset credentials panel consume the same border-radius variable.
+- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards, the Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** consume the same border-radius variable.
 - Heading: selected module **`headingTitle`** in `<bdi>` at **`--font-size-medium`** (no beta/version chips in the rail header).
 - Endpoint rows: **`CdxMenuItem`** outside `CdxMenu` — same Codex shell exception as **`ShellSidePanelNav`**. Default slot renders HTTP method (`dir="ltr"`, method colours) + **name** (`<bdi>`, OpenAPI `summary` via `resolveEndpointNameLabel()`; path only as fallback); `:label` supplies the accessible name (includes path when it differs); **`:selected`** binds to **`selectedEndpointOperationId`**. Non-selected **name** hover uses **`--color-progressive`**; HTTP method tags **keep semantic colours** on hover and when selected. Selected rows override Codex **`progressive-subtle`** background to **transparent** (name colour only).
 - Scroll divider: when **`.explorer-module-rail__endpoint-scrollport`** has `scrollTop > 0`, a sticky **`.explorer-module-rail__scroll-divider`** (real DOM element, not `::before`) pins a **`--border-color-subtle`** line at the scrollport top; end-column insets with **`margin-inline: var(--spacing-75)`**, inline layout via rail **`padding-inline: var(--spacing-50)`**.
@@ -472,7 +472,7 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
 | `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
 | `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
-| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, and Reset credentials panel (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
+| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
 | `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `560px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row (search min + controls + **16px** search→preferences + **8px**×2 remaining gaps) |
 | `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
@@ -982,11 +982,11 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
-| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards and Reset credentials panel |
+| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, and CodeTabs |
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
-| `config/landingSurfaces.ts` | Platform home: band gradient stops (`apis` / `join`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px → `--fd-landing-content-max-inline-size`), committed `LANDING_ASSETS` paths, `LANDING_API_ARTICLE_PREVIEWS` placeholder cards |
+| `config/landingSurfaces.ts` | Platform home: band gradient stops (`apis` / `join`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px → `--fd-landing-content-max-inline-size`), **`LANDING_AWARD_CHIP`** (Codex purple100 / purple600 → `--fd-landing-award-chip-*`), committed `LANDING_ASSETS` paths (incl. app screenshots), `LANDING_API_ARTICLE_PREVIEWS` placeholder cards |
 | `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
 | `config/navigationCardTitleLogos.ts` | Allowlisted brand title logos (`gerrit`, `github`, `gitlab`, `wikimediaEnterprise`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
@@ -1059,12 +1059,15 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **Content measure:** Centered inners use **`--fd-landing-content-max-inline-size`** set from **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / **1000px**) in `config/landingSurfaces.ts` via inline style on `.fd-landing-page` in `index.vue` (config source of truth — AGENTS rule 6). Inline padding uses **`--fd-layout-page-margin`**.
 
-**Typography exceptions** (`.fd-landing-page` in `landing-page.css`, override `.fd-content-page` serif Heading 1/2):
+**Typography / chrome exceptions** (`.fd-landing-page` in `landing-page.css`, override `.fd-content-page` serif Heading 1/2):
 
 | Element | Landing treatment |
 |---------|-------------------|
 | `h1` | Monospace, bold, centered (Figma hero) |
 | `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
+| Heading anchors | Not rendered (`ProseHeading` skips anchors when `isLandingRoutePath`) |
+| Section `h2` → content | **`--spacing-150` (24px)** end margin; next sibling start margin zeroed |
+| Hero prose links | No ProseA external icon; no `:visited` colour (keep link / hover / active) |
 | `hr` | Hidden (no Markdown `---` dividers) |
 
 **MDC structure** (`content/en/index.md`):
@@ -1073,11 +1076,11 @@ Markdown page titles and section headings follow the Codex [typography style gui
 |-------|------|
 | `:::landing-hero` | Full-bleed dither + H1 / intro / `::app-button` + ascii globe |
 | `:::landing-section` | “What would you like to do?” + 3-up cards (leading icons / Enterprise `title-logo`) |
-| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base` |
-| `:::landing-api-demo` | Two-column curl + article previews from `LANDING_API_ARTICLE_PREVIEWS` |
-| `::landing-section-cta` | Quiet progressive section link + arrow / external icon |
+| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base`; community app cards use `media` + optional `chips="award:…"` + `hide-external-icon` |
+| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + article previews from `LANDING_API_ARTICLE_PREVIEWS` |
+| `::landing-section-cta` | Quiet progressive section link + trailing arrow (always `cdxIconArrowNext`, including external Toolhub CTA — not the external glyph) |
 
-**Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`). Do not invent community-app portrait screenshots or true bitonal dither textures — call out missing assets. Current `hero-dither.svg` is a soft radial gradient export from Figma (not a dot dither).
+**Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`) — hero dither / ascii globe, API article-preview thumbs, and community-app screenshots (`app-lexica` / `app-paulina` / `app-listen`). Do not invent replacements; call out still-missing assets (e.g. true bitonal dither texture — current `hero-dither.svg` is a soft radial gradient export from Figma).
 
 **Product decision:** `DESIGN_REQUIREMENTS.md` → Platform landing / home. Figma Latest [1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177). Metrics row in Figma is **hidden** — not implemented.
 
@@ -1125,19 +1128,20 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
-| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`, including `--color-link--hover`) |
+| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external; external links default to `target="_blank"` + `rel="noopener noreferrer"`. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`, including `--color-link--hover`). Landing hero hides the external icon via `landing-page.css` |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` (optional `columns="2"` for two-up rows, e.g. landing Join) wrapping `::navigation-card` — equal-height rows; default max **3** columns at desktop |
+| `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap; `dir="ltr"`); see **Code block** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
-| `AppButton.vue` | Progressive link chrome (NuxtLink / `<a>`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — single interactive element (not nested `CdxButton`); label BiDi-isolated |
+| `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — click navigates (`navigateTo` / external window); label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
 | `LandingHero.vue` | — | `:::landing-hero` — see **Platform landing / home** |
 | `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
 | `LandingSection.vue` | — | `:::landing-section` |
 | `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` |
 | `LandingArticlePreview.vue` | — | Used by `LandingApiDemo` (not authored directly in Markdown) |
-| `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` / `cdxIconLinkExternal` | `::landing-section-cta{href label}` |
+| `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` | `::landing-section-cta{href label}` — arrow for internal and external; external still `target="_blank"` |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
 | `Attribution.vue` | `CdxIcon` + `cdxIconLogoWikimedia` | `::attribution{…}` — CC BY-SA footer for wiki-imported pages |
@@ -1167,7 +1171,7 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row. **Minimum** **`--spacing-50` (8px)** from the description via **`padding-block-start`** on `.navigation-card__supporting-text` (so the gap never collapses below 8px when free space is zero) |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 
-**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `chips` (Vue array or MDC pipe-separated string), `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
+**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `media` (public image path for top screenshot), `chips` (Vue array or MDC pipe-separated string; `award:Label` → star + purple Coolest Tool chip), `hideExternalIcon`, `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
 
 **Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose. Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 
@@ -1224,9 +1228,19 @@ Highlight copy is **page content** (per-locale Markdown or Vue slots) — not ba
 
 Imported wiki message boxes map to `::callout{type=…}` via the remote-content conversion registry (`docs/adr-remote-content-fetching.md`).
 
+#### Code block
+
+`CodeBlock.vue` is the standalone (non-tabbed) code module. It reuses the same bordered panel chrome as framed **Code tabs** — muted border, exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`), `--background-color-base`, and `--spacing-75` padding on `pre` — without a `CdxTabs` header.
+
+**MDC:** `:::code-block` wrapping a normal fenced code block (Shiki highlighting, line numbers, and diffs still apply). Use a language tag present in `nuxt.config.ts` `content.build.markdown.highlight.langs` (e.g. `bash` / `shell` for curl — not an unknown tag, or highlighting is skipped). The wrapper pins `dir="ltr"` because code / shell / curl samples are inherently LTR. Long lines **soft-wrap** inside the panel (`white-space: pre-wrap`); authors still use `\` + indent for intentional multi-line commands.
+
+**When to use:** One sample (landing API curl, a single language example). Prefer **Code tabs** when authors need language or variant switching.
+
+**Demo / polish surface:** `content/en/index.md` (API band) and `content/en/use-content-and-data.md` → Code block.
+
 #### Code tabs
 
-`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`).
+`CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop. Codex documents framed tabs for use inside a bordered module ([Tabs component](https://doc.wikimedia.org/codex/latest/components/demos/tabs.html)); quiet (default) tabs are reserved for shell chrome (`ShellPrimaryNav`). Panel border / radius / `pre` padding tokens match **Code block** — keep them in sync when polishing.
 
 **Why framed:** Tabbed code blocks are self-contained modules on prose pages, not page-level navigation. Framed tabs supply the gray header row, white selected-tab label, and content panel chrome without reimplementing tab interaction states.
 
@@ -1237,7 +1251,7 @@ Imported wiki message boxes map to `::callout{type=…}` via the remote-content 
 | Rule | Token / value | Rationale |
 |---|---|---|
 | Module border | `1px solid var(--border-color-muted)` | Muted module edge per Codex framed-tabs-in-a-box pattern |
-| Module radius | `var(--border-radius-base)` | Matches Codex framed tab label corner radius |
+| Module radius | `var(--fd-explorer-controls-surface-border-radius)` (**4px**) | Matches CodeBlock / NavigationCard / explorer surfaces (not Codex 2px base) |
 | Code padding | `var(--spacing-75)` (12px) on `pre` | Inset code inside the white content panel |
 | Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM for find-in-page across tabs |
 

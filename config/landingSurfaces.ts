@@ -42,7 +42,23 @@ export const LANDING_ASSETS = {
 	heroAsciiGlobe: '/images/landing/hero-ascii-globe.png',
 	apiPreviewBonnie: '/images/landing/api-preview-bonnie.jpg',
 	apiPreviewHaaland: '/images/landing/api-preview-haaland.jpg',
-	apiPreviewWorldCup: '/images/landing/api-preview-worldcup.png'
+	apiPreviewWorldCup: '/images/landing/api-preview-worldcup.png',
+	appLexica: '/images/landing/app-lexica.png',
+	appPaulina: '/images/landing/app-paulina.png',
+	appListen: '/images/landing/app-listen.png'
+} as const
+
+/**
+ * Coolest Tool award InfoChip colours (Codex palette purple100 / purple600).
+ *
+ * Not shipped as runtime CSS variables by `@wikimedia/codex-design-tokens` in
+ * this project — bind onto `.fd-landing-page` from `app/pages/index.vue`.
+ *
+ * @see https://doc.wikimedia.org/codex/latest/style-guide/colors.html
+ */
+export const LANDING_AWARD_CHIP = {
+	backgroundColor: '#e6e0f0',
+	color: '#7a6db7'
 } as const
 
 /**

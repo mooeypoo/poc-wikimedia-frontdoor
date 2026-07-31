@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { LANDING_CONTENT_MAX_INLINE_SIZE } from '../../config/landingSurfaces'
+import {
+	LANDING_AWARD_CHIP,
+	LANDING_CONTENT_MAX_INLINE_SIZE
+} from '../../config/landingSurfaces'
 import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
 
 /**
@@ -9,7 +12,8 @@ import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
  * as nested slug routes, so the homepage gets its own page component. Wraps
  * content in `.fd-content-page.fd-landing-page` so Codex content typography and
  * landing-specific surfaces (hero, full-bleed bands) apply. Content max width
- * comes from {@link LANDING_CONTENT_MAX_INLINE_SIZE} (config — not hardcoded in CSS).
+ * and award-chip colours come from {@link LANDING_CONTENT_MAX_INLINE_SIZE} /
+ * {@link LANDING_AWARD_CHIP} (config — not hardcoded in CSS).
  *
  * @see ARCHITECTURE.md → Platform landing / home
  * @see DESIGN_REQUIREMENTS.md → Platform landing / home
@@ -34,11 +38,12 @@ if ( !page.value ) {
 }
 
 /**
- * Sets `--fd-landing-content-max-inline-size` from config so section inners
- * do not hardcode the 1000px measure (AGENTS.md → All configuration in config/).
+ * Sets landing CSS custom properties from config (AGENTS.md → config/).
  */
 const landingPageStyle = {
-	'--fd-landing-content-max-inline-size': LANDING_CONTENT_MAX_INLINE_SIZE
+	'--fd-landing-content-max-inline-size': LANDING_CONTENT_MAX_INLINE_SIZE,
+	'--fd-landing-award-chip-background-color': LANDING_AWARD_CHIP.backgroundColor,
+	'--fd-landing-award-chip-color': LANDING_AWARD_CHIP.color
 }
 </script>
 

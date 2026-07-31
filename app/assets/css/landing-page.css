@@ -45,16 +45,46 @@
 /*
  * Landing section titles stay Codex Heading 2 size/weight but use the base
  * (sans) stack per Figma — not the content-page serif override.
+ * **24px** (`--spacing-150`) between each h2 and the following content.
  */
 .fd-landing-page :where( h2 ) {
 	font-family: var( --font-family-base );
 	font-weight: var( --font-weight-bold );
+	margin-block-start: 0;
+	margin-block-end: var( --spacing-150 );
+}
+
+/*
+ * Avoid stacking h2 end-margin with the next sibling’s start margin
+ * (card grid, API demo, or band intro paragraph).
+ */
+.fd-landing-page :where( h2 ) + :where( .navigation-card-grid, .landing-api-demo, p ) {
 	margin-block-start: 0;
 }
 
 /* No Markdown hr section rules on the home page (same product call as get-started). */
 .fd-landing-page :where( hr ) {
 	display: none;
+}
+
+/*
+ * Hero intro links (Wikipedia / other Wikimedia projects): no external glyph
+ * and no visited colour — keep progressive link states only.
+ */
+.fd-landing-page .landing-hero :where( .prose-link__external-icon ) {
+	display: none;
+}
+
+.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited ) {
+	color: var( --color-link );
+}
+
+.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited:hover ) {
+	color: var( --color-link--hover );
+}
+
+.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited:active ) {
+	color: var( --color-link--active );
 }
 
 /* Quiet progressive Explore / Discover CTAs under landing sections. */

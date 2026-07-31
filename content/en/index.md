@@ -19,10 +19,10 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::navigation-card{url="/get-started/build-for-communities" title="Build for Wikimedia communities" description="Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tool and bots using Wikimedia infrastructure." supporting-text="Learn about building tools →" leading-icon="userGroup"}
 ::
 
-::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
+::navigation-card{url="/get-started/data-for-research" title="Work with Wikimedia datasets for research" description="Power research and create visualizations using APIs and bulk downloads of Wikimedia projects' data." supporting-text="Learn about bulk data sources →" leading-icon="labFlask"}
 ::
 
-::navigation-card{url="/get-started/data-for-research" title="Work with Wikimedia datasets for research" description="Power research and create visualizations using APIs and bulk downloads of Wikimedia projects' data." supporting-text="Learn about bulk data sources →" leading-icon="labFlask"}
+::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
 ::
 :::
 :::
@@ -30,15 +30,17 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 :::landing-band{variant="apis"}
 ## Build and learn with Wikimedia APIs
 
+:::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
 Wikimedia APIs power thousands of apps, tools, and bots. Query analytics, articles, media, pages' history, search, user data, and more across languages. Send requests and inspect responses right in your browser.
 
-:::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
 ### List of most viewed English Wikipedia articles
 
-```sh
+:::code-block
+```bash
 curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
--H "accept: application/json"
+  -H "accept: application/json"
 ```
+:::
 :::
 :::
 
@@ -48,13 +50,13 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
 
 :::navigation-card-grid
-::navigation-card{url="http://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere."}
+::navigation-card{url="http://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
 ::
 
-::navigation-card{url="https://paulina.toolforge.org/" title="Paulina - Data for the Public Domain" description="A global, multilingual search interface for works and authors in the public domain using Wikidata and Python."}
+::navigation-card{url="https://paulina.toolforge.org/" title="Paulina" description="A global, multilingual search interface for works and authors in the public domain using Wikidata and Python." media="/images/landing/app-paulina.png" chips="award:Coolest Tool Award 2025" hide-external-icon}
 ::
 
-::navigation-card{url="https://listen.hatnote.com/" title="Listen to Wikipedia" description="Multimedia visualizer which translates recent Wikipedia edits into a display of visuals and sounds."}
+::navigation-card{url="https://listen.hatnote.com/" title="Listen to Wikipedia" description="Multimedia visualizer which translates recent Wikipedia edits into a display of visuals and sounds." media="/images/landing/app-listen.png" hide-external-icon}
 ::
 :::
 

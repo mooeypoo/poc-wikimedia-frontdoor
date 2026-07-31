@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CdxIcon } from '@wikimedia/codex'
+import { CdxButton, CdxIcon } from '@wikimedia/codex'
 import {
 	cdxIconArrowNext,
 	cdxIconLinkExternal,
@@ -7,12 +7,12 @@ import {
 } from '@wikimedia/codex-icons'
 
 /**
- * Progressive CTA used from Markdown (`::app-button`).
+ * Progressive primary CTA used from Markdown (`::app-button`).
  *
- * Renders as an internal `NuxtLink` or external `<a>` with Codex progressive
- * button chrome (not a nested `CdxButton`, so the control stays a single
- * interactive element). Optional large size and `arrowNext` end icon for the
- * landing hero. Label is a content string (BiDi-isolated).
+ * Renders Codex `CdxButton` (`action="progressive"` `weight="primary"`) so
+ * shell prose-link colour rules cannot wash out the label (custom `<a>` chrome
+ * lost to `.frontdoor-shell__main a`). Click navigates internally via
+ * `navigateTo` or opens external URLs. Label is BiDi-isolated.
  *
  * MDC: `::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}`
  */
@@ -21,7 +21,7 @@ const props = withDefaults( defineProps<{
 	label: string
 	/** MDC passes attribute values as strings; accept both for Vue prop validation. */
 	external?: boolean | string
-	/** Visual size (`medium` default, `large` for landing hero — 44px min block size). */
+	/** Codex Button size (`medium` default, `large` for landing hero). */
 	size?: 'medium' | 'large' | string
 	/**
 	 * Optional end icon. Allowlisted: `arrowNext`. Empty = no end icon
@@ -40,7 +40,7 @@ const isInternal = computed( () => {
 	)
 } )
 
-const showExternalIcon = computed( () => {
+const isExternalHttp = computed( () => {
 	return !isInternal.value && (
 		props.external === true || props.external === '' || props.external === 'true' ||
 		/^https?:/i.test( props.href )
@@ -55,20 +55,38 @@ const resolvedEndIcon = computed( (): Icon | undefined => {
 	return undefined
 } )
 
-const buttonClass = computed( () => {
-	return [
-		'app-button',
-		'app-button--progressive',
-		props.size === 'large' ? 'app-button--large' : null
-	]
+const buttonSize = computed( (): 'medium' | 'large' => {
+	return props.size === 'large' ? 'large' : 'medium'
 } )
+
+/**
+ * Navigates to the configured href (internal router or external window).
+ *
+ * @returns Promise that resolves when internal navigation finishes.
+ */
+async function onActivate(): Promise<void> {
+	if ( isInternal.value ) {
+		await navigateTo( props.href )
+		return
+	}
+	if ( !import.meta.client ) {
+		return
+	}
+	if ( isExternalHttp.value ) {
+		window.open( props.href, '_blank', 'noopener,noreferrer' )
+		return
+	}
+	window.location.assign( props.href )
+}
 </script>
 
 <template>
-	<NuxtLink
-		v-if="isInternal"
-		:to="href"
-		:class="buttonClass"
+	<CdxButton
+		action="progressive"
+		weight="primary"
+		:size="buttonSize"
+		class="app-button"
+		@click="onActivate"
 	>
 		<bdi>{{ label }}</bdi>
 		<CdxIcon
@@ -76,81 +94,11 @@ const buttonClass = computed( () => {
 			:icon="resolvedEndIcon"
 			size="medium"
 			:flip-for-rtl="true"
-			class="app-button__end-icon"
-		/>
-	</NuxtLink>
-	<a
-		v-else
-		:href="href"
-		:class="buttonClass"
-		:rel="showExternalIcon ? 'noopener noreferrer' : undefined"
-		:target="showExternalIcon ? '_blank' : undefined"
-	>
-		<bdi>{{ label }}</bdi>
-		<CdxIcon
-			v-if="resolvedEndIcon"
-			:icon="resolvedEndIcon"
-			size="medium"
-			:flip-for-rtl="true"
-			class="app-button__end-icon"
 		/>
 		<CdxIcon
-			v-else-if="showExternalIcon"
+			v-else-if="isExternalHttp"
 			:icon="cdxIconLinkExternal"
-			size="x-small"
-			class="app-button__external-icon"
+			size="medium"
 		/>
-	</a>
+	</CdxButton>
 </template>
-
-<style scoped>
-.app-button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: var( --spacing-25 );
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-100 );
-	border-radius: var( --border-radius-base );
-	font-family: inherit;
-	font-size: var( --font-size-medium );
-	font-weight: var( --font-weight-bold );
-	line-height: var( --line-height-small );
-	text-decoration: none;
-	cursor: pointer;
-	transition: background-color 100ms, color 100ms, border-color 100ms;
-}
-
-.app-button--large {
-	/* Figma large progressive CTA is 44px tall. */
-	min-block-size: 2.75rem;
-	padding-inline: var( --spacing-100 );
-}
-
-.app-button--progressive {
-	background-color: var( --background-color-progressive );
-	color: var( --color-inverted );
-	border: var( --border-width-base ) solid var( --border-color-progressive );
-}
-
-.app-button--progressive:hover {
-	background-color: var( --background-color-progressive--hover );
-	border-color: var( --border-color-progressive--hover );
-	color: var( --color-inverted );
-	text-decoration: none;
-}
-
-.app-button--progressive:active {
-	background-color: var( --background-color-progressive--active );
-	border-color: var( --border-color-progressive--active );
-}
-
-.app-button__end-icon,
-.app-button__external-icon {
-	color: inherit;
-}
-
-.app-button__external-icon {
-	margin-inline-start: 0;
-}
-</style>

@@ -87,10 +87,7 @@ const bandStyle = computed( () => {
 }
 
 .landing-band__inner :deep( h2 ) {
-	margin-block: 0;
-}
-
-.landing-band__inner :deep( h2 + p ) {
-	margin-block-start: var( --spacing-100 );
+	/* End margin owned by landing-page.css (`--spacing-150`). */
+	margin-block-start: 0;
 }
 </style>
