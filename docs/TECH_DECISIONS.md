@@ -42,6 +42,14 @@ These two surfaces have different rules and must not be conflated.
 - Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
 - Scalar chrome Front Door does not own is opted out in `config/scalar.ts`: `hideDarkModeToggle`, **`hideClientButton`** (Open API Client), `agent.disabled` — prefer schema flags over CSS hacks
 
+### API to explore audience chips
+
+**Decision:** Show beta and internal as **label-only** warning **`CdxInfoChip`**s beside the module name in the **API to explore** Select (menu + closed handle). Keep **version** as Codex MenuItem `supportingText` only (strip trailing `-beta` / `-internal` from the version string). Do not show Codex status icons on these chips.
+
+**Implementation:** Custom `CdxSelect` `#menu-item` / `#label` slots (`ExplorerModuleSelectOptionContent`) — Codex exception #14. Hide `.cdx-info-chip__icon--vue` in CSS (Codex forces icons on `warning` and ignores null `icon`; same pattern as NavigationCard). Interaction states stay native Codex.
+
+**Source of truth:** `ARCHITECTURE.md` → Codex exceptions #14 and REST API module select; `DESIGN_REQUIREMENTS.md` → REST API module select + opt-in; `AGENTS.md` InfoChip label-only exception + RTL checklist.
+
 ### Opt-in module visibility (community explorer)
 
 **Decision:** Gate which discovery modules appear in **API to explore** (and therefore which spec Scalar loads) with the Include checkboxes. Defaults: beta **on**, internal **off** (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`). Bootstrap still fetches all modules; filtering is client-side.

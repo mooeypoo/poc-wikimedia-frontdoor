@@ -578,7 +578,8 @@ Top to bottom:
 | Control | Pattern |
 |---------|---------|
 | **API module** | `CdxSelect` — field label banana `explorer-rest-api-module-label` (“API to explore”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
-| **Menu supporting text** | Codex MenuItem **`supportingText`** — beta and version metadata: localized **beta** label (`explorer-module-beta-chip-label`) when `showBetaChip`; **`versionChipLabel`** when present (for example `v0.1.0`); both joined with **` · `** via `formatExplorerModuleSelectSupportingText()` in `explorerModuleRailHeading.ts`. Version strings use `isolatePickerLabel()`; omitted when neither chip applies |
+| **Menu supporting text** | Codex MenuItem **`supportingText`** — **version only** (`versionChipLabel`, e.g. `v0.1.0`) via `formatExplorerModuleSelectSupportingText()`; trailing `-beta` / `-internal` stripped. Omitted when no version |
+| **Menu audience chips** | **Label-only** warning **`CdxInfoChip`** (**beta** / **internal**) beside the module name — Codex exception #14 (`ExplorerModuleSelectOptionContent` in Select `#menu-item` / `#label` slots). Banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`. Status icons hidden (Codex forces them on `warning`). Do **not** put audience markers in `supportingText` |
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Select the REST API that you’d like to test on this project” |
 
@@ -597,13 +598,13 @@ Top to bottom:
 
 **Layout:** Opt-in group sits beside the **API to explore** select with **no** extra `margin-block-start` (overrides Codex field default).
 
-**Source:** `ExplorerProjectControls.vue`, `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only).
+**Source:** `ExplorerProjectControls.vue`, `ExplorerModuleSelectOptionContent.vue` (Codex exception #14), `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only), `i18n/*` (`explorer-module-*-chip-label`).
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. **Internal** opt-in gates discovery modules whose version path segment ends with `-internal` (for example **Discord Preview API** / `discord/v0-internal`); default **off** so they stay out of **API to explore** until checked.
 
 **Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes; Attribution API `attribution/v0-beta` docs / framework / beta-talk links, leaving the one-line product summary). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
-**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented exceptions.
+**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): custom `#menu-item` / `#label` slots insert **label-only** warning audience chips (icons hidden) while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented shell exceptions.
 
 ---
 
@@ -840,6 +841,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |
 | *(uncommitted)* | Internal opt-in module gate | Hide `*-internal` discovery modules (e.g. Discord Preview / `discord/v0-internal`) from **API to explore** until Internal checkbox is on |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |
 | *(uncommitted)* | API catalog Math + Wikimedia REST cards | `config/apiCatalogWikimedia.ts` — Math API (before Wikifunctions) + Wikimedia REST APIs → `/explorer`; All projects / Stable; `universal` |

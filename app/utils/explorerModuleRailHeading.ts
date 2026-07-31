@@ -1,3 +1,5 @@
+import { isExplorerInternalOptInModule } from '../../config/explorerOptIn.ts'
+
 /** Matches a trailing or embedded "(Beta)" segment in discovery module titles. */
 const MODULE_TITLE_BETA_PATTERN = /\s*\(\s*beta\s*\)\s*/gi
 
@@ -5,20 +7,21 @@ export interface ExplorerModuleRailHeading {
 	headingTitle: string
 	versionChipLabel?: string
 	showBetaChip: boolean
+	showInternalChip: boolean
 }
 
-/** Trailing prerelease tag stripped from version chip labels (beta is shown separately). */
-const MODULE_VERSION_BETA_SUFFIX_PATTERN = /-beta$/i
+/** Trailing audience tags stripped from version labels (shown as separate warning chips). */
+const MODULE_VERSION_AUDIENCE_SUFFIX_PATTERN = /-(?:beta|internal)$/i
 
 /**
  * Normalizes a raw module version string for chip display.
  *
  * @param moduleVersion - Raw version from discovery or the module spec.
- * @returns Version without a leading `v` or trailing `-beta` tag.
+ * @returns Version without a leading `v` or trailing `-beta` / `-internal` tag.
  */
 function normalizeModuleVersionForChip( moduleVersion: string ): string {
 	const withoutLeadingV = moduleVersion.trim().replace( /^v/i, '' )
-	return withoutLeadingV.replace( MODULE_VERSION_BETA_SUFFIX_PATTERN, '' ).trim()
+	return withoutLeadingV.replace( MODULE_VERSION_AUDIENCE_SUFFIX_PATTERN, '' ).trim()
 }
 
 /**
@@ -68,7 +71,8 @@ export function resolveExplorerModuleRailHeading(
 	return {
 		headingTitle,
 		versionChipLabel: formatModuleVersionChipLabel( moduleVersion ),
-		showBetaChip
+		showBetaChip,
+		showInternalChip: isExplorerInternalOptInModule( moduleName )
 	}
 }
 
@@ -77,16 +81,22 @@ export function resolveExplorerModuleRailHeading(
  *
  * @param railHeading - Parsed heading parts for the module.
  * @param betaChipLabel - Localized label for the beta InfoChip.
+ * @param internalChipLabel - Localized label for the internal InfoChip.
  * @returns Comma-separated phrase for screen readers.
  */
 export function formatModuleRailHeadingAriaLabel(
 	railHeading: ExplorerModuleRailHeading,
-	betaChipLabel: string
+	betaChipLabel: string,
+	internalChipLabel: string = ''
 ): string {
 	const segments = [ railHeading.headingTitle ]
 
 	if ( railHeading.showBetaChip ) {
 		segments.push( betaChipLabel )
+	}
+
+	if ( railHeading.showInternalChip && internalChipLabel ) {
+		segments.push( internalChipLabel )
 	}
 
 	if ( railHeading.versionChipLabel ) {
@@ -97,30 +107,16 @@ export function formatModuleRailHeadingAriaLabel(
 }
 
 /**
- * Builds supporting text for REST API module select menu items.
+ * Builds version-only supporting text for REST API module select menu items.
  *
- * Mirrors beta and version chip metadata from the module rail using Codex
- * MenuItem `supportingText` (subtle text after the label).
+ * Audience markers (beta / internal) are rendered as warning `CdxInfoChip`s in the
+ * custom Select `menu-item` slot — not as Codex `supportingText`.
  *
- * @param railHeading - Parsed heading parts for the module.
- * @param betaChipLabel - Localized label for the beta chip.
  * @param versionChipLabel - Optional isolated version label for display.
- * @returns Supporting text, or an empty string when no chips apply.
+ * @returns Supporting text, or an empty string when no version applies.
  */
 export function formatExplorerModuleSelectSupportingText(
-	railHeading: Pick<ExplorerModuleRailHeading, 'showBetaChip' | 'versionChipLabel'>,
-	betaChipLabel: string,
 	versionChipLabel?: string
 ): string {
-	const segments: string[] = []
-
-	if ( railHeading.showBetaChip ) {
-		segments.push( betaChipLabel )
-	}
-
-	if ( versionChipLabel ) {
-		segments.push( versionChipLabel )
-	}
-
-	return segments.join( ' · ' )
+	return versionChipLabel?.trim() ?? ''
 }

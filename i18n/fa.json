@@ -108,6 +108,7 @@
   "explorer-loading-interface": "در حال بارگذاری رابط کاوشگر...",
   "explorer-loading-modules": "در حال بارگذاری ماژول‌ها...",
   "explorer-module-beta-chip-label": "بتا",
+  "explorer-module-internal-chip-label": "داخلی",
   "explorer-module-description-readinglists-v0": "فهرست‌های خصوصی صفحات را ذخیره و بازیابی می‌کند؛ مثلاً برای نشانک یا «بعداً بخوان».",
   "explorer-module-label": "ماژول REST",
   "explorer-module-placeholder": "یک ماژول انتخاب کنید",
