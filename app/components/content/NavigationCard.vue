@@ -31,11 +31,11 @@ export type { NavigationCardChip }
  *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`) with a Codex
- *   **minimum** `--spacing-50` (8px) from the description via
- *   `padding-block-start`. When converting from prose, **keep the technical
- *   writer’s supporting-text / link labels** — do not rewrite them
- * - Optional `CdxInfoChip` row
+ *   supporting-text is bottom-aligned (`margin-block-start: auto`). When
+ *   converting from prose, **keep the technical writer’s supporting-text /
+ *   link labels** — do not rewrite them
+ * - Optional `CdxInfoChip` row (label-only in cards — status icons hidden; Codex
+ *   forces icons on warning/error/success and ignores a null `icon` for those)
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
  *   MDC named slots do not nest under `:::navigation-card-grid`)
@@ -634,6 +634,14 @@ const hasBody = computed( () =>
 	align-items: center;
 	gap: var( --spacing-50 );
 	inline-size: 100%;
+}
+
+/*
+ * Codex forces status icons on warning / error / success InfoChips and ignores
+ * a null `icon` prop for those statuses. Catalog chips are label-only (Figma).
+ */
+.navigation-card__chips :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
 }
 
 .navigation-card--is-link {

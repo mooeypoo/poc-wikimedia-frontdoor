@@ -18,6 +18,19 @@ export default defineNuxtPlugin( () => {
 			return
 		}
 
+		// Initial router navigation (hard load / first hydrate): `from` has no
+		// matched records. Re-assigning the explorer URL here would full-reload
+		// in a loop.
+		if ( from.matched.length === 0 ) {
+			return
+		}
+
+		// Already at the target document URL (e.g. soft nav that then forces
+		// assign to the same explorer path).
+		if ( import.meta.client && window.location.pathname === to.path ) {
+			return
+		}
+
 		const resolvedTarget = router.resolve( to )
 		window.location.assign( resolvedTarget.href )
 		return false

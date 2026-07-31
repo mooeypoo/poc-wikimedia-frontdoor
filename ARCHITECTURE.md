@@ -76,7 +76,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── oauthHandoff.ts      # sessionStorage key for callback → destination token handoff
 │   │   ├── explorerRoute.ts     # isExplorerRoutePath() for layout and plugins
 │   │   ├── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
-│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props for NavigationCard
+│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props (label-only in NavigationCard)
 │   ├── middleware/
 │   │   └── content-sidebar.global.ts  # Content `sidebar` frontmatter; forces `/account` sidebar off
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
@@ -189,12 +189,12 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
 | `useExplorerModuleSelect(visibleModules, …)` | REST API module `CdxSelect` menu items and selection bridge; discovery order after opt-in filter; `label` + `supportingText` (beta/version) + `description` (OpenAPI or config fallback); `default-label`, `menu-config`; calls `selectModule` with `source: 'module-select'` |
-| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab keeps explicit `/explorer` (never locale-prefixed; `i18n: false`) |
+| `useMainNavigationLinks()` | Shell primary nav labels (banana) and locale-aware paths; **APIs** tab → catalog `/apis`; explorer `/explorer` stays never locale-prefixed (`i18n: false`) |
 | `usePrimaryNavigationTab()` | Active primary nav tab id from current route (`apis` on explorer); pairs with `ShellPrimaryNav` |
 | `useShellNavigationCollapse(navRowRef, expandedNavContentRef)` | Whether primary tabs and the start-column section menu are collapsed into the header hamburger + breadcrumb row; `ResizeObserver` with hysteresis (`config/shellNavigation.ts`) |
 | `useShellCollapsedNavMenu({ isNavigationCollapsed, hasSectionNavigation })` | Full-screen collapsed navigation overlay: open/close, section vs primary view, Escape / route / uncollapse dismiss |
 | `useShellNavigationBreadcrumbs()` | Primary and section labels for `ShellCollapsedNavigation` breadcrumbs (primary crumb uses active tab label, including **APIs** on explorer) |
-| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). Content IA from `config/sectionNavigation.js`, explorer from `config/explorerSideNav.js`; fallback `section-nav-site-label` when no config entry. Explorer items with `mode` resolve `to` via `pathForExplorerMode()` and `isActive` via `explorerModeFromPath()`; `enabled: false` items are omitted. Content routes use prototype active map only. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
+| `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). **APIs** section (`apis`: catalog + explorer) from `config/explorerSideNav.js`; other content IA from `config/sectionNavigation.js`; fallback `section-nav-site-label` when no config entry. APIs items: `mode` → `pathForExplorerMode()` / `explorerModeFromPath()`; `href` → content routes; `enabled: false` omitted. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
 | `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
@@ -258,27 +258,26 @@ Do **not** treat copied “secrets” from the Reset success dialog as usable ag
 
 ## Shell section navigation (start column)
 
-The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). Explorer routes (primary tab **APIs**, id `apis`) use `config/explorerSideNav.js` via `isExplorerRoutePath()` — the start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`). Routes without a section config entry still get an empty panel (`section-nav-site-label`).
+The **start column** is **always mounted** on every page. At tablet+, the grid track is normally **281px** wide when navigation is expanded; it collapses to **0** width when primary nav does not fit (see **Responsive navigation collapse** below). It shows a **route-aware section menu** when config defines sections; otherwise the panel renders **empty** (e.g. **Tools and bots**). The **APIs** primary section (`apis`) — catalog `/apis` (section overview, like `/get-started`), `/apis/…`, and explorer `/explorer` / `/explorer/…` — always uses `config/explorerSideNav.js`. The start-column section heading for explorer mode links remains **API Explorer** (`explorer-side-nav-api-explorer-title`). Routes without a section config entry still get an empty panel (`section-nav-site-label`).
 
-**Link behaviour:** On **content routes**, section items are **prototype placeholders** (`to: null` → `href="#"`); active state comes from `PROTOTYPE_ACTIVE_ITEM_BY_CONTENT_PATH` in `usePageSectionNav.ts`. On **explorer routes**, items with a `mode` in `config/explorerSideNav.js` resolve **`to`** via `pathForExplorerMode()` in `app/utils/explorerRoute.ts`; **`isActive`** follows `explorerModeFromPath()` on the current route; items with **`enabled: false`** are omitted. Overview items (no `mode`) remain placeholders. `ShellSidePanelNav` calls **`navigateTo(item.to)`** on click when `to` is set — URL resolution stays in the composable; the component only handles the click. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
+**Link behaviour:** On **content routes** under other primary tabs, section items resolve `to` from `href` when set (otherwise placeholders). On the **APIs** section menu, items with **`mode`** resolve via `pathForExplorerMode()` / `explorerModeFromPath()`; items with **`href`** resolve via `resolveContentHref()` and activate when the locale-agnostic path matches; items with **`enabled: false`** are omitted; items with neither `mode` nor `href` remain placeholders. `ShellSidePanelNav` calls **`navigateTo(item.to)`** on click when `to` is set — URL resolution stays in the composable; the component only handles the click. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 ```
 Route path
     ↓
-isExplorerRoutePath()?  → yes → config/explorerSideNav.js
-    ↓ no                      (filter enabled; mode → pathForExplorerMode)
 getMainNavigationIdFromPath()     ← app/utils/contentRoute.ts
-    (explorer → `apis`; matches remote primary-nav sources by localPath)
+    (explorer → `apis`; `/apis` (+ children) → `apis`)
     ↓
 usePageSectionNav()
-    └── main nav id → config/sectionNavigation.js (sections may be empty)
+    ├── `apis` (catalog or explorer) → config/explorerSideNav.js
+    │     (filter enabled; mode → pathForExplorerMode; href → content)
+    └── other main nav id → config/sectionNavigation.js (sections may be empty)
     ↓
 banana-i18n labels + resolved to + single global active item
     ↓
 .shell-side-panel (always) + ShellSidePanelNav (when sections.length > 0)
     └── navigateTo(to) when item.to is set; else href="#" placeholder
 ```
-
 **Rendering.** `app/layouts/default.vue` always mounts the start panel wrapper with classes **`frontdoor-shell__side-panel--start`**, **`shell-side-panel`**, and **`shell-side-panel--start`** (all three are required — block-start padding on `.shell-side-panel`, scroll-end spacer on the breakpoint scrollport in `shell-start-nav-scroll.css`, and `shell-start-nav-reveal.css` drawer rules all target the BEM `--start` suffix). `SharedShellSidePanelNav` renders when `navigationSections` is non-empty and remains in the DOM when navigation is collapsed (`inert` + `aria-hidden` on the panel wrapper). The layout calls `usePageSectionNav()` only — components do not read config or resolve routes directly. **`ShellSidePanelNav`** receives pre-resolved `to` paths and invokes **`navigateTo`** on item click when `to` is non-null (explorer mode links and collapsed-overlay reuse).
 
 **Scroll-end inset (symmetry).** Start section nav, collapsed nav overlay, and site footer all reserve **32px** (`var(--spacing-200)`) below the last visible item. Footer inset uses **`padding-block-end`** on **`.shell-site-footer`** (`ShellSiteFooter.vue`). Start nav and overlay use a **`::after` block spacer** on the **scrollport** element — not `padding-block-end` on a nested wrapper — because nested flex + `overflow: auto` does not always extend scroll range for padding on inner panels (mobile scrollport is **`.fd-page-grid__start`**; tablet+ scrollport is **`.frontdoor-shell__side-panel--start`**; overlay scrollport is **`.shell-collapsed-nav-menu-overlay__panel`**). Spacer rules live in **`shell-start-nav-scroll.css`** (in-shell) and **`ShellCollapsedNavMenuOverlay.vue`** (overlay). Supersedes the earlier **48px** (`--spacing-300`) footer-only inset from Figma Footer **393:4639** — prototype choice for column symmetry.
@@ -493,7 +492,9 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | `ShellCollapsedNavMenuOverlay.vue` | Full-screen collapsed nav overlay (section + primary views) | Props + events from `default.vue`; `ShellSidePanelNav`; `useShellCollapsedNavMenu` state |
 | `ShellPrimaryNav.vue` | Codex quiet tabs for primary nav | `usePrimaryNavigationTab()`, `useMainNavigationLinks()` |
 
-**APIs primary tab.** The explorer is a quiet tab in `ShellPrimaryNav` (`id: apis`, message key `nav-api` → “APIs”, path `/explorer` / `API_EXPLORER_NAVIGATION_PATH`). `getMainNavigationIdFromPath()` returns **`apis`** for `/explorer` and `/explorer/…` so the tab stays selected. The destination is never locale-prefixed (`i18n: false` on the explorer route; `useMainNavigationLinks` keeps `/explorer`). The start-column section heading remains **API Explorer** (`explorer-side-nav-api-explorer-title`).
+**APIs primary tab.** Quiet tab in `ShellPrimaryNav` (`id: apis`, message key `nav-api` → “APIs”, path `/apis` / `API_CATALOG_NAVIGATION_PATH`). `getMainNavigationIdFromPath()` returns **`apis`** for `/apis` (+ children) and for `/explorer` (+ children) so the tab stays selected in both the catalog and the explorer. The explorer destination remains never locale-prefixed (`i18n: false`; `API_EXPLORER_NAVIGATION_PATH`). The start-column section heading on explorer routes remains **API Explorer** (`explorer-side-nav-api-explorer-title`).
+
+**Tab re-selection:** Clicking the already-selected primary tab returns to that section’s landing path (e.g. `/get-started` from a Get started child, `/apis` from `/apis/…` or `/explorer`). Codex `CdxTabs` does not emit `update:active` for a no-op re-select, so `ShellPrimaryNav` listens for clicks on the active tab and re-emits `navigation-select`. Mount-time `v-model` sync is ignored so the explorer does not bounce to the catalog on load. `handlePrimaryNavigationSelect` no-ops only when the route is already the tab’s landing `to`.
 
 ### Codex exceptions (shell chrome)
 
@@ -807,12 +808,16 @@ Enterprise explorer experiences share the unified start column with community mo
 
 The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
 
-1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation).
+1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation). Skips the router’s **initial** navigation (`from.matched.length === 0`) and skips when `window.location.pathname` already matches the target (avoids full-reload loops on hard load / same-URL assign).
 2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+
+**APIs tab vs explorer:** The primary **APIs** tab lands on `/apis` but stays selected on `/explorer`. Re-clicking **APIs** from explorer (or an `/apis/…` page) navigates to the catalog overview; mount-time tab sync is ignored so load does not bounce through this plugin. `ShellSidePanelNav` does not re-navigate when a mode item’s `to` is already the current path (community → `/explorer`).
 
 `app/utils/explorerRoute.ts` provides `isExplorerRoutePath()`, `explorerModeFromPath()`, and `pathForExplorerMode()` for the layout, explorer page (teleport disable on exit), side nav (`usePageSectionNav`), and the route-boundary plugin.
 
 Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
+
+**Dev — Vite `optimizeDeps.include`:** First navigation into `/explorer` (and other cold client mounts) can trigger Vite dependency discovery (`@scalar/api-reference`, Codex, `banana-i18n`, `markdown-it` from Enterprise custom mode, …). That invalidates `/_nuxt/pages/explorer/[[view]].vue` mid-load and surfaces as **500 / Failed to fetch dynamically imported module**. Those packages are listed under `vite.optimizeDeps.include` in `nuxt.config.ts` so they pre-bundle at `nuxt dev` startup. If the error returns after cache clears or new deps, hard-refresh or restart `npm run dev`; extend the include list when Vite logs “discovered new dependencies at runtime”.
 
 ### Opt-in module visibility
 
@@ -973,7 +978,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 |---|---|
 | `config/instances.ts` | Wiki instance IDs, display names, base URLs, explicit `dir`, content language codes |
 | `config/languages.js` | Language codes, explicit `dir` declarations, fallback chains |
-| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_EXPLORER_NAVIGATION_PATH` for the **APIs** tab (`apis` → `/explorer`) |
+| `config/mainNavigation.ts` | Primary shell navigation order, banana message keys, locale-agnostic paths; `API_CATALOG_NAVIGATION_PATH` (`/apis`) for the **APIs** tab landing; `API_EXPLORER_NAVIGATION_PATH` (`/explorer`) for the explorer (`i18n: false`) |
 | `config/contentRedirects.ts` | Legacy content URL **301** redirects merged into `nuxt.config.ts` `routeRules` |
 | `config/sectionNavigation.js` | Content-page left-rail section groups and items (banana message keys only; keyed by main nav id) |
 | `config/explorerSideNav.js` | Explorer left-rail sections and placeholder links (banana message keys only) |
@@ -1002,7 +1007,7 @@ Removed or renamed markdown routes are handled by **`config/contentRedirects.ts`
 
 Each mapping is duplicated for locale prefixes (`es`, `fr`, `he`, `fa`), e.g. `/fr/learn` → `/fr/use-content-and-data`, `/fr/about` → `/fr`. **About** and **Enterprise** markdown files are removed from `content/`; only redirects remain for old bookmarks.
 
-**Primary navigation IA:** Tabs include Get started, **APIs** (`/explorer`), Contribute, Community, Get help, plus remote primary merges from `REMOTE_CONTENT_SOURCES`. Start-column explorer section heading remains **API Explorer**. See `DESIGN_REQUIREMENTS.md` → Information architecture.
+**Primary navigation IA:** Tabs include Get started, **APIs** (catalog `/apis`; explorer keeps the tab selected), Contribute, Community, Get help, plus remote primary merges from `REMOTE_CONTENT_SOURCES`. Start-column explorer section heading remains **API Explorer**. See `DESIGN_REQUIREMENTS.md` → Information architecture.
 
 **Route → nav id:** `app/utils/contentRoute.ts` → `getMainNavigationIdFromPath()` returns **`apis`** on explorer routes, matches other `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`, and strips locale prefixes before matching.
 
@@ -1041,6 +1046,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 **Section spacing:** Content-page `h2` overrides the global heading `margin-block-start` (`--spacing-150` / 24px) with **`--spacing-250` (40px)**. Implemented as `.fd-content-page :where(h2) { margin-block-start: var(--spacing-250); }`. `margin-block-end` remains **`--spacing-75`**. Do not change this for one-off pages — it is the documentation section rhythm for all `.fd-content-page` routes. Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography.
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
+
+**API catalog** (`content/en/apis.md`): section overview for the primary **APIs** tab (`API_CATALOG_NAVIGATION_PATH` `/apis` — same landing role as `/get-started`). Start-column menu is `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID.apis` in `config/sectionNavigation.js` (shared with `/apis/…` and explorer). Structure (v0): intro `::highlight` → Quick start; **Wikimedia APIs** via `::api-catalog-wikimedia-section` (Recommended chip + project filter + cards); **Wikimedia Enterprise APIs** / **Classic APIs** `:::navigation-card-grid`s with optional `CdxInfoChip` rows (see Navigation card → Info chips); stacked **API best practices** `::highlight` panels (Attribution, Authentication, Rate limits). Mixed internal (`/explorer`, `/apis/…`) and external cards; external cards keep writer-authored `supporting-text`. Deferred: end-column page nav, curated per-API destinations (many Wikimedia cards temporarily link to `/explorer`). See `DESIGN_REQUIREMENTS.md` → API catalog.
 
 **Build for communities** (`content/en/get-started/build-for-communities.md`): same internal-card pattern — page intro, then one `:::navigation-card-grid` (Use wiki content, Access open data, Build tools and bots, Build on-wiki features). Card `url`s match `config/sectionNavigation.js` For communities items (`/get-started/wiki-content`, `/get-started/open-data`, `/get-started/tools-and-bots`, `/get-started/on-wiki`). Internal card and section-nav destinations must have a corresponding Markdown file under `content/<locale>/` or Nuxt Content returns **404** (e.g. `content/en/get-started/on-wiki.md` mockup for Build on-wiki features).
 
@@ -1089,6 +1096,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`, including `--color-link--hover`) |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
+| `SectionHeading.vue` | `CdxInfoChip` + `ProseHeading` | `::section-heading{title="…" chip="…"}` — see **Section heading** below |
+| `ApiCatalogWikimediaSection.vue` | `CdxField` + `CdxCombobox` + `SectionHeading` + `NavigationCard` | `::api-catalog-wikimedia-section` — see **API catalog project filter** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` wrapping `::navigation-card` — equal-height rows of 3 |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
@@ -1126,6 +1135,17 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 
 **Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose. Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 
+**Info chips:** Optional `CdxInfoChip` row under the description (`chips` prop or `#chips` slot). Parsed by `app/utils/parseNavigationCardChips.ts`:
+
+| MDC form | Result |
+|----------|--------|
+| `chips="Bots and tools\|Wikimedia APIs"` | Labels with default status `subtle` |
+| `chips="notice:All projects\|success:Stable\|warning:Beta"` | `status:label` segments (`StatusType` prefix must be valid) |
+
+**API catalog conventions** (`content/en/apis.md`): `notice` = scope, `success` = Stable / Check stability…, `warning` = Beta — stock Codex status colours. Get started overview cards omit chips.
+
+**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. See `AGENTS.md` → Content components (approved exception).
+
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
 **MDC authoring examples:**
@@ -1139,6 +1159,8 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 ::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Wikibase" title="Wikibase and Wikidata" supporting-text="Read more on mediawiki.org"}
 Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 ::
+::navigation-card{url="/explorer" title="MediaWiki REST API" description="…" chips="notice:All projects|success:Check stability at endpoint level"}
+::
 :::
 ```
 
@@ -1148,7 +1170,60 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted Codex icon names for MDC), `config/navigationCardTitleLogos.ts` (allowlisted brand title logos), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot; wiki-content Get featured content uses mediawiki.org supporting-text; open-data Compare page metrics uses “Read the docs”); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`; `by-language.md` (Browse repositories: `title-logo` gerrit/github/gitlab + supporting-text); `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; Wikibase/Wikidata description is plain text — no inline Wikidata link when the card already has an external destination).
+**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+
+#### Section heading
+
+`SectionHeading.vue` (`::section-heading`) renders a prose `h2` (via `ProseHeading` — hover anchor) with an optional inline Codex **`CdxInfoChip`**. Props: `title` (required), `chip`, `status` (default `notice`), `id` (optional; otherwise slugified from `title` with `github-slugger`), `level` (default `2`). Title and chip labels are content strings in `<bdi>` (not banana-i18n). Status icons are hidden (same catalog exception as navigation-card chips). Also composed inside `ApiCatalogWikimediaSection`.
+
+```md
+::section-heading{title="Wikimedia APIs" chip="Recommended" status="notice"}
+::
+```
+
+#### API catalog project filter
+
+`ApiCatalogWikimediaSection.vue` (`::api-catalog-wikimedia-section`) is a **client-interactive island** on the still-static `/apis` Markdown page: the route stays SSG (not `ssr: false`, not wrapped in `<ClientOnly>`). Pre-render shows the default **Any** filter (all cards); hydration enables show/hide without a full SPA catalog route.
+
+It renders:
+
+1. Header row — Wikimedia APIs + Recommended (`SectionHeading`; `title` / `chip` are **content** props from Markdown) and **Filter by project** (`CdxField` + `CdxCombobox`, Figma 1183:31958). Restores content **`h2`** block-start rhythm via `margin-block-start: var(--spacing-150)` on the header (heading margin is zeroed so the filter can share the row). Heading cluster and filter are **`flex: 0 0 auto`** with **`gap: var(--spacing-150)`** (24px) and **`flex-wrap`**: when the space between the Recommended chip and the filter label would drop below 24px, the filter wraps below the heading. Combobox **`inline-size` / `min-inline-size: var(--size-1600)`** (Codex 16rem / 256px) with **`flex: 0 0 auto`** so flex layout cannot shrink it (a previous `min( var(--size-1600), 100% )` collapsed against a `min-inline-size: 0` parent). Inner Codex input wrappers fill that width.
+2. Optional intro (default slot — Markdown)
+3. Filtered `NavigationCardGrid` of cards from `config/apiCatalogWikimedia.ts`
+
+**Composable:** `useApiCatalogProjectFilter()` — banana field / option / empty labels, `isolatePickerLabel()` on menu item labels, selected filter id, Codex Combobox label↔id bridge, visible cards. No fetch or URL construction in the Vue component.
+
+**Filter options (banana):** Any, Wikidata / Wikibase, Wikifunctions, Wikimedia Commons, Wikipedia.
+
+**Visibility (product):** Resolved only in `config/apiCatalogWikimedia.ts` via `isApiCatalogCardVisibleForProjectFilter()` (AGENTS rule 6 — no show/hide logic in the Vue component).
+
+| `visibility.kind` | Behaviour |
+|-------------------|-----------|
+| `universal` | Shown for **Any** and every project **except** optional `excludeProjectIds` |
+| `projects` | Shown for **Any** and the listed `projectIds` only |
+
+Current exclusions / project-specific cards:
+
+| Card | Rule |
+|------|------|
+| Attribution API | `universal` + exclude **Wikifunctions** |
+| Lift Wing API | `universal` + exclude **Wikifunctions**, **Wikimedia Commons** |
+| GrowthExperiments API | `universal` + exclude **Wikifunctions**, **Wikimedia Commons** |
+| Commons analytics API | `projects`: Commons |
+| Wikifunctions API | `projects`: Wikifunctions |
+| Wikibase GraphQL / REST | `projects`: Wikidata |
+
+Scope InfoChip labels are **content** in config (`notice`): **All projects** (broad coverage), **Multi-project** (subset / not every filter project), or a named project. **All projects** includes MediaWiki REST, Wikimedia REST APIs, ReadingLists, CampaignEvents, Device / Edit / Editor / Media file / Page view analytics, and **Math API** (placed immediately before Wikifunctions). Attribution / Lift Wing / GrowthExperiments keep **Multi-project**. New catalog cards belong in this config array (with `url: '/explorer'` when the destination is the explorer), not as a hand-authored `:::navigation-card-grid` on `/apis`.
+
+Wikipedia currently has no exclusive cards — selecting it shows universal cards that do not exclude Wikipedia.
+
+**i18n split:** Filter chrome → banana-i18n (`api-catalog-filter-*`). Section heading title / chip → content (MDC props). Card title / description / chips / supporting-text → English content in config (v0; per-locale card catalogs can follow).
+
+```md
+::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
+Discover our curated selection of production-ready APIs…
+::
+```
 
 #### Highlight
 
@@ -1168,7 +1243,7 @@ CSS lives in `app/assets/css/main.css` so Vue templates may apply `class="fd-hig
 
 Highlight copy is **page content** (per-locale Markdown or Vue slots) — not banana-i18n interface strings. The name is independent of code syntax highlighting (Shiki / `mw-highlight`).
 
-**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …” with arrow, single paragraph). Also `content/en/get-started/wikimedia-enterprise.md` — high-volume access blurb + **Get started with Wikimedia Enterprise** as a **second paragraph** inside the highlight (**no** arrow; `https://enterprise.wikimedia.com`). Enterprise **body** sections are prose (not cards).
+**Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …” with arrow, single paragraph). Also `content/en/get-started/wikimedia-enterprise.md` — high-volume access blurb + **Get started with Wikimedia Enterprise** as a **second paragraph** inside the highlight (**no** arrow; `https://enterprise.wikimedia.com`). Enterprise **body** sections are prose (not cards). Also `content/en/apis.md` — catalog Quick start highlight and stacked API best-practice highlights (Attribution, Authentication, Rate limits).
 
 #### Callouts
 

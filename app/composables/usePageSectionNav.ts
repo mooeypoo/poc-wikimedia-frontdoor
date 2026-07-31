@@ -109,6 +109,8 @@ export function usePageSectionNav() {
 		}
 
 		// `sidebar: true` or omitted — automatic, path-based resolution.
+		// Catalog `/apis` (+ children) and explorer `/explorer` (+ children) both
+		// resolve to main-nav id `apis` → the shared APIs section menu.
 		const navigationId = mainNavigationId.value
 
 		if ( navigationId ) {
