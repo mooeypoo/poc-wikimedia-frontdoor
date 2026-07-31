@@ -24,10 +24,11 @@ No new dependencies are required.
 | Header anchors | Custom component | `ProseH2.vue`…`ProseH6.vue` override default prose headings; plain text + hover `CdxIcon` link |
 | External link icons | Custom component | `ProseA.vue` overrides default prose anchor; appends `CdxIcon` for `https?://` links |
 | Callouts | Custom component | `Callout.vue` wraps `CdxMessage`; `type` prop + optional `#title` named slot (bold first paragraph via CSS) |
+| Code block | Custom component | `CodeBlock.vue` — bordered single sample (`:::code-block`); same panel chrome as code tabs without tabs |
 | Code tabs | Custom components | `CodeTabs.vue` + `CodeTab.vue` wrap **`CdxTabs` (`framed`)** + `CdxTab`; module border `--border-color-muted`; code `pre` padding `--spacing-75` |
 | File inclusion | Custom component | `Include.vue` resolves relative paths against current locale + route, queries content collection |
 | Expandable sections | Built-in | Native `<details>` / `<summary>`; no configuration needed |
-| Buttons | Custom component | `AppButton.vue`; `NuxtLink` (internal) or `<a>` (external) styled as a Codex progressive button |
+| Buttons | Codex | `AppButton.vue` wraps `CdxButton` progressive primary; click navigates internal (`navigateTo`) or external |
 | Syntax highlighting | Built-in | Shiki bundled with `@nuxt/content`; language tag on fence is enough |
 | Line numbers | Configured | Custom inline Shiki transformer in `nuxt.config.ts`; CSS counters in `main.css` |
 | Line highlighting | Configured | `transformerMetaHighlight()` from `@shikijs/transformers` (transitive dep), added to config |
@@ -87,9 +88,22 @@ upgrading. Responses from the old endpoint will return `410 Gone` after the depr
 
 ---
 
+## Code block
+
+**Custom component** — `CodeBlock.vue` is a single bordered code panel with the same chrome as framed code tabs (muted border, exploratory **4px** radius, `--spacing-75` padding on `pre`) but **without** a tab header. Wrap any normal fence. Also used on the platform home API band.
+
+:::code-block
+```bash
+curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
+  -H "accept: application/json"
+```
+:::
+
+---
+
 ## Code Tabs
 
-**Custom components** — `CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop and **`CdxTab`** panels (framed tabs are for bordered modules; quiet tabs are used in shell navigation). The module uses `--border-color-muted`; each code block has 12px (`--spacing-75`) padding inside the panel.
+**Custom components** — `CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop and **`CdxTab`** panels (framed tabs are for bordered modules; quiet tabs are used in shell navigation). The module uses `--border-color-muted` and exploratory **4px** radius; each code block has 12px (`--spacing-75`) padding inside the panel — matching **Code block**.
 All tab panels remain in the DOM (`v-show`), so Ctrl+F searches all tabs regardless of which is active.
 
 ::::code-tabs
@@ -174,9 +188,10 @@ Wikipedia articles redirect when pages are moved or merged. The REST API returns
 
 ## Buttons
 
-**Custom component** — `AppButton.vue` renders a `NuxtLink` for internal paths or an `<a>` for
-external ones, styled with Codex tokens to match a progressive primary button. External links
-show a `CdxIcon` (`cdxIconLinkExternal`) and get `rel="noopener noreferrer"`.
+**Codex** — `AppButton.vue` wraps `CdxButton` (`action="progressive"` `weight="primary"`).
+Click navigates with `navigateTo` for internal paths, or opens external URLs in a new tab
+(with `cdxIconLinkExternal` when no `icon-end` is set). Use `size="large"` and
+`icon-end="arrowNext"` for the landing hero CTA.
 
 ::app-button{href="/explorer" label="Open API Explorer"}
 ::

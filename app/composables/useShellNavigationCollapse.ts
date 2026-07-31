@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import {
 	SHELL_NAV_COLLAPSE_PADDING_PX,
+	SHELL_NAV_DRAWER_EXPAND_DURATION_MS,
 	SHELL_NAV_EXPAND_PADDING_PX
 } from '../../config/shellNavigation'
 
@@ -15,17 +16,36 @@ import {
  * - **Collapse** (expanded): `scrollWidth + COLLAPSE_PADDING > clientWidth`
  * - **Expand** (collapsed): `scrollWidth + EXPAND_PADDING <= clientWidth`
  *
+ * Also exposes `isNavDrawerExpanding`: true only while the start drawer
+ * animates open after a **viewport** expand (hamburger → tabs). Landing /
+ * `sidebar: false` route changes must stay instant — they share the same
+ * 0 ↔ 281px grid track but must not reuse the drawer transition.
+ *
  * @param navRowRef - Root of `.frontdoor-shell__primary-nav-row`.
  * @param expandedNavContentRef - Intrinsic-width measure target (`.frontdoor-shell__primary-nav-expanded__content`).
- * @returns Reactive `isNavigationCollapsed` flag for template bindings.
+ * @returns Reactive collapse + drawer-expanding flags for template bindings.
  */
 export function useShellNavigationCollapse(
 	navRowRef: Ref<HTMLElement | null>,
 	expandedNavContentRef: Ref<HTMLElement | null>
 ) {
 	const isNavigationCollapsed = ref( false )
+	const isNavDrawerExpanding = ref( false )
 
 	let resizeObserver: ResizeObserver | null = null
+	let navDrawerExpandTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+	/**
+	 * Clears any pending drawer-expand class timeout.
+	 */
+	function clearNavDrawerExpandTimeout(): void {
+		if ( navDrawerExpandTimeoutId === null ) {
+			return
+		}
+
+		clearTimeout( navDrawerExpandTimeoutId )
+		navDrawerExpandTimeoutId = null
+	}
 
 	/**
 	 * Returns the inline size the expanded nav row needs including trailing padding.
@@ -84,6 +104,27 @@ export function useShellNavigationCollapse(
 		}
 	}
 
+	/*
+	 * Enable drawer CSS transitions only for collapsed → expanded (viewport
+	 * widen / hamburger dismiss). Leaving landing (`sidebar: false`) also
+	 * grows the start track 0 → 281px but must not animate — see
+	 * shell-start-nav-reveal.css.
+	 */
+	watch( isNavigationCollapsed, ( isCollapsed, wasCollapsed ) => {
+		clearNavDrawerExpandTimeout()
+
+		if ( wasCollapsed === true && isCollapsed === false ) {
+			isNavDrawerExpanding.value = true
+			navDrawerExpandTimeoutId = setTimeout( () => {
+				isNavDrawerExpanding.value = false
+				navDrawerExpandTimeoutId = null
+			}, SHELL_NAV_DRAWER_EXPAND_DURATION_MS )
+			return
+		}
+
+		isNavDrawerExpanding.value = false
+	} )
+
 	onMounted( () => {
 		const navRowElement = navRowRef.value
 
@@ -108,9 +149,11 @@ export function useShellNavigationCollapse(
 	onUnmounted( () => {
 		resizeObserver?.disconnect()
 		resizeObserver = null
+		clearNavDrawerExpandTimeout()
 	} )
 
 	return {
-		isNavigationCollapsed
+		isNavigationCollapsed,
+		isNavDrawerExpanding
 	}
 }

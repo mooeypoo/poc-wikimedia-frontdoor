@@ -7,6 +7,7 @@ import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigation
 import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
 import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMenu'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
+import { isLandingRoutePath } from '../utils/landingRoute'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInternalSidebarExperiment'
 
 /**
@@ -26,6 +27,11 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+/**
+ * Platform home / landing — full-bleed section backgrounds (viewport width) with
+ * centered content. See `landing-page.css` → `.frontdoor-shell--landing`.
+ */
+const isLandingRoute = computed( () => isLandingRoutePath( route.path ) )
 /**
  * Experiment: on the Explorer route with Scalar's built-in sidebar enabled, the
  * manual endpoints rail is not mounted, so the end column is collapsed and the
@@ -109,7 +115,7 @@ const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-coll
 const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
 const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
 
-const { isNavigationCollapsed } = useShellNavigationCollapse(
+const { isNavigationCollapsed, isNavDrawerExpanding } = useShellNavigationCollapse(
 	primaryNavRowRef,
 	expandedNavContentRef
 )
@@ -199,7 +205,9 @@ useHead( {
 		:class="{
 			'frontdoor-shell--explorer': isExplorerRoute,
 			'frontdoor-shell--explorer-internal-sidebar': isExplorerInternalSidebar,
+			'frontdoor-shell--landing': isLandingRoute,
 			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
+			'frontdoor-shell--nav-drawer-expanding': isNavDrawerExpanding,
 			'frontdoor-shell--sidebar-hidden': isSidebarHidden
 		}"
 	>
@@ -358,7 +366,7 @@ useHead( {
 		align-items: stretch;
 	}
 
-.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__side-panel--start {
+.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__side-panel--start {
 		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -564,7 +572,7 @@ useHead( {
 		transition: none;
 	}
 
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__body-columns {
 		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -573,6 +581,40 @@ useHead( {
 	.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
 	}
+
+	/*
+	 * Landing exception: section backgrounds are full viewport width — do not
+	 * lock body-columns. Content measure is enforced inside landing section inners.
+	 */
+	.frontdoor-shell--landing .frontdoor-shell__body-columns,
+	.frontdoor-shell--landing.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns,
+	.frontdoor-shell--landing.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns {
+		max-inline-size: none;
+	}
+}
+
+/*
+ * Landing page exception: full-bleed section backgrounds.
+ * Drop horizontal page insets and the unused end column so `.landing-*`
+ * wrappers at `inline-size: 100%` paint edge-to-edge. Documented in
+ * DESIGN_REQUIREMENTS.md → Platform landing / home.
+ */
+.frontdoor-shell--landing :deep( .fd-page-grid ) {
+	padding-inline-start: 0;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__body-scroll {
+	padding-inline-end: 0;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__body-columns {
+	grid-template-columns: minmax( 0, 1fr );
+	column-gap: 0;
+	max-inline-size: none;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__side-panel--end {
+	display: none;
 }
 
 .frontdoor-shell__header {

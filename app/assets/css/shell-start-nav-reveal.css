@@ -5,10 +5,15 @@
  * pushing the body column. The fixed-width inner panel slides in from inline-start
  * with the same timing so nav labels never paint over main content.
  *
+ * Transitions run **only** while `.frontdoor-shell--nav-drawer-expanding` is set
+ * (viewport collapsed → expanded via `useShellNavigationCollapse`). Collapse is
+ * instant. Landing / `sidebar: false` also uses a 0-width start track but must
+ * **not** animate when navigating to/from those routes — gating avoids that.
+ *
  * Codex transition tokens (UI motion, not decorative animation):
  * https://doc.wikimedia.org/codex/latest/design-tokens/transition.html
  *
- * Collapse is instant; expand uses the drawer. `display: none` is not used.
+ * `display: none` is not used for collapse (inert + zero track instead).
  *
  * Scrollport preservation: drawer clip rules must not disable section-nav scroll.
  * Tablet+ scroll lives on `.frontdoor-shell__side-panel--start` (`shell-start-nav-scroll.css`);
@@ -20,10 +25,18 @@
  * See ARCHITECTURE.md → Shell section navigation.
  */
 
-@media (prefers-reduced-motion: reduce) {
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid,
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start,
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+.frontdoor-shell .fd-page-grid,
+.frontdoor-shell .shell-side-panel--start,
+.frontdoor-shell .frontdoor-shell__body-columns,
+.frontdoor-shell .fd-page-grid__start {
+	transition: none;
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.frontdoor-shell--nav-drawer-expanding .fd-page-grid,
+	.frontdoor-shell--nav-drawer-expanding .shell-side-panel--start,
+	.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__body-columns,
+	.frontdoor-shell--nav-drawer-expanding .fd-page-grid__start {
 		transition: none;
 	}
 }
@@ -33,18 +46,13 @@
 	.fd-page-grid__start {
 		/* Clip horizontal drawer motion only — preserve vertical scroll (page-grid.css). */
 		overflow-inline: hidden;
-		transition: none;
 	}
 
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid__start {
+	.frontdoor-shell--nav-drawer-expanding .fd-page-grid__start {
 		transition: max-block-size var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
-	.shell-side-panel--start {
-		transition: none;
-	}
-
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start {
+	.frontdoor-shell--nav-drawer-expanding .shell-side-panel--start {
 		transition: transform var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -62,21 +70,13 @@
 
 /* --- Tablet+: inline drawer — grid track pushes body, panel slides in --- */
 @media screen and ( min-width: 640px ) {
-	.fd-page-grid {
-		transition: none;
-	}
-
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .fd-page-grid {
+	.frontdoor-shell--nav-drawer-expanding .fd-page-grid {
 		transition:
 			grid-template-columns var( --transition-duration-medium ) var( --transition-timing-function-user ),
 			column-gap var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
-	.shell-side-panel--start {
-		transition: none;
-	}
-
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .shell-side-panel--start {
+	.frontdoor-shell--nav-drawer-expanding .shell-side-panel--start {
 		transition: transform var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 

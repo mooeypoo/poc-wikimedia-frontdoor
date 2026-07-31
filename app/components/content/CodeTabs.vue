@@ -119,12 +119,13 @@ provide( 'code-tabs:register', registerTab )
 
 /*
  * Framed tabs are meant to sit inside a bordered module (Codex Tabs docs).
+ * Panel chrome tokens match {@link CodeBlock} (keep in sync when polishing).
  * Do not override .cdx-tabs__list__item padding/margins — those come from Codex.
  */
 .code-tabs :deep( .cdx-tabs--framed ) {
 	border: 1px solid var( --border-color-muted );
-	/* Matches Codex framed tab label radius (--border-radius-base = 2px). */
-	border-radius: var( --border-radius-base );
+	/* Exploratory 4px — same token as CodeBlock / NavigationCard / explorer surfaces. */
+	border-radius: var( --fd-explorer-controls-surface-border-radius );
 	overflow: hidden;
 	background-color: var( --background-color-base );
 }
