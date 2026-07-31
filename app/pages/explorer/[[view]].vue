@@ -12,7 +12,6 @@ import { useScalarClientModalBackgroundScrollLock } from '../../composables/useS
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
 import { useScalarClientWriteRequestConfirmDialog } from '../../composables/useScalarClientWriteRequestConfirmDialog'
 import { useHideScalarClientAuthSection } from '../../composables/useHideScalarClientAuthSection'
-import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
 import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
