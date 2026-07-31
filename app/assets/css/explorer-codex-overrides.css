@@ -351,7 +351,9 @@
 		flex-direction: column;
 		justify-content: stretch;
 	}
- * @hack Hide the Authentication section in Scalar's "try it out" client modal.
+}
+
+/* @hack Hide the Authentication section in Scalar's "try it out" client modal.
  *
  * Companion to the .scalar-reference-intro-auth rule above, but for the client
  * modal — a separate Scalar surface that mounts under `.scalar-client` (not
