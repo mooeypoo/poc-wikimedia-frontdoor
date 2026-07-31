@@ -538,7 +538,9 @@ Top to bottom:
 
 **Routing:** Write requests go to the **production** wiki in this phase (no checkbox, no rewrite to a test host). Further guardrails are expected later.
 
-**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `config/wikiInstanceTestWikis.ts`, `app/assets/css/explorer-codex-overrides.css`.
+**Confirm dialog (mock):** Before address-bar **Send** on write methods, a **`CdxDialog`** asks for confirmation (title / body with production wiki `$1`). Action buttons stay **end-aligned** like the default Dialog; within that group, progressive **Confirm** sits to the **left** of neutral **Cancel** — **Codex exception #13** (Codex defaults primary to the end of the pair via `row-reverse`; Confirm is swapped leftward to prevent habitual error clicks on live writes). Title **18px** (`--font-size-large`); body **16px** (`--font-size-medium`, Codex default). The dialog component is a **sibling** of **`#explorer-reference-panel`** and teleports into that panel so the backdrop circumscribes the Scalar embed section only (not the whole viewport / shell chrome; physical viewport clears documented in AGENTS.md rule 8). Gated by `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` — set `false` to undo quickly. See `ARCHITECTURE.md` → Write-request confirm dialog and Codex exceptions #13.
+
+**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `ScalarClientWriteRequestConfirmDialog.vue`, `useScalarClientWriteRequestConfirmDialog.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`.
 
 ---
 

@@ -199,3 +199,78 @@
 .explorer-page .scalar-reference-intro-auth {
 	display: none;
 }
+
+/*
+ * Write-request confirm dialog — contain overlay to the Scalar reference panel.
+ *
+ * Codex `CdxDialog` backdrop defaults to `position: fixed` + `100vw` / `100vh`
+ * (full viewport). The dialog teleports to `#explorer-reference-panel`
+ * (`target` prop). Override to `position: absolute` + `inset: 0` so the backdrop
+ * circumscribes the embed section only (shell chrome / project controls stay
+ * interactable). Physical `width` / `height` / `top` / `left` / `right` clear
+ * Codex’s viewport rules (no logical equivalents for those resets).
+ *
+ * @see ARCHITECTURE.md → Write-request confirm dialog; Codex exceptions #13
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop {
+	position: absolute !important;
+	inset: 0 !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	z-index: 400;
+	inline-size: 100% !important;
+	block-size: 100% !important;
+	min-block-size: 0 !important;
+	width: auto !important;
+	height: auto !important;
+}
+
+#explorer-reference-panel > .cdx-dialog-backdrop .cdx-dialog {
+	inline-size: calc( 100% - 2rem ) !important;
+	max-inline-size: 32rem;
+	max-block-size: calc( 100% - 2rem ) !important;
+	width: calc( 100% - 2rem ) !important;
+	max-width: 32rem !important;
+	max-height: calc( 100% - 2rem ) !important;
+}
+
+/*
+ * Write-request confirm dialog title — product size (not Codex Dialog default).
+ *
+ * Codex Dialog title is `--font-size-x-large` (20px). This mock uses
+ * `--font-size-large` (18px). Body stays Codex `--font-size-medium` (16px).
+ * Global rules in `shell-codex-overrides.css` (#12) re-assert Codex defaults for
+ * other teleported dialogs; this selector wins for the title only.
+ *
+ * @see ARCHITECTURE.md → Write-request confirm dialog
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop .cdx-dialog.scalar-write-request-confirm-dialog .cdx-dialog__header__title {
+	font-size: var( --font-size-large );
+	line-height: var( --line-height-large );
+}
+
+/*
+ * Codex exception #13 — Confirm left of Cancel; action group stays at inline-end.
+ *
+ * Codex footer actions use `flex-direction: row-reverse` (progressive primary at
+ * inline-end of the pair). Keep the action group end-aligned like the default
+ * Dialog, but use `row` + `justify-content: end` so Confirm sits to the
+ * left of Cancel within that group (harder to hit by habit). Narrow screens
+ * keep Codex’s column stack.
+ *
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #13
+ */
+#explorer-reference-panel > .cdx-dialog-backdrop .scalar-write-request-confirm-dialog .cdx-dialog__footer__actions {
+	flex-direction: row;
+	/* `end` follows writing mode (same end-align intent as Codex’s reversed pair). */
+	justify-content: end;
+}
+
+@media ( max-width: 639px ) {
+	#explorer-reference-panel > .cdx-dialog-backdrop .scalar-write-request-confirm-dialog .cdx-dialog__footer__actions {
+		flex-direction: column;
+		justify-content: stretch;
+	}
+}

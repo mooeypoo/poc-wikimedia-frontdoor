@@ -59,6 +59,8 @@ Codex components and banana-i18n work inside plugins natively — no bridge patt
 
 **Source of truth:** `ARCHITECTURE.md` → Write-request production warning; `DESIGN_REQUIREMENTS.md` → Write-request production warning; `AGENTS.md` RTL checklist + Experiment 1 scope.
 
+**Confirm-before-Send mock:** A Codex `CdxDialog` intercepts address-bar Send for write methods. Overlay is contained to `#explorer-reference-panel` (Scalar embed; dialog component is a sibling of that panel). Action group stays end-aligned; progressive **Confirm** is left of **Cancel** within the pair (Codex exception #13 — reduces accidental confirms). Title 18px / body 16px. Easy undo: `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED = false` in `config/scalarClientWriteWarnings.ts`.
+
 ---
 
 ## Discovery and spec resolution

@@ -179,10 +179,15 @@ function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): 
 	closeCollapsedNavMenu()
 }
 
+// Prefer `$interfaceLocale` (never empty). On explorer (`i18n: false`),
+// `@nuxtjs/i18n` can clear `<html lang>`; an empty lang breaks banana-i18n
+// helpers that read `document.documentElement.lang` (see resolveInterfaceMessage).
+const htmlLang = computed( () => $interfaceLocale.value || 'en' )
+
 useHead( {
 	htmlAttrs: {
 		dir: direction,
-		lang: selectedInterfaceLocale
+		lang: htmlLang
 	},
 	title: applicationTitle
 } )
