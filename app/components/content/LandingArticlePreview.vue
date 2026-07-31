@@ -12,6 +12,9 @@ import { CdxCard, type Thumbnail } from '@wikimedia/codex'
  * context; landing previews add a muted border so cards read as framed tiles
  * on the API band (Figma). Documented in ARCHITECTURE.md → Platform landing.
  *
+ * Thumbnail URLs are preloaded from `app/pages/index.vue` so Codex
+ * `CdxThumbnail`’s client-side `Image()` load can use the HTTP cache.
+ *
  * @see LandingApiDemo.vue
  * @see config/landingSurfaces.ts
  * @see Figma Card instances 1181:25098–1181:25100
