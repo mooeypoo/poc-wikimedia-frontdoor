@@ -14,12 +14,21 @@ import {
  * lost to `.frontdoor-shell__main a`). Click navigates internally via
  * `navigateTo` or opens external URLs. Label is BiDi-isolated.
  *
+ * **Routing:** Path-based `href` values (`/…`) always use in-app `navigateTo`,
+ * even when MDC passes a boolean `external` / `external=""` attribute. Only
+ * non-path destinations honour `external` or an absolute `http(s):` URL for
+ * new-tab behaviour. (Same path-vs-absolute split as {@link LandingSectionCta}.)
+ *
  * MDC: `::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}`
  */
 const props = withDefaults( defineProps<{
 	href: string
 	label: string
-	/** MDC passes attribute values as strings; accept both for Vue prop validation. */
+	/**
+	 * Prefer absolute `http(s):` URLs for off-platform destinations. When set
+	 * on a non-path `href`, forces new-tab + external icon. Ignored for `/…`
+	 * paths (including MDC empty-string boolean `external=""`).
+	 */
 	external?: boolean | string
 	/** Codex Button size (`medium` default, `large` for landing hero). */
 	size?: 'medium' | 'large' | string
@@ -34,17 +43,39 @@ const props = withDefaults( defineProps<{
 	iconEnd: ''
 } )
 
-const isInternal = computed( () => {
-	return props.href.startsWith( '/' ) && !(
-		props.external === true || props.external === '' || props.external === 'true'
-	)
+/**
+ * True when MDC/Vue marks the CTA as explicitly external.
+ *
+ * MDC boolean attributes arrive as `""`; treat that like `true` / `"true"`.
+ *
+ * @returns Whether the `external` prop is set in a truthy MDC-compatible form.
+ */
+const isExplicitExternalFlag = computed( (): boolean => {
+	const flag = props.external
+	return flag === true || flag === '' || flag === 'true'
 } )
 
-const isExternalHttp = computed( () => {
-	return !isInternal.value && (
-		props.external === true || props.external === '' || props.external === 'true' ||
-		/^https?:/i.test( props.href )
-	)
+/**
+ * True for in-app destinations. Path shape wins over `external` so
+ * `::app-button{href="/get-started" external}` still routes via `navigateTo`.
+ *
+ * @returns Whether `href` is a root-relative Front Door path.
+ */
+const isInternal = computed( (): boolean => {
+	return props.href.startsWith( '/' )
+} )
+
+/**
+ * True when activation should open a new tab (and show the external glyph
+ * unless `iconEnd` overrides). Never true for internal paths.
+ *
+ * @returns Whether the destination is treated as off-platform HTTP(S).
+ */
+const isExternalHttp = computed( (): boolean => {
+	if ( isInternal.value ) {
+		return false
+	}
+	return isExplicitExternalFlag.value || /^https?:/i.test( props.href )
 } )
 
 const resolvedEndIcon = computed( (): Icon | undefined => {

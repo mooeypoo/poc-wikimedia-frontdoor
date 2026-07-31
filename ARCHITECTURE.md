@@ -1163,7 +1163,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` (optional `columns="2"` for two-up rows, e.g. landing Join) wrapping `::navigation-card` — equal-height rows; default max **3** columns at desktop |
 | `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap; `dir="ltr"`); see **Code block** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
-| `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — click navigates (`navigateTo` / external window); label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
+| `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — `/…` paths always `navigateTo` (path wins over MDC `external` / `external=""`); absolute `http(s):` (or `external` on non-path hrefs) open in a new tab; label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
 | `LandingHero.vue` | — | `:::landing-hero` — dither + globe; intro `p` **`--font-size-x-large`** (scoped); H1 type in `landing-page.css` (exploratory **2rem**). See **Platform landing / home** |
 | `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
 | `LandingSection.vue` | — | `:::landing-section` |
