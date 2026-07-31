@@ -1213,7 +1213,7 @@ Current exclusions / project-specific cards:
 | Wikifunctions API | `projects`: Wikifunctions |
 | Wikibase GraphQL / REST | `projects`: Wikidata |
 
-Scope InfoChip labels are **content** in config (`notice`): **All projects** (broad coverage), **Multi-project** (subset / not every filter project), or a named project. **All projects** includes MediaWiki REST, Wikimedia REST APIs, ReadingLists, CampaignEvents, Devices / Edit / Editors / Media files / Page views analytics, and **Math API** (placed immediately before Wikifunctions). Attribution / Lift Wing / GrowthExperiments keep **Multi-project**. New catalog cards belong in this config array (with `url: '/explorer'` when the destination is the explorer), not as a hand-authored `:::navigation-card-grid` on `/apis`.
+Scope InfoChip labels are **content** in config (`notice`): **All projects** (broad coverage), **Multi-project** (subset / not every filter project), or a named project. **All projects** includes MediaWiki REST, Wikimedia REST APIs, ReadingLists, CampaignEvents, Device / Edit / Editor / Media file / Page view analytics, and **Math API** (placed immediately before Wikifunctions). Attribution / Lift Wing / GrowthExperiments keep **Multi-project**. New catalog cards belong in this config array (with `url: '/explorer'` when the destination is the explorer), not as a hand-authored `:::navigation-card-grid` on `/apis`.
 
 Wikipedia currently has no exclusive cards — selecting it shows universal cards that do not exclude Wikipedia.
 

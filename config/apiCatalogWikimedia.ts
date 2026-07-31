@@ -6,7 +6,8 @@ import type { StatusType } from '@wikimedia/codex'
  * Wikimedia APIs catalog cards and project-filter options for `/apis`.
  * Filter chrome labels are banana-i18n keys; card title / description /
  * chip / supporting-text copy is English content (v0 — locale-specific card
- * catalogs can follow later).
+ * catalogs can follow later). Card titles use current product names (e.g.
+ * Device / Editor / Media file / Page view analytics — singular forms).
  *
  * Visibility rules (product):
  * - `universal` cards stay visible for every project filter **except** any
@@ -193,7 +194,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 	},
 	{
 		id: 'devices-analytics',
-		title: 'Devices analytics API',
+		title: 'Device analytics API',
 		description: 'Provides data about the number of unique devices that access Wikimedia projects. This endpoint only returns data for projects that have at least 1,000 unique devices for the requested time period.',
 		url: '/explorer',
 		chips: [
@@ -215,7 +216,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 	},
 	{
 		id: 'editors-analytics',
-		title: 'Editors analytics API',
+		title: 'Editor analytics API',
 		description: 'Editor analytics provides data about the number of editors and newly registered users of Wikimedia projects. Data returned by these endpoints includes edits on redirects.',
 		url: '/explorer',
 		chips: [
@@ -226,7 +227,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 	},
 	{
 		id: 'media-files-analytics',
-		title: 'Media files analytics API',
+		title: 'Media file analytics API',
 		description: 'Media file analytics provides data about requests for media files on Wikimedia projects.',
 		url: '/explorer',
 		chips: [
@@ -237,7 +238,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 	},
 	{
 		id: 'page-views-analytics',
-		title: 'Page views analytics API',
+		title: 'Page view analytics API',
 		description: 'Page view analytics provides data about page views for Wikimedia projects.',
 		url: '/explorer',
 		chips: [
