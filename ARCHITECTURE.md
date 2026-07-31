@@ -641,6 +641,18 @@ Markdown content for prose pages lives in `content/[locale]/`. Nuxt Content quer
 
 Scalar renders its own internal UI strings (button labels, response section headers, etc.) outside the Nuxt component tree. These do not go through banana-i18n. This is the one documented exception: it is third-party developer tooling UI, not our interface. It is noted here explicitly so it is not mistaken for an oversight.
 
+### Scalar chrome opt-outs (`config/scalar.ts`)
+
+`SCALAR_DEFAULT_CONFIGURATION` (used by community `useScalarConfig` and enterprise merges) turns off Scalar chrome Front Door does not own:
+
+| Flag | Effect |
+|------|--------|
+| `hideDarkModeToggle: true` | Site color theme is owned by the shell (`useColorMode`) |
+| `hideClientButton: true` | Hides the global **Open API Client** control (operation-header button and related chrome). Prefer this over CSS `display: none` on Scalar Tailwind classes — those class strings break on upgrades. Does **not** hide **Test Request** (`hideTestRequestButton` stays `false`) |
+| `agent: { disabled: true }` | Disables Ask AI agent surfaces everywhere |
+
+Re-verify these flags on `@scalar/api-reference` upgrades (`@scalar/types` `SourceConfiguration`).
+
 ---
 
 ## API explorer architecture
@@ -987,7 +999,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
 | `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards and Reset credentials panel |
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
-| `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
+| `config/scalar.ts` | Scalar component defaults (theme, layout, enabled features): `hideDarkModeToggle`, **`hideClientButton`** (no Open API Client chrome), `agent.disabled`, sidebar experiment flag |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
 

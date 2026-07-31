@@ -40,6 +40,7 @@ These two surfaces have different rules and must not be conflated.
 - Specs are fetched at **runtime** from the discovery endpoint — no spec URLs are hardcoded
 - Reactive configuration updated via `Object.assign()` on a `reactive()` config object
 - Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
+- Scalar chrome Front Door does not own is opted out in `config/scalar.ts`: `hideDarkModeToggle`, **`hideClientButton`** (Open API Client), `agent.disabled` — prefer schema flags over CSS hacks
 
 ### Scalar plugin system
 

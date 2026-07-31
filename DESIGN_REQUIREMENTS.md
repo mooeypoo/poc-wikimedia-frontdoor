@@ -526,7 +526,9 @@ Top to bottom:
 
 **Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
 
-**Source:** `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
+**Chrome opt-outs:** `config/scalar.ts` → `SCALAR_DEFAULT_CONFIGURATION` sets **`hideClientButton: true`** so the global **Open API Client** control is not shown (community + enterprise). Prefer Scalar’s config flag over CSS `display: none` on Tailwind utility classes. **Test Request** remains available (`hideTestRequestButton: false`). See `ARCHITECTURE.md` → Scalar chrome opt-outs.
+
+**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize.
 
 ---
 
