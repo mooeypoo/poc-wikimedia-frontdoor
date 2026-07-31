@@ -74,6 +74,11 @@ const bandStyle = computed( () => {
 .landing-band--apis,
 .landing-band--join {
 	/* Default light; dark override in landing-page.css under fd-theme--*. */
+	/*
+	 * Physical `to bottom` — linear-gradient has no shipped logical side keywords
+	 * (`to block-end` is invalid and drops the whole declaration). Vertical band
+	 * gradients are writing-mode stable for this surface.
+	 */
 	background-image: linear-gradient(
 		to bottom,
 		var( --fd-landing-band-start ),

@@ -150,6 +150,6 @@ const isInternalExploreHref = computed( () => {
 
 .landing-api-demo__cta {
 	display: flex;
-	justify-content: flex-start;
+	justify-content: start;
 }
 </style>

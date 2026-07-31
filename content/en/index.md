@@ -50,7 +50,7 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
 
 :::navigation-card-grid
-::navigation-card{url="http://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
+::navigation-card{url="https://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
 ::
 
 ::navigation-card{url="https://paulina.toolforge.org/" title="Paulina" description="A global, multilingual search interface for works and authors in the public domain using Wikidata and Python." media="/images/landing/app-paulina.png" chips="award:Coolest Tool Award 2025" hide-external-icon}

@@ -191,7 +191,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Header utility row collapse (256px search) | **Implemented** | `useHeaderUtilityCollapse` — `ResizeObserver`; search icon + compact language + `CdxMenuButton` |
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; start drawer on expand |
-| Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide; Codex transition tokens |
+| Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide **only** under `.frontdoor-shell--nav-drawer-expanding` (viewport expand); landing / `sidebar: false` route changes instant; Codex transition tokens |
 | Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
@@ -264,7 +264,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **disabled** prototype), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **quiet** — opens color-theme preferences popover), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/apis` (catalog); explorer keeps the tab selected |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -289,7 +289,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Primary nav + section menu collapse (Figma [Off-wiki page templates 50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)):** `useShellNavigationCollapse` observes `.frontdoor-shell__primary-nav-row` and `.frontdoor-shell__primary-nav-expanded__content` with **`ResizeObserver`**. Collapse uses intrinsic-width + **hysteresis** (`scrollWidth + 24px` to collapse, `scrollWidth + 48px` to expand). When collapsed, **`ShellCollapsedNavigation`** replaces quiet tabs; **`page-grid.css`** sets **`grid-template-columns: 0 minmax(0, 1fr)`** and **`column-gap: 0`** so the body band fills the freed space. Start panel **`border-inline-end-width: 0`**. Brand **`--spacing-75`** inline-start padding removed.
 
-**Start drawer (expand only):** **`shell-start-nav-reveal.css`** — the grid track grows from **0 → 281px** (+ gutter), **pushing** main content; the fixed-width **281px** panel slides in from inline-start inside a clipping track (`transform: translate3d(±100%, 0, 0)`; RTL mirrored). Codex **transition** tokens: **`--transition-duration-medium`** (250ms), **`--transition-timing-function-user`** (`ease-out`). Collapse is **instant**. Section nav stays mounted when collapsed (`inert`, `aria-hidden`). **`prefers-reduced-motion: reduce`** disables transitions.
+**Start drawer (expand only):** **`shell-start-nav-reveal.css`** — gated by **`.frontdoor-shell--nav-drawer-expanding`** (set only for viewport collapsed → expanded via `useShellNavigationCollapse` / `SHELL_NAV_DRAWER_EXPAND_DURATION_MS`). Then the grid track grows from **0 → 281px** (+ gutter), **pushing** main content; the fixed-width **281px** panel slides in from inline-start inside a clipping track (`transform: translate3d(±100%, 0, 0)`; RTL mirrored). Codex **transition** tokens: **`--transition-duration-medium`** (250ms), **`--transition-timing-function-user`** (`ease-out`). Collapse is **instant**. Navigating to/from **landing** (or any `sidebar: false` page) must also be **instant** — those routes share a zero-width start track but must not animate the content shift. Section nav stays mounted when collapsed (`inert`, `aria-hidden`). **`prefers-reduced-motion: reduce`** disables transitions.
 
 **Start nav scroll (drawer-compatible):** Tablet+ scrollport is **`.frontdoor-shell__side-panel--start`** — must **`flex-shrink: 1`** with **`min-block-size: 0`** so `overflow-block: auto` activates inside the flex-column grid track (`shell-start-nav-scroll.css`). Mobile scrollport is **`.fd-page-grid__start`** (`max-block-size: 40dvh`, `overflow-y: auto` from `page-grid.css`); inner panel **`overflow: visible`** so only one scrollbar appears. Drawer CSS uses **`overflow-inline: hidden`** only when expanded (not blanket `overflow: hidden`, which had broken vertical scroll).
 
@@ -828,6 +828,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Landing ↔ section-nav layout instant | Drawer expand gated by `.frontdoor-shell--nav-drawer-expanding` (viewport only); landing / `sidebar: false` snaps |
+| *(uncommitted)* | Landing home polish | Award chip dark invert; API thumb preload; no `:visited`; brand no focus outline; Lexica `https` |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |
 | *(uncommitted)* | API catalog Math + Wikimedia REST cards | `config/apiCatalogWikimedia.ts` — Math API (before Wikifunctions) + Wikimedia REST APIs → `/explorer`; All projects / Stable; `universal` |
 | *(uncommitted)* | API catalog filter combobox min size | Combobox `inline-size` / `min-inline-size: var(--size-1600)` (256px) + `flex: 0 0 auto`; avoid `min(…, 100%)` flex collapse |

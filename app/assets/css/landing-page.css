@@ -88,6 +88,7 @@ html.fd-theme--dark .fd-landing-page .landing-hero__globe-mark {
  */
 html.fd-theme--dark .fd-landing-page .landing-band--apis,
 html.fd-theme--dark .fd-landing-page .landing-band--join {
+	/* Physical `to bottom` — see LandingBand.vue (no linear-gradient logical sides). */
 	background-image: linear-gradient(
 		to bottom,
 		var( --fd-landing-band-start-dark ),

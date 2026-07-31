@@ -13,7 +13,7 @@ This covers **hand-authored** content committed under `content/`. For content
 
 - **A page is a Markdown file.** `content/<locale>/<slug>.md` becomes a route.
   - `content/en/get-started.md` → `/get-started`
-  - `content/en/index.md` → `/` (the front page)
+  - `content/en/index.md` → `/` (the front page — Figma platform home; other locale `index.md` stubs fall back to English until translated)
   - `content/fr/get-started.md` → `/fr/get-started`
 - **English is the default, everything falls back to it.** The default locale
   (`en`) has no URL prefix; other locales are prefixed (`/fr/...`). If a page is

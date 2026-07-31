@@ -115,7 +115,7 @@ const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-coll
 const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
 const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
 
-const { isNavigationCollapsed } = useShellNavigationCollapse(
+const { isNavigationCollapsed, isNavDrawerExpanding } = useShellNavigationCollapse(
 	primaryNavRowRef,
 	expandedNavContentRef
 )
@@ -202,6 +202,7 @@ useHead( {
 			'frontdoor-shell--explorer-internal-sidebar': isExplorerInternalSidebar,
 			'frontdoor-shell--landing': isLandingRoute,
 			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
+			'frontdoor-shell--nav-drawer-expanding': isNavDrawerExpanding,
 			'frontdoor-shell--sidebar-hidden': isSidebarHidden
 		}"
 	>
@@ -360,7 +361,7 @@ useHead( {
 		align-items: stretch;
 	}
 
-.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__side-panel--start {
+.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__side-panel--start {
 		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -566,7 +567,7 @@ useHead( {
 		transition: none;
 	}
 
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__body-columns {
 		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
