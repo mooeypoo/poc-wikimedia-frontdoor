@@ -12,7 +12,7 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::
 :::
 
-:::landing-section
+::::landing-section
 ## What would you like to do?
 
 :::navigation-card-grid
@@ -25,12 +25,12 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
 ::
 :::
-:::
+::::
 
-:::landing-band{variant="apis"}
+:::::landing-band{variant="apis"}
 ## Build and learn with Wikimedia APIs
 
-:::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
+::::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
 Wikimedia APIs power thousands of apps, tools, and bots. Query analytics, articles, media, pages' history, search, user data, and more across languages. Send requests and inspect responses right in your browser.
 
 ### List of most viewed English Wikipedia articles
@@ -41,10 +41,10 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
   -H "accept: application/json"
 ```
 :::
-:::
-:::
+::::
+:::::
 
-:::landing-band{variant="apps"}
+::::landing-band{variant="apps"}
 ## Discover community-built apps
 
 Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
@@ -62,9 +62,9 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 
 ::landing-section-cta{href="https://toolhub.wikimedia.org/" label="Discover more apps on Toolhub"}
 ::
-:::
+::::
 
-:::landing-band{variant="join"}
+::::landing-band{variant="join"}
 ## Join the Wikimedia community
 
 :::navigation-card-grid{columns="2"}
@@ -74,4 +74,4 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 ::navigation-card{url="/community" title="Connect with the Wikimedia developer community" description="Explore hackathons and events, and find opportunities for support and learning." supporting-text="Get involved →" leading-icon="userTalk"}
 ::
 :::
-:::
+::::

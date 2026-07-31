@@ -1076,11 +1076,15 @@ Markdown page titles and section headings follow the Codex [typography style gui
 |-------|------|
 | `:::landing-hero` | Full-bleed dither + H1 / intro / `::app-button` + ascii globe |
 | `:::landing-section` | “What would you like to do?” + 3-up cards (leading icons / Enterprise `title-logo`) |
-| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base`; community app cards use `media` + optional `chips="award:…"` + `hide-external-icon` |
-| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + article previews from `LANDING_API_ARTICLE_PREVIEWS` |
+| `:::landing-band{variant="apis\|apps\|join"}` | Full-bleed band; `apis` / `join` = Figma gradient stops from config; `apps` = `--background-color-base`; community app cards use Portrait-card media (`media` + **`--spacing-75` (12px)** image inset — Codex Portrait card not shipped yet, [T310632](https://phabricator.wikimedia.org/T310632) / [Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634)) + optional `chips="award:…"` + `hide-external-icon` |
+| `:::landing-api-demo` | Two-column demo: intro + `:::code-block` curl + Codex `CdxCard` article previews from `LANDING_API_ARTICLE_PREVIEWS` (desktop: first/last cards align to example column top/bottom with auto space between) |
 | `::landing-section-cta` | Quiet progressive section link + trailing arrow (always `cdxIconArrowNext`, including external Toolhub CTA — not the external glyph) |
 
 **Assets:** Committed under `public/images/landing/` (`LANDING_ASSETS`) — hero dither / ascii globe, API article-preview thumbs, and community-app screenshots (`app-lexica` / `app-paulina` / `app-listen`). Do not invent replacements; call out still-missing assets (e.g. true bitonal dither texture — current `hero-dither.svg` is a soft radial gradient export from Figma).
+
+**MDC nesting:** Nested landing containers must use **increasing colon counts** on outer wrappers (Nuxt Content / MDC rule) — e.g. `:::::landing-band` → `::::landing-api-demo` → `:::code-block`. Same-level `:::` openers close the previous container and can leave orphan `:::` markers as visible paragraphs.
+
+**Codex exception — landing API `CdxCard` border:** `LandingArticlePreview` wraps Codex `CdxCard` but adds a resting **`--border-color-muted`** border and exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`). Stock Card chrome does not provide that framed tile look on the API band; do not apply this override to other `CdxCard` usages without a documented exception.
 
 **Product decision:** `DESIGN_REQUIREMENTS.md` → Platform landing / home. Figma Latest [1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177). Metrics row in Figma is **hidden** — not implemented.
 
@@ -1139,8 +1143,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `LandingHero.vue` | — | `:::landing-hero` — see **Platform landing / home** |
 | `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
 | `LandingSection.vue` | — | `:::landing-section` |
-| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` |
-| `LandingArticlePreview.vue` | — | Used by `LandingApiDemo` (not authored directly in Markdown) |
+| `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` — desktop results column `space-between` pins first/last cards to example column edges |
+| `LandingArticlePreview.vue` | `CdxCard` + thumbnail | Used by `LandingApiDemo` (not authored in Markdown); landscape Codex [Card](https://doc.wikimedia.org/codex/latest/components/demos/card.html). **Codex exception:** muted resting border + exploratory **4px** radius (stock Card has no framed border in this surface) — see Platform landing |
 | `LandingSectionCta.vue` | `CdxIcon` + `cdxIconArrowNext` | `::landing-section-cta{href label}` — arrow for internal and external; external still `target="_blank"` |
 | `Include.vue` | — | `::include{file="./_partials/…"}` — locale-relative content inclusion |
 | `Partial.vue` | — | `::partial{name="…"}` — allowlisted shared partials (`config/sharedPartials.ts`); see remote-content ADR §11 |
@@ -1171,7 +1175,7 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row. **Minimum** **`--spacing-50` (8px)** from the description via **`padding-block-start`** on `.navigation-card__supporting-text` (so the gap never collapses below 8px when free space is zero) |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
 
-**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `media` (public image path for top screenshot), `chips` (Vue array or MDC pipe-separated string; `award:Label` → star + purple Coolest Tool chip), `hideExternalIcon`, `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
+**Props / slots:** `url`, `title`, `titleLogo`, `description`, `supportingText`, `topIcon` / `leadingIcon` (Codex `Icon` or allowlisted name from `config/navigationCardIcons.ts`), `media` (public image path for Portrait-card screenshot; **`--spacing-75` (12px)** inset — Codex Portrait card not shipped, [T310632](https://phabricator.wikimedia.org/T310632) / [Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634)), `chips` (Vue array or MDC pipe-separated string; `award:Label` → star + purple Coolest Tool chip), `hideExternalIcon`, `external`; slots `#title`, `#description`, **default** (Markdown description inside grids), `#supporting-text`, `#top-icon`, `#leading-icon`, `#chips`.
 
 **Grid:** `NavigationCardGrid.vue` (`:::navigation-card-grid`) — CSS grid with `align-items: stretch`; cards use `block-size: 100%` / `min-block-size: 100%` so each row matches the tallest card. Card body and copy blocks are flex columns (`flex: 1`) so supporting-text can pin to the bottom of the card. Column counts match Codex shell breakpoints (**1** &lt; 640px, **2** ≥ 640px tablet, **3** ≥ 1120px desktop) using the same px literals as `page-grid.css` (CSS custom properties are unreliable in `@media`). **`--spacing-100` (16px)** `margin-block` separates the card row from adjacent intro copy **and** following prose. Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed so that 16px does not collapse away. Non-card MDC wrappers use `display: contents` so cards are the grid items. For Markdown (e.g. inline links) inside a grid card, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and cause a parse failure (page omitted from the collection → 404).
 

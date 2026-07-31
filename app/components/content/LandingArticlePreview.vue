@@ -1,16 +1,22 @@
 <script setup lang="ts">
+import { CdxCard, type Thumbnail } from '@wikimedia/codex'
+
 /**
- * Horizontal article-preview card for the landing API demo column.
+ * Landscape article-preview card for the landing API demo column.
  *
- * Non-interactive Codex-style landscape card (thumbnail + title + snippet).
- * Content strings are BiDi-isolated. Thumbnail URL is a committed public asset
- * rendered as a plain `<img>` (relative public paths are more reliable than
- * CdxThumbnail’s lazy load for these static mockup images).
+ * Uses Codex {@link CdxCard} with a thumbnail ([Card demos](https://doc.wikimedia.org/codex/latest/components/demos/card.html)).
+ * Non-interactive (no `url`). Title and description are content strings —
+ * BiDi-isolated. Thumbnail paths come from {@link LANDING_API_ARTICLE_PREVIEWS}.
  *
+ * **Codex exception:** stock `CdxCard` has no visible resting border in this
+ * context; landing previews add a muted border so cards read as framed tiles
+ * on the API band (Figma). Documented in ARCHITECTURE.md → Platform landing.
+ *
+ * @see LandingApiDemo.vue
  * @see config/landingSurfaces.ts
  * @see Figma Card instances 1181:25098–1181:25100
  */
-defineProps<{
+const props = defineProps<{
 	/** Article title (content string). */
 	title: string
 	/** Truncated snippet (content string). */
@@ -18,83 +24,57 @@ defineProps<{
 	/** Public path to the thumbnail image. */
 	thumbnailSrc: string
 }>()
+
+/**
+ * Codex Thumbnail payload for {@link CdxCard}.
+ *
+ * @returns Thumbnail object with committed public URL and 40px box size.
+ */
+const thumbnail = computed( (): Thumbnail => ( {
+	url: props.thumbnailSrc,
+	width: 40,
+	height: 40
+} ) )
 </script>
 
 <template>
-	<article class="landing-article-preview">
-		<img
-			class="landing-article-preview__thumbnail"
-			:src="thumbnailSrc"
-			alt=""
-			width="40"
-			height="40"
-			decoding="async"
-		>
-		<div class="landing-article-preview__copy">
-			<p class="landing-article-preview__title">
-				<bdi>{{ title }}</bdi>
-			</p>
-			<p class="landing-article-preview__description">
+	<CdxCard
+		class="landing-article-preview"
+		:thumbnail="thumbnail"
+	>
+		<template #title>
+			<bdi>{{ title }}</bdi>
+		</template>
+		<template #description>
+			<span class="landing-article-preview__description">
 				<bdi>{{ description }}</bdi>
-			</p>
-		</div>
-	</article>
+			</span>
+		</template>
+	</CdxCard>
 </template>
 
 <style scoped>
 .landing-article-preview {
-	display: flex;
-	align-items: flex-start;
-	gap: var( --spacing-75 );
-	box-sizing: border-box;
 	inline-size: 100%;
-	padding: var( --spacing-75 );
+	box-sizing: border-box;
+	/*
+	 * Codex exception — stock CdxCard has no resting border here; Figma landing
+	 * API previews are framed tiles. Use muted (not progressive) so they stay
+	 * quiet beside the curl sample. See ARCHITECTURE.md → Platform landing.
+	 */
 	border: var( --border-width-base ) solid var( --border-color-muted );
 	border-radius: var( --fd-explorer-controls-surface-border-radius );
-	background-color: var( --background-color-base );
 }
 
-.landing-article-preview__thumbnail {
-	flex: 0 0 auto;
-	/* 40px — matches Figma landscape card thumbnails. */
-	inline-size: var( --size-250 );
-	block-size: var( --size-250 );
-	object-fit: cover;
-	border: var( --border-width-base ) solid var( --border-color-subtle );
-	border-radius: var( --border-radius-base );
-}
-
-.landing-article-preview__copy {
-	display: flex;
-	flex: 1 1 auto;
-	flex-direction: column;
-	gap: var( --spacing-25 );
-	min-inline-size: 0;
-}
-
-.landing-article-preview__title,
+/*
+ * Clamp description to two lines so the stacked column keeps a stable height
+ * while free space is distributed between cards (space-between).
+ */
 .landing-article-preview__description {
-	margin-block: 0;
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-small );
-	overflow-wrap: anywhere;
-}
-
-.landing-article-preview__title {
-	font-weight: var( --font-weight-bold );
-	color: var( --color-base );
-}
-
-.landing-article-preview__description {
-	font-weight: var( --font-weight-normal );
-	color: var( --color-subtle );
-	/*
-	 * Clamp to two lines so the stacked column matches Figma card height
-	 * without inventing different copy.
-	 */
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
 	overflow: hidden;
+	overflow-wrap: anywhere;
 }
 </style>

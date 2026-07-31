@@ -17,7 +17,9 @@ export type { NavigationCardChip }
  * ([79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)).
  *
  * Differences from stock `CdxCard`:
- * - Vertical stack; optional top **media** screenshot (`media` public path)
+ * - Vertical stack; optional top **media** screenshot (`media` public path) —
+ *   Portrait-card layout (Codex design, not shipped yet — see T310632);
+ *   **`--spacing-75` (12px)** inset around the image per Figma Portrait card
  * - Neutral-subtle background; transparent border that uses
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
@@ -95,6 +97,8 @@ const props = withDefaults( defineProps<{
 	/**
 	 * Optional top-of-card screenshot / media (public path, e.g.
 	 * `/images/landing/app-lexica.png`). Decorative — empty `alt`.
+	 * Portrait-card inset: **`--spacing-75` (12px)** around the image
+	 * (Codex Portrait card not shipped — T310632).
 	 */
 	media?: string
 	/**
@@ -479,9 +483,19 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 	overflow: clip;
 }
 
+/*
+ * Portrait card (Codex Figma, not implemented in Codex yet — T310632):
+ * 12px (`--spacing-75`) around the media image on all sides toward the card
+ * edge / body. Used by landing “Discover community-built apps” cards.
+ * @see https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634
+ */
 .navigation-card--has-media {
-	/* Media bleeds to the card’s top / inline edges; body keeps padding. */
-	padding-block-start: 0;
+	padding: var( --spacing-75 );
+	gap: var( --spacing-75 );
+}
+
+.navigation-card--has-media .navigation-card__body {
+	padding-block: 0;
 	padding-inline: 0;
 }
 
@@ -490,6 +504,7 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 	z-index: 1;
 	inline-size: 100%;
 	overflow: hidden;
+	border-radius: var( --border-radius-base );
 	pointer-events: none;
 }
 

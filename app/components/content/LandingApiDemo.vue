@@ -7,14 +7,16 @@ import LandingArticlePreview from './LandingArticlePreview.vue'
 /**
  * Landing “Build and learn with Wikimedia APIs” two-column demo.
  *
- * Left: slotted band intro + subheading + `:::code-block` sample from Markdown
- * (top-aligned with the right column). Right: stacked article-preview cards from
- * {@link LANDING_API_ARTICLE_PREVIEWS}. Optional explore CTA uses Codex quiet
- * progressive styling (content label — BiDi).
+ * Left: slotted band intro + subheading + `:::code-block` sample from Markdown.
+ * Right: Codex {@link CdxCard} article previews from
+ * {@link LANDING_API_ARTICLE_PREVIEWS}. At desktop, the results column stretches
+ * to the example column height; first/last cards pin to the top/bottom with
+ * free space distributed between them (`justify-content: space-between`).
  *
  * MDC: `:::landing-api-demo{explore-href="/explorer" explore-label="…"}` … `:::`.
  *
  * @see CodeBlock.vue
+ * @see LandingArticlePreview.vue
  * @see Figma API band 1181:25138
  */
 const props = withDefaults( defineProps<{
@@ -90,7 +92,6 @@ const isInternalExploreHref = computed( () => {
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: var( --spacing-200 );
-	/* Intro + curl top-align with the article-preview stack (Figma). */
 	align-items: start;
 	inline-size: 100%;
 }
@@ -98,6 +99,8 @@ const isInternalExploreHref = computed( () => {
 @media ( min-width: 1120px ) {
 	.landing-api-demo__columns {
 		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
+		/* Equal column height so results can pin first/last cards to example edges. */
+		align-items: stretch;
 	}
 }
 
@@ -130,6 +133,19 @@ const isInternalExploreHref = computed( () => {
 	flex-direction: column;
 	gap: var( --spacing-75 );
 	min-inline-size: 0;
+}
+
+@media ( min-width: 1120px ) {
+	.landing-api-demo__results {
+		/*
+		 * First card top-aligns with `.landing-api-demo__example`; last card
+		 * bottom-aligns; remaining space is distributed between cards.
+		 */
+		justify-content: space-between;
+		/* Minimum rhythm when the example column is short. */
+		gap: var( --spacing-75 );
+		min-block-size: 100%;
+	}
 }
 
 .landing-api-demo__cta {
