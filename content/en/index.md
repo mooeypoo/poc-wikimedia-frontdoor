@@ -31,7 +31,7 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ## Build and learn with Wikimedia APIs
 
 ::::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
-Wikimedia APIs power thousands of apps, tools, and bots. Query analytics, articles, media, pages' history, search, user data, and more across languages. Send requests and inspect responses right in your browser.
+Query analytics, articles, media, page history, and more across languages. Send requests and inspect responses right in your browser.
 
 ### List of most viewed English Wikipedia articles
 
