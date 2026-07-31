@@ -75,8 +75,9 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── accountTokenSecret.ts # Masking helpers for account API key secrets
 │   │   ├── oauthHandoff.ts      # sessionStorage key for callback → destination token handoff
 │   │   ├── explorerRoute.ts     # isExplorerRoutePath() for layout and plugins
+│   │   ├── landingRoute.ts      # isLandingRoutePath() for frontdoor-shell--landing
 │   │   ├── contentRoute.ts      # Main-nav id from route path (explorer → `apis`); locale prefix stripping
-│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props (label-only in NavigationCard)
+│   │   └── parseNavigationCardChips.ts # MDC chip attribute → CdxInfoChip props (label-only / award in NavigationCard)
 │   ├── middleware/
 │   │   └── content-sidebar.global.ts  # Content `sidebar` frontmatter; forces `/account` sidebar off
 │   ├── app.vue                 # NuxtPage :page-key for route remounts
@@ -97,7 +98,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
 │   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
-│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab) for NavigationCard
+│   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab/wikimediaEnterprise)
+│   ├── landingSurfaces.ts      # Platform home gradients, assets, globe tints, award chips, API previews
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki URL mapping for write-request modal
 │   ├── scalarWriteHttpMethods.ts # HTTP methods treated as write requests in the Test Request modal
 │   ├── scalarClientWriteWarnings.ts # Plain HTML probe flag for modal injection debugging
@@ -991,7 +993,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
-| `config/landingSurfaces.ts` | Platform home: band gradient stops (`apis` / `join`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px → `--fd-landing-content-max-inline-size`), **`LANDING_AWARD_CHIP`** (Codex purple100 / purple600 → `--fd-landing-award-chip-*`), committed `LANDING_ASSETS` paths (incl. app screenshots), `LANDING_API_ARTICLE_PREVIEWS` placeholder cards |
+| `config/landingSurfaces.ts` | Platform home: light/dark **`LANDING_BAND_GRADIENTS`** (`apis` / `join` dark `#233566` → `#101418`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px), **`LANDING_HERO_GLOBE_COLOR`**, **`LANDING_AWARD_CHIP`** (purple100 / purple600 → `--fd-landing-award-chip-*`), **`LANDING_ASSETS`** (incl. `heroDither` / `heroDitherDark`, app screenshots), `LANDING_API_ARTICLE_PREVIEWS` |
 | `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
 | `config/navigationCardTitleLogos.ts` | Allowlisted brand title logos (`gerrit`, `github`, `gitlab`, `wikimediaEnterprise`) |
 | `config/siteFooter.ts` | Footer policy and license link URLs |
@@ -1072,7 +1074,8 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
 | Heading anchors | Not rendered (`ProseHeading` skips anchors when `isLandingRoutePath`) |
 | Section `h2` → content | **`--spacing-150` (24px)** end margin; next sibling start margin zeroed |
-| Hero prose links | No ProseA external icon; no `:visited` colour (keep link / hover / active) |
+| All home links | No `:visited` colour (hero prose, card supporting-text, section CTAs) — keep link / progressive hover / active only (`landing-page.css`) |
+| Hero prose links | No ProseA external icon |
 | `hr` | Hidden (no Markdown `---` dividers) |
 
 **MDC structure** (`content/en/index.md`):
@@ -1145,7 +1148,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | File | Codex widget(s) | Markdown syntax |
 |---|---|---|
 | `ProseH2.vue` … `ProseH6.vue` | `CdxIcon` + `cdxIconLink` | Overrides default heading rendering; heading text is plain text, icon appears on hover via CSS. Default `@nuxtjs/mdc` wraps the full heading text in `<a>` — these components replace that with the icon-alongside pattern. Visual size/weight for `h2` on content pages comes from `.fd-content-page` rules in `main.css` (Codex Heading 2). |
-| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external; external links default to `target="_blank"` + `rel="noopener noreferrer"`. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`, including `--color-link--hover`). Landing hero hides the external icon via `landing-page.css` |
+| `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external; external links default to `target="_blank"` + `rel="noopener noreferrer"`. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`). On `.fd-landing-page`, hero hides the external icon and **all** home links suppress `:visited` via `landing-page.css` |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
 | `SectionHeading.vue` | `CdxInfoChip` + `ProseHeading` | `::section-heading{title="…" chip="…"}` — see **Section heading** below |
@@ -1175,17 +1178,18 @@ Markdown page titles and section headings follow the Codex [typography style gui
 |-------|------|-----------|--------------------|
 | **Internal** | Same-origin path (`/get-started/…`, `/explorer`, …) | `url` + `title` + `description` only — **no** `supporting-text` | `get-started.md`, `build-for-communities.md` |
 | **External** | Off-platform `https://…` | `url` + `title` + `description` + **`supporting-text`** (writer label; external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
+| **Platform home (exception)** | Persona / join on `index.md` | Internal `url` **with** writer `supporting-text`; apps band = Portrait `media` + optional `award:` chips + `hide-external-icon` | `content/en/index.md` — see **Platform landing / home** |
 
 Mixed pages apply the table **per card**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
 
 | Aspect | Stock `CdxCard` | `NavigationCard` |
 |--------|-----------------|------------------|
-| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; no thumbnail |
+| Layout | Horizontal (optional thumbnail / start icon) | Vertical stack; optional Portrait **`media`** screenshot (landing apps) |
 | Background | Base (white) | Neutral-subtle via `--fd-explorer-controls-surface-background-color` |
 | Border | Present | Transparent by default; **`--border-color-subtle`** on hover when linked |
 | Radius | `--border-radius-base` (2px) | `--fd-explorer-controls-surface-border-radius` (exploratory **4px**) |
 | Typography | — | Title, description, and supporting-text use Codex base **`--font-size-medium`** / **`--line-height-medium`** (title bold) |
-| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **Codex Link** to the same destination ([Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) via `--color-link*` tokens — hover/active/visited/focus, not progressive-only). External icon on that link for off-platform destinations (`color: inherit`); title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
+| Supporting text | Codex Card supporting-text slot | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a **Codex Link** to the same destination ([Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) via `--color-link*` tokens — hover/active/visited/focus, not progressive-only). **Platform landing exception:** `.fd-landing-page` suppresses `:visited` (unvisited / hover / active only). External icon on that link for off-platform destinations (`color: inherit`) unless `hideExternalIcon`; title trailing icon omitted when supporting-text is present. **Preserve technical-writer labels** when converting from prose — do not rewrite supporting-text copy |
 | Title logos | — | Optional `titleLogo` / MDC `title-logo` — allowlisted monochrome brand marks (`gerrit`, `github`, `gitlab`, **`wikimediaEnterprise`**) in `config/navigationCardTitleLogos.ts`; SVG sources under `public/images/navigation-card-logos/`. Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub Octicons](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg), Wikimedia Enterprise mark from Figma Latest (1179:23269) — brand fills remapped to `currentColor`. Sized to **`--size-icon-medium`**; inherits title **`--color-base`** (dark mode via tokens). When a text `title` is also set, the logo renders before the title (landing commercial card). Not Codex icons — brand marks are a documented exception. Demos: `by-language.md` → Browse repositories; `content/en/index.md` → Enterprise persona card |
 | Bottom alignment | — | In equal-height grids, supporting-text uses **`margin-block-start: auto`** inside a flex-growing copy block so links share a baseline across the row. **Minimum** **`--spacing-50` (8px)** from the description via **`padding-block-start`** on `.navigation-card__supporting-text` (so the gap never collapses below 8px when free space is zero) |
 | Click target | Optional card link | **Stretched link** over the card when `url` is set (whole-card click). Description and supporting-text links sit above it via `z-index` + `pointer-events` — valid HTML, **no nested `<a>`**. ProseA external icons are suppressed inside card descriptions |
@@ -1200,10 +1204,11 @@ Mixed pages apply the table **per card**. Empty former links → ask or omit `ur
 |----------|--------|
 | `chips="Bots and tools\|Wikimedia APIs"` | Labels with default status `subtle` |
 | `chips="notice:All projects\|success:Stable\|warning:Beta"` | `status:label` segments (`StatusType` prefix must be valid) |
+| `chips="award:Coolest Tool Award 2026"` | Landing Coolest Tool chip — `cdxIconStar` + purple100/600 via `LANDING_AWARD_CHIP` (not a Codex `StatusType`) |
 
 **API catalog conventions** (`content/en/apis.md`): `notice` = scope, `success` = Stable / Check stability…, `warning` = Beta — stock Codex status colours. Get started overview cards omit chips.
 
-**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. See `AGENTS.md` → Content components (approved exception).
+**Label-only (approved exception):** Catalog chips must not show Codex status icons. `CdxInfoChip` forces icons for `warning` / `error` / `success` and ignores a null `icon` prop for those statuses, so `NavigationCard` hides `.cdx-info-chip__icon--vue` under `.navigation-card__chips` (documented inline in the SFC). Do not invent a second chip component or re-colour chips outside Codex statuses without updating `DESIGN_REQUIREMENTS.md`. **Landing exception:** `award:` chips keep the star icon and purple fill from `LANDING_AWARD_CHIP` (bound on `.fd-landing-page`). See `AGENTS.md` → Content components (approved exception).
 
 **BiDi / i18n:** Title, description, supporting-text, and chip labels from props are wrapped in `<bdi>` (content / external strings). No banana-i18n keys in the card chrome itself — labels are authored in per-locale Markdown. First-party card/grid CSS uses logical properties (`inline-size`, `margin-block-*`, `block-size`, `min-block-size`).
 
@@ -1229,7 +1234,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted Codex icon names for MDC), `config/navigationCardTitleLogos.ts` (allowlisted brand title logos), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/index.md` (platform home — persona/join with internal supporting-text exception; Portrait app cards + `award:` chips); `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
 
 #### Section heading
 

@@ -115,22 +115,42 @@ html.fd-theme--dark .fd-landing-page .landing-band--join {
 }
 
 /*
- * Hero intro links (Wikipedia / other Wikimedia projects): no external glyph
- * and no visited colour — keep progressive link states only.
+ * Hero intro links (Wikipedia / other Wikimedia projects): no external glyph.
  */
 .fd-landing-page .landing-hero :where( .prose-link__external-icon ) {
 	display: none;
 }
 
-.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited ) {
+/*
+ * Landing home: no visited link colour on any home-surface link (hero prose,
+ * card supporting-text, section CTAs). Keep unvisited / hover / active only.
+ * Product decision: DESIGN_REQUIREMENTS.md → Platform landing / home.
+ */
+.frontdoor-shell__main .fd-landing-page :where( a:visited ) {
 	color: var( --color-link );
 }
 
-.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited:hover ) {
+.frontdoor-shell__main .fd-landing-page :where( a:visited:hover ) {
 	color: var( --color-link--hover );
 }
 
-.frontdoor-shell__main .fd-landing-page .landing-hero :where( a:visited:active ) {
+.frontdoor-shell__main .fd-landing-page :where( a:visited:active ) {
+	color: var( --color-link--active );
+}
+
+/*
+ * Beat NavigationCard supporting-text visited rules (`:where()` above does not
+ * outrank `.navigation-card__supporting-text-link:visited`).
+ */
+.fd-landing-page .navigation-card__supporting-text-link:visited {
+	color: var( --color-link );
+}
+
+.fd-landing-page .navigation-card__supporting-text-link:visited:hover {
+	color: var( --color-link--hover );
+}
+
+.fd-landing-page .navigation-card__supporting-text-link:visited:active {
 	color: var( --color-link--active );
 }
 
@@ -153,6 +173,19 @@ html.fd-theme--dark .fd-landing-page .landing-band--join {
 }
 
 .fd-landing-page__section-cta:active {
+	color: var( --color-progressive--active );
+}
+
+.fd-landing-page__section-cta:visited {
+	color: var( --color-progressive );
+}
+
+.fd-landing-page__section-cta:visited:hover {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.fd-landing-page__section-cta:visited:active {
 	color: var( --color-progressive--active );
 }
 
