@@ -213,6 +213,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items; exports `SHELL_HEADER_UTILITY_MENU_VALUE` (settings→preferences popover handled in parent; username→account; log in/out) |
 | `useScalarClientWriteEndpointWarnings(scalarInterface)` | Injects write-request production **`CdxMessage`** into the Scalar Test Request modal **only** after `.scalar-address-bar`; removes stray warning hosts (e.g. under Response Headers); `$2` test-wiki link is mocked until test instances are discoverable |
 | `useScalarClientWriteRequestConfirmDialog()` | **Mock** Codex confirm before Scalar address-bar Send on write methods; disable via `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` in `config/scalarClientWriteWarnings.ts` |
+| `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` | Keeps Test Request usable in the visible shell: snap shell `scrollTop` to 0 on open (restore on close), freeze + wheel/touch lock outside `.scalar-client`; CSS pins overlay into the shell client box; does **not** lock page body scroll |
 
 **Account dashboard** (`app/pages/account.vue`):
 
@@ -806,6 +807,30 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: a
 
 **UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
 
+### Scalar Test Request modal background scroll lock
+
+**Issue.** Scalar’s `ApiClientModal` locks background scroll by setting `document.documentElement.style.overflow = 'hidden'`. Front Door does **not** scroll the document for the explorer reference panel — at ≥ 960px the scrollport is **`.explorer-page__scalar-shell`** (containing `.references-rendered`). Wheel / trackpad input therefore still scrolls the docs behind the open Test Request modal.
+
+**Product intent.** Keep the Test Request dialog **fully inside the visible Scalar shell** (close control reachable). Lock **reference docs only**. Keep **`.frontdoor-shell__body-scroll`** scrollable.
+
+**Workaround.** `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` (wired from `app/pages/explorer/[[view]].vue`) + CSS in `explorer-codex-overrides.css`:
+
+| Mechanism | Role |
+|-----------|------|
+| Scalar `ui:open:client-modal` / `ui:close:client-modal` | Sole open/close signal — **no** body-wide MutationObserver (that freezes the explorer tab during Scalar mount) |
+| Snap shell `scrollTop` → `0` on open; restore on close | Modal is transform-contained; after the reference scrolls, fixed chrome can sit **above** the visible client box — freeze alone trapped the close control off-screen |
+| `scrollTop` freeze at `0` while open | Holds the shell so the pinned overlay stays aligned |
+| Capture-phase `wheel` / `touchmove` `preventDefault` | Blocks gestures over the shell **outside** `.scalar-client[role="dialog"]` |
+| Class `explorer-page__scalar-shell--client-modal-open` | Pins `.scalar.scalar-app` / `.scalar-container` with `position: absolute; inset: 0`, **`z-index: 10000`** (must beat Scalar `.t-doc__sidebar` at `10`), sizes `.scalar-app-layout` to the shell (not `90svh`), and sizes `.scalar-app-exit` to `100%` (not `100vh`) |
+
+**Why not `overflow: hidden` on the shell.** Clipping the transform containing block produced a **second scrollbar inside the Test Request modal**. Geometry pin + scroll snap avoid that.
+
+**Does not** lock `.frontdoor-shell__body-scroll`.
+
+**FRAGILITY:** Depends on `.scalar-client[role="dialog"]` and Scalar modal class names (`.scalar-container`, `.scalar-app-layout`, `.scalar-app-exit`) — re-verify on `@scalar/api-client` upgrades.
+
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock.
+
 ### Explorer modes and start-column routing
 
 Enterprise explorer experiences share the unified start column with community mode. Mode is encoded in the URL (`app/utils/explorerRoute.ts`):
@@ -1389,6 +1414,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `app/composables/useExplorerOptInCheckboxGroup.ts`, `app/utils/explorerModuleOptInFilter.ts`, `config/explorerOptIn.ts` (`isExplorerBetaOptInModule`, `isExplorerInternalOptInModule`), `tests/explorerModuleOptInFilter.test.mjs` |
 | Write-request production warning (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/createScalarWriteEndpointWarningElement.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `app/scalar/explorerMapConfigPlugins.client.ts` (hooks only — no warning view slots), `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`, `i18n/*` (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-test-wiki-name-*`) |
 | Test Request modal sticky section titles | `app/assets/css/explorer-codex-overrides.css` (`.explorer-page .scalar-client .request-response-header { z-index: 1 }`) — see **Scalar Test Request modal sticky headers** |
+| Test Request modal background scroll lock | `app/composables/useScalarClientModalBackgroundScrollLock.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css` (shell-pinned modal geometry under `--client-modal-open`) — see **Scalar Test Request modal background scroll lock** |
 | Write-request confirm dialog (Test Request Send, mock) | `app/components/explorer/scalar/ScalarClientWriteRequestConfirmDialog.vue`, `app/composables/useScalarClientWriteRequestConfirmDialog.ts`, `config/scalarClientWriteWarnings.ts` (`SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED`), `app/assets/css/explorer-codex-overrides.css` (containment + actions + title 18px; Codex exception #13), `app/pages/explorer/[[view]].vue` (`#explorer-reference-panel` sibling mount), `app/utils/resolveInterfaceMessage.ts` / `resolveActiveInterfaceLocale.ts` / `getInterfaceMessageTemplate.ts`, `i18n/*` (`explorer-scalar-write-confirm-*`) |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css`, `app/assets/css/shell-codex-overrides.css` (`fd-cdx-popover--arrow-seam-fix`, preferences body padding), `app/composables/useColorMode.ts`, `config/colorMode.ts`, `app/assets/css/color-modes.css` |

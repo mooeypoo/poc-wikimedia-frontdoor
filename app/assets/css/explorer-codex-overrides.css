@@ -220,6 +220,65 @@
 }
 
 /*
+ * Test Request modal — pin into the visible Scalar shell client box.
+ *
+ * Scalar mounts the client modal inside `.explorer-page__scalar-shell`
+ * (`transform: translateZ(0)` containing block). After the reference scrolls,
+ * `position: fixed` chrome can sit above the visible client area; combined with
+ * scroll freeze that traps the close control. JS snaps `scrollTop` to 0 on open
+ * (restored on close). These rules then pin the overlay with `absolute` + shell
+ * percentages (not Scalar’s `100vh` / `90svh`) so the dialog fits the shell.
+ *
+ * Physical `top` / `right` / `bottom` / `left` / `width` / `height` / `max-height`
+ * override Scalar’s physical modal rules (no logical equivalents for those resets).
+ * Do **not** set `overflow: hidden` on the shell itself (double scrollbar).
+ * Page body scroll stays unlocked.
+ *
+ * FRAGILITY: `.scalar-container` / `.scalar-app-layout` / `.scalar-app-exit` are
+ * @scalar/api-client class names — re-verify on upgrades.
+ *
+ * @see ARCHITECTURE.md → Scalar Test Request modal background scroll lock
+ * @see DESIGN_REQUIREMENTS.md → Scalar shell containment → Test Request reference scroll lock
+ */
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app {
+	position: absolute;
+	inset: 0;
+	/*
+	 * Must beat Scalar’s `.t-doc__sidebar { z-index: 10 }` (internal endpoint
+	 * nav). Keep Scalar’s own overlay scale (`z-overlay` = 10000) — our earlier
+	 * `z-index: 5` painted the Test Request modal behind the sidebar.
+	 */
+	z-index: 10000;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar-container {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar .scalar-app-layout {
+	block-size: calc( 100% - var( --spacing-200 ) );
+	max-block-size: calc( 100% - var( --spacing-200 ) );
+	height: calc( 100% - var( --spacing-200 ) );
+	max-height: none;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar-app-exit {
+	inline-size: 100%;
+	block-size: 100%;
+	width: 100%;
+	height: 100%;
+}
+
+/*
  * Write-request confirm dialog — contain overlay to the Scalar reference panel.
  *
  * Codex `CdxDialog` backdrop defaults to `position: fixed` + `100vw` / `100vh`

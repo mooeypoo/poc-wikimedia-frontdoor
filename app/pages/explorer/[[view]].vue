@@ -8,6 +8,7 @@ import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOp
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import { useScalarClientModalBackgroundScrollLock } from '../../composables/useScalarClientModalBackgroundScrollLock'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
 import { useScalarClientWriteRequestConfirmDialog } from '../../composables/useScalarClientWriteRequestConfirmDialog'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
@@ -75,8 +76,10 @@ const {
 } )
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
+const scalarShellRef = ref<HTMLElement | null>( null )
 
 useScalarClientWriteEndpointWarnings( scalarInterface )
+useScalarClientModalBackgroundScrollLock( scalarShellRef, scalarInterface )
 
 const {
 	isWriteRequestConfirmDialogOpen,
@@ -92,7 +95,6 @@ watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 	setActiveExplorerWikiInstanceId( wikiInstanceId )
 }, { immediate: true } )
 
-const scalarShellRef = ref<HTMLElement | null>( null )
 const explorerEndPanelElement = ref<HTMLElement | null>( null )
 
 const { focusPendingOperationInScalar } = useExplorerScalarFocus(

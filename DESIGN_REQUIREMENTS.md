@@ -528,7 +528,9 @@ Top to bottom:
 
 **Test Request sticky titles:** Scalar’s `.request-response-header` (endpoint name in the client modal) is sticky without a z-index, so scrolling parameters paint over it. Override in `explorer-codex-overrides.css`: `.explorer-page .scalar-client .request-response-header { z-index: 1 }` (modal-scoped). See `ARCHITECTURE.md` → Scalar Test Request modal sticky headers.
 
-**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers.
+**Test Request reference scroll lock + shell fit:** While the Test Request modal is open, the dialog must stay **fully inside the visible Scalar shell** (close control and address bar reachable). **Reference docs** must not scroll behind the modal; the **page** scrollport (`.frontdoor-shell__body-scroll`) **must remain scrollable**. Do **not** use `overflow: hidden` on the shell (second scrollbar inside Test Request). Implementation: snap shell scroll to top on open (restore on close), freeze + wheel/touch lock outside the modal, and CSS-pin the Scalar overlay into the shell client box (`useScalarClientModalBackgroundScrollLock` + `explorer-codex-overrides.css`). See `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock.
+
+**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal background scroll lock.
 
 ### Write-request production warning (Test Request modal)
 
@@ -839,6 +841,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Test Request modal shell fit | Pin Test Request into visible Scalar shell (scroll snap + absolute overlay); freeze reference only; keep page body scroll; no shell `overflow: hidden` |
 | *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |
 | *(uncommitted)* | Internal opt-in module gate | Hide `*-internal` discovery modules (e.g. Discord Preview / `discord/v0-internal`) from **API to explore** until Internal checkbox is on |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |

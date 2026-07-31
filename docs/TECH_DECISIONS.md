@@ -80,6 +80,14 @@ Codex components and banana-i18n work inside plugins natively — no bridge patt
 
 **Confirm-before-Send mock:** A Codex `CdxDialog` intercepts address-bar Send for write methods. Overlay is contained to `#explorer-reference-panel` (Scalar embed; dialog component is a sibling of that panel). Action group stays end-aligned; progressive **Confirm** is left of **Cancel** within the pair (Codex exception #13 — reduces accidental confirms). Title 18px / body 16px. Easy undo: `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED = false` in `config/scalarClientWriteWarnings.ts`.
 
+### Test Request modal — shell fit + reference scroll lock (not page lock)
+
+**Decision:** Keep the Test Request dialog fully inside the **visible Scalar shell** while open (close control reachable). Freeze **`.explorer-page__scalar-shell`** only; leave **`.frontdoor-shell__body-scroll`** unlocked. On open, snap shell `scrollTop` to `0` (restore on close), freeze + block wheel/touch outside `.scalar-client`, and CSS-pin the overlay into the shell client box (`absolute` + shell `%` sizing — not Scalar `100vh` / `90svh`). Do **not** use `overflow: hidden` on the shell.
+
+**Rationale:** The modal is transform-contained inside the scrollable shell. After the reference scrolls, fixed modal chrome can sit above the visible client box; freezing scroll then traps the close control off-screen. Shell `overflow: hidden` caused a second scrollbar inside Test Request. Page-level lock was rejected — project controls should stay scrollable.
+
+**Source of truth:** `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock; `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock; `AGENTS.md` RTL checklist.
+
 ---
 
 ## Discovery and spec resolution
