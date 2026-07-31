@@ -9,8 +9,6 @@ import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
-import { useScalarWriteRequestAddressBarSync } from '../../composables/useScalarWriteRequestAddressBarSync'
-import { useScalarWriteRequestTestWiki } from '../../composables/useScalarWriteRequestTestWiki'
 import { setActiveExplorerWikiInstanceId } from '../../utils/explorerWikiInstanceContext'
 import ExplorerScalarReference from '../../components/explorer/ExplorerScalarReference.client.vue'
 import ExplorerEnterpriseCustom from '../../components/explorer/ExplorerEnterpriseCustom.vue'
@@ -75,7 +73,7 @@ const {
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 
-useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
+useScalarClientWriteEndpointWarnings( scalarInterface )
 
 watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
 	setActiveExplorerWikiInstanceId( wikiInstanceId )
@@ -160,9 +158,6 @@ const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
 		? communityScalarConfiguration as unknown as Record<string, unknown>
 		: enterpriseScalarConfiguration.value
 )
-
-useScalarWriteRequestTestWiki( communityScalarConfiguration )
-useScalarWriteRequestAddressBarSync( scalarInterface, selectedWikiInstanceId )
 
 /**
  * Forces ApiReference remount when the spec context changes.

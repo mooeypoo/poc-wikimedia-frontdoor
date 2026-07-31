@@ -1,6 +1,6 @@
 import { createApp, onBeforeUnmount, watch, type App, type Ref } from 'vue'
 import { getWikiInstanceById } from '../../config/instances'
-import { getTestWikiUrlForWikiInstance } from '../../config/wikiInstanceTestWikis'
+import { getTestWikiDisplayNameMessageKey } from '../../config/wikiInstanceTestWikis'
 import {
 	SCALAR_CLIENT_WRITE_ENDPOINT_WARNINGS_ENABLED,
 	SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE
@@ -8,10 +8,6 @@ import {
 import ScalarClientWriteEndpointWarning from '../components/explorer/scalar/ScalarClientWriteEndpointWarning.vue'
 import { SCALAR_CLIENT_MODAL_VIEW_SLOTS } from '../scalar/scalarClientWriteEndpointPlugins'
 import type { ScalarInterfaceHandle } from './useExplorerScalarFocus'
-import {
-	resetScalarWriteRequestTestWikiPreference,
-	scheduleScalarWriteRequestAddressBarSync
-} from '../utils/explorerScalarWriteRequestContext'
 import { activeExplorerWikiInstanceId } from '../utils/explorerWikiInstanceContext'
 import { createScalarWriteEndpointWarningElement } from '../utils/createScalarWriteEndpointWarningElement'
 import { findOpenScalarClientModal } from '../utils/findOpenScalarClientModal'
@@ -46,25 +42,29 @@ interface MountedWriteWarning {
  * @param insertBefore - Optional sibling inserted before the warning.
  * @param slotKey - Slot identifier stored on the mount node for deduplication.
  * @param httpMethod - HTTP method for write-endpoint gating inside the warning component.
- * @param testWikiUrl - Test wiki URL label for the selected explorer instance.
  * @returns Mounted warning handles.
  */
 function mountWriteWarning(
 	parentElement: Element,
 	insertBefore: Element | null,
 	slotKey: string,
-	httpMethod: string,
-	testWikiUrl: string
+	httpMethod: string
 ): MountedWriteWarning {
 	let mountElement: HTMLElement
 	let application: App<Element> | null = null
 
 	if ( SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE ) {
 		const productionWikiDisplayName = getWikiInstanceById( activeExplorerWikiInstanceId.value )?.displayName ?? ''
+		const testWikiDisplayName = resolveInterfaceMessage(
+			getTestWikiDisplayNameMessageKey( activeExplorerWikiInstanceId.value )
+		)
 
 		mountElement = createScalarWriteEndpointWarningElement(
 			slotKey,
-			resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [ productionWikiDisplayName, testWikiUrl ] )
+			resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [
+				productionWikiDisplayName,
+				testWikiDisplayName
+			] )
 		)
 	} else {
 		mountElement = document.createElement( 'div' )
@@ -73,8 +73,7 @@ function mountWriteWarning(
 
 		application = createApp( ScalarClientWriteEndpointWarning, {
 			slotKey,
-			httpMethod,
-			testWikiUrl
+			httpMethod
 		} )
 	}
 
@@ -92,18 +91,16 @@ function mountWriteWarning(
 }
 
 /**
- * Injects Codex-styled write-endpoint controls into the Scalar Test Request modal.
+ * Injects a Codex write-endpoint production warning into the Scalar Test Request modal.
  *
  * Scalar's modal is a separate Vue app; DOM injection mounts {@link ScalarClientWriteEndpointWarning}
- * (`CdxCheckbox` + `CdxMessage`) in a small Vue root per slot. Plain HTML probe mode is available via config.
+ * (`CdxMessage`) in a small Vue root per slot. Plain HTML probe mode is available via config.
  *
  * @param scalarInterface - Scalar handles from {@link ExplorerScalarReference} (event bus for method).
- * @param selectedWikiInstanceId - Reactive wiki instance id for test-wiki copy in warnings.
  * @returns Nothing.
  */
 export function useScalarClientWriteEndpointWarnings(
-	scalarInterface: Ref<ScalarInterfaceHandle | null>,
-	selectedWikiInstanceId: Ref<string>
+	scalarInterface: Ref<ScalarInterfaceHandle | null>
 ): void {
 	let mountedWarnings: MountedWriteWarning[] = []
 	let observer: MutationObserver | null = null
@@ -175,10 +172,6 @@ export function useScalarClientWriteEndpointWarnings(
 
 		const testRequestButton = clickTarget.closest( '.show-api-client-button' )
 
-		if ( testRequestButton ) {
-			resetScalarWriteRequestTestWikiPreference()
-		}
-
 		if ( !testRequestButton ) {
 			return
 		}
@@ -221,8 +214,7 @@ export function useScalarClientWriteEndpointWarnings(
 		parentElement: Element | null | undefined,
 		insertBefore: Element | null,
 		slotKey: string,
-		httpMethod: string,
-		testWikiUrl: string
+		httpMethod: string
 	): void {
 		if ( !parentElement ) {
 			return
@@ -233,22 +225,20 @@ export function useScalarClientWriteEndpointWarnings(
 		}
 
 		mountedWarnings.push(
-			mountWriteWarning( parentElement, insertBefore, slotKey, httpMethod, testWikiUrl )
+			mountWriteWarning( parentElement, insertBefore, slotKey, httpMethod )
 		)
 	}
 
 	/**
-	 * Mounts or repositions the address-bar write-request controls below the endpoint URL bar.
+	 * Mounts or repositions the address-bar write-request warning below the endpoint URL bar.
 	 *
 	 * @param modalDialog - Scalar modal root element.
 	 * @param httpMethod - HTTP method for the active operation.
-	 * @param testWikiUrl - Test wiki hostname label for the selected instance.
 	 * @returns Nothing.
 	 */
 	function injectAddressBarWarning(
 		modalDialog: Element,
-		httpMethod: string,
-		testWikiUrl: string
+		httpMethod: string
 	): void {
 		const existingMount = modalDialog.querySelector( `[${ WRITE_WARNING_ATTRIBUTE }="address-bar"]` )
 
@@ -272,8 +262,7 @@ export function useScalarClientWriteEndpointWarnings(
 			placement.parentElement,
 			placement.insertBefore,
 			'address-bar',
-			httpMethod,
-			testWikiUrl
+			httpMethod
 		)
 		mountedWarnings.push( mountedWarning )
 
@@ -295,8 +284,7 @@ export function useScalarClientWriteEndpointWarnings(
 	 * @returns Nothing.
 	 */
 	function injectWarningsIntoModal( modalDialog: Element, httpMethod: string ): void {
-		const testWikiUrl = getTestWikiUrlForWikiInstance( selectedWikiInstanceId.value )
-		injectAddressBarWarning( modalDialog, httpMethod, testWikiUrl )
+		injectAddressBarWarning( modalDialog, httpMethod )
 
 		const requestSection = modalDialog.querySelector( '.request-section-content' )
 		const codeExample = requestSection?.querySelector( '.request-section-content-code-example' )
@@ -306,8 +294,7 @@ export function useScalarClientWriteEndpointWarnings(
 			requestSection,
 			codeExample ?? null,
 			SCALAR_CLIENT_MODAL_VIEW_SLOTS.requestComponent,
-			httpMethod,
-			testWikiUrl
+			httpMethod
 		)
 
 		const responseSection = modalDialog.querySelector( '.response-section-content' )
@@ -317,8 +304,7 @@ export function useScalarClientWriteEndpointWarnings(
 			responseSection,
 			responseSection?.querySelector( '.response-section-content-body' ) ?? null,
 			SCALAR_CLIENT_MODAL_VIEW_SLOTS.responseComponent,
-			httpMethod,
-			testWikiUrl
+			httpMethod
 		)
 	}
 
@@ -366,7 +352,6 @@ export function useScalarClientWriteEndpointWarnings(
 		injectWarningsIntoModal( modalDialog, httpMethod )
 		startAddressBarAlignResizeListener( modalDialog )
 		syncAddressBarWarningInlineAlignment( modalDialog )
-		scheduleScalarWriteRequestAddressBarSync.value?.()
 	}
 
 	/**
@@ -428,8 +413,6 @@ export function useScalarClientWriteEndpointWarnings(
 	 * @returns Nothing.
 	 */
 	function onModalOpen( payload: unknown ): void {
-		resetScalarWriteRequestTestWikiPreference()
-
 		if (
 			payload
 			&& typeof payload === 'object'
