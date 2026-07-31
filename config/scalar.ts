@@ -21,12 +21,6 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	// driven from it in useScalarConfig. Hide Scalar's own toggle so there is a
 	// single control — the shell header switch — as the source of truth.
 	hideDarkModeToggle: true,
-	// Hide Scalar's global "Open API Client" control (operation header + related
-	// chrome). Prefer this schema-validated flag over CSS `display: none` on
-	// Tailwind utility classes, which break across Scalar upgrades. Applies to
-	// community and enterprise modes via SCALAR_DEFAULT_CONFIGURATION.
-	// @see @scalar/types SourceConfiguration.hideClientButton
-	hideClientButton: true,
 	// Experiment: Scalar's own sidebar replaces the manual endpoints rail when
 	// the flag is on. See config/explorerInternalSidebarExperiment.ts.
 	showSidebar: EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR,
