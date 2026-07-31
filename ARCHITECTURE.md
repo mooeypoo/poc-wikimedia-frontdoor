@@ -1072,7 +1072,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | Element | Landing treatment |
 |---------|-------------------|
 | Hero `h1` | Monospace, bold, centered; **`font-size: 2rem`** (exploratory — not a Codex `--font-size-*` token; xxx-large is 1.75rem) |
-| Hero intro `p` | **`--font-size-x-large`** (Codex) |
+| Hero intro `p` | **`--font-size-x-large`** (Codex) in `LandingHero.vue` (scoped `:deep(p)` — not `landing-page.css` `:where`, which loses on specificity) |
 | `h2` | Base (sans) stack, bold; `margin-block-start: 0` (bands own vertical padding) |
 | Heading anchors | Not rendered (`ProseHeading` skips anchors when `isLandingRoutePath`) |
 | Section `h2` → content | **`--spacing-150` (24px)** end margin; next sibling start margin zeroed |
@@ -1164,7 +1164,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap; `dir="ltr"`); see **Code block** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
 | `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — click navigates (`navigateTo` / external window); label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
-| `LandingHero.vue` | — | `:::landing-hero` — see **Platform landing / home** |
+| `LandingHero.vue` | — | `:::landing-hero` — dither + globe; intro `p` **`--font-size-x-large`** (scoped); H1 type in `landing-page.css` (exploratory **2rem**). See **Platform landing / home** |
 | `LandingBand.vue` | — | `:::landing-band{variant="apis\|apps\|join"}` |
 | `LandingSection.vue` | — | `:::landing-section` |
 | `LandingApiDemo.vue` | — | `:::landing-api-demo{explore-href explore-label}` — desktop results column `space-between` pins first/last cards to example column edges |

@@ -12,6 +12,11 @@ import {
  * as CSS custom properties; `landing-page.css` swaps under `html.fd-theme--dark`
  * / `fd-theme--auto` + `prefers-color-scheme: dark` (same pattern as color-modes).
  *
+ * Typography: intro slot `p` uses Codex **`--font-size-x-large`** here (scoped
+ * `:deep(p)`). Hero `h1` size/weight/family live in `landing-page.css`
+ * (exploratory **`2rem`** — not a Codex font-size token). Do not move intro
+ * size into `landing-page.css` with `:where(p)` — that loses to this rule.
+ *
  * The ascii globe is a committed **RGBA PNG** used as a CSS mask (Figma does not
  * ship an SVG for this art). Fill colours come from {@link LANDING_HERO_GLOBE_COLOR}
  * (light `#202122`, dark `#eaecf0`) so the mark stays readable on each dither.
@@ -117,8 +122,9 @@ const heroSurfaceStyle = {
 
 .landing-hero__text :deep( p ) {
 	margin-block: 0;
-	font-size: var( --font-size-xx-large );
-	line-height: var( --line-height-xx-large );
+	/* Codex x-large — see ARCHITECTURE.md → Platform landing typography. */
+	font-size: var( --font-size-x-large );
+	line-height: var( --line-height-x-large );
 	/* Intro is start-aligned in Figma (full measure), not centered. */
 	text-align: start;
 }

@@ -43,10 +43,11 @@
 	margin-block-start: 0;
 }
 
-/* Hero intro copy — Codex x-large (1.25rem), not default medium body. */
-.fd-landing-page .landing-hero :where( p ) {
-	font-size: var( --font-size-x-large );
-}
+/*
+ * Hero intro `p` size lives in `LandingHero.vue` (`.landing-hero__text :deep(p)` →
+ * `--font-size-x-large`). Do not redeclare here with `:where(p)` — zero-specificity
+ * `:where` loses to the scoped SFC rule.
+ */
 
 /*
  * Landing section titles stay Codex Heading 2 size/weight but use the base
