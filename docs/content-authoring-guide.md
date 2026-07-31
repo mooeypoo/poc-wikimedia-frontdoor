@@ -69,6 +69,29 @@ Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-starte
 
 Example: `content/en/get-started.md` (quick-start CTA with arrow). Also `content/en/get-started/wikimedia-enterprise.md` — sentence and CTA as **separate paragraphs** inside the highlight (CTA **without** arrow). That page’s body sections stay **prose** (not navigation cards). Copy is page content (per-locale Markdown), not banana-i18n.
 
+### Section heading with chip
+
+For a content `h2` that needs an inline Codex InfoChip:
+
+```md
+::section-heading{title="Wikimedia APIs" chip="Recommended" status="notice"}
+::
+```
+
+Title and chip text are page content (per-locale Markdown), not banana-i18n. Default status is `notice`. See `ARCHITECTURE.md` → Section heading.
+
+### API catalog — Wikimedia APIs (filterable)
+
+On `/apis`, do **not** hand-author the Wikimedia APIs card grid. Use:
+
+```md
+::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
+Discover our curated selection of production-ready APIs…
+::
+```
+
+`title` and `chip` are **page content** (translate in per-locale Markdown) — same rules as `::section-heading`. Cards, project-filter visibility (`universal` / `projects` / optional `excludeProjectIds`), and scope chip labels live in `config/apiCatalogWikimedia.ts` — do not encode filter show/hide or add Wikimedia APIs cards in the Markdown body (e.g. Math API, Wikimedia REST APIs). Explorer destinations use `url: '/explorer'`. Combobox **`inline-size` / `min-inline-size`** use Codex **`--size-1600`** (256px) in the section component CSS. Filter chrome labels (“Filter by project”, “Any”, …) are banana-i18n. See `ARCHITECTURE.md` → API catalog project filter and `DESIGN_REQUIREMENTS.md` → API catalog → Project filter layout.
+
 ### Navigation cards (destination tiles)
 
 **Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.
@@ -91,7 +114,7 @@ Use **`:::navigation-card-grid`** for equal-height rows with **`--spacing-100` (
 :::
 ```
 
-Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `media` (public image path), `chips="subtle:Tag|notice:Other"` or `chips="award:Coolest Tool Award 2026"` (landing purple Coolest Tool chip + star), `hide-external-icon`, `supporting-text="Read more on Meta-Wiki"` (progressive link to the same `url`, with external icon for off-platform destinations unless `hide-external-icon`; title trailing icon is omitted when supporting-text is set; bottom-aligned in equal-height rows; **keep the technical writer’s label text**), `external` or an `https://…` `url` for off-platform destinations. Omit `url` for a non-interactive card (e.g. destination TBD). Title, description, supporting-text, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Examples: `content/en/get-started.md`, `content/en/get-started/build-for-communities.md` (internal cards, no supporting-text), `content/en/get-started/wiki-content.md` / `open-data.md` / `tools-and-bots.md` (mixed internal / external; description default slot for inline links), `content/en/get-started/about-wikimedia.md` (external supporting-text links), `content/en/index.md` (landing persona + community app cards).
+Optional props (when design needs them): `top-icon` / `leading-icon` (allowlisted Codex names), `media` (public image path), `chips="notice:All projects|success:Stable|warning:Beta"` (API catalog — scope / stable / beta; **label-only**, no status icons; see `AGENTS.md` → Info chips) or `chips="award:Coolest Tool Award 2026"` (landing purple Coolest Tool chip + star), `hide-external-icon`, `supporting-text="Read more on Meta-Wiki"` (progressive link to the same `url`, with external icon for off-platform destinations unless `hide-external-icon`; title trailing icon is omitted when supporting-text is set; bottom-aligned in equal-height rows; **keep the technical writer’s label text**), `external` or an `https://…` `url` for off-platform destinations. Omit `url` for a non-interactive card (e.g. destination TBD). Title, description, supporting-text, and chip text are **page content** (translate in per-locale Markdown files) — not banana-i18n interface strings. Examples: `content/en/get-started.md`, `content/en/get-started/build-for-communities.md` (internal cards, no supporting-text), `content/en/apis.md` (catalog with chips), `content/en/get-started/wiki-content.md` / `open-data.md` / `tools-and-bots.md` (mixed internal / external; description default slot for inline links), `content/en/get-started/about-wikimedia.md` (external supporting-text links), `content/en/index.md` (landing persona + community app cards).
 
 When a card needs **Markdown** in the description (e.g. an inline link) **inside** a grid, put the Markdown in the card’s **default slot** — not `#description`. MDC named slots do not nest under `:::navigation-card-grid` and will 404 the page.
 

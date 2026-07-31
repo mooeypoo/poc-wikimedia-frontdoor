@@ -166,10 +166,23 @@ export default defineNuxtConfig( {
 				) ]: resolve( projectRootDirectory, 'app/scalar/explorerMapConfigPlugins.client.ts' )
 			}
 		},
+		/*
+		 * Pre-bundle deps used on first paint / first explorer entry. Without
+		 * this, Vite discovers them at runtime, invalidates `/_nuxt/pages/…`
+		 * modules mid-navigation, and the browser shows 500 “Failed to fetch
+		 * dynamically imported module” for `pages/explorer/[[view]].vue`.
+		 */
 		optimizeDeps: {
 			include: [
 				'@scalar/api-reference',
-				'github-slugger'
+				'@vue/devtools-core',
+				'@vue/devtools-kit',
+				'@wikimedia/codex',
+				'@wikimedia/codex-icons',
+				'banana-i18n',
+				'github-slugger',
+				// Pulled in by ExplorerEnterpriseCustom on first /explorer entry.
+				'markdown-it'
 			],
 			esbuildOptions: {
 				plugins: [

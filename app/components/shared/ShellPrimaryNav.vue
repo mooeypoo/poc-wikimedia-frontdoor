@@ -8,6 +8,13 @@ import type { MainNavigationLink } from '../../composables/useMainNavigationLink
  * Navigation-only usage: tab panels are hidden; route changes are handled by
  * the parent when `navigation-select` fires. Matches Figma Header/MainNav.
  *
+ * **Re-selecting the active tab:** Codex `CdxTabs` does not emit `update:active`
+ * when the clicked tab is already active, so a capture-phase click on the
+ * selected tab re-emits `navigation-select` — the parent can then navigate to
+ * that section’s overview (e.g. `/get-started` from `/get-started/…`, `/apis`
+ * from `/apis/…` or `/explorer`). Mount-time `v-model` sync is ignored until
+ * after the first tick so explorer does not bounce to the catalog on load.
+ *
  * **Layout:** Tab labels use an extra `--spacing-75` (12px) block-end padding
  * beyond Codex defaults for alignment with the header bottom border. The quiet-tabs
  * header border is suppressed — `.frontdoor-shell__chrome` owns the single edge.
@@ -30,22 +37,76 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	/** Emitted when the user selects a different primary nav tab. */
+	/** Emitted when the user selects a primary nav tab (including re-select). */
 	'navigation-select': [ navigationId: string ]
 }>()
+
+const rootElement = useTemplateRef<HTMLElement>( 'rootElement' )
+const isTabSyncReady = ref( false )
+
+onMounted( () => {
+	void nextTick( () => {
+		isTabSyncReady.value = true
+	} )
+} )
 
 const activeTabName = computed( {
 	get: () => props.activeNavigationId,
 	set: ( navigationId: string ) => {
+		// Ignore mount-time / no-op sync to the already-active tab. Re-selecting
+		// the active tab for “go to section overview” is handled in
+		// `onTabListClick` (Codex does not emit `update:active` for that click).
+		if ( !isTabSyncReady.value || navigationId === props.activeNavigationId ) {
+			return
+		}
+
 		emit( 'navigation-select', navigationId )
 	}
 } )
+
+/**
+ * Re-emits selection when the user clicks the already-active tab.
+ *
+ * Codex `select(name)` is a no-op for `update:active` when `name` is already
+ * active, so overview navigation would never fire without this path.
+ *
+ * @param pointerEvent - Click inside the primary nav.
+ */
+function onTabListClick( pointerEvent: MouseEvent ): void {
+	if ( !isTabSyncReady.value || !rootElement.value ) {
+		return
+	}
+
+	const eventTarget = pointerEvent.target
+	if ( !( eventTarget instanceof Element ) ) {
+		return
+	}
+
+	const tabButton = eventTarget.closest( 'button[role="tab"]' )
+	if ( !( tabButton instanceof HTMLButtonElement ) || !rootElement.value.contains( tabButton ) ) {
+		return
+	}
+
+	const tabButtons = Array.from(
+		rootElement.value.querySelectorAll<HTMLButtonElement>( 'button[role="tab"]' )
+	)
+	const tabIndex = tabButtons.indexOf( tabButton )
+	const navigationLink = props.navigationLinks[ tabIndex ]
+
+	if ( !navigationLink || navigationLink.id !== props.activeNavigationId ) {
+		return
+	}
+
+	emit( 'navigation-select', navigationLink.id )
+}
 </script>
 
 <template>
 	<nav
+		ref="rootElement"
 		class="shell-primary-nav"
 		:aria-label="ariaLabel"
+		@click="onTabListClick"
 	>
 		<CdxTabs
 			v-model:active="activeTabName"

@@ -4,7 +4,8 @@ import type { StatusType } from '@wikimedia/codex'
  * One optional InfoChip shown under a NavigationCard description.
  *
  * Chip labels are **content** (per-locale Markdown), not banana-i18n interface
- * chrome — see ARCHITECTURE.md → Navigation card.
+ * chrome. Catalog chips are label-only (status icons hidden in NavigationCard) —
+ * see ARCHITECTURE.md → Navigation card → Info chips.
  *
  * @property label - Visible chip text (BiDi-isolated in the template).
  * @property status - Codex {@link CdxInfoChip} status (default `subtle`).

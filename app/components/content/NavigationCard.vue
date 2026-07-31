@@ -37,7 +37,10 @@ export type { NavigationCardChip }
  *   `--spacing-50` (8px) from the description via `padding-block-start`.
  *   When converting from prose, **keep the technical writer’s supporting-text
  *   / link labels** — do not rewrite them
- * - Optional `CdxInfoChip` row (`chips="award:…"` for purple Coolest Tool chips)
+ * - Optional `CdxInfoChip` row (label-only in cards — status icons hidden; Codex
+ *   forces icons on warning/error/success and ignores a null `icon` for those;
+ *   landing Coolest Tool chips use `chips="award:…"` with star + purple)
+
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
  *   MDC named slots do not nest under `:::navigation-card-grid`)
@@ -762,6 +765,14 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 .navigation-card__chip--award.cdx-info-chip :deep( .cdx-info-chip__text ),
 .navigation-card__chip--award.cdx-info-chip :deep( .cdx-icon ) {
 	color: var( --fd-landing-award-chip-color, #7a6db7 );
+}
+
+/*
+ * Codex forces status icons on warning / error / success InfoChips and ignores
+ * a null `icon` prop for those statuses. Catalog chips are label-only (Figma).
+ */
+.navigation-card__chips :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
 }
 
 .navigation-card--is-link {

@@ -35,6 +35,25 @@ defineProps<{
 	omitSectionTitleMatching?: string
 }>()
 
+const route = useRoute()
+
+/**
+ * Resolves the href for a section nav item.
+ *
+ * Uses `#` when the item targets the current path so the selected community
+ * explorer link does not re-navigate to `/explorer` (which remounts Scalar).
+ *
+ * @param item - Resolved navigation item from `usePageSectionNav()`.
+ * @returns Href for `CdxMenuItem` `url`, or `#` for placeholders / current path.
+ */
+function sectionNavItemHref( item: ResolvedSectionNavItem ): string {
+	if ( item.to === null || item.to === route.path ) {
+		return '#'
+	}
+
+	return item.to
+}
+
 /**
  * Navigates to a resolved section item when it has a route target.
  *
@@ -42,7 +61,7 @@ defineProps<{
  * @param item - Resolved navigation item from `usePageSectionNav()`.
  */
 function onSectionNavItemClick( pointerEvent: PointerEvent, item: ResolvedSectionNavItem ): void {
-	if ( item.to === null ) {
+	if ( item.to === null || item.to === route.path ) {
 		pointerEvent.preventDefault()
 		return
 	}
@@ -74,7 +93,7 @@ function onSectionNavItemClick( pointerEvent: PointerEvent, item: ResolvedSectio
 				class="shell-side-panel-nav__menu-item"
 				:value="item.id"
 				:label="item.label"
-				:url="item.to ?? '#'"
+				:url="sectionNavItemHref( item )"
 				:selected="item.isActive"
 				@click="onSectionNavItemClick( $event, item )"
 			/>
