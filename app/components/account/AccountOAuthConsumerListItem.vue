@@ -4,15 +4,16 @@ import AccountTokenListItemLayout from './AccountTokenListItemLayout.vue'
 import type { AccountOAuthConsumerListItem } from '../../types/accountTokenList'
 
 /**
- * Application API key list item — name, description, client id/secret, and meta.
+ * Application API key list item — name, description, Client ID, and meta.
  *
- * Delete is not shown: revoke/delete is not available until a Meta/backend
- * integration lands (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
+ * Client secret is **not** shown on the card (users cannot reveal it here);
+ * it appears only in the Reset success dialog. Delete is not shown until a
+ * Meta/backend revoke integration lands (see `ARCHITECTURE.md` → Account
+ * dashboard → Prototype placeholders).
  */
 const properties = defineProps<{
 	item: AccountOAuthConsumerListItem
 	clientIdLabel: string
-	clientSecretLabel: string
 	issuedMetaPrefix: string
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
@@ -65,15 +66,6 @@ function onReset(): void {
 					>
 						<bdi>{{ properties.item.consumerKey }}</bdi>
 					</code>
-				</p>
-				<p class="account-oauth-consumer-list-item__credential">
-					<span>{{ properties.clientSecretLabel }}</span>
-					<!-- LTR: masked OAuth client secrets are inherently left-to-right. -->
-					<span
-						class="account-oauth-consumer-list-item__credential-masked"
-						dir="ltr"
-						aria-hidden="true"
-					>{{ properties.item.maskedClientSecret }}</span>
 				</p>
 			</div>
 
@@ -142,11 +134,6 @@ function onReset(): void {
 .account-oauth-consumer-list-item__credential-value {
 	font-family: var( --font-family-monospace, monospace );
 	font-size: var( --font-size-medium );
-}
-
-.account-oauth-consumer-list-item__credential-masked {
-	font-family: var( --font-family-monospace, monospace );
-	letter-spacing: 0.05em;
 }
 
 .account-oauth-consumer-list-item__meta {

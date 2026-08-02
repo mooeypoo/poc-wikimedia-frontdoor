@@ -9,7 +9,6 @@ import type { PrototypeDeveloperJwt, PrototypeOAuthConsumer } from '../../config
 import { storeToRefs } from 'pinia'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { openUrlInNewTab } from '../utils/openUrlInNewTab'
-import { maskSecretValue } from '../utils/accountTokenSecret'
 import { resolveContentHref } from '../utils/localeAwarePath'
 import type {
 	AccountDeveloperTokenListItem,
@@ -25,7 +24,8 @@ import type {
  * Live list / reset / revoke backends are pending. URLs come from `config/auth.ts`.
  * Learn-more paths (`ownerOnlyConsumersDocUrl`, `oauthForDevelopersDocUrl`) are locale-aware
  * Front Door content routes (same-tab `NuxtLink`); Meta registration stays outbound.
- * Masked secrets are computed here (`maskSecretValue`) so list-item components stay presentational.
+ * Application list cards show Client ID only — Client secret is not listed (revealed only
+ * after Reset in `AccountResetApiKeyDialog`).
  *
  * @returns {{
  *   hasDeveloperJwts: import('vue').ComputedRef<boolean>,
@@ -36,7 +36,6 @@ import type {
  *   statusMetaPrefix: import('vue').ComputedRef<string>,
  *   permissionsMetaPrefix: import('vue').ComputedRef<string>,
  *   clientIdLabel: import('vue').ComputedRef<string>,
- *   clientSecretLabel: import('vue').ComputedRef<string>,
  *   onConfirmResetDeveloperJwt: (tokenId: string) => import('../../config/tokenManagement').PrototypeDeveloperJwt | null,
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
  *   onRequestNewAuthenticationToken: () => void,
@@ -72,7 +71,6 @@ export function useDeveloperTokenDashboard() {
 	const statusMetaPrefix = computed( () => $bananaI18n( 'account-meta-status' ) )
 	const permissionsMetaPrefix = computed( () => $bananaI18n( 'account-meta-permissions' ) )
 	const clientIdLabel = computed( () => $bananaI18n( 'account-client-id-label' ) )
-	const clientSecretLabel = computed( () => $bananaI18n( 'account-client-secret-label' ) )
 
 	/**
 	 * Builds an accessible label for an external Meta-Wiki or MediaWiki link.
@@ -100,8 +98,6 @@ export function useDeveloperTokenDashboard() {
 			applicationName: consumer.applicationName,
 			description: consumer.description,
 			consumerKey: consumer.consumerKey,
-			clientSecret: consumer.clientSecret,
-			maskedClientSecret: maskSecretValue( consumer.clientSecret ),
 			status: consumer.status,
 			permissions: consumer.permissions,
 			registeredOn: consumer.registeredOn
@@ -152,7 +148,6 @@ export function useDeveloperTokenDashboard() {
 		statusMetaPrefix,
 		permissionsMetaPrefix,
 		clientIdLabel,
-		clientSecretLabel,
 		externalLinkAccessibleLabel,
 		onConfirmResetDeveloperJwt,
 		onConfirmResetOAuthConsumer,

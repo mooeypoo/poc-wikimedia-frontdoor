@@ -9,7 +9,6 @@ const properties = defineProps<{
 	listAriaLabel: string
 	items: AccountOAuthConsumerListItemModel[]
 	clientIdLabel: string
-	clientSecretLabel: string
 	issuedMetaPrefix: string
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
@@ -31,7 +30,6 @@ const emit = defineEmits<{
 			:key="item.id"
 			:item="item"
 			:client-id-label="properties.clientIdLabel"
-			:client-secret-label="properties.clientSecretLabel"
 			:issued-meta-prefix="properties.issuedMetaPrefix"
 			:status-meta-prefix="properties.statusMetaPrefix"
 			:permissions-meta-prefix="properties.permissionsMetaPrefix"

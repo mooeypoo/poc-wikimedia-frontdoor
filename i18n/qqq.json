@@ -1,7 +1,7 @@
 {
   "account-adjust-scope-link": "Link to manage OAuth consumer settings on Wikimedia's Meta-Wiki (nice-to-have scope changes).",
   "account-client-id-label": "Label before the OAuth client ID value on an application key card; include trailing punctuation for the locale.",
-  "account-client-secret-label": "Label before the masked OAuth client secret on an application key card; include trailing punctuation for the locale.",
+  "account-client-secret-label": "Label before the Client secret value in the Reset API key success dialog; include trailing punctuation for the locale. Not shown on application key list cards.",
   "account-col-access-token": "Table column header for the masked access token value.",
   "account-col-actions": "Table column header for row actions (manage link and remove button).",
   "account-col-application": "Table column header for OAuth application name.",

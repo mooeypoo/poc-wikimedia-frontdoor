@@ -39,7 +39,6 @@ const {
 	statusMetaPrefix,
 	permissionsMetaPrefix,
 	clientIdLabel,
-	clientSecretLabel,
 	onRequestNewAuthenticationToken,
 	isResetDialogOpen,
 	isResetDialogSuccessStep,
@@ -186,7 +185,6 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:list-aria-label="oauthConsumersListAriaLabel"
 				:items="oauthConsumerListItems"
 				:client-id-label="clientIdLabel"
-				:client-secret-label="clientSecretLabel"
 				:issued-meta-prefix="issuedMetaPrefix"
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
