@@ -10,7 +10,8 @@
  * **Pending:** Real retrieval, reset, and revoke of OAuth consumers / developer
  * tokens still require backend (and Meta) integration — not implemented.
  *
- * “Request new API key” may open Meta registration URLs from `config/auth.ts`;
+ * Section CTAs (“Create API token” / “Request new OAuth client”) open
+ * `META_OAUTH2_CONSUMER_REGISTRATION_URL` from `config/auth.ts` in a new tab;
  * that outbound link is separate from the fake rows shown on `/account`.
  *
  * Seed field strings (names, status, permissions, dates, secrets) are **external**

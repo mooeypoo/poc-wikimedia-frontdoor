@@ -18,6 +18,9 @@ import { useShellAuthNavigation } from './useShellAuthNavigation'
  *
  * Composes {@link usePrototypeAuthSession} (placeholder key seeding when logged in),
  * {@link useDeveloperTokenDashboard}, and {@link useAccountResetApiKeyDialog}.
+ * Logged-in section CTAs use banana labels (`account-create-api-token-button`,
+ * `account-request-new-oauth-client-button`) and shared Meta registration open
+ * from the token dashboard composable.
  *
  * @returns Account access flag, logged-out gate labels/handlers, and logged-in
  *   dashboard fields for `app/pages/account.vue`.
@@ -111,7 +114,12 @@ export function useAccountDashboardPage() {
 	const oauthTokensSectionTitle = computed( () => $bananaI18n( 'account-oauth-tokens-heading' ) )
 	const oauthTokensDescription = computed( () => $bananaI18n( 'account-oauth-tokens-description' ) )
 
-	const requestNewTokenLabel = computed( () => $bananaI18n( 'account-request-new-token-button' ) )
+	const createApiTokenButtonLabel = computed( () =>
+		$bananaI18n( 'account-create-api-token-button' )
+	)
+	const requestNewOAuthClientButtonLabel = computed( () =>
+		$bananaI18n( 'account-request-new-oauth-client-button' )
+	)
 	const developerJwtEmptyMessage = computed( () => $bananaI18n( 'account-developer-tokens-empty' ) )
 	const oauthConsumersEmptyMessage = computed( () => $bananaI18n( 'account-oauth-tokens-empty' ) )
 
@@ -124,6 +132,13 @@ export function useAccountDashboardPage() {
 	const oauthConsumersListAriaLabel = computed( () => $bananaI18n( 'account-oauth-tokens-list-label' ) )
 
 	const learnMoreAboutBefore = computed( () => $bananaI18n( 'account-learn-more-about-before' ) )
+
+	const createApiTokenButtonAriaLabel = computed( () =>
+		tokenDashboard.externalLinkAccessibleLabel( createApiTokenButtonLabel.value )
+	)
+	const requestNewOAuthClientButtonAriaLabel = computed( () =>
+		tokenDashboard.externalLinkAccessibleLabel( requestNewOAuthClientButtonLabel.value )
+	)
 
 	return {
 		isAccountDashboardAccessible,
@@ -146,7 +161,10 @@ export function useAccountDashboardPage() {
 		developerTokensDescription,
 		oauthTokensSectionTitle,
 		oauthTokensDescription,
-		requestNewTokenLabel,
+		createApiTokenButtonLabel,
+		requestNewOAuthClientButtonLabel,
+		createApiTokenButtonAriaLabel,
+		requestNewOAuthClientButtonAriaLabel,
 		developerJwtEmptyMessage,
 		oauthConsumersEmptyMessage,
 		resetTokenLabel,

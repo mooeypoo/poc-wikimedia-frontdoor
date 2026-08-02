@@ -23,7 +23,8 @@ import type {
  * **not real Meta credentials** — usability-testing placeholders from `config/tokenManagement.ts`.
  * Live list / reset / revoke backends are pending. URLs come from `config/auth.ts`.
  * Learn-more paths (`ownerOnlyConsumersDocUrl`, `oauthForDevelopersDocUrl`) are locale-aware
- * Front Door content routes (same-tab `NuxtLink`); Meta registration stays outbound.
+ * Front Door content routes (same-tab `NuxtLink`), inlined in each section’s description
+ * paragraph on `/account`; Meta registration CTAs stay outbound.
  * Application list cards show Client ID only — Client secret is not listed (revealed only
  * after Reset in `AccountResetApiKeyDialog`).
  *
@@ -38,12 +39,13 @@ import type {
  *   clientIdLabel: import('vue').ComputedRef<string>,
  *   onConfirmResetDeveloperJwt: (tokenId: string) => import('../../config/tokenManagement').PrototypeDeveloperJwt | null,
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
- *   onRequestNewAuthenticationToken: () => void,
+ *   onOpenMetaConsumerRegistration: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
  * }} Reactive lists, locale-aware in-app auth doc paths, Meta registration URLs,
  *   metadata labels, request handlers, and confirm-reset regenerate handlers
  *   (used by {@link useAccountResetApiKeyDialog}). Delete is not exposed in the UI
- *   until a Meta/backend revoke integration lands.
+ *   until a Meta/backend revoke integration lands. Section CTAs open the same Meta
+ *   registration URL in a new tab.
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
@@ -125,11 +127,15 @@ export function useDeveloperTokenDashboard() {
 	}
 
 	/**
-	 * Opens Meta-Wiki OAuth consumer registration to request a new authentication token.
+	 * Opens Meta-Wiki OAuth consumer registration (new tab).
+	 *
+	 * Used by both section CTAs (“Create API token” and “Request new OAuth client”)
+	 * — same `META_OAUTH2_CONSUMER_REGISTRATION_URL`; does not insert a key into
+	 * the local placeholder list.
 	 *
 	 * @returns Nothing.
 	 */
-	function onRequestNewAuthenticationToken(): void {
+	function onOpenMetaConsumerRegistration(): void {
 		openUrlInNewTab( requestOAuthApplicationUrl )
 	}
 
@@ -151,6 +157,6 @@ export function useDeveloperTokenDashboard() {
 		externalLinkAccessibleLabel,
 		onConfirmResetDeveloperJwt,
 		onConfirmResetOAuthConsumer,
-		onRequestNewAuthenticationToken
+		onOpenMetaConsumerRegistration
 	}
 }
