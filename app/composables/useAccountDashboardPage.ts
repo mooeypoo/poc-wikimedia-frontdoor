@@ -127,13 +127,6 @@ export function useAccountDashboardPage() {
 
 	const learnMoreAboutBefore = computed( () => $bananaI18n( 'account-learn-more-about-before' ) )
 
-	const learnMoreOAuthAriaLabel = computed( () =>
-		tokenDashboard.externalLinkAccessibleLabel( learnMoreOAuthLabel.value )
-	)
-	const learnMoreOwnerOnlyAriaLabel = computed( () =>
-		tokenDashboard.externalLinkAccessibleLabel( learnMoreOwnerOnlyLabel.value )
-	)
-
 	return {
 		isAccountDashboardAccessible,
 		username,
@@ -164,8 +157,6 @@ export function useAccountDashboardPage() {
 		signOutButtonLabel,
 		learnMoreOAuthLabel,
 		learnMoreOwnerOnlyLabel,
-		learnMoreOAuthAriaLabel,
-		learnMoreOwnerOnlyAriaLabel,
 		learnMoreAboutBefore,
 		developerJwtListAriaLabel,
 		oauthConsumersListAriaLabel

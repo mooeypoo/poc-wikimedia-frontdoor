@@ -10,17 +10,21 @@ import { storeToRefs } from 'pinia'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { openUrlInNewTab } from '../utils/openUrlInNewTab'
 import { maskSecretValue } from '../utils/accountTokenSecret'
+import { resolveContentHref } from '../utils/localeAwarePath'
 import type {
 	AccountDeveloperTokenListItem,
 	AccountOAuthConsumerListItem
 } from '../types/accountTokenList'
 
 /**
- * Wikimedia Meta-Wiki links, **placeholder** token list state, and list view-models for `/account`.
+ * Account Meta registration links, in-app auth doc paths, **placeholder** token list
+ * state, and list view-models for `/account`.
  *
  * Wraps `prototypeDeveloperTokens` Pinia store. List rows and Reset-regenerated secrets are
  * **not real Meta credentials** — usability-testing placeholders from `config/tokenManagement.ts`.
  * Live list / reset / revoke backends are pending. URLs come from `config/auth.ts`.
+ * Learn-more paths (`ownerOnlyConsumersDocUrl`, `oauthForDevelopersDocUrl`) are locale-aware
+ * Front Door content routes (same-tab `NuxtLink`); Meta registration stays outbound.
  * Masked secrets are computed here (`maskSecretValue`) so list-item components stay presentational.
  *
  * @returns {{
@@ -39,14 +43,14 @@ import type {
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
  *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
- * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, idle Delete
- *   handlers, request handlers, and confirm-reset regenerate handlers (used by
- *   {@link useAccountResetApiKeyDialog}).
+ * }} Reactive lists, locale-aware in-app auth doc paths, Meta registration URLs,
+ *   metadata labels, idle Delete handlers, request handlers, and confirm-reset
+ *   regenerate handlers (used by {@link useAccountResetApiKeyDialog}).
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
 	const { developerJwts, oauthConsumers } = storeToRefs( prototypeDeveloperTokensStore )
-	const { $bananaI18n } = useNuxtApp()
+	const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
 	const hasDeveloperJwts = computed( () => developerJwts.value.length > 0 )
 	const hasOAuthConsumers = computed( () => oauthConsumers.value.length > 0 )
@@ -55,8 +59,14 @@ export function useDeveloperTokenDashboard() {
 	const requestOAuthApplicationUrl = META_OAUTH2_CONSUMER_REGISTRATION_URL
 	const manageConsumersOnMetaUrl = META_OAUTH_CONSUMER_LIST_URL
 
-	const oauthForDevelopersDocUrl = MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL
-	const ownerOnlyConsumersDocUrl = MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL
+	/** Locale-aware in-app path to `/apis/authentication#oauth-authorization-code-flow`. */
+	const oauthForDevelopersDocUrl = computed( () =>
+		resolveContentHref( MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL, $interfaceLocale.value )
+	)
+	/** Locale-aware in-app path to `/apis/authentication#personal-api-tokens`. */
+	const ownerOnlyConsumersDocUrl = computed( () =>
+		resolveContentHref( MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL, $interfaceLocale.value )
+	)
 	const wikimediaApiAuthenticationDocUrl = MEDIAWIKI_WIKIMEDIA_API_AUTHENTICATION_DOC_URL
 
 	const issuedMetaPrefix = computed( () => $bananaI18n( 'account-meta-issued' ) )

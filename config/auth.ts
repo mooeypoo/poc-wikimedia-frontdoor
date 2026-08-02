@@ -49,15 +49,19 @@ export const META_OAUTH_CONSUMER_LIST_URL =
 	`${ META_WIKI_BASE_URL }/wiki/Special:OAuthListConsumers`
 
 /**
- * Owner-only consumers — personal tokens for the registering user only.
+ * Front Door authentication doc — Personal API tokens section.
  *
- * @see https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers
+ * Locale-agnostic in-app path for the logged-in `/account` learn-more link.
+ * Resolve with `resolveContentHref` at runtime (same tab; no external icon).
  */
 export const MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL =
 	'/apis/authentication#personal-api-tokens'
 
 /**
- * OAuth developer documentation (registration, OAuth 2.0 flow, security).
+ * Front Door authentication doc — OAuth authorization code flow section.
+ *
+ * Locale-agnostic in-app path for the logged-in `/account` learn-more link.
+ * Resolve with `resolveContentHref` at runtime (same tab; no external icon).
  */
 export const MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL =
 	'/apis/authentication#oauth-authorization-code-flow'

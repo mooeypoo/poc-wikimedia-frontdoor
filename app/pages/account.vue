@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CdxButton, CdxMessage } from '@wikimedia/codex'
 import AccountDeveloperTokenList from '../components/account/AccountDeveloperTokenList.vue'
-import AccountExternalMetaLink from '../components/account/AccountExternalMetaLink.vue'
 import AccountLoggedOutGate from '../components/account/AccountLoggedOutGate.vue'
 import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumerList.vue'
 import AccountResetApiKeyDialog from '../components/account/AccountResetApiKeyDialog.vue'
@@ -76,8 +75,6 @@ const {
 	signOutButtonLabel,
 	learnMoreOAuthLabel,
 	learnMoreOwnerOnlyLabel,
-	learnMoreOAuthAriaLabel,
-	learnMoreOwnerOnlyAriaLabel,
 	learnMoreAboutBefore,
 	developerJwtListAriaLabel,
 	oauthConsumersListAriaLabel
@@ -140,12 +137,10 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				</p>
 				<p class="account-page__learn-more">
 					{{ learnMoreAboutBefore }}
-					<AccountExternalMetaLink
-						:href="ownerOnlyConsumersDocUrl"
-						:accessible-label="learnMoreOwnerOnlyAriaLabel"
-					>
+					<!-- In-app `/apis/authentication#personal-api-tokens` — same tab, no external icon. -->
+					<NuxtLink :to="ownerOnlyConsumersDocUrl">
 						{{ learnMoreOwnerOnlyLabel }}
-					</AccountExternalMetaLink>
+					</NuxtLink>
 				</p>
 			</div>
 
@@ -185,12 +180,10 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				</p>
 				<p class="account-page__learn-more">
 					{{ learnMoreAboutBefore }}
-					<AccountExternalMetaLink
-						:href="oauthForDevelopersDocUrl"
-						:accessible-label="learnMoreOAuthAriaLabel"
-					>
+					<!-- In-app `/apis/authentication#oauth-authorization-code-flow` — same tab, no external icon. -->
+					<NuxtLink :to="oauthForDevelopersDocUrl">
 						{{ learnMoreOAuthLabel }}
-					</AccountExternalMetaLink>
+					</NuxtLink>
 				</p>
 			</div>
 
