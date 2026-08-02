@@ -9,19 +9,24 @@ import type { PrototypeDeveloperJwt, PrototypeOAuthConsumer } from '../../config
 import { storeToRefs } from 'pinia'
 import { usePrototypeDeveloperTokensStore } from '../../stores/prototypeDeveloperTokens'
 import { openUrlInNewTab } from '../utils/openUrlInNewTab'
-import { maskSecretValue } from '../utils/accountTokenSecret'
+import { resolveContentHref } from '../utils/localeAwarePath'
 import type {
 	AccountDeveloperTokenListItem,
 	AccountOAuthConsumerListItem
 } from '../types/accountTokenList'
 
 /**
- * Wikimedia Meta-Wiki links, **placeholder** token list state, and list view-models for `/account`.
+ * Account Meta registration links, in-app auth doc paths, **placeholder** token list
+ * state, and list view-models for `/account`.
  *
  * Wraps `prototypeDeveloperTokens` Pinia store. List rows and Reset-regenerated secrets are
  * **not real Meta credentials** — usability-testing placeholders from `config/tokenManagement.ts`.
  * Live list / reset / revoke backends are pending. URLs come from `config/auth.ts`.
- * Masked secrets are computed here (`maskSecretValue`) so list-item components stay presentational.
+ * Learn-more paths (`ownerOnlyConsumersDocUrl`, `oauthForDevelopersDocUrl`) are locale-aware
+ * Front Door content routes (same-tab `NuxtLink`), inlined in each section’s description
+ * paragraph on `/account`; Meta registration CTAs stay outbound.
+ * Application list cards show Client ID only — Client secret is not listed (revealed only
+ * after Reset in `AccountResetApiKeyDialog`).
  *
  * @returns {{
  *   hasDeveloperJwts: import('vue').ComputedRef<boolean>,
@@ -32,21 +37,20 @@ import type {
  *   statusMetaPrefix: import('vue').ComputedRef<string>,
  *   permissionsMetaPrefix: import('vue').ComputedRef<string>,
  *   clientIdLabel: import('vue').ComputedRef<string>,
- *   clientSecretLabel: import('vue').ComputedRef<string>,
- *   onDeleteDeveloperJwt: (tokenId: string) => void,
- *   onDeleteOAuthConsumer: (consumerId: string) => void,
  *   onConfirmResetDeveloperJwt: (tokenId: string) => import('../../config/tokenManagement').PrototypeDeveloperJwt | null,
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
- *   onRequestNewAuthenticationToken: () => void,
+ *   onOpenMetaConsumerRegistration: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
- * }} Reactive lists, Meta-Wiki/MediaWiki doc URLs, metadata labels, idle Delete
- *   handlers, request handlers, and confirm-reset regenerate handlers (used by
- *   {@link useAccountResetApiKeyDialog}).
+ * }} Reactive lists, locale-aware in-app auth doc paths, Meta registration URLs,
+ *   metadata labels, request handlers, and confirm-reset regenerate handlers
+ *   (used by {@link useAccountResetApiKeyDialog}). Delete is not exposed in the UI
+ *   until a Meta/backend revoke integration lands. Section CTAs open the same Meta
+ *   registration URL in a new tab.
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
 	const { developerJwts, oauthConsumers } = storeToRefs( prototypeDeveloperTokensStore )
-	const { $bananaI18n } = useNuxtApp()
+	const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
 	const hasDeveloperJwts = computed( () => developerJwts.value.length > 0 )
 	const hasOAuthConsumers = computed( () => oauthConsumers.value.length > 0 )
@@ -55,15 +59,20 @@ export function useDeveloperTokenDashboard() {
 	const requestOAuthApplicationUrl = META_OAUTH2_CONSUMER_REGISTRATION_URL
 	const manageConsumersOnMetaUrl = META_OAUTH_CONSUMER_LIST_URL
 
-	const oauthForDevelopersDocUrl = MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL
-	const ownerOnlyConsumersDocUrl = MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL
+	/** Locale-aware in-app path to `/apis/authentication#oauth-authorization-code-flow`. */
+	const oauthForDevelopersDocUrl = computed( () =>
+		resolveContentHref( MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL, $interfaceLocale.value )
+	)
+	/** Locale-aware in-app path to `/apis/authentication#personal-api-tokens`. */
+	const ownerOnlyConsumersDocUrl = computed( () =>
+		resolveContentHref( MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL, $interfaceLocale.value )
+	)
 	const wikimediaApiAuthenticationDocUrl = MEDIAWIKI_WIKIMEDIA_API_AUTHENTICATION_DOC_URL
 
 	const issuedMetaPrefix = computed( () => $bananaI18n( 'account-meta-issued' ) )
 	const statusMetaPrefix = computed( () => $bananaI18n( 'account-meta-status' ) )
 	const permissionsMetaPrefix = computed( () => $bananaI18n( 'account-meta-permissions' ) )
 	const clientIdLabel = computed( () => $bananaI18n( 'account-client-id-label' ) )
-	const clientSecretLabel = computed( () => $bananaI18n( 'account-client-secret-label' ) )
 
 	/**
 	 * Builds an accessible label for an external Meta-Wiki or MediaWiki link.
@@ -91,37 +100,11 @@ export function useDeveloperTokenDashboard() {
 			applicationName: consumer.applicationName,
 			description: consumer.description,
 			consumerKey: consumer.consumerKey,
-			clientSecret: consumer.clientSecret,
-			maskedClientSecret: maskSecretValue( consumer.clientSecret ),
 			status: consumer.status,
 			permissions: consumer.permissions,
 			registeredOn: consumer.registeredOn
 		} ) )
 	)
-
-	/**
-	 * Idle Delete handler for personal API keys (prototype).
-	 *
-	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
-	 *
-	 * @param _tokenId - Token row id (unused while Delete is idle).
-	 * @returns Nothing.
-	 */
-	function onDeleteDeveloperJwt( _tokenId: string ): void {
-		// Prototype: Delete is intentionally idle.
-	}
-
-	/**
-	 * Idle Delete handler for application API keys (prototype).
-	 *
-	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
-	 *
-	 * @param _consumerId - Consumer row id (unused while Delete is idle).
-	 * @returns Nothing.
-	 */
-	function onDeleteOAuthConsumer( _consumerId: string ): void {
-		// Prototype: Delete is intentionally idle.
-	}
 
 	/**
 	 * Regenerates prototype credentials for a personal API key after dialog confirm.
@@ -144,11 +127,15 @@ export function useDeveloperTokenDashboard() {
 	}
 
 	/**
-	 * Opens Meta-Wiki OAuth consumer registration to request a new authentication token.
+	 * Opens Meta-Wiki OAuth consumer registration (new tab).
+	 *
+	 * Used by both section CTAs (“Create API token” and “Request new OAuth client”)
+	 * — same `META_OAUTH2_CONSUMER_REGISTRATION_URL`; does not insert a key into
+	 * the local placeholder list.
 	 *
 	 * @returns Nothing.
 	 */
-	function onRequestNewAuthenticationToken(): void {
+	function onOpenMetaConsumerRegistration(): void {
 		openUrlInNewTab( requestOAuthApplicationUrl )
 	}
 
@@ -167,12 +154,9 @@ export function useDeveloperTokenDashboard() {
 		statusMetaPrefix,
 		permissionsMetaPrefix,
 		clientIdLabel,
-		clientSecretLabel,
 		externalLinkAccessibleLabel,
-		onDeleteDeveloperJwt,
-		onDeleteOAuthConsumer,
 		onConfirmResetDeveloperJwt,
 		onConfirmResetOAuthConsumer,
-		onRequestNewAuthenticationToken
+		onOpenMetaConsumerRegistration
 	}
 }

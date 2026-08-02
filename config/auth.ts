@@ -23,6 +23,18 @@ export const PROTOTYPE_DEFAULT_WIKI_USERNAME = 'ExampleDeveloper'
 export const META_WIKI_BASE_URL = 'https://meta.wikimedia.org'
 
 /**
+ * Wikimedia account registration (SUL / auth wiki CreateAccount).
+ *
+ * Used on the logged-out `/account` gate as a mock outbound “Create an account”
+ * link. Front Door does not handle post-registration return or session handoff
+ * from this URL — users create an account externally, then use Log in on Front Door.
+ *
+ * @see https://auth.wikimedia.org/metawiki/wiki/Special:CreateAccount
+ */
+export const WIKIMEDIA_CREATE_ACCOUNT_URL =
+	'https://auth.wikimedia.org/metawiki/wiki/Special:CreateAccount'
+
+/**
  * Register a new OAuth 2.0 consumer on Wikimedia's Meta-Wiki (recommended for new applications).
  *
  * @see https://www.mediawiki.org/wiki/OAuth/For_Developers#Registration
@@ -37,18 +49,22 @@ export const META_OAUTH_CONSUMER_LIST_URL =
 	`${ META_WIKI_BASE_URL }/wiki/Special:OAuthListConsumers`
 
 /**
- * Owner-only consumers — personal tokens for the registering user only.
+ * Front Door authentication doc — Personal API tokens section.
  *
- * @see https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers
+ * Locale-agnostic in-app path for the logged-in `/account` learn-more link.
+ * Resolve with `resolveContentHref` at runtime (same tab; no external icon).
  */
 export const MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL =
-	'https://www.mediawiki.org/wiki/OAuth/Owner-only_consumers'
+	'/apis/authentication#personal-api-tokens'
 
 /**
- * OAuth developer documentation (registration, OAuth 2.0 flow, security).
+ * Front Door authentication doc — OAuth authorization code flow section.
+ *
+ * Locale-agnostic in-app path for the logged-in `/account` learn-more link.
+ * Resolve with `resolveContentHref` at runtime (same tab; no external icon).
  */
 export const MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL =
-	'https://www.mediawiki.org/wiki/OAuth/For_Developers'
+	'/apis/authentication#oauth-authorization-code-flow'
 
 /**
  * Wikimedia API authentication overview (Wikimedia's Meta-Wiki as authorization server).

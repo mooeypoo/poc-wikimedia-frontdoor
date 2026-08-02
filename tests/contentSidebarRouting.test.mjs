@@ -33,6 +33,12 @@ test( 'explorer routes map to the APIs primary nav id', () => {
 	assert.equal( getMainNavigationIdFromPath( '/fr/explorer' ), 'apis' )
 } )
 
+test( 'account dashboard is outside primary nav (no selected tab)', () => {
+	assert.equal( getMainNavigationIdFromPath( '/account' ), null )
+	assert.equal( getMainNavigationIdFromPath( '/fr/account' ), null )
+	assert.equal( getMainNavigationIdFromPath( '/he/account' ), null )
+} )
+
 test( 'contentLocaleFromPath mirrors prefix_except_default', () => {
 	assert.equal( contentLocaleFromPath( '/' ), 'en' )
 	assert.equal( contentLocaleFromPath( '/get-started' ), 'en' )

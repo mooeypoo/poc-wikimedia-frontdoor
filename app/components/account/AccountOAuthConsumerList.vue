@@ -9,18 +9,14 @@ const properties = defineProps<{
 	listAriaLabel: string
 	items: AccountOAuthConsumerListItemModel[]
 	clientIdLabel: string
-	clientSecretLabel: string
 	issuedMetaPrefix: string
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	deleteButtonLabel: string
-	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
 	reset: [ consumerId: string ]
-	delete: [ consumerId: string ]
 }>()
 </script>
 
@@ -34,15 +30,11 @@ const emit = defineEmits<{
 			:key="item.id"
 			:item="item"
 			:client-id-label="properties.clientIdLabel"
-			:client-secret-label="properties.clientSecretLabel"
 			:issued-meta-prefix="properties.issuedMetaPrefix"
 			:status-meta-prefix="properties.statusMetaPrefix"
 			:permissions-meta-prefix="properties.permissionsMetaPrefix"
 			:reset-button-label="properties.resetButtonLabel"
-			:delete-button-label="properties.deleteButtonLabel"
-			:write-token-notice="properties.writeTokenNotice"
 			@reset="emit( 'reset', $event )"
-			@delete="emit( 'delete', $event )"
 		/>
 	</ul>
 </template>

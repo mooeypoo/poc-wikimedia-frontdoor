@@ -14,6 +14,10 @@ The User-Agent header can include a link to a user page on a Wikimedia wiki, a U
 
 ## OAuth authorization code flow
 
+To allow your app to interact with and access content on behalf of a user, use the [OAuth 2.0 authorization code flow](https://oauth.net/2/grant-types/authorization-code/). This provides a secure process for users to log in with their Wikimedia account and authorize your app. The OAuth 2.0 authorization code workflow can be used by server-side, client-side, and installed apps.
+
+The OAuth 2.0 authorization code workflow includes three steps: request authorization, get a token, and authenticate the request.
+
 ### 1. Register an app
 
 To use the authorization code flow, you must select the "Authorization code" and "Refresh token" options in the "Allowed OAuth2 grant types" of the [OAuth 2.0 app registration form](https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/propose/oauth2). After registering the app, you'll be shown a client ID and secret. Make sure to store these credentials securely before exiting the dialog.
@@ -75,13 +79,13 @@ curl -X POST -d 'grant_type=refresh_token' \
 https://meta.wikimedia.org/w/rest.php/oauth2/access_token
 ```
 
-## Owner-only consumers
+## Personal API tokens
 
 ::callout
-Support for owner-only consumers is currently a work in progress.
+Support for personal API tokens is currently a work in progress.
 ::
 
-Owner-only consumers let you authenticate API requests on behalf of your Wikimedia account.
+Personal API tokens let you authenticate API requests on behalf of your Wikimedia account.
 
 ### 1. Create token
 
@@ -99,7 +103,7 @@ https://en.wikipedia.org/w/rest.php/v1/page/Earth/bare
 
 ### 3. Implement cookies
 
-To receive a higher [rate limit](/wiki/Special:MyLanguage/Wikimedia_APIs/Rate_limits), clients that use owner-only tokens must implement support for [returning cookies to the server](https://en.wikipedia.org/wiki/HTTP_cookie). For examples, see [OAuth/Owner-only consumers](/wiki/OAuth/Owner-only_consumers).
+To receive a higher [rate limit](/wiki/Special:MyLanguage/Wikimedia_APIs/Rate_limits), clients that use prsonal API tokens must implement support for [returning cookies to the server](https://en.wikipedia.org/wiki/HTTP_cookie). For examples, see [OAuth/Owner-only consumers](/wiki/OAuth/Owner-only_consumers).
 
 ## Client credentials flow
 

@@ -10,7 +10,8 @@
  * **Pending:** Real retrieval, reset, and revoke of OAuth consumers / developer
  * tokens still require backend (and Meta) integration — not implemented.
  *
- * “Request new API key” may open Meta registration URLs from `config/auth.ts`;
+ * Section CTAs (“Create API token” / “Request new OAuth client”) open
+ * `META_OAUTH2_CONSUMER_REGISTRATION_URL` from `config/auth.ts` in a new tab;
  * that outbound link is separate from the fake rows shown on `/account`.
  *
  * Seed field strings (names, status, permissions, dates, secrets) are **external**
@@ -105,27 +106,27 @@ export function createPrototypeRefreshToken(): string {
 export const PROTOTYPE_SEED_DEVELOPER_JWTS: readonly PrototypeDeveloperJwt[] = [
 	{
 		id: 'dev-jwt-1',
-		label: 'Developer oauth token',
+		label: 'My token',
 		consumerKey: 'b7c4e9120f5a8361d2e9a0b3c4d5e6f7',
 		clientSecret: 'e1a2b3c4d5e6f708192a3b4c5d6e7f80',
 		refreshToken: 'def50200a1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbcc',
 		accessToken: 'eyJprototype.frontdoor.dev.jwt.7f3a9c2e1b4d8a6f0c2e9b1',
 		issuedOn: '2025-07-17',
 		status: 'Approved',
-		permissions: 'read, write'
+		permissions: 'read pages, create and edit pages'
 	}
 ]
 
 export const PROTOTYPE_SEED_OAUTH_CONSUMERS: readonly PrototypeOAuthConsumer[] = [
 	{
 		id: 'oauth-consumer-1',
-		applicationName: 'API key name',
-		description: 'API key description',
+		applicationName: 'Category editor app',
+		description: 'App for editing categories on English Wikipedia',
 		consumerKey: 'a331e186b64a938591e7614170814a75',
 		clientSecret: 'f8e7d6c5b4a392817061524334455667',
 		refreshToken: 'def50200112233445566778899aabbccddeeff00112233445566778899aabbcc',
 		status: 'Approved',
-		permissions: 'read, write',
+		permissions: 'read pages, create and edit pages',
 		registeredOn: '2026-07-17'
 	}
 ]

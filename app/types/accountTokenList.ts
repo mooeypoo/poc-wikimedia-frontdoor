@@ -20,10 +20,6 @@ export interface AccountOAuthConsumerListItem {
 	description: string
 	/** OAuth client ID (shown in full). */
 	consumerKey: string
-	/** OAuth client secret (full value; masked form is `maskedClientSecret`). */
-	clientSecret: string
-	/** Masked client secret for display (from `maskSecretValue`). */
-	maskedClientSecret: string
 	/** Approval status (external). */
 	status: string
 	/** Permissions summary (external). */

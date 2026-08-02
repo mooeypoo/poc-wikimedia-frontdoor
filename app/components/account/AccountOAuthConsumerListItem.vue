@@ -1,30 +1,27 @@
 <script setup lang="ts">
-import { CdxButton, CdxMessage } from '@wikimedia/codex'
+import { CdxButton } from '@wikimedia/codex'
 import AccountTokenListItemLayout from './AccountTokenListItemLayout.vue'
 import type { AccountOAuthConsumerListItem } from '../../types/accountTokenList'
 
 /**
- * Application API key list item — name, description, client id/secret, meta, write-token notice.
+ * Application API key list item — name, description, Client ID, and meta.
  *
- * Card body stacks description / credentials / meta, then a write-token `CdxMessage`
- * with Codex **`--spacing-75`** (12px) between the content block and the message
- * (`.account-oauth-consumer-list-item__stack`).
+ * Client secret is **not** shown on the card (users cannot reveal it here);
+ * it appears only in the Reset success dialog. Delete is not shown until a
+ * Meta/backend revoke integration lands (see `ARCHITECTURE.md` → Account
+ * dashboard → Prototype placeholders).
  */
 const properties = defineProps<{
 	item: AccountOAuthConsumerListItem
 	clientIdLabel: string
-	clientSecretLabel: string
 	issuedMetaPrefix: string
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	deleteButtonLabel: string
-	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
 	reset: [ consumerId: string ]
-	delete: [ consumerId: string ]
 }>()
 
 /**
@@ -34,15 +31,6 @@ const emit = defineEmits<{
  */
 function onReset(): void {
 	emit( 'reset', properties.item.id )
-}
-
-/**
- * Emits delete for this application key.
- *
- * @returns Nothing.
- */
-function onDelete(): void {
-	emit( 'delete', properties.item.id )
 }
 </script>
 
@@ -61,85 +49,53 @@ function onDelete(): void {
 			>
 				{{ properties.resetButtonLabel }}
 			</CdxButton>
-			<CdxButton
-				action="destructive"
-				weight="quiet"
-				@click="onDelete"
-			>
-				{{ properties.deleteButtonLabel }}
-			</CdxButton>
 		</template>
 
-		<div class="account-oauth-consumer-list-item__stack">
-			<div class="account-oauth-consumer-list-item__content">
-				<p class="account-oauth-consumer-list-item__description">
-					<bdi>{{ properties.item.description }}</bdi>
+		<div class="account-oauth-consumer-list-item__content">
+			<p class="account-oauth-consumer-list-item__description">
+				<bdi>{{ properties.item.description }}</bdi>
+			</p>
+
+			<div class="account-oauth-consumer-list-item__credentials">
+				<p class="account-oauth-consumer-list-item__credential">
+					<span>{{ properties.clientIdLabel }}</span>
+					<!-- LTR: OAuth client IDs are inherently left-to-right. -->
+					<code
+						class="account-oauth-consumer-list-item__credential-value"
+						dir="ltr"
+					>
+						<bdi>{{ properties.item.consumerKey }}</bdi>
+					</code>
 				</p>
-
-				<div class="account-oauth-consumer-list-item__credentials">
-					<p class="account-oauth-consumer-list-item__credential">
-						<span>{{ properties.clientIdLabel }}</span>
-						<!-- LTR: OAuth client IDs are inherently left-to-right. -->
-						<code
-							class="account-oauth-consumer-list-item__credential-value"
-							dir="ltr"
-						>
-							<bdi>{{ properties.item.consumerKey }}</bdi>
-						</code>
-					</p>
-					<p class="account-oauth-consumer-list-item__credential">
-						<span>{{ properties.clientSecretLabel }}</span>
-						<!-- LTR: masked OAuth client secrets are inherently left-to-right. -->
-						<span
-							class="account-oauth-consumer-list-item__credential-masked"
-							dir="ltr"
-							aria-hidden="true"
-						>{{ properties.item.maskedClientSecret }}</span>
-					</p>
-				</div>
-
-				<div class="account-oauth-consumer-list-item__meta">
-					<p class="account-oauth-consumer-list-item__meta-item">
-						<span>{{ properties.issuedMetaPrefix }}</span>
-						<bdi>{{ properties.item.registeredOn }}</bdi>
-					</p>
-					<span
-						class="account-oauth-consumer-list-item__meta-divider"
-						aria-hidden="true"
-					/>
-					<p class="account-oauth-consumer-list-item__meta-item">
-						<span>{{ properties.statusMetaPrefix }}</span>
-						<bdi>{{ properties.item.status }}</bdi>
-					</p>
-					<span
-						class="account-oauth-consumer-list-item__meta-divider"
-						aria-hidden="true"
-					/>
-					<p class="account-oauth-consumer-list-item__meta-item">
-						<span>{{ properties.permissionsMetaPrefix }}</span>
-						<bdi>{{ properties.item.permissions }}</bdi>
-					</p>
-				</div>
 			</div>
 
-			<CdxMessage
-				class="account-oauth-consumer-list-item__notice"
-				type="notice"
-			>
-				{{ properties.writeTokenNotice }}
-			</CdxMessage>
+			<div class="account-oauth-consumer-list-item__meta">
+				<p class="account-oauth-consumer-list-item__meta-item">
+					<span>{{ properties.issuedMetaPrefix }}</span>
+					<bdi>{{ properties.item.registeredOn }}</bdi>
+				</p>
+				<span
+					class="account-oauth-consumer-list-item__meta-divider"
+					aria-hidden="true"
+				/>
+				<p class="account-oauth-consumer-list-item__meta-item">
+					<span>{{ properties.statusMetaPrefix }}</span>
+					<bdi>{{ properties.item.status }}</bdi>
+				</p>
+				<span
+					class="account-oauth-consumer-list-item__meta-divider"
+					aria-hidden="true"
+				/>
+				<p class="account-oauth-consumer-list-item__meta-item">
+					<span>{{ properties.permissionsMetaPrefix }}</span>
+					<bdi>{{ properties.item.permissions }}</bdi>
+				</p>
+			</div>
 		</div>
 	</AccountTokenListItemLayout>
 </template>
 
 <style scoped>
-/* Stack owns Spacing/75 (12px) between card content and the write-token CdxMessage. */
-.account-oauth-consumer-list-item__stack {
-	display: flex;
-	flex-direction: column;
-	gap: var( --spacing-75 );
-}
-
 .account-oauth-consumer-list-item__content {
 	display: flex;
 	flex-direction: column;
@@ -180,11 +136,6 @@ function onDelete(): void {
 	font-size: var( --font-size-medium );
 }
 
-.account-oauth-consumer-list-item__credential-masked {
-	font-family: var( --font-family-monospace, monospace );
-	letter-spacing: 0.05em;
-}
-
 .account-oauth-consumer-list-item__meta {
 	display: flex;
 	flex-wrap: wrap;
@@ -208,9 +159,5 @@ function onDelete(): void {
 	block-size: 1rem;
 	background-color: var( --border-color-subtle );
 	flex-shrink: 0;
-}
-
-.account-oauth-consumer-list-item__notice {
-	inline-size: 100%;
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { CdxButton, CdxMessage } from '@wikimedia/codex'
+import { CdxButton, CdxIcon, CdxMessage } from '@wikimedia/codex'
+import { cdxIconLinkExternal } from '@wikimedia/codex-icons'
 import AccountDeveloperTokenList from '../components/account/AccountDeveloperTokenList.vue'
-import AccountExternalMetaLink from '../components/account/AccountExternalMetaLink.vue'
 import AccountLoggedOutGate from '../components/account/AccountLoggedOutGate.vue'
 import AccountOAuthConsumerList from '../components/account/AccountOAuthConsumerList.vue'
 import AccountResetApiKeyDialog from '../components/account/AccountResetApiKeyDialog.vue'
@@ -23,6 +23,10 @@ const {
 	loggedOutPageTitle,
 	loggedOutDescription,
 	loginButtonLabel,
+	createAccountPrompt,
+	createAccountLinkLabel,
+	createAccountUrl,
+	createAccountLinkAriaLabel,
 	onAccountPageLogin,
 	initializeAccountDashboardPlaceholders,
 	resetPrototypeAccountSession,
@@ -36,10 +40,7 @@ const {
 	statusMetaPrefix,
 	permissionsMetaPrefix,
 	clientIdLabel,
-	clientSecretLabel,
-	onDeleteDeveloperJwt,
-	onDeleteOAuthConsumer,
-	onRequestNewAuthenticationToken,
+	onOpenMetaConsumerRegistration,
 	isResetDialogOpen,
 	isResetDialogSuccessStep,
 	resetDialogTitle,
@@ -63,17 +64,16 @@ const {
 	developerTokensDescription,
 	oauthTokensSectionTitle,
 	oauthTokensDescription,
-	requestNewTokenLabel,
+	createApiTokenButtonLabel,
+	requestNewOAuthClientButtonLabel,
+	createApiTokenButtonAriaLabel,
+	requestNewOAuthClientButtonAriaLabel,
 	developerJwtEmptyMessage,
 	oauthConsumersEmptyMessage,
 	resetTokenLabel,
-	deleteTokenLabel,
-	writeTokenNotice,
 	signOutButtonLabel,
 	learnMoreOAuthLabel,
 	learnMoreOwnerOnlyLabel,
-	learnMoreOAuthAriaLabel,
-	learnMoreOwnerOnlyAriaLabel,
 	learnMoreAboutBefore,
 	developerJwtListAriaLabel,
 	oauthConsumersListAriaLabel
@@ -100,6 +100,10 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 		:title="loggedOutPageTitle"
 		:description="loggedOutDescription"
 		:login-button-label="loginButtonLabel"
+		:create-account-prompt="createAccountPrompt"
+		:create-account-link-label="createAccountLinkLabel"
+		:create-account-url="createAccountUrl"
+		:create-account-link-aria-label="createAccountLinkAriaLabel"
 		@login="onAccountPageLogin"
 	/>
 
@@ -127,17 +131,13 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				>
 					{{ developerTokensSectionTitle }}
 				</h2>
+				<!--
+					Description + learn-more as one paragraph (no block gap).
+					Learn-more: in-app `/apis/authentication#personal-api-tokens` — same tab, no external icon.
+				-->
 				<p class="account-page__prose account-page__section-description">
 					{{ developerTokensDescription }}
-				</p>
-				<p class="account-page__learn-more">
-					{{ learnMoreAboutBefore }}
-					<AccountExternalMetaLink
-						:href="ownerOnlyConsumersDocUrl"
-						:accessible-label="learnMoreOwnerOnlyAriaLabel"
-					>
-						{{ learnMoreOwnerOnlyLabel }}
-					</AccountExternalMetaLink>
+					{{ learnMoreAboutBefore }}<NuxtLink :to="ownerOnlyConsumersDocUrl">{{ learnMoreOwnerOnlyLabel }}</NuxtLink>
 				</p>
 			</div>
 
@@ -149,9 +149,7 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
 				@reset="openResetPersonalApiKeyDialog"
-				@delete="onDeleteDeveloperJwt"
 			/>
 			<CdxMessage
 				v-else
@@ -159,6 +157,21 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 			>
 				{{ developerJwtEmptyMessage }}
 			</CdxMessage>
+
+			<!-- Same Meta OAuth2 registration URL as the OAuth clients CTA; new tab. -->
+			<CdxButton
+				action="progressive"
+				weight="normal"
+				class="account-page__section-cta"
+				:aria-label="createApiTokenButtonAriaLabel"
+				@click="onOpenMetaConsumerRegistration"
+			>
+				{{ createApiTokenButtonLabel }}
+				<CdxIcon
+					:icon="cdxIconLinkExternal"
+					size="medium"
+				/>
+			</CdxButton>
 		</section>
 
 		<section
@@ -172,17 +185,13 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				>
 					{{ oauthTokensSectionTitle }}
 				</h2>
+				<!--
+					Description + learn-more as one paragraph (no block gap).
+					Learn-more: in-app `/apis/authentication#oauth-authorization-code-flow` — same tab, no external icon.
+				-->
 				<p class="account-page__prose account-page__section-description">
 					{{ oauthTokensDescription }}
-				</p>
-				<p class="account-page__learn-more">
-					{{ learnMoreAboutBefore }}
-					<AccountExternalMetaLink
-						:href="oauthForDevelopersDocUrl"
-						:accessible-label="learnMoreOAuthAriaLabel"
-					>
-						{{ learnMoreOAuthLabel }}
-					</AccountExternalMetaLink>
+					{{ learnMoreAboutBefore }}<NuxtLink :to="oauthForDevelopersDocUrl">{{ learnMoreOAuthLabel }}</NuxtLink>
 				</p>
 			</div>
 
@@ -191,15 +200,11 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:list-aria-label="oauthConsumersListAriaLabel"
 				:items="oauthConsumerListItems"
 				:client-id-label="clientIdLabel"
-				:client-secret-label="clientSecretLabel"
 				:issued-meta-prefix="issuedMetaPrefix"
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
-				:write-token-notice="writeTokenNotice"
 				@reset="openResetApplicationApiKeyDialog"
-				@delete="onDeleteOAuthConsumer"
 			/>
 			<CdxMessage
 				v-else
@@ -207,17 +212,22 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 			>
 				{{ oauthConsumersEmptyMessage }}
 			</CdxMessage>
-		</section>
 
-		<div class="account-page__request">
+			<!-- Same Meta OAuth2 registration URL as the personal CTA; new tab. -->
 			<CdxButton
 				action="progressive"
 				weight="normal"
-				@click="onRequestNewAuthenticationToken"
+				class="account-page__section-cta"
+				:aria-label="requestNewOAuthClientButtonAriaLabel"
+				@click="onOpenMetaConsumerRegistration"
 			>
-				{{ requestNewTokenLabel }}
+				{{ requestNewOAuthClientButtonLabel }}
+				<CdxIcon
+					:icon="cdxIconLinkExternal"
+					size="medium"
+				/>
 			</CdxButton>
-		</div>
+		</section>
 
 		<footer class="account-page__footer">
 			<CdxButton
@@ -250,7 +260,7 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 </template>
 
 <style scoped>
-/* Figma 966:21207 Content — column gap --spacing-200 between title, sections, request, logout. */
+/* Figma 966:21207 Content — column gap --spacing-200 between title, sections, logout. */
 .account-page {
 	display: flex;
 	flex-direction: column;
@@ -297,6 +307,14 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 	padding-block-end: 0;
 }
 
+/*
+ * Personal → OAuth: 40px between sections (Codex --spacing-250).
+ * Parent flex gap already contributes --spacing-200 (32px); add the remainder.
+ */
+.account-page__section + .account-page__section {
+	margin-block-start: calc( var( --spacing-250 ) - var( --spacing-200 ) );
+}
+
 .account-page__section-intro {
 	display: flex;
 	flex-direction: column;
@@ -315,19 +333,9 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 	margin: 0;
 }
 
-.account-page__learn-more {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var( --spacing-50 );
-	margin: 0;
-	font-size: var( --font-size-medium );
-	line-height: var( --line-height-medium );
-}
-
-.account-page__request {
-	display: flex;
-	flex-wrap: wrap;
+/* Progressive outlined CTA + external icon (Codex Button with icon pattern). */
+.account-page__section-cta {
+	align-self: flex-start;
 }
 
 /* Figma: divider then Log out as Content siblings (--spacing-200). Border acts as divider. */
