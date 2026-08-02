@@ -333,7 +333,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Source:** `app/layouts/default.vue` — `.frontdoor-shell__header-top`, `.frontdoor-shell__primary-nav-row`; `app/components/shared/ShellHeaderUtilityActions.vue`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts`, `app/composables/useColorMode.ts`, `config/headerChrome.ts`, `config/colorMode.ts`, `app/assets/css/shell-codex-overrides.css`.
 
-**Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()` (**APIs** → `/apis`; explorer stays `/explorer` when linked from section nav). Catalog and explorer routes keep the **APIs** tab selected (`activeNavigationId` = `apis`).
+**Primary navigation:** `v-model:active` bound to route via `usePrimaryNavigationTab()`; tab select calls `navigateTo()` with locale-aware paths from `useMainNavigationLinks()` (**APIs** → `/apis`; explorer stays `/explorer` when linked from section nav). Catalog and explorer routes keep the **APIs** tab selected (`activeNavigationId` = `apis`). Home `/` and `/account` (and other routes with no primary match) leave **no** tab selected (`activeNavigationId` = `''` — do not fall back to the first tab).
 
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
@@ -352,6 +352,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | Element | Behaviour |
 |---------|-----------|
 | Start column | **Hidden** (same as logged-in `/account`) |
+| Primary nav | **No** selected tab (account is not under any primary section; `usePrimaryNavigationTab` → `''`) |
 | Title | banana `account-logged-out-title` — “User dashboard” |
 | Body | banana `account-logged-out-description` |
 | Log in | Progressive primary `CdxButton` — same Meta OAuth + PKCE flow as the header Log in link; `returnTo` = locale-aware `/account` |
@@ -363,6 +364,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | Element | Behaviour |
 |---------|-----------|
 | Start column | **Hidden** (`sidebar: false` via `content-sidebar.global` for `/account`) — full-width main column; no empty section nav |
+| Primary nav | **No** selected tab (same as logged-out gate — not nested under Get started / APIs / …) |
 | Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Meta OAuth username only |
 | Personal API keys | Section heading + description + learn-more (“personal API tokens”) above cards; learn-more is an in-app `NuxtLink` to `/apis/authentication#personal-api-tokens` (`MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL` via `resolveContentHref`) — **same tab, no external icon**; list-element card (`--background-color-neutral-subtle`, exploratory **4px** radius via **`--fd-explorer-controls-surface-border-radius`** / `config/explorerSurfaces.ts` — not a Codex token; under consideration as a future system default; same as explorer project controls / module rail and Reset credentials panel; title, quiet **Reset** only — **Delete not shown** until Meta/backend revoke lands; Issued \| Status \| Permissions). **Row data = placeholders** |
 | Application API keys | Section heading + description + learn-more (“OAuth”) above cards; learn-more is an in-app `NuxtLink` to `/apis/authentication#oauth-authorization-code-flow` (`MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL` via `resolveContentHref`) — **same tab, no external icon**; same list-element card chrome (**`--fd-explorer-controls-surface-border-radius`**); card adds description, Client ID (`dir="ltr"` monospace), masked Client secret (`dir="ltr"`), meta row, quiet **Reset** only — **Delete not shown** until Meta/backend revoke lands; **no** write-token `CdxMessage` notice. **Row data = placeholders** |

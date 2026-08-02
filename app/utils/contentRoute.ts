@@ -62,6 +62,8 @@ export function stripContentLocalePrefix( path: string ): string {
  * Matches `MAIN_NAVIGATION_ITEMS` and remote sources with `navEntry.target === 'primary'`.
  * Explorer routes (`/explorer`, `/explorer/…`) resolve to the **APIs** tab id (`apis`)
  * even though the tab’s configured path is the API catalog (`/apis`).
+ * Routes outside the primary IA (e.g. home `/`, `/account`) return `null` so the
+ * shell shows **no** selected primary tab (`usePrimaryNavigationTab`).
  *
  * @param path - Vue Router path (may include locale prefix).
  * @returns Main navigation id from `config/mainNavigation.ts` or a remote source id, or null.

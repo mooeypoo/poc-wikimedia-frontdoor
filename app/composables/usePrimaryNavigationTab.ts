@@ -1,5 +1,5 @@
 import { useMainNavigationLinks } from './useMainNavigationLinks'
-import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
+import { getMainNavigationIdFromPath } from '../utils/contentRoute'
 
 /**
  * Resolves the active primary navigation tab for the shell header.
@@ -7,29 +7,21 @@ import { getMainNavigationIdFromPath, stripContentLocalePrefix } from '../utils/
  * Maps the current route to a main navigation id via `getMainNavigationIdFromPath`.
  * Used with `CdxTabs` quiet tabs in the header chrome row.
  *
+ * Routes outside the primary IA (home `/`, `/account`, and other unmatched paths)
+ * return an empty string so **no** tab appears selected.
+ *
  * @returns {{
  *   mainNavigationLinks: import('vue').ComputedRef<import('./useMainNavigationLinks').MainNavigationLink[]>,
  *   activeNavigationId: import('vue').ComputedRef<string>
- * }} Primary nav links and the tab name matching the current route.
+ * }} Primary nav links and the tab name matching the current route (or `''`).
  */
 export function usePrimaryNavigationTab() {
 	const route = useRoute()
 	const { mainNavigationLinks } = useMainNavigationLinks()
 
-	const activeNavigationId = computed( () => {
-		const navigationId = getMainNavigationIdFromPath( route.path )
-
-		if ( navigationId ) {
-			return navigationId
-		}
-
-		// Front page (`/`) is not a tab — no tab is active there.
-		if ( stripContentLocalePrefix( route.path ) === '/' ) {
-			return ''
-		}
-
-		return mainNavigationLinks.value[ 0 ]?.id ?? ''
-	} )
+	const activeNavigationId = computed( () =>
+		getMainNavigationIdFromPath( route.path ) ?? ''
+	)
 
 	return {
 		mainNavigationLinks,
