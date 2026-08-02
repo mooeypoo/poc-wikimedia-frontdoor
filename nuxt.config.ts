@@ -98,7 +98,10 @@ export default defineNuxtConfig( {
 						'typescript',
 						'python',
 						'php',
+						// Shell aliases — fences may use `bash`, `sh`, or `shell`
 						'bash',
+						'shell',
+						'shellscript',
 						'json',
 						'html',
 						'css',
@@ -133,6 +136,8 @@ export default defineNuxtConfig( {
 	css: [
 		'@wikimedia/codex/dist/codex.style-bidi.css',
 		'~/assets/css/main.css',
+		// Platform home / landing page surface (full-bleed bands, hero typography).
+		'~/assets/css/landing-page.css',
 		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
 		// Loads after main.css so it overrides the light :root token defaults.
 		'~/assets/css/color-modes.css'
@@ -161,10 +166,23 @@ export default defineNuxtConfig( {
 				) ]: resolve( projectRootDirectory, 'app/scalar/explorerMapConfigPlugins.client.ts' )
 			}
 		},
+		/*
+		 * Pre-bundle deps used on first paint / first explorer entry. Without
+		 * this, Vite discovers them at runtime, invalidates `/_nuxt/pages/…`
+		 * modules mid-navigation, and the browser shows 500 “Failed to fetch
+		 * dynamically imported module” for `pages/explorer/[[view]].vue`.
+		 */
 		optimizeDeps: {
 			include: [
 				'@scalar/api-reference',
-				'github-slugger'
+				'@vue/devtools-core',
+				'@vue/devtools-kit',
+				'@wikimedia/codex',
+				'@wikimedia/codex-icons',
+				'banana-i18n',
+				'github-slugger',
+				// Pulled in by ExplorerEnterpriseCustom on first /explorer entry.
+				'markdown-it'
 			],
 			esbuildOptions: {
 				plugins: [

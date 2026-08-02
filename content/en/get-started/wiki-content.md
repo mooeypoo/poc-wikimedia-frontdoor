@@ -31,7 +31,7 @@ Access articles from Wikipedia, media files, structured data, and more with publ
 ::navigation-card{url="/get-started/quick-start" title="Quick start" description="Get started, and make your first API request."}
 ::
 
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/API:Picture_of_the_day_viewer" title="Get featured content" description="Get daily featured articles, most read pages, and more."}
+::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/API:Picture_of_the_day_viewer" title="Get featured content" description="Get daily featured articles, most read pages, and more." supporting-text="Read more on mediawiki.org"}
 ::
 
 ::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}

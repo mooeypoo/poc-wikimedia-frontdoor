@@ -7,6 +7,8 @@ import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigation
 import { useShellNavigationCollapse } from '../composables/useShellNavigationCollapse'
 import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMenu'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
+import { isLandingRoutePath } from '../utils/landingRoute'
+import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInternalSidebarExperiment'
 
 /**
  * Default layout — the Front Door application shell.
@@ -25,6 +27,19 @@ const { locale } = useI18n()
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
+/**
+ * Platform home / landing — full-bleed section backgrounds (viewport width) with
+ * centered content. See `landing-page.css` → `.frontdoor-shell--landing`.
+ */
+const isLandingRoute = computed( () => isLandingRoutePath( route.path ) )
+/**
+ * Experiment: on the Explorer route with Scalar's built-in sidebar enabled, the
+ * manual endpoints rail is not mounted, so the end column is collapsed and the
+ * reference panel stretches full-width. See config/explorerInternalSidebarExperiment.ts.
+ */
+const isExplorerInternalSidebar = computed(
+	() => isExplorerRoute.value && EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR
+)
 const { mainNavigationLinks, activeNavigationId } = usePrimaryNavigationTab()
 const {
 	navigationLabel: pageSectionNavigationLabel,
@@ -100,7 +115,7 @@ const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-coll
 const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
 const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
 
-const { isNavigationCollapsed } = useShellNavigationCollapse(
+const { isNavigationCollapsed, isNavDrawerExpanding } = useShellNavigationCollapse(
 	primaryNavRowRef,
 	expandedNavContentRef
 )
@@ -124,19 +139,40 @@ const {
 	hasSectionNavigationBreadcrumb
 } = useShellNavigationBreadcrumbs()
 
+const isPrimaryNavigationReady = ref( false )
+
+onMounted( () => {
+	// Defer until after Codex tabs finish their mount-time active sync.
+	void nextTick( () => {
+		isPrimaryNavigationReady.value = true
+	} )
+} )
+
 /**
  * Navigates to the primary nav destination when a header tab is selected.
+ *
+ * Always goes to the tab’s configured landing path (`navigationLink.to`) unless
+ * the route is already there — so re-selecting **Get started** / **APIs** from a
+ * section-nav child (or from `/explorer`) returns to that section’s overview.
+ * Mount-time tab sync is ignored via {@link isPrimaryNavigationReady} so the
+ * explorer does not bounce to `/apis` on load.
  *
  * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
  */
 function handlePrimaryNavigationSelect( navigationId: string ): void {
+	if ( !isPrimaryNavigationReady.value ) {
+		return
+	}
+
 	const navigationLink = mainNavigationLinks.value.find(
 		( link ) => link.id === navigationId
 	)
 
-	if ( navigationLink ) {
-		navigateTo( navigationLink.to )
+	if ( !navigationLink || navigationLink.to === route.path ) {
+		return
 	}
+
+	navigateTo( navigationLink.to )
 }
 
 /**
@@ -149,10 +185,15 @@ function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): 
 	closeCollapsedNavMenu()
 }
 
+// Prefer `$interfaceLocale` (never empty). On explorer (`i18n: false`),
+// `@nuxtjs/i18n` can clear `<html lang>`; an empty lang breaks banana-i18n
+// helpers that read `document.documentElement.lang` (see resolveInterfaceMessage).
+const htmlLang = computed( () => $interfaceLocale.value || 'en' )
+
 useHead( {
 	htmlAttrs: {
 		dir: direction,
-		lang: selectedInterfaceLocale
+		lang: htmlLang
 	},
 	title: applicationTitle
 } )
@@ -163,7 +204,10 @@ useHead( {
 		class="frontdoor-shell"
 		:class="{
 			'frontdoor-shell--explorer': isExplorerRoute,
+			'frontdoor-shell--explorer-internal-sidebar': isExplorerInternalSidebar,
+			'frontdoor-shell--landing': isLandingRoute,
 			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
+			'frontdoor-shell--nav-drawer-expanding': isNavDrawerExpanding,
 			'frontdoor-shell--sidebar-hidden': isSidebarHidden
 		}"
 	>
@@ -322,7 +366,7 @@ useHead( {
 		align-items: stretch;
 	}
 
-.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__side-panel--start {
+.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__side-panel--start {
 		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -407,6 +451,8 @@ useHead( {
 
 .frontdoor-shell__chrome-start--brand {
 	padding-inline-start: var( --spacing-75 );
+	/* Keep brand lockup on the same vertical centerline as utility actions. */
+	align-self: center;
 }
 
 /* Logo aligns with collapsed hamburger row — no extra inset on the start column track. */
@@ -422,6 +468,7 @@ useHead( {
 	display: flex;
 	flex: 1 1 auto;
 	align-items: center;
+	align-self: center;
 	justify-content: flex-end;
 	min-inline-size: 0;
 }
@@ -499,6 +546,20 @@ useHead( {
 	.frontdoor-shell__side-panel--end {
 		display: flex;
 	}
+
+	/*
+	 * Experiment: Scalar's built-in sidebar replaces the manual endpoints rail.
+	 * Collapse the end column so the reference panel takes the full body width.
+	 * See config/explorerInternalSidebarExperiment.ts.
+	 */
+	.frontdoor-shell--explorer-internal-sidebar .frontdoor-shell__body-columns {
+		grid-template-columns: minmax( 0, 1fr );
+		column-gap: 0;
+	}
+
+	.frontdoor-shell--explorer-internal-sidebar .frontdoor-shell__side-panel--end {
+		display: none;
+	}
 }
 
 @media screen and ( min-width: 1680px ) {
@@ -511,7 +572,7 @@ useHead( {
 		transition: none;
 	}
 
-	.frontdoor-shell:not( .frontdoor-shell--nav-collapsed ) .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__body-columns {
 		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
@@ -520,9 +581,45 @@ useHead( {
 	.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
 	}
+
+	/*
+	 * Landing exception: section backgrounds are full viewport width — do not
+	 * lock body-columns. Content measure is enforced inside landing section inners.
+	 */
+	.frontdoor-shell--landing .frontdoor-shell__body-columns,
+	.frontdoor-shell--landing.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns,
+	.frontdoor-shell--landing.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns {
+		max-inline-size: none;
+	}
+}
+
+/*
+ * Landing page exception: full-bleed section backgrounds.
+ * Drop horizontal page insets and the unused end column so `.landing-*`
+ * wrappers at `inline-size: 100%` paint edge-to-edge. Documented in
+ * DESIGN_REQUIREMENTS.md → Platform landing / home.
+ */
+.frontdoor-shell--landing :deep( .fd-page-grid ) {
+	padding-inline-start: 0;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__body-scroll {
+	padding-inline-end: 0;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__body-columns {
+	grid-template-columns: minmax( 0, 1fr );
+	column-gap: 0;
+	max-inline-size: none;
+}
+
+.frontdoor-shell--landing .frontdoor-shell__side-panel--end {
+	display: none;
 }
 
 .frontdoor-shell__header {
+	display: flex;
+	align-items: center;
 	min-inline-size: 0;
 }
 

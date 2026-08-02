@@ -1,0 +1,227 @@
+/*
+ * Platform home / landing page surface (.fd-landing-page).
+ *
+ * Full-bleed gradient bands, hero (monospace H1, centered CTA + ascii globe),
+ * and the API demo two-column layout. Content lives in per-locale index.md.
+ * MDC wrappers: LandingHero, LandingBand, LandingApiDemo, LandingArticlePreview.
+ *
+ * See DESIGN_REQUIREMENTS.md / ARCHITECTURE.md → Platform landing / home
+ * and Figma Latest 1179:23177.
+ */
+
+/*
+ * Landing shell full-bleed rules live in `default.vue` (scoped, so they can
+ * override body-columns max-width). Content measure + section chrome below.
+ */
+
+.fd-landing-page {
+	/*
+	 * --fd-landing-content-max-inline-size is set from
+	 * LANDING_CONTENT_MAX_INLINE_SIZE in app/pages/index.vue (config source of truth).
+	 */
+	overflow-x: clip;
+	/*
+	 * Cancel .frontdoor-shell__main padding-block so hero / last band sit flush
+	 * against the header and footer. Section wrappers use margin-block: 0.
+	 */
+	margin-block: calc( -1 * var( --spacing-200 ) );
+}
+
+/* Landing sections abut; no collapsed gap between hero / bands / sections. */
+.fd-landing-page :where( .landing-hero, .landing-section, .landing-band ) {
+	margin-block: 0;
+}
+
+/* Landing H1 is monospace (Figma), not the content-page serif Heading 1. */
+.fd-landing-page :where( h1 ) {
+	font-family: var( --font-family-monospace );
+	/* Exploratory 2rem — not a Codex `--font-size-*` token (xxx-large is 1.75rem). */
+	font-size: 2rem;
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-xxx-large );
+	text-align: center;
+	margin-block-start: 0;
+}
+
+/*
+ * Hero intro `p` size lives in `LandingHero.vue` (`.landing-hero__text :deep(p)` →
+ * `--font-size-x-large`). Do not redeclare here with `:where(p)` — zero-specificity
+ * `:where` loses to the scoped SFC rule.
+ */
+
+/*
+ * Landing section titles stay Codex Heading 2 size/weight but use the base
+ * (sans) stack per Figma — not the content-page serif override.
+ * **24px** (`--spacing-150`) between each h2 and the following content.
+ */
+.fd-landing-page :where( h2 ) {
+	font-family: var( --font-family-base );
+	font-weight: var( --font-weight-bold );
+	margin-block-start: 0;
+	margin-block-end: var( --spacing-150 );
+}
+
+/*
+ * Avoid stacking h2 end-margin with the next sibling’s start margin
+ * (card grid, API demo, or band intro paragraph).
+ */
+.fd-landing-page :where( h2 ) + :where( .navigation-card-grid, .landing-api-demo, p ) {
+	margin-block-start: 0;
+}
+
+/* No Markdown hr section rules on the home page (same product call as get-started). */
+.fd-landing-page :where( hr ) {
+	display: none;
+}
+
+/*
+ * Hero dither — light SVG by default (bound on `.landing-hero` from config).
+ * Dark SVG (Figma 1202:27291: progressive blue glow → #1B223D → #101418)
+ * follows the same `fd-theme--*` split as `color-modes.css`.
+ */
+html.fd-theme--dark .fd-landing-page .landing-hero__dither {
+	background-image: var( --fd-landing-hero-dither-dark );
+}
+
+html.fd-theme--dark .fd-landing-page .landing-hero__globe-mark {
+	background-color: var( --fd-landing-hero-globe-color-dark );
+}
+
+/*
+ * APIs / join bands — dark linear gradients from config
+ * (`#233566` progressive--active ↔ `#101418` inverted). Bound on each band as
+ * `--fd-landing-band-*-dark` (do not use var(--background-color-inverted) here —
+ * that token flips to light under fd-theme--dark).
+ */
+html.fd-theme--dark .fd-landing-page .landing-band--apis,
+html.fd-theme--dark .fd-landing-page .landing-band--join {
+	/* Physical `to bottom` — see LandingBand.vue (no linear-gradient logical sides). */
+	background-image: linear-gradient(
+		to bottom,
+		var( --fd-landing-band-start-dark ),
+		var( --fd-landing-band-end-dark )
+	);
+}
+
+/*
+ * Award InfoChip — invert purple100/purple600 in dark (text→fill, fill→text).
+ * Use distinct -light/-dark custom properties; do not reassign the light var
+ * under fd-theme--dark (inline style on `.fd-landing-page` would win).
+ */
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip {
+	background-color: var( --fd-landing-award-chip-background-color-dark );
+	color: var( --fd-landing-award-chip-color-dark );
+}
+
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-info-chip__text,
+html.fd-theme--dark .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-icon {
+	color: var( --fd-landing-award-chip-color-dark );
+}
+
+@media ( prefers-color-scheme: dark ) {
+	html.fd-theme--auto .fd-landing-page .landing-hero__dither {
+		background-image: var( --fd-landing-hero-dither-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .landing-hero__globe-mark {
+		background-color: var( --fd-landing-hero-globe-color-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .landing-band--apis,
+	html.fd-theme--auto .fd-landing-page .landing-band--join {
+		background-image: linear-gradient(
+			to bottom,
+			var( --fd-landing-band-start-dark ),
+			var( --fd-landing-band-end-dark )
+		);
+	}
+
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip {
+		background-color: var( --fd-landing-award-chip-background-color-dark );
+		color: var( --fd-landing-award-chip-color-dark );
+	}
+
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-info-chip__text,
+	html.fd-theme--auto .fd-landing-page .navigation-card__chip--award.cdx-info-chip .cdx-icon {
+		color: var( --fd-landing-award-chip-color-dark );
+	}
+}
+
+/*
+ * Hero intro links (Wikipedia / other Wikimedia projects): no external glyph.
+ */
+.fd-landing-page .landing-hero :where( .prose-link__external-icon ) {
+	display: none;
+}
+
+/*
+ * Landing home: no visited link colour on any home-surface link (hero prose,
+ * card supporting-text, section CTAs). Keep unvisited / hover / active only.
+ * Product decision: DESIGN_REQUIREMENTS.md → Platform landing / home.
+ */
+.frontdoor-shell__main .fd-landing-page :where( a:visited ) {
+	color: var( --color-link );
+}
+
+.frontdoor-shell__main .fd-landing-page :where( a:visited:hover ) {
+	color: var( --color-link--hover );
+}
+
+.frontdoor-shell__main .fd-landing-page :where( a:visited:active ) {
+	color: var( --color-link--active );
+}
+
+/*
+ * Beat NavigationCard supporting-text visited rules (`:where()` above does not
+ * outrank `.navigation-card__supporting-text-link:visited`).
+ */
+.fd-landing-page .navigation-card__supporting-text-link:visited {
+	color: var( --color-link );
+}
+
+.fd-landing-page .navigation-card__supporting-text-link:visited:hover {
+	color: var( --color-link--hover );
+}
+
+.fd-landing-page .navigation-card__supporting-text-link:visited:active {
+	color: var( --color-link--active );
+}
+
+/* Quiet progressive Explore / Discover CTAs under landing sections. */
+.fd-landing-page__section-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --spacing-25 );
+	margin-block-start: var( --spacing-150 );
+	font-size: var( --font-size-medium );
+	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-small );
+	color: var( --color-progressive );
+	text-decoration: none;
+}
+
+.fd-landing-page__section-cta:hover {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.fd-landing-page__section-cta:active {
+	color: var( --color-progressive--active );
+}
+
+.fd-landing-page__section-cta:visited {
+	color: var( --color-progressive );
+}
+
+.fd-landing-page__section-cta:visited:hover {
+	color: var( --color-progressive--hover );
+	text-decoration: underline;
+}
+
+.fd-landing-page__section-cta:visited:active {
+	color: var( --color-progressive--active );
+}
+
+.fd-landing-page__section-cta .cdx-icon {
+	color: inherit;
+}

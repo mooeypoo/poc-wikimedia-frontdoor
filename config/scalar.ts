@@ -1,3 +1,5 @@
+import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from './explorerInternalSidebarExperiment'
+
 /**
  * Stable Scalar document slug used for operation navigation ids.
  *
@@ -19,8 +21,18 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	// driven from it in useScalarConfig. Hide Scalar's own toggle so there is a
 	// single control — the shell header switch — as the source of truth.
 	hideDarkModeToggle: true,
-	showSidebar: false,
+	// Experiment: Scalar's own sidebar replaces the manual endpoints rail when
+	// the flag is on. See config/explorerInternalSidebarExperiment.ts.
+	showSidebar: EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR,
 	searchHotKey: 'k',
+	// Disable Scalar's "Ask AI" Agent feature everywhere. Without this the
+	// agent surfaces (the sidebar "Ask AI" button, the per-operation "Ask AI
+	// Agent" button, and the chat drawer) auto-enable on localhost — and would
+	// enable in any environment if an agent key were ever set. `agent.disabled`
+	// forces Scalar's internal `agentEnabled` to false, hiding all three. This
+	// is Scalar's supported, schema-validated opt-out (see
+	// @scalar/types SourceConfiguration.agent); re-verify on Scalar upgrades.
+	agent: { disabled: true },
 	metaData: {
 		title: 'Front Door API Explorer'
 	}

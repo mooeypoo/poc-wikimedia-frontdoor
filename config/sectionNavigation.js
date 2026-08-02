@@ -16,8 +16,12 @@
  * @typedef {object} SectionNavItem
  * @property {string} id - Stable id for the nav item.
  * @property {string} messageKey - banana-i18n message key for the link label.
- * @property {string} href - Locale-agnostic content path the item links to
+ * @property {string} [href] - Locale-agnostic content path the item links to
  *   (e.g. `/quick-start`). Resolved to a locale-aware route by `usePageSectionNav()`.
+ *   API Explorer paths (`/explorer`, `/explorer/…`) are left unprefixed
+ *   (`i18n: false`). Omit for a non-navigating placeholder link.
+ * @property {boolean} [enabled] - When false, the item is hidden entirely
+ *   (functionality may still be wired). Defaults to true.
  */
 
 /**
@@ -35,13 +39,62 @@
 
 /** @type {Record<string, SectionNavigationDefinition>} */
 export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
+	// APIs / API Explorer. Shared by the `/apis` catalog page and every
+	// `/explorer` route (both resolve to the `apis` main-nav id — see
+	// `getMainNavigationIdFromPath`). Explorer-mode links are plain `href`s to
+	// their public URLs; `resolveContentHref` leaves `/explorer` paths unprefixed
+	// (`i18n: false`) and active state is derived from the path like any content item.
+	apis: {
+		ariaLabelMessageKey: 'explorer-side-nav-label',
+		sections: [
+			{
+				id: 'overview',
+				titleMessageKey: 'nav-api',
+				items: [
+					{ id: 'apis-overview', messageKey: 'section-nav-overview', href: '/apis' },
+					{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
+					{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: '/apis/authentication' },
+					{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: '/apis/rate-limits' },
+					{ id: 'policies', messageKey: 'explorer-side-nav-policies', href: '/apis/policies' }
+				]
+			},
+			{
+				id: 'api-explorer',
+				titleMessageKey: 'explorer-side-nav-api-explorer-title',
+				items: [
+					{ id: 'wikimedia-api-modules', messageKey: 'explorer-side-nav-wikimedia-api-modules', href: '/explorer' },
+					{ id: 'enterprise-apis', messageKey: 'explorer-side-nav-enterprise-apis', href: '/explorer/enterprise' },
+					{
+						// Hidden for now (functionality retained — the enterprise-custom
+						// mode, route, and component are all still wired; flip `enabled`
+						// to true to re-expose it). See ADR §5.2 on the `enabled` toggle.
+						id: 'enterprise-apis-custom',
+						messageKey: 'explorer-side-nav-enterprise-apis-custom',
+						href: '/explorer/enterprise-custom',
+						enabled: false
+					},
+					{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks', href: '/apis/libraries-sdks' }
+				]
+			},
+			{
+				id: 'resources',
+				titleMessageKey: 'explorer-side-nav-resources-title',
+				items: [
+					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
+					{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy', href: '/apis/stability' },
+					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/apis/troubleshooting' }
+				]
+			}
+		]
+	},
 	'get-started': {
 		ariaLabelMessageKey: 'section-nav-get-started-label',
 		sections: [
 			{
 				id: 'get-started',
-				titleMessageKey: 'section-nav-get-started-title',
+				titleMessageKey: 'nav-get-started',
 				items: [
+					{ id: 'get-started-overview', messageKey: 'section-nav-overview', href: '/get-started' },
 					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start', href: '/get-started/quick-start' },
 					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' }
 				]
@@ -50,7 +103,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				id: 'for-communities',
 				titleMessageKey: 'section-nav-get-started-for-communities-title',
 				items: [
-					{ id: 'community-overview', messageKey: 'section-nav-get-started-community-overview', href: '/get-started/build-for-communities' },
+					{ id: 'community-overview', messageKey: 'section-nav-overview', href: '/get-started/build-for-communities' },
 					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content', href: '/get-started/wiki-content' },
 					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data', href: '/get-started/open-data' },
 					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots', href: '/get-started/tools-and-bots' },
@@ -77,70 +130,19 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 			}
 		]
 	},
-	'use-content-and-data': {
-		ariaLabelMessageKey: 'section-nav-use-content-and-data-label',
-		sections: [
-			{
-				id: 'use-content-and-data',
-				titleMessageKey: 'section-nav-use-content-and-data-title',
-				items: [
-					{ id: 'get-started-link', messageKey: 'section-nav-learn-get-started-link', href: '/get-started' }
-				]
-			},
-			{
-				id: 'guides',
-				titleMessageKey: 'section-nav-learn-guides-title',
-				items: [
-					{ id: 'reuse-wikimedia-content', messageKey: 'section-nav-learn-reuse-wikimedia-content', href: '/reuse-wikimedia-content' },
-					{ id: 'login-with-wikimedia', messageKey: 'section-nav-learn-login-with-wikimedia', href: '/login-with-wikimedia' },
-					{ id: 'troubleshooting', messageKey: 'section-nav-learn-troubleshooting', href: '/troubleshooting' },
-					{ id: 'browse-all-guides', messageKey: 'section-nav-learn-browse-all-guides', href: '/browse-all-guides' }
-				]
-			},
-			{
-				id: 'tutorials',
-				titleMessageKey: 'section-nav-learn-tutorials-title',
-				items: [
-					{ id: 'display-holidays-from-wikipedia', messageKey: 'section-nav-learn-display-holidays-from-wikipedia', href: '/display-holidays-from-wikipedia' },
-					{ id: 'reuse-media-files', messageKey: 'section-nav-learn-reuse-media-files', href: '/reuse-media-files' },
-					{ id: 'compare-page-metrics', messageKey: 'section-nav-learn-compare-page-metrics', href: '/compare-page-metrics' },
-					{ id: 'browse-all-tutorials', messageKey: 'section-nav-learn-browse-all-tutorials', href: '/browse-all-tutorials' }
-				]
-			},
-			{
-				id: 'concepts',
-				titleMessageKey: 'section-nav-learn-concepts-title',
-				items: [
-					{ id: 'page-views', messageKey: 'section-nav-learn-page-views', href: '/page-views' },
-					{ id: 'unique-devices', messageKey: 'section-nav-learn-unique-devices', href: '/unique-devices' },
-					{ id: 'machine-learning-models', messageKey: 'section-nav-learn-machine-learning-models', href: '/machine-learning-models' },
-					{ id: 'browse-all-concepts', messageKey: 'section-nav-learn-browse-all-concepts', href: '/browse-all-concepts' }
-				]
-			},
-			{
-				id: 'policies',
-				titleMessageKey: 'section-nav-learn-policies-title',
-				items: [
-					{ id: 'terms-of-use', messageKey: 'section-nav-learn-terms-of-use', href: '/terms-of-use' },
-					{ id: 'privacy-policy', messageKey: 'section-nav-learn-privacy-policy', href: '/privacy-policy' },
-					{ id: 'robot-policy', messageKey: 'section-nav-learn-robot-policy', href: '/robot-policy' },
-					{ id: 'browse-all-policies', messageKey: 'section-nav-learn-browse-all-policies', href: '/browse-all-policies' }
-				]
-			}
-		]
-	},
 	community: {
 		ariaLabelMessageKey: 'section-nav-community-label',
 		sections: [
 			{
 				id: 'community',
-				titleMessageKey: 'section-nav-community-title',
+				titleMessageKey: 'nav-community',
 				items: [
-					{ id: 'explore-hackathons-and-events', messageKey: 'section-nav-community-explore-hackathons-and-events', href: '/explore-hackathons-and-events' },
-					{ id: 'communicate-with-tech-community', messageKey: 'section-nav-community-communicate-with-tech-community', href: '/communicate-with-tech-community' },
-					{ id: 'learn-and-share-technical-skills', messageKey: 'section-nav-community-learn-and-share-technical-skills', href: '/learn-and-share-technical-skills' },
-					{ id: 'get-tech-project-updates', messageKey: 'section-nav-community-get-tech-project-updates', href: '/get-tech-project-updates' },
-					{ id: 'learn-about-wikimedia-technical-operations', messageKey: 'section-nav-community-learn-about-wikimedia-technical-operations', href: '/learn-about-wikimedia-technical-operations' }
+					{ id: 'community-overview', messageKey: 'section-nav-overview', href: '/community' },
+					{ id: 'explore-hackathons-and-events', messageKey: 'section-nav-community-explore-hackathons-and-events', href: '/community/events' },
+					{ id: 'communicate-with-tech-community', messageKey: 'section-nav-community-communicate-with-tech-community', href: '/community/communicate' },
+					{ id: 'learn-and-share-technical-skills', messageKey: 'section-nav-community-learn-and-share-technical-skills', href: '/community/grow' },
+					{ id: 'get-tech-project-updates', messageKey: 'section-nav-community-get-tech-project-updates', href: '/community/updates' },
+					{ id: 'learn-about-wikimedia-technical-operations', messageKey: 'section-nav-community-learn-about-wikimedia-technical-operations', href: '/community/tech-ops' }
 				]
 			}
 		]
@@ -150,13 +152,13 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 		sections: [
 			{
 				id: 'contribute',
-				titleMessageKey: 'section-nav-contribute-title',
+				titleMessageKey: 'nav-contribute',
 				items: [
-					{ id: 'wikimedia-open-source', messageKey: 'section-nav-contribute-wikimedia-open-source', href: '/wikimedia-open-source' },
-					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/learn-how-contributing-works' },
-					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute-by-topic' },
-					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute-by-programming-language' },
-					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/search-all-projects' }
+					{ id: 'contribute-overview', messageKey: 'section-nav-overview', href: '/contribute' },
+					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/contribute/learn' },
+					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute/by-topic' },
+					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute/by-language' },
+					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' }
 				]
 			},
 			{
@@ -175,9 +177,10 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 		sections: [
 			{
 				id: 'get-help',
-				titleMessageKey: 'section-nav-get-help-title',
+				titleMessageKey: 'nav-get-help',
 				items: [
-					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/troubleshooting-guide' }
+					{ id: 'get-help-overview', messageKey: 'section-nav-overview', href: '/get-help' },
+					{ id: 'get-help-about', messageKey: 'section-nav-get-help-about', href: '/get-help/about' }
 				]
 			}
 		]

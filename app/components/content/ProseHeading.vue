@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CdxIcon } from '@wikimedia/codex'
 import { cdxIconLink } from '@wikimedia/codex-icons'
+import { isLandingRoutePath } from '../../utils/landingRoute'
 
 defineProps<{
 	id?: string
@@ -8,6 +9,13 @@ defineProps<{
 }>()
 
 const { $bananaI18n } = useNuxtApp()
+const route = useRoute()
+
+/**
+ * Platform home is a marketing surface — no heading permalink controls
+ * (docs pages keep ProseHeading anchors).
+ */
+const showHeadingAnchor = computed( () => !isLandingRoutePath( route.path ) )
 </script>
 
 <template>
@@ -18,7 +26,7 @@ const { $bananaI18n } = useNuxtApp()
 	>
 		<slot />
 		<a
-			v-if="id"
+			v-if="id && showHeadingAnchor"
 			:href="`#${id}`"
 			:aria-label="$bananaI18n( 'content-heading-anchor-label' )"
 			class="prose-heading__anchor"

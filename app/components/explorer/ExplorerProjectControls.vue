@@ -5,12 +5,18 @@ import type { ExplorerBootstrapModule } from '../../composables/useExplorerBoots
 import { useExplorerModuleSelect } from '../../composables/useExplorerModuleSelect'
 import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
 import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
+import ExplorerModuleSelectOptionContent from './ExplorerModuleSelectOptionContent.vue'
 
 /**
  * ExplorerProjectControls — project, language, REST API module, and opt-in filters.
  *
  * Presentational only; selection state is owned by the explorer page via `defineModel`.
  * Project and language resolve to a wiki instance id for bootstrap.
+ *
+ * **Codex exception #14:** API to explore uses a custom `CdxSelect` `#menu-item` (and `#label`)
+ * slot so beta / internal audience markers render as **label-only** warning `CdxInfoChip`s
+ * beside the module name (status icons hidden); version stays Codex `supportingText`.
+ * See `ARCHITECTURE.md` → Codex exceptions #14.
  */
 const props = defineProps<{
 	isInstanceBootstrapping: boolean
@@ -56,6 +62,9 @@ const {
 	moduleMenuItems,
 	moduleSelectMenuConfig,
 	moduleSelectDefaultLabel,
+	moduleSelectBetaChipLabel,
+	moduleSelectInternalChipLabel,
+	resolveModuleSelectOptionDisplay,
 	selectedModuleValue,
 	isModuleSelectDisabled
 } = useExplorerModuleSelect(
@@ -149,7 +158,37 @@ function onOptInPopoverTriggerClick(): void {
 					:menu-config="moduleSelectMenuConfig"
 					:default-label="moduleSelectDefaultLabel"
 					:disabled="isModuleSelectDisabled"
-				/>
+				>
+					<template #label="{ selectedMenuItem, defaultLabel }">
+						<template
+							v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay( selectedMenuItem ) ]"
+							:key="resolvedMenuItem?.value ?? 'module-select-default'"
+						>
+							<ExplorerModuleSelectOptionContent
+								v-if="resolvedMenuItem"
+								:menu-item="resolvedMenuItem"
+								:beta-chip-label="moduleSelectBetaChipLabel"
+								:internal-chip-label="moduleSelectInternalChipLabel"
+								variant="label"
+							/>
+							<span v-else>{{ defaultLabel }}</span>
+						</template>
+					</template>
+					<template #menu-item="{ menuItem }">
+						<template
+							v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay( menuItem ) ]"
+							:key="resolvedMenuItem?.value ?? 'module-select-empty'"
+						>
+							<ExplorerModuleSelectOptionContent
+								v-if="resolvedMenuItem"
+								:menu-item="resolvedMenuItem"
+								:beta-chip-label="moduleSelectBetaChipLabel"
+								:internal-chip-label="moduleSelectInternalChipLabel"
+								variant="menu"
+							/>
+						</template>
+					</template>
+				</CdxSelect>
 			</CdxField>
 
 			<CdxField
@@ -171,7 +210,7 @@ function onOptInPopoverTriggerClick(): void {
 							<CdxIcon :icon="cdxIconInfo" />
 						</CdxButton>
 						<CdxPopover
-							class="explorer-project-controls__opt-in-help-popover"
+							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							v-model:open="isOptInPopoverOpen"
 							:anchor="optInPopoverTrigger"
 							:title="optInPopoverTitle"

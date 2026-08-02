@@ -1,7 +1,9 @@
 /**
- * Test wiki base URLs for safe write-request experimentation in the Scalar API client.
+ * Production → test wiki mapping for write-request warning copy in the Scalar API client.
  *
- * Production explorer instances map to their corresponding Wikimedia test wikis.
+ * Used to resolve banana-i18n display-name keys for the Test Request modal warning link.
+ * Test wikis are not yet selectable explorer instances (discovery wiring pending);
+ * base URLs remain for that future switch. Write requests currently hit production.
  */
 export const WIKI_INSTANCE_TEST_WIKI_BASE_URLS = {
 	commonswiki: 'https://test-commons.wikimedia.org',
@@ -10,6 +12,13 @@ export const WIKI_INSTANCE_TEST_WIKI_BASE_URLS = {
 
 /** Default test wiki base URL for Wikipedia (and other) language wikis. */
 export const DEFAULT_WIKIPEDIA_TEST_WIKI_BASE_URL = 'https://test.wikipedia.org'
+
+/** banana-i18n keys for test wiki display names used in write-request warning copy. */
+export const TEST_WIKI_DISPLAY_NAME_MESSAGE_KEYS = {
+	commonswiki: 'explorer-scalar-write-test-wiki-name-commons',
+	wikidata: 'explorer-scalar-write-test-wiki-name-wikidata',
+	wikipedia: 'explorer-scalar-write-test-wiki-name-wikipedia'
+} as const
 
 /**
  * Returns the test wiki base URL for a selected explorer wiki instance.
@@ -26,31 +35,29 @@ export function getTestWikiBaseUrlForWikiInstance( wikiInstanceId: string ): str
 }
 
 /**
- * Returns the test wiki hostname label for interface copy.
+ * Returns the banana-i18n message key for the mapped test wiki display name.
  *
  * @param wikiInstanceId - Wiki instance id from {@link config/instances.ts}.
- * @returns Test wiki hostname (for example `test.wikipedia.org`).
+ * @returns Message key for Test Wikipedia, Test Wikidata, or Test Wikimedia Commons.
  */
-export function getTestWikiDisplayHostForWikiInstance( wikiInstanceId: string ): string {
-	return new URL( getTestWikiBaseUrlForWikiInstance( wikiInstanceId ) ).host
+export function getTestWikiDisplayNameMessageKey( wikiInstanceId: string ): string {
+	if ( wikiInstanceId === 'wikidata' ) {
+		return TEST_WIKI_DISPLAY_NAME_MESSAGE_KEYS.wikidata
+	}
+
+	if ( wikiInstanceId === 'commonswiki' ) {
+		return TEST_WIKI_DISPLAY_NAME_MESSAGE_KEYS.commonswiki
+	}
+
+	return TEST_WIKI_DISPLAY_NAME_MESSAGE_KEYS.wikipedia
 }
 
 /**
  * Returns whether the selected explorer instance has a mapped test wiki.
  *
  * @param wikiInstanceId - Wiki instance id from {@link config/instances.ts}.
- * @returns True when write requests can be routed to a test wiki.
+ * @returns True when write-request warnings can name a corresponding test wiki.
  */
 export function hasTestWikiForWikiInstance( wikiInstanceId: string ): boolean {
 	return Boolean( getTestWikiBaseUrlForWikiInstance( wikiInstanceId ) )
-}
-
-/**
- * Returns the test wiki URL label for a selected explorer wiki instance.
- *
- * @param wikiInstanceId - Wiki instance id from {@link config/instances.ts}.
- * @returns Test wiki hostname for interface copy.
- */
-export function getTestWikiUrlForWikiInstance( wikiInstanceId: string ): string {
-	return getTestWikiDisplayHostForWikiInstance( wikiInstanceId )
 }

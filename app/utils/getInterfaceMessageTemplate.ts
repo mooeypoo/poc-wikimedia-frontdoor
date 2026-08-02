@@ -3,6 +3,7 @@ import messagesSpanish from '../../i18n/es.json'
 import messagesFrench from '../../i18n/fr.json'
 import messagesHebrew from '../../i18n/he.json'
 import messagesPersian from '../../i18n/fa.json'
+import { resolveActiveInterfaceLocale } from './resolveActiveInterfaceLocale'
 
 type MessageMap = Record<string, string>
 
@@ -25,10 +26,7 @@ export function getInterfaceMessageTemplate(
 	messageKey: string,
 	localeCode?: string
 ): string {
-	const documentLocale = typeof document !== 'undefined'
-		? document.documentElement.lang?.split( '-' )[ 0 ]
-		: undefined
-	const activeLocale = localeCode ?? documentLocale ?? 'en'
+	const activeLocale = resolveActiveInterfaceLocale( localeCode )
 	const localeMessages = MESSAGES_BY_LOCALE[ activeLocale ] ?? MESSAGES_BY_LOCALE.en
 
 	return localeMessages[ messageKey ] ?? MESSAGES_BY_LOCALE.en[ messageKey ] ?? messageKey

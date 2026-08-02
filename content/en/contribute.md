@@ -1,5 +1,18 @@
-# Contribute
+---
+status: draft 1
+---
 
-## How to contribute
+# Contribute to Wikimedia open source
 
-Front Door is an open source project and welcomes contributions from the developer community. You can report bugs or suggest improvements by opening an issue in the project tracker. To contribute code, fork the repository, create a feature branch, and open a pull request with a clear description of your changes. All pull requests are reviewed by the core maintainer team before merging. Documentation improvements, translation updates, and accessibility fixes are especially welcome.
+Help build the Wikimedia ecosystem with open source software.
+
+:::navigation-card-grid
+::navigation-card{url="/contribute/learn" title="Learn how contributing works" description="Get the basics of how to contribute to MediaWiki and other Wikimedia open source projects."}
+::
+::navigation-card{url="/contribute/by-topic" title="Contribute by topic" description="Find ways to contribute, and connect with others with shared interests."}
+::
+::navigation-card{url="/contribute/by-language" title="Contribute by programming language" description="Choose a project to contribute to based on programming language."}
+::
+::navigation-card{url="/contribute/search" title="Search all projects" description="Search all Wikimedia open source software projects."}
+::
+:::

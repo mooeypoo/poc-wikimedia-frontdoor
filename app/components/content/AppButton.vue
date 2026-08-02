@@ -1,73 +1,135 @@
 <script setup lang="ts">
-import { CdxIcon } from '@wikimedia/codex'
-import { cdxIconLinkExternal } from '@wikimedia/codex-icons'
+import { CdxButton, CdxIcon } from '@wikimedia/codex'
+import {
+	cdxIconArrowNext,
+	cdxIconLinkExternal,
+	type Icon
+} from '@wikimedia/codex-icons'
 
-const props = defineProps<{
+/**
+ * Progressive primary CTA used from Markdown (`::app-button`).
+ *
+ * Renders Codex `CdxButton` (`action="progressive"` `weight="primary"`) so
+ * shell prose-link colour rules cannot wash out the label (custom `<a>` chrome
+ * lost to `.frontdoor-shell__main a`). Click navigates internally via
+ * `navigateTo` or opens external URLs. Label is BiDi-isolated.
+ *
+ * **Routing:** Path-based `href` values (`/…`) always use in-app `navigateTo`,
+ * even when MDC passes a boolean `external` / `external=""` attribute. Only
+ * non-path destinations honour `external` or an absolute `http(s):` URL for
+ * new-tab behaviour. (Same path-vs-absolute split as {@link LandingSectionCta}.)
+ *
+ * MDC: `::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}`
+ */
+const props = withDefaults( defineProps<{
 	href: string
 	label: string
-	// MDC passes attribute values as strings; accept both for Vue prop validation.
+	/**
+	 * Prefer absolute `http(s):` URLs for off-platform destinations. When set
+	 * on a non-path `href`, forces new-tab + external icon. Ignored for `/…`
+	 * paths (including MDC empty-string boolean `external=""`).
+	 */
 	external?: boolean | string
-}>()
+	/** Codex Button size (`medium` default, `large` for landing hero). */
+	size?: 'medium' | 'large' | string
+	/**
+	 * Optional end icon. Allowlisted: `arrowNext`. Empty = no end icon
+	 * (external links still show the external glyph when treated as external).
+	 */
+	iconEnd?: string
+}>(), {
+	external: false,
+	size: 'medium',
+	iconEnd: ''
+} )
 
-const isInternal = computed( () => props.href.startsWith( '/' ) && !props.external )
+/**
+ * True when MDC/Vue marks the CTA as explicitly external.
+ *
+ * MDC boolean attributes arrive as `""`; treat that like `true` / `"true"`.
+ *
+ * @returns Whether the `external` prop is set in a truthy MDC-compatible form.
+ */
+const isExplicitExternalFlag = computed( (): boolean => {
+	const flag = props.external
+	return flag === true || flag === '' || flag === 'true'
+} )
+
+/**
+ * True for in-app destinations. Path shape wins over `external` so
+ * `::app-button{href="/get-started" external}` still routes via `navigateTo`.
+ *
+ * @returns Whether `href` is a root-relative Front Door path.
+ */
+const isInternal = computed( (): boolean => {
+	return props.href.startsWith( '/' )
+} )
+
+/**
+ * True when activation should open a new tab (and show the external glyph
+ * unless `iconEnd` overrides). Never true for internal paths.
+ *
+ * @returns Whether the destination is treated as off-platform HTTP(S).
+ */
+const isExternalHttp = computed( (): boolean => {
+	if ( isInternal.value ) {
+		return false
+	}
+	return isExplicitExternalFlag.value || /^https?:/i.test( props.href )
+} )
+
+const resolvedEndIcon = computed( (): Icon | undefined => {
+	const iconEndName = props.iconEnd.trim()
+	if ( iconEndName === 'arrowNext' || iconEndName === 'cdxIconArrowNext' ) {
+		return cdxIconArrowNext
+	}
+	return undefined
+} )
+
+const buttonSize = computed( (): 'medium' | 'large' => {
+	return props.size === 'large' ? 'large' : 'medium'
+} )
+
+/**
+ * Navigates to the configured href (internal router or external window).
+ *
+ * @returns Promise that resolves when internal navigation finishes.
+ */
+async function onActivate(): Promise<void> {
+	if ( isInternal.value ) {
+		await navigateTo( props.href )
+		return
+	}
+	if ( !import.meta.client ) {
+		return
+	}
+	if ( isExternalHttp.value ) {
+		window.open( props.href, '_blank', 'noopener,noreferrer' )
+		return
+	}
+	window.location.assign( props.href )
+}
 </script>
 
 <template>
-	<NuxtLink v-if="isInternal" :to="href" class="app-button app-button--progressive">
-		{{ label }}
-	</NuxtLink>
-	<a
-		v-else
-		:href="href"
-		class="app-button app-button--progressive"
-		:rel="external ? 'noopener noreferrer' : undefined"
+	<CdxButton
+		action="progressive"
+		weight="primary"
+		:size="buttonSize"
+		class="app-button"
+		@click="onActivate"
 	>
-		{{ label }}
+		<bdi>{{ label }}</bdi>
 		<CdxIcon
-			v-if="external"
-			:icon="cdxIconLinkExternal"
-			size="x-small"
-			class="app-button__external-icon"
+			v-if="resolvedEndIcon"
+			:icon="resolvedEndIcon"
+			size="medium"
+			:flip-for-rtl="true"
 		/>
-	</a>
+		<CdxIcon
+			v-else-if="isExternalHttp"
+			:icon="cdxIconLinkExternal"
+			size="medium"
+		/>
+	</CdxButton>
 </template>
-
-<style scoped>
-.app-button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	padding-block: var( --spacing-75 );
-	padding-inline: var( --spacing-150 );
-	border-radius: var( --border-radius-base );
-	font-family: inherit;
-	font-size: var( --font-size-medium );
-	font-weight: var( --font-weight-bold );
-	line-height: var( --line-height-medium );
-	text-decoration: none;
-	cursor: pointer;
-	transition: background-color 100ms, color 100ms, border-color 100ms;
-}
-
-.app-button--progressive {
-	background-color: var( --background-color-progressive );
-	color: var( --color-inverted );
-	border: 1px solid var( --border-color-progressive );
-}
-
-.app-button--progressive:hover {
-	background-color: var( --background-color-progressive--hover );
-	border-color: var( --border-color-progressive--hover );
-	color: var( --color-inverted );
-	text-decoration: none;
-}
-
-.app-button--progressive:active {
-	background-color: var( --background-color-progressive--active );
-	border-color: var( --border-color-progressive--active );
-}
-
-.app-button__external-icon {
-	margin-inline-start: var( --spacing-50 );
-}
-</style>

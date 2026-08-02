@@ -2,6 +2,7 @@
 import { CdxIcon, CdxInfoChip } from '@wikimedia/codex'
 import { cdxIconLinkExternal, type Icon } from '@wikimedia/codex-icons'
 import { resolveNavigationCardIcon } from '../../../config/navigationCardIcons'
+import { resolveNavigationCardTitleLogo } from '../../../config/navigationCardTitleLogos'
 import {
 	parseNavigationCardChips,
 	type NavigationCardChip
@@ -16,19 +17,30 @@ export type { NavigationCardChip }
  * ([79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)).
  *
  * Differences from stock `CdxCard`:
- * - Vertical stack (no thumbnail)
+ * - Vertical stack; optional top **media** screenshot (`media` public path) —
+ *   Portrait-card layout (Codex design, not shipped yet — see T310632);
+ *   **`--spacing-75` (12px)** inset around the image per Figma Portrait card
  * - Neutral-subtle background; transparent border that uses
  *   `--border-color-subtle` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
- * - Optional **top** / **leading** title icons
- * - Optional **supporting-text**: when `url` is set, rendered as a progressive
- *   link to the same destination (external icon appended for off-platform URLs);
+ * - Optional **top** / **leading** title icons (Codex allowlist)
+ * - Optional **title-logo** — allowlisted monochrome brand SVG
+ *   (`gerrit` / `github` / `gitlab` / `wikimediaEnterprise`) in the title
+ *   position at `--size-icon-medium`, `currentColor` / `--color-base`
+ * - Optional **supporting-text**: when `url` is set, rendered as a Codex Link
+ *   (mixin tokens: `--color-link*`) to the same destination (external icon
+ *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
- *   off-platform cards still show the title trailing icon. In equal-height grids,
- *   supporting-text is bottom-aligned (`margin-block-start: auto`). When
- *   converting from prose, **keep the technical writer’s supporting-text /
- *   link labels** — do not rewrite them
- * - Optional `CdxInfoChip` row
+ *   off-platform cards still show the title trailing icon unless
+ *   `hide-external-icon` is set. In equal-height grids, supporting-text is
+ *   bottom-aligned (`margin-block-start: auto`) with a Codex **minimum**
+ *   `--spacing-50` (8px) from the description via `padding-block-start`.
+ *   When converting from prose, **keep the technical writer’s supporting-text
+ *   / link labels** — do not rewrite them
+ * - Optional `CdxInfoChip` row (label-only in cards — status icons hidden; Codex
+ *   forces icons on warning/error/success and ignores a null `icon` for those;
+ *   landing Coolest Tool chips use `chips="award:…"` with star + purple)
+
  * - Markdown description via the **`description` prop**, the `#description`
  *   named slot, or the **default slot** (prefer default slot inside grids —
  *   MDC named slots do not nest under `:::navigation-card-grid`)
@@ -49,6 +61,7 @@ const props = withDefaults( defineProps<{
 	url?: string
 	/**
 	 * Title text when the `#title` slot is unused. Content string — BiDi-isolated.
+	 * Omit when `titleLogo` supplies the title visual instead.
 	 */
 	title?: string
 	/**
@@ -57,11 +70,17 @@ const props = withDefaults( defineProps<{
 	description?: string
 	/**
 	 * Optional Codex Card supporting-text. When `url` is set, rendered as a
-	 * progressive link to the same destination (with external icon when
-	 * off-platform). Content string — BiDi-isolated. Preserve technical-writer
-	 * labels when converting from prose.
+	 * Codex Link (Link mixin tokens) to the same destination (with external
+	 * icon when off-platform). Content string — BiDi-isolated. Preserve
+	 * technical-writer labels when converting from prose.
 	 */
 	supportingText?: string
+	/**
+	 * Optional monochrome brand logo in the title position (MDC:
+	 * `title-logo="gerrit"`). Allowlisted in `config/navigationCardTitleLogos.ts`.
+	 * Sized to `--size-icon-medium`; colour via `currentColor` / `--color-base`.
+	 */
+	titleLogo?: string
 	/**
 	 * Optional icon above the title row. Pass a Codex {@link Icon} from Vue, or
 	 * an allowlisted name from Markdown (`top-icon="userGroup"`).
@@ -73,23 +92,39 @@ const props = withDefaults( defineProps<{
 	leadingIcon?: Icon | string
 	/**
 	 * Optional InfoChips under the description. Vue: chip objects. MDC: pipe-separated
-	 * labels (`chips="A|B"`) or `status:label` segments (`chips="subtle:A|success:B"`).
+	 * labels (`chips="A|B"`), `status:label` (`chips="subtle:A|success:B"`), or
+	 * `award:label` for landing Coolest Tool chips (star + purple100/600).
 	 * Ignored when the `#chips` slot is provided.
 	 */
 	chips?: NavigationCardChip[] | string
+	/**
+	 * Optional top-of-card screenshot / media (public path, e.g.
+	 * `/images/landing/app-lexica.png`). Decorative — empty `alt`.
+	 * Portrait-card inset: **`--spacing-75` (12px)** around the image
+	 * (Codex Portrait card not shipped — T310632).
+	 */
+	media?: string
 	/**
 	 * Force external link behaviour (`target="_blank"`, trailing external icon)
 	 * even for path-like URLs. Absolute `http(s):` URLs are treated as external
 	 * automatically.
 	 */
 	external?: boolean | string
+	/**
+	 * When true, omit the trailing / supporting-text external-link icon
+	 * (community app cards on the landing page).
+	 */
+	hideExternalIcon?: boolean | string
 }>(), {
 	url: '',
 	title: '',
 	description: '',
 	supportingText: '',
+	titleLogo: '',
 	chips: () => [],
-	external: false
+	media: '',
+	external: false,
+	hideExternalIcon: false
 } )
 
 const slots = useSlots()
@@ -102,7 +137,16 @@ const isExternalFlag = computed( () => {
 	return flag === true || flag === '' || flag === 'true'
 } )
 
+const shouldHideExternalIcon = computed( () => {
+	const flag = props.hideExternalIcon
+	return flag === true || flag === '' || flag === 'true'
+} )
+
 const isLink = computed( () => props.url.trim().length > 0 )
+
+const mediaSrc = computed( () => props.media.trim() )
+
+const hasMedia = computed( () => mediaSrc.value.length > 0 )
 
 /**
  * True when the primary `url` is off-platform (drives trailing icon + link attrs).
@@ -150,6 +194,13 @@ const resolvedTopIcon = computed( () => resolveNavigationCardIcon( props.topIcon
 const resolvedLeadingIcon = computed( () => resolveNavigationCardIcon( props.leadingIcon ) )
 
 /**
+ * Allowlisted brand mark for the title row (replaces text title when set alone).
+ */
+const resolvedTitleLogo = computed( () =>
+	resolveNavigationCardTitleLogo( props.titleLogo )
+)
+
+/**
  * Render prop supporting-text as a progressive link to the same `url`.
  * Custom `#supporting-text` slots are left as authored.
  */
@@ -164,6 +215,9 @@ const showSupportingTextAsLink = computed( () =>
  * supporting-text is present (the external affordance moves onto that link).
  */
 const resolvedTrailingIcon = computed( (): Icon | undefined => {
+	if ( shouldHideExternalIcon.value ) {
+		return undefined
+	}
 	const hasSupportingTextContent =
 		Boolean( slots[ 'supporting-text' ] ) ||
 		props.supportingText.trim().length > 0
@@ -180,7 +234,9 @@ const hasTopIcon = computed( () =>
 )
 
 const hasTitle = computed( () =>
-	Boolean( slots.title ) || props.title.trim().length > 0
+	Boolean( slots.title ) ||
+	props.title.trim().length > 0 ||
+	Boolean( resolvedTitleLogo.value )
 )
 
 const hasDescription = computed( () =>
@@ -210,12 +266,25 @@ const hasBody = computed( () =>
 	hasSupportingText.value ||
 	hasChips.value
 )
+
+/**
+ * Resolves an optional chip icon from the allowlisted NavigationCard icons.
+ *
+ * @param chip - Parsed chip descriptor.
+ * @returns Codex icon, or `undefined` when the chip has no icon.
+ */
+function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
+	return resolveNavigationCardIcon( chip.icon )
+}
 </script>
 
 <template>
 	<div
 		class="navigation-card"
-		:class="{ 'navigation-card--is-link': isLink }"
+		:class="{
+			'navigation-card--is-link': isLink,
+			'navigation-card--has-media': hasMedia
+		}"
 	>
 		<!--
 			Stretched link: whole-card click without wrapping body in <a>, so
@@ -231,6 +300,18 @@ const hasBody = computed( () =>
 				{{ title || supportingText || url }}
 			</span>
 		</component>
+		<div
+			v-if="hasMedia"
+			class="navigation-card__media"
+			aria-hidden="true"
+		>
+			<img
+				class="navigation-card__media-image"
+				:src="mediaSrc"
+				alt=""
+				decoding="async"
+			>
+		</div>
 		<div
 			v-if="hasBody"
 			class="navigation-card__body"
@@ -275,7 +356,38 @@ const hasBody = computed( () =>
 						</span>
 						<div class="navigation-card__title">
 							<slot name="title">
-								<bdi>{{ title }}</bdi>
+								<svg
+									v-if="resolvedTitleLogo"
+									class="navigation-card__title-logo"
+									:viewBox="resolvedTitleLogo.viewBox"
+									aria-hidden="true"
+									focusable="false"
+								>
+									<g
+										v-if="resolvedTitleLogo.groupTransform"
+										:transform="resolvedTitleLogo.groupTransform"
+									>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</g>
+									<template v-else>
+										<path
+											v-for="( logoPath, logoPathIndex ) in resolvedTitleLogo.paths"
+											:key="logoPathIndex"
+											fill="currentColor"
+											:fill-rule="resolvedTitleLogo.fillRule"
+											:clip-rule="resolvedTitleLogo.fillRule"
+											:d="logoPath"
+										/>
+									</template>
+								</svg>
+								<bdi v-if="title.trim().length > 0">{{ title }}</bdi>
 							</slot>
 						</div>
 						<span
@@ -321,7 +433,7 @@ const hasBody = computed( () =>
 						>
 							<bdi>{{ supportingText }}</bdi>
 							<CdxIcon
-								v-if="isExternalDestination"
+								v-if="isExternalDestination && !shouldHideExternalIcon"
 								:icon="cdxIconLinkExternal"
 								size="x-small"
 								aria-hidden="true"
@@ -341,6 +453,10 @@ const hasBody = computed( () =>
 						v-for="( chip, chipIndex ) in parsedChips"
 						:key="`${chip.label}-${chipIndex}`"
 						:status="chip.status ?? 'subtle'"
+						:icon="resolveChipIcon( chip )"
+						:class="{
+							'navigation-card__chip--award': chip.variant === 'award'
+						}"
 					>
 						<bdi>{{ chip.label }}</bdi>
 					</CdxInfoChip>
@@ -367,6 +483,41 @@ const hasBody = computed( () =>
 	text-decoration: none;
 	color: inherit;
 	box-sizing: border-box;
+	overflow: clip;
+}
+
+/*
+ * Portrait card (Codex Figma, not implemented in Codex yet — T310632):
+ * 12px (`--spacing-75`) around the media image on all sides toward the card
+ * edge / body. Used by landing “Discover community-built apps” cards.
+ * @see https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634
+ */
+.navigation-card--has-media {
+	padding: var( --spacing-75 );
+	gap: var( --spacing-75 );
+}
+
+.navigation-card--has-media .navigation-card__body {
+	padding-block: 0;
+	padding-inline: 0;
+}
+
+.navigation-card__media {
+	position: relative;
+	z-index: 1;
+	inline-size: 100%;
+	overflow: hidden;
+	border-radius: var( --border-radius-base );
+	pointer-events: none;
+}
+
+.navigation-card__media-image {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	object-position: top center;
 }
 
 .navigation-card__stretched-link {
@@ -404,6 +555,11 @@ const hasBody = computed( () =>
 	pointer-events: none;
 }
 
+.navigation-card--has-media .navigation-card__body {
+	padding-block: var( --spacing-75 );
+	padding-inline: var( --spacing-75 );
+}
+
 .navigation-card__description :deep( a ),
 .navigation-card__supporting-text-link {
 	pointer-events: auto;
@@ -415,7 +571,8 @@ const hasBody = computed( () =>
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
-	gap: var( --spacing-25 );
+	/* No flex gap — description↔supporting-text min spacing is owned below. */
+	gap: 0;
 	inline-size: 100%;
 	min-inline-size: 0;
 	min-block-size: 0;
@@ -429,6 +586,11 @@ const hasBody = computed( () =>
 	min-inline-size: 0;
 }
 
+/* Codex spacing-25 between title block and description when both are present. */
+.navigation-card__intro + .navigation-card__description {
+	margin-block-start: var( --spacing-25 );
+}
+
 .navigation-card__top-icon {
 	display: inline-flex;
 	flex: 0 0 auto;
@@ -438,14 +600,26 @@ const hasBody = computed( () =>
 
 .navigation-card__title-row {
 	display: flex;
-	align-items: center;
+	/* Top-align leading icons with the first line of the title (wrap-safe). */
+	align-items: flex-start;
 	gap: var( --spacing-50 );
 	inline-size: 100%;
 	min-inline-size: 0;
 }
 
+/*
+ * Optical nudge: Codex medium icons sit slightly high vs bold title
+ * cap-height when top-aligned; 2px matches Figma landing persona cards.
+ */
+.navigation-card__title-icon--leading {
+	padding-block-start: 2px;
+}
+
 .navigation-card__title {
+	display: flex;
 	flex: 1 1 auto;
+	align-items: flex-start;
+	gap: var( --spacing-25 );
 	min-inline-size: 0;
 	/* Codex base (medium) size for all card copy. */
 	font-size: var( --font-size-medium );
@@ -453,6 +627,18 @@ const hasBody = computed( () =>
 	line-height: var( --line-height-medium );
 	color: var( --color-base );
 	overflow-wrap: anywhere;
+}
+
+/*
+ * Brand title logos: Codex medium icon size; inherit title `--color-base`
+ * (and dark-mode token overrides) via currentColor — not progressive link colour.
+ */
+.navigation-card__title-logo {
+	display: block;
+	inline-size: var( --size-icon-medium );
+	block-size: var( --size-icon-medium );
+	flex-shrink: 0;
+	color: inherit;
 }
 
 .navigation-card__title-icon {
@@ -483,8 +669,15 @@ const hasBody = computed( () =>
 }
 
 .navigation-card__supporting-text {
-	/* Absorb free vertical space so links share a baseline across equal-height cards. */
+	/*
+	 * Bottom-align in equal-height grids (`auto` absorbs free space). Codex
+	 * **minimum** `--spacing-50` (8px) from the description via padding so the
+	 * gap never collapses below 8px when free space is zero. Padding sits inside
+	 * the supporting-text box so it remains immediately above the link when
+	 * pinned to the card bottom.
+	 */
 	margin-block-start: auto;
+	padding-block-start: var( --spacing-50 );
 	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
@@ -496,16 +689,51 @@ const hasBody = computed( () =>
 	margin-block: 0;
 }
 
+/*
+ * Codex Link mixin (`.cdx-mixin-link-base()`) expressed with design tokens —
+ * https://doc.wikimedia.org/codex/latest/components/mixins/link.html
+ * Project CSS is plain CSS (no Less), so tokens mirror the mixin rather than
+ * importing `link.less`. External icon inherits link colour (Codex pattern).
+ */
 .navigation-card__supporting-text-link {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	color: var( --color-progressive );
-	text-decoration: none;
+	color: var( --color-link );
+	border-radius: var( --border-radius-base );
+	text-decoration: var( --text-decoration-none );
+}
+
+.navigation-card__supporting-text-link:visited {
+	color: var( --color-link--visited );
+}
+
+.navigation-card__supporting-text-link:visited:hover {
+	color: var( --color-link--visited--hover );
+}
+
+.navigation-card__supporting-text-link:visited:active {
+	color: var( --color-link--visited--active );
 }
 
 .navigation-card__supporting-text-link:hover {
-	text-decoration: underline;
+	color: var( --color-link--hover );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:active {
+	color: var( --color-link--active );
+	text-decoration: var( --text-decoration-underline );
+}
+
+.navigation-card__supporting-text-link:focus-visible {
+	outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+}
+
+@supports not selector( :focus-visible ) {
+	.navigation-card__supporting-text-link:focus {
+		outline: var( --border-style-base ) var( --border-width-thick ) var( --outline-color-progressive--focus );
+	}
 }
 
 .navigation-card__supporting-text-external-icon {
@@ -519,6 +747,34 @@ const hasBody = computed( () =>
 	align-items: center;
 	gap: var( --spacing-50 );
 	inline-size: 100%;
+	/* Pin chips under copy in equal-height grids (with or without supporting-text). */
+	margin-block-start: auto;
+}
+
+/*
+ * Landing Coolest Tool award chip — Codex purple100 background / purple600
+ * text+icon in light (`--fd-landing-award-chip-*-light` on `.fd-landing-page`).
+ * Dark invert is applied in `landing-page.css` via `*-dark` (same pattern as
+ * the hero globe). Codex sets `.cdx-info-chip__text` to `--color-base`;
+ * override that too.
+ */
+.navigation-card__chip--award.cdx-info-chip {
+	background-color: var( --fd-landing-award-chip-background-color-light, #e6e0f0 );
+	color: var( --fd-landing-award-chip-color-light, #7a6db7 );
+	border-color: transparent;
+}
+
+.navigation-card__chip--award.cdx-info-chip :deep( .cdx-info-chip__text ),
+.navigation-card__chip--award.cdx-info-chip :deep( .cdx-icon ) {
+	color: var( --fd-landing-award-chip-color-light, #7a6db7 );
+}
+
+/*
+ * Codex forces status icons on warning / error / success InfoChips and ignores
+ * a null `icon` prop for those statuses. Catalog chips are label-only (Figma).
+ */
+.navigation-card__chips :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
 }
 
 .navigation-card--is-link {
@@ -534,7 +790,12 @@ const hasBody = computed( () =>
 	box-shadow: inset 0 0 0 2px var( --box-shadow-color-progressive--focus, var( --color-progressive ) );
 }
 
-.navigation-card__stretched-link:focus {
+/*
+ * Suppress Codex Link focus outline on the invisible stretched hit target —
+ * the card surface shows focus via inset box-shadow above.
+ */
+.navigation-card__stretched-link:focus,
+.navigation-card__stretched-link:focus-visible {
 	outline: 1px solid transparent;
 }
 </style>

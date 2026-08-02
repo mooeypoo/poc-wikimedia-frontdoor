@@ -3,56 +3,75 @@ sidebar: false
 status: mockup
 ---
 
+:::landing-hero
 # Build with Wikimedia
 
-The infrastructure behind [Wikipedia](https://www.wikipedia.org/) and other [Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools, and bots. Explore live APIs, and connect with a global community of contributors.
+The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools and services. Explore live APIs, and connect with a global community of contributors.
 
-::app-button{href="/get-started" label="Get started"}
+::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}
+::
+:::
+
+::::landing-section
+## What would you like to do?
+
+:::navigation-card-grid
+::navigation-card{url="/get-started/build-for-communities" title="Build for Wikimedia communities" description="Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tool and bots using Wikimedia infrastructure." supporting-text="Learn about building tools →" leading-icon="userGroup"}
 ::
 
----
+::navigation-card{url="/get-started/data-for-research" title="Work with Wikimedia datasets for research" description="Power research and create visualizations using APIs and bulk downloads of Wikimedia projects' data." supporting-text="Learn about bulk data sources →" leading-icon="labFlask"}
+::
 
-## Build for Wikimedia communities
+::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
+::
+:::
+::::
 
-Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tools and bots using Wikimedia infrastructure.
+:::::landing-band{variant="apis"}
+## Build and learn with Wikimedia APIs
 
-[Learn about building tools →](/get-started/build-for-communities)
+::::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
+Query analytics, articles, media, page history, and more across languages. Send requests and inspect responses right in your browser.
 
-## Use Wikimedia content for commercial use cases
+### List of most viewed English Wikipedia articles
 
-Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched product experiences at scale.
-
-[Learn about Wikimedia Enterprise →](/get-started/wikimedia-enterprise)
-
-## Download Wikimedia datasets for research
-
-Power research apps and visualizations with bulk downloads of Wikimedia content and data. Learn about Wikimedia communities and the evolution of Wikimedia projects.
-
-[Learn about bulk data downloads →](/get-started/data-for-research)
-
----
-
-## Get human-curated knowledge from Wikimedia projects
-
-```sh
-# Get the featured image of the day from Wikimedia Commons
-curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
+:::code-block
+```bash
+curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
+  -H "accept: application/json"
 ```
+:::
+::::
+:::::
 
-[Image preview with attribution info]
+::::landing-band{variant="apps"}
+## Discover community-built apps
 
----
+Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
 
-## Contribute to Wikimedia open source
+:::navigation-card-grid
+::navigation-card{url="https://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
+::
 
-Help build the Wikimedia ecosystem with open source software.
+::navigation-card{url="https://paulina.toolforge.org/" title="Paulina" description="A global, multilingual search interface for works and authors in the public domain using Wikidata and Python." media="/images/landing/app-paulina.png" chips="award:Coolest Tool Award 2025" hide-external-icon}
+::
 
-[Start coding →](/contribute)
+::navigation-card{url="https://listen.hatnote.com/" title="Listen to Wikipedia" description="Multimedia visualizer which translates recent Wikipedia edits into a display of visuals and sounds." media="/images/landing/app-listen.png" chips="award:Coolest Tool Award 2020" hide-external-icon}
+::
+:::
 
----
+::landing-section-cta{href="https://toolhub.wikimedia.org/" label="Discover more apps on Toolhub"}
+::
+::::
 
-## Connect with the Wikimedia developer community
+::::landing-band{variant="join"}
+## Join the Wikimedia community
 
-Explore hackathons and events, and find opportunities for support and learning.
+:::navigation-card-grid{columns="2"}
+::navigation-card{url="/contribute" title="Contribute to Wikimedia open source" description="Help build the Wikimedia ecosystem with open source software." supporting-text="Start coding →" leading-icon="code"}
+::
 
-[Get involved →](/community)
+::navigation-card{url="/community" title="Connect with the Wikimedia developer community" description="Explore hackathons and events, and find opportunities for support and learning." supporting-text="Get involved →" leading-icon="userTalk"}
+::
+:::
+::::

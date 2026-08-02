@@ -3,7 +3,7 @@ import type { Plugin } from 'vite'
 
 /**
  * Vite plugin that redirects Scalar's `map-config-plugins` helper to the Front Door
- * implementation so ClientPlugin write warnings reach the Test Request modal.
+ * implementation (request hooks via ClientPlugin; write warnings use DOM injection).
  *
  * A `resolve.alias` alone is not always applied when `@scalar/api-reference` is
  * pre-bundled under `optimizeDeps`.
