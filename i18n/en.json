@@ -67,7 +67,6 @@
   "account-row-actions-menu-aria": "Actions for this token",
   "account-sign-out-button": "Log out",
   "account-token-secret-actions-aria": "Token visibility and copy",
-  "account-write-token-notice": "This token can't be used for write requests (like creating or editing pages). To test write endpoints in the API Explorer, switch to your personal token or enable the Developer portal authorization above as your default.",
   "api-catalog-filter-by-project-label": "Filter by project",
   "api-catalog-filter-empty": "No APIs match this project filter.",
   "api-catalog-filter-project-any": "Any",

@@ -67,7 +67,6 @@
   "account-row-actions-menu-aria": "Accessible name for the icon-only row actions MenuButton (ellipsis).",
   "account-sign-out-button": "Destructive button label to end the Meta OAuth session from the account dashboard.",
   "account-token-secret-actions-aria": "Accessible name for the grouped reveal and copy controls beside a masked token.",
-  "account-write-token-notice": "Notice inside an application API key card explaining that the token cannot be used for write requests in the API Explorer.",
   "api-catalog-filter-by-project-label": "Label for the API catalog project filter combobox (Figma: Filter by project).",
   "api-catalog-filter-empty": "Empty state when the API catalog project filter hides every card.",
   "api-catalog-filter-project-any": "API catalog project filter option: show all Wikimedia APIs cards.",

@@ -68,7 +68,6 @@ const {
 	developerJwtEmptyMessage,
 	oauthConsumersEmptyMessage,
 	resetTokenLabel,
-	writeTokenNotice,
 	signOutButtonLabel,
 	learnMoreOAuthLabel,
 	learnMoreOwnerOnlyLabel,
@@ -192,7 +191,6 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
-				:write-token-notice="writeTokenNotice"
 				@reset="openResetApplicationApiKeyDialog"
 			/>
 			<CdxMessage

@@ -67,7 +67,6 @@
   "account-row-actions-menu-aria": "Acciones para este token",
   "account-sign-out-button": "Cerrar sesion",
   "account-token-secret-actions-aria": "Visibilidad y copia del token",
-  "account-write-token-notice": "Este token no se puede usar para solicitudes de escritura (como crear o editar paginas). Para probar endpoints de escritura en el explorador de API, cambia a tu token personal o habilita la autorizacion del portal de desarrolladores como predeterminada.",
   "api-catalog-filter-by-project-label": "Filter by project",
   "api-catalog-filter-empty": "No APIs match this project filter.",
   "api-catalog-filter-project-any": "Any",

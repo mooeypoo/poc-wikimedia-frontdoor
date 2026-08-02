@@ -117,7 +117,6 @@ export function useAccountDashboardPage() {
 
 	const resetTokenLabel = computed( () => $bananaI18n( 'account-reset-token-button' ) )
 	const signOutButtonLabel = computed( () => $bananaI18n( 'account-sign-out-button' ) )
-	const writeTokenNotice = computed( () => $bananaI18n( 'account-write-token-notice' ) )
 
 	const learnMoreOAuthLabel = computed( () => $bananaI18n( 'account-learn-more-oauth-link' ) )
 	const learnMoreOwnerOnlyLabel = computed( () => $bananaI18n( 'account-learn-more-owner-only-link' ) )
@@ -151,7 +150,6 @@ export function useAccountDashboardPage() {
 		developerJwtEmptyMessage,
 		oauthConsumersEmptyMessage,
 		resetTokenLabel,
-		writeTokenNotice,
 		signOutButtonLabel,
 		learnMoreOAuthLabel,
 		learnMoreOwnerOnlyLabel,

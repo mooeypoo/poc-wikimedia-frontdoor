@@ -67,7 +67,6 @@
   "account-row-actions-menu-aria": "Actions pour ce jeton",
   "account-sign-out-button": "Se deconnecter",
   "account-token-secret-actions-aria": "Visibilite et copie du jeton",
-  "account-write-token-notice": "Ce jeton ne peut pas etre utilise pour des requetes d'ecriture (creation ou modification de pages). Pour tester des points de terminaison d'ecriture dans l'explorateur d'API, utilisez votre jeton personnel ou activez l'autorisation du portail developpeur comme valeur par defaut.",
   "api-catalog-filter-by-project-label": "Filter by project",
   "api-catalog-filter-empty": "No APIs match this project filter.",
   "api-catalog-filter-project-any": "Any",

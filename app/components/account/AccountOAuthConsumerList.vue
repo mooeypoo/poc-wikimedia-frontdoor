@@ -14,7 +14,6 @@ const properties = defineProps<{
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
@@ -37,7 +36,6 @@ const emit = defineEmits<{
 			:status-meta-prefix="properties.statusMetaPrefix"
 			:permissions-meta-prefix="properties.permissionsMetaPrefix"
 			:reset-button-label="properties.resetButtonLabel"
-			:write-token-notice="properties.writeTokenNotice"
 			@reset="emit( 'reset', $event )"
 		/>
 	</ul>

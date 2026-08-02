@@ -67,7 +67,6 @@
   "account-row-actions-menu-aria": "פעולות עבור אסימון זה",
   "account-sign-out-button": "יציאה",
   "account-token-secret-actions-aria": "הצגה והעתקה של אסימון",
-  "account-write-token-notice": "לא ניתן להשתמש באסימון זה לבקשות כתיבה (כגון יצירה או עריכה של דפים). כדי לבדוק נקודות קצה לכתיבה בסייר ה-API, עברו לאסימון האישי שלכם או הפעילו את הרשאת פורטל המפתחים כברירת מחדל.",
   "api-catalog-filter-by-project-label": "Filter by project",
   "api-catalog-filter-empty": "No APIs match this project filter.",
   "api-catalog-filter-project-any": "Any",
