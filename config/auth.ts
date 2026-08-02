@@ -23,6 +23,18 @@ export const PROTOTYPE_DEFAULT_WIKI_USERNAME = 'ExampleDeveloper'
 export const META_WIKI_BASE_URL = 'https://meta.wikimedia.org'
 
 /**
+ * Wikimedia account registration (SUL / auth wiki CreateAccount).
+ *
+ * Used on the logged-out `/account` gate as a mock outbound “Create an account”
+ * link. Front Door does not handle post-registration return or session handoff
+ * from this URL — users create an account externally, then use Log in on Front Door.
+ *
+ * @see https://auth.wikimedia.org/metawiki/wiki/Special:CreateAccount
+ */
+export const WIKIMEDIA_CREATE_ACCOUNT_URL =
+	'https://auth.wikimedia.org/metawiki/wiki/Special:CreateAccount'
+
+/**
  * Register a new OAuth 2.0 consumer on Wikimedia's Meta-Wiki (recommended for new applications).
  *
  * @see https://www.mediawiki.org/wiki/OAuth/For_Developers#Registration

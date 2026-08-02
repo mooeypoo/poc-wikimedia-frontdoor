@@ -23,6 +23,10 @@ const {
 	loggedOutPageTitle,
 	loggedOutDescription,
 	loginButtonLabel,
+	createAccountPrompt,
+	createAccountLinkLabel,
+	createAccountUrl,
+	createAccountLinkAriaLabel,
 	onAccountPageLogin,
 	initializeAccountDashboardPlaceholders,
 	resetPrototypeAccountSession,
@@ -100,6 +104,10 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 		:title="loggedOutPageTitle"
 		:description="loggedOutDescription"
 		:login-button-label="loginButtonLabel"
+		:create-account-prompt="createAccountPrompt"
+		:create-account-link-label="createAccountLinkLabel"
+		:create-account-url="createAccountUrl"
+		:create-account-link-aria-label="createAccountLinkAriaLabel"
 		@login="onAccountPageLogin"
 	/>
 

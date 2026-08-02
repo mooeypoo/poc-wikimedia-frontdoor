@@ -26,6 +26,8 @@
   "account-learn-more-about-before": "Learn more about ",
   "account-learn-more-oauth-link": "OAuth",
   "account-learn-more-owner-only-link": "personal API tokens",
+  "account-logged-out-create-account-link": "Create an account",
+  "account-logged-out-create-account-prompt": "Don't have a Wikimedia account yet?",
   "account-logged-out-description": "Log in with your Wikimedia account to create and manage API keys.",
   "account-logged-out-title": "User dashboard",
   "account-meta-grants": "Grants:",

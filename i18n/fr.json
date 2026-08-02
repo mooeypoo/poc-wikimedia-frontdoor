@@ -26,6 +26,8 @@
   "account-learn-more-about-before": "En savoir plus sur ",
   "account-learn-more-oauth-link": "OAuth pour les developpeurs",
   "account-learn-more-owner-only-link": "les consommateurs reserves au proprietaire (jetons personnels)",
+  "account-logged-out-create-account-link": "Creer un compte",
+  "account-logged-out-create-account-prompt": "Vous n'avez pas encore de compte Wikimedia ?",
   "account-logged-out-description": "Connectez-vous pour acceder a vos identifiants et gerer vos cles API.",
   "account-logged-out-title": "Tableau de bord utilisateur",
   "account-meta-grants": "Droits :",

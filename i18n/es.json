@@ -26,6 +26,8 @@
   "account-learn-more-about-before": "Mas informacion sobre ",
   "account-learn-more-oauth-link": "OAuth para desarrolladores",
   "account-learn-more-owner-only-link": "consumidores solo del propietario (tokens personales)",
+  "account-logged-out-create-account-link": "Crear una cuenta",
+  "account-logged-out-create-account-prompt": "¿Aun no tiene una cuenta de Wikimedia?",
   "account-logged-out-description": "Inicie sesion para acceder a sus credenciales y gestionar sus claves de API.",
   "account-logged-out-title": "Panel de usuario",
   "account-meta-grants": "Permisos:",

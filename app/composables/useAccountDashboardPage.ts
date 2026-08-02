@@ -1,3 +1,4 @@
+import { WIKIMEDIA_CREATE_ACCOUNT_URL } from '../../config/auth'
 import { useAccountResetApiKeyDialog } from './useAccountResetApiKeyDialog'
 import { useDeveloperTokenDashboard } from './useDeveloperTokenDashboard'
 import { useAccountPath } from './useAccountPath'
@@ -12,6 +13,8 @@ import { useShellAuthNavigation } from './useShellAuthNavigation'
  * Unauthenticated visits to `/account` show the logged-out gate (Figma 1001:18723).
  * Log in starts the same OAuth + PKCE flow as the header link, with `returnTo` set
  * to the locale-aware account path so users land back on the dashboard after auth.
+ * Create an account is a mock outbound link to Wikimedia CreateAccount
+ * (`WIKIMEDIA_CREATE_ACCOUNT_URL`) — no post-registration return handling.
  *
  * Composes {@link usePrototypeAuthSession} (placeholder key seeding when logged in),
  * {@link useDeveloperTokenDashboard}, and {@link useAccountResetApiKeyDialog}.
@@ -54,6 +57,17 @@ export function useAccountDashboardPage() {
 	const loggedOutPageTitle = computed( () => $bananaI18n( 'account-logged-out-title' ) )
 	const loggedOutDescription = computed( () => $bananaI18n( 'account-logged-out-description' ) )
 	const loginButtonLabel = computed( () => $bananaI18n( 'header-login-label' ) )
+	const createAccountPrompt = computed( () =>
+		$bananaI18n( 'account-logged-out-create-account-prompt' )
+	)
+	const createAccountLinkLabel = computed( () =>
+		$bananaI18n( 'account-logged-out-create-account-link' )
+	)
+	/** Mock outbound CreateAccount URL from `config/auth.ts` (no return handoff). */
+	const createAccountUrl = WIKIMEDIA_CREATE_ACCOUNT_URL
+	const createAccountLinkAriaLabel = computed( () =>
+		tokenDashboard.externalLinkAccessibleLabel( createAccountLinkLabel.value )
+	)
 
 	/**
 	 * Starts Meta OAuth + PKCE with return to the locale-aware `/account` path
@@ -126,6 +140,10 @@ export function useAccountDashboardPage() {
 		loggedOutPageTitle,
 		loggedOutDescription,
 		loginButtonLabel,
+		createAccountPrompt,
+		createAccountLinkLabel,
+		createAccountUrl,
+		createAccountLinkAriaLabel,
 		onAccountPageLogin,
 		initializeAccountDashboardPlaceholders,
 		resetPrototypeAccountSession: signOutFromAccountDashboard,

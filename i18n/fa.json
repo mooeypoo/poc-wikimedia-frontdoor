@@ -26,6 +26,8 @@
   "account-learn-more-about-before": "اطلاعات بیشتر درباره ",
   "account-learn-more-oauth-link": "OAuth برای توسعه‌دهندگان",
   "account-learn-more-owner-only-link": "مصرف‌کنندگان فقط-مالک (توکن‌های شخصی)",
+  "account-logged-out-create-account-link": "ایجاد حساب",
+  "account-logged-out-create-account-prompt": "هنوز حساب ویکی‌مدیا ندارید؟",
   "account-logged-out-description": "برای دسترسی به اعتبارنامه‌ها و مدیریت کلیدهای API وارد شوید.",
   "account-logged-out-title": "داشبورد کاربر",
   "account-meta-grants": "مجوزها:",

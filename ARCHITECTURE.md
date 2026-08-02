@@ -227,10 +227,11 @@ Unauthenticated visits to `/account` (including manually appending `/account` to
 | Title | banana `account-logged-out-title` — “User dashboard” |
 | Body | banana `account-logged-out-description` — prompt to log in for credentials / API keys |
 | Log in | Progressive primary `CdxButton`; starts the **same** Meta OAuth + PKCE flow as the header Log in link (`useShellAuthNavigation` / `useOAuthSession.login`), with `returnTo` = locale-aware account path (`useAccountPath`) so post-auth lands on the dashboard |
+| Create an account | Prompt banana `account-logged-out-create-account-prompt` + Codex Link (`--color-link*` mixin) label `account-logged-out-create-account-link` → `WIKIMEDIA_CREATE_ACCOUNT_URL` in `config/auth.ts` (`https://auth.wikimedia.org/metawiki/wiki/Special:CreateAccount`). Opens in a new tab. **Suppresses `:visited`** (keep unvisited / hover / active). **Mock outbound only** — Front Door does not handle post-registration return, session handoff, or closing that flow; users return and use Log in |
 | Footer | **Shell** `ShellSiteFooter` (not a page-local footer). **Logged-out gate only:** `AccountLoggedOutGate` grows (`min-block-size: 100%` / flex) so short gate content pins the footer to the viewport bottom. Logged-in dashboard is a **separate root** with Figma Content gaps (`--spacing-200` / section `--spacing-150`) — never shares the gate’s fill / `gap: 0` styles. `/account` is **`ssr: false`** so post-login handoff does not SSR the gate into the dashboard tree |
 | Access rule | Dashboard (placeholder key cards) only when `useOAuthSession().isLoggedIn` is true |
 
-UI: `AccountLoggedOutGate.vue`. Gate labels and `onAccountPageLogin` live in `useAccountDashboardPage`.
+UI: `AccountLoggedOutGate.vue`. Gate labels, Create an account URL, and `onAccountPageLogin` live in `useAccountDashboardPage`.
 
 #### Logged-in dashboard (Figma node `966:21207`)
 
