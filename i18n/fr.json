@@ -13,7 +13,6 @@
   "account-col-registered": "Enregistre",
   "account-col-token-name": "Nom",
   "account-copy-secret-aria": "Copier le jeton dans le presse-papiers",
-  "account-delete-token-button": "Supprimer",
   "account-developer-tokens-description": "Identifiants personnels pour les API communautaires de votre compte.",
   "account-developer-tokens-empty": "Aucune cle API personnelle pour ce compte.",
   "account-developer-tokens-heading": "Cles API personnelles",

@@ -4,7 +4,10 @@ import AccountTokenListItemLayout from './AccountTokenListItemLayout.vue'
 import type { AccountDeveloperTokenListItem } from '../../types/accountTokenList'
 
 /**
- * Personal API key list item — title, Reset/Delete, issued/status/permissions meta.
+ * Personal API key list item — title, Reset, issued/status/permissions meta.
+ *
+ * Delete is not shown: revoke/delete is not available until a Meta/backend
+ * integration lands (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
  */
 const properties = defineProps<{
 	item: AccountDeveloperTokenListItem
@@ -12,12 +15,10 @@ const properties = defineProps<{
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	deleteButtonLabel: string
 }>()
 
 const emit = defineEmits<{
 	reset: [ tokenId: string ]
-	delete: [ tokenId: string ]
 }>()
 
 /**
@@ -27,15 +28,6 @@ const emit = defineEmits<{
  */
 function onReset(): void {
 	emit( 'reset', properties.item.id )
-}
-
-/**
- * Emits delete for this personal API key.
- *
- * @returns Nothing.
- */
-function onDelete(): void {
-	emit( 'delete', properties.item.id )
 }
 </script>
 
@@ -53,13 +45,6 @@ function onDelete(): void {
 				@click="onReset"
 			>
 				{{ properties.resetButtonLabel }}
-			</CdxButton>
-			<CdxButton
-				action="destructive"
-				weight="quiet"
-				@click="onDelete"
-			>
-				{{ properties.deleteButtonLabel }}
 			</CdxButton>
 		</template>
 

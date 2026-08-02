@@ -13,7 +13,6 @@
   "account-col-registered": "Registrado",
   "account-col-token-name": "Nombre",
   "account-copy-secret-aria": "Copiar token al portapapeles",
-  "account-delete-token-button": "Eliminar",
   "account-developer-tokens-description": "Credenciales personales para las API comunitarias en tu cuenta.",
   "account-developer-tokens-empty": "No hay claves API personales en esta cuenta.",
   "account-developer-tokens-heading": "Claves API personales",

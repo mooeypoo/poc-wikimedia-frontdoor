@@ -37,15 +37,14 @@ import type {
  *   permissionsMetaPrefix: import('vue').ComputedRef<string>,
  *   clientIdLabel: import('vue').ComputedRef<string>,
  *   clientSecretLabel: import('vue').ComputedRef<string>,
- *   onDeleteDeveloperJwt: (tokenId: string) => void,
- *   onDeleteOAuthConsumer: (consumerId: string) => void,
  *   onConfirmResetDeveloperJwt: (tokenId: string) => import('../../config/tokenManagement').PrototypeDeveloperJwt | null,
  *   onConfirmResetOAuthConsumer: (consumerId: string) => import('../../config/tokenManagement').PrototypeOAuthConsumer | null,
  *   onRequestNewAuthenticationToken: () => void,
  *   externalLinkAccessibleLabel: (linkLabel: string) => string
  * }} Reactive lists, locale-aware in-app auth doc paths, Meta registration URLs,
- *   metadata labels, idle Delete handlers, request handlers, and confirm-reset
- *   regenerate handlers (used by {@link useAccountResetApiKeyDialog}).
+ *   metadata labels, request handlers, and confirm-reset regenerate handlers
+ *   (used by {@link useAccountResetApiKeyDialog}). Delete is not exposed in the UI
+ *   until a Meta/backend revoke integration lands.
  */
 export function useDeveloperTokenDashboard() {
 	const prototypeDeveloperTokensStore = usePrototypeDeveloperTokensStore()
@@ -110,30 +109,6 @@ export function useDeveloperTokenDashboard() {
 	)
 
 	/**
-	 * Idle Delete handler for personal API keys (prototype).
-	 *
-	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
-	 *
-	 * @param _tokenId - Token row id (unused while Delete is idle).
-	 * @returns Nothing.
-	 */
-	function onDeleteDeveloperJwt( _tokenId: string ): void {
-		// Prototype: Delete is intentionally idle.
-	}
-
-	/**
-	 * Idle Delete handler for application API keys (prototype).
-	 *
-	 * Clicking Delete does nothing for now — Meta-owned revoke/delete is not wired.
-	 *
-	 * @param _consumerId - Consumer row id (unused while Delete is idle).
-	 * @returns Nothing.
-	 */
-	function onDeleteOAuthConsumer( _consumerId: string ): void {
-		// Prototype: Delete is intentionally idle.
-	}
-
-	/**
 	 * Regenerates prototype credentials for a personal API key after dialog confirm.
 	 *
 	 * @param tokenId - Token row id.
@@ -179,8 +154,6 @@ export function useDeveloperTokenDashboard() {
 		clientIdLabel,
 		clientSecretLabel,
 		externalLinkAccessibleLabel,
-		onDeleteDeveloperJwt,
-		onDeleteOAuthConsumer,
 		onConfirmResetDeveloperJwt,
 		onConfirmResetOAuthConsumer,
 		onRequestNewAuthenticationToken

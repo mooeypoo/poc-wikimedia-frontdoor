@@ -116,7 +116,6 @@ export function useAccountDashboardPage() {
 	const oauthConsumersEmptyMessage = computed( () => $bananaI18n( 'account-oauth-tokens-empty' ) )
 
 	const resetTokenLabel = computed( () => $bananaI18n( 'account-reset-token-button' ) )
-	const deleteTokenLabel = computed( () => $bananaI18n( 'account-delete-token-button' ) )
 	const signOutButtonLabel = computed( () => $bananaI18n( 'account-sign-out-button' ) )
 	const writeTokenNotice = computed( () => $bananaI18n( 'account-write-token-notice' ) )
 
@@ -152,7 +151,6 @@ export function useAccountDashboardPage() {
 		developerJwtEmptyMessage,
 		oauthConsumersEmptyMessage,
 		resetTokenLabel,
-		deleteTokenLabel,
 		writeTokenNotice,
 		signOutButtonLabel,
 		learnMoreOAuthLabel,

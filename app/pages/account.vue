@@ -40,8 +40,6 @@ const {
 	permissionsMetaPrefix,
 	clientIdLabel,
 	clientSecretLabel,
-	onDeleteDeveloperJwt,
-	onDeleteOAuthConsumer,
 	onRequestNewAuthenticationToken,
 	isResetDialogOpen,
 	isResetDialogSuccessStep,
@@ -70,7 +68,6 @@ const {
 	developerJwtEmptyMessage,
 	oauthConsumersEmptyMessage,
 	resetTokenLabel,
-	deleteTokenLabel,
 	writeTokenNotice,
 	signOutButtonLabel,
 	learnMoreOAuthLabel,
@@ -152,9 +149,7 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
 				@reset="openResetPersonalApiKeyDialog"
-				@delete="onDeleteDeveloperJwt"
 			/>
 			<CdxMessage
 				v-else
@@ -197,10 +192,8 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 				:status-meta-prefix="statusMetaPrefix"
 				:permissions-meta-prefix="permissionsMetaPrefix"
 				:reset-button-label="resetTokenLabel"
-				:delete-button-label="deleteTokenLabel"
 				:write-token-notice="writeTokenNotice"
 				@reset="openResetApplicationApiKeyDialog"
-				@delete="onDeleteOAuthConsumer"
 			/>
 			<CdxMessage
 				v-else

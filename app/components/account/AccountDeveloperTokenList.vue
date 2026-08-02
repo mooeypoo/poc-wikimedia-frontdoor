@@ -12,12 +12,10 @@ const properties = defineProps<{
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	deleteButtonLabel: string
 }>()
 
 const emit = defineEmits<{
 	reset: [ tokenId: string ]
-	delete: [ tokenId: string ]
 }>()
 </script>
 
@@ -34,9 +32,7 @@ const emit = defineEmits<{
 			:status-meta-prefix="properties.statusMetaPrefix"
 			:permissions-meta-prefix="properties.permissionsMetaPrefix"
 			:reset-button-label="properties.resetButtonLabel"
-			:delete-button-label="properties.deleteButtonLabel"
 			@reset="emit( 'reset', $event )"
-			@delete="emit( 'delete', $event )"
 		/>
 	</ul>
 </template>

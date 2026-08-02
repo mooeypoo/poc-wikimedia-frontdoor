@@ -9,6 +9,9 @@ import type { AccountOAuthConsumerListItem } from '../../types/accountTokenList'
  * Card body stacks description / credentials / meta, then a write-token `CdxMessage`
  * with Codex **`--spacing-75`** (12px) between the content block and the message
  * (`.account-oauth-consumer-list-item__stack`).
+ *
+ * Delete is not shown: revoke/delete is not available until a Meta/backend
+ * integration lands (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
  */
 const properties = defineProps<{
 	item: AccountOAuthConsumerListItem
@@ -18,13 +21,11 @@ const properties = defineProps<{
 	statusMetaPrefix: string
 	permissionsMetaPrefix: string
 	resetButtonLabel: string
-	deleteButtonLabel: string
 	writeTokenNotice: string
 }>()
 
 const emit = defineEmits<{
 	reset: [ consumerId: string ]
-	delete: [ consumerId: string ]
 }>()
 
 /**
@@ -34,15 +35,6 @@ const emit = defineEmits<{
  */
 function onReset(): void {
 	emit( 'reset', properties.item.id )
-}
-
-/**
- * Emits delete for this application key.
- *
- * @returns Nothing.
- */
-function onDelete(): void {
-	emit( 'delete', properties.item.id )
 }
 </script>
 
@@ -60,13 +52,6 @@ function onDelete(): void {
 				@click="onReset"
 			>
 				{{ properties.resetButtonLabel }}
-			</CdxButton>
-			<CdxButton
-				action="destructive"
-				weight="quiet"
-				@click="onDelete"
-			>
-				{{ properties.deleteButtonLabel }}
 			</CdxButton>
 		</template>
 

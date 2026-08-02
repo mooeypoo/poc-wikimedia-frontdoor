@@ -13,7 +13,6 @@
   "account-col-registered": "Registered",
   "account-col-token-name": "Name",
   "account-copy-secret-aria": "Copy token to clipboard",
-  "account-delete-token-button": "Delete",
   "account-developer-tokens-description": "Personal API tokens let you authenticate API requests on behalf of your Wikimedia account.",
   "account-developer-tokens-empty": "You have no personal API keys listed for this account.",
   "account-developer-tokens-heading": "Personal API tokens",
