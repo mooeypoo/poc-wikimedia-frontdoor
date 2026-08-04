@@ -165,7 +165,7 @@ The cookie is set with `HttpOnly; Secure; SameSite=Lax`, `Path=/`, and a short m
 
 The access token returned from the exchange lives only in the `oauthSession` Pinia store.  It is **never** written to `localStorage`, and it is written to `sessionStorage` only for the duration of a single navigation as a handoff mechanism (see §10 Step B4).  This means:
 
-- A page reload loses the in-memory token.  On mount, the store has no token; the UI shows "logged out" until the user clicks login again.  For the prototype this is acceptable (resolves §8.6).  The sessionStorage handoff key is cleared on first read, so it never survives a subsequent reload.
+- A page reload drops the in-memory token, but on mount the session is restored from the HttpOnly refresh-token cookie and a fresh access token is minted (§8.6), so the UI returns to logged-in without user action.  The sessionStorage handoff key is still one-shot (cleared on first read); persistence across reloads comes from the refresh-token cookie, not from browser storage of the access token.
 - An XSS payload that can reach the Pinia store can exfiltrate the token.  Mitigation: keep the Front Door's XSS surface small, request only the `basic` scope, accept short-lived tokens.
 - We do not surface the token to any third-party domain.  Scalar consumes it via the `authentication` configuration prop — it stays in the same JS realm.
 
@@ -235,7 +235,7 @@ The badge uses Codex components for consistency with the rest of the shell.  It 
 
 ### 5.8 Where the session is mounted
 
-The `useOAuthSession` composable is called from [app/layouts/default.vue](/home/moriel/code/wikimedia/frontdoor/app/layouts/default.vue) so the Pinia store hydrates on every page (content pages and Explorer alike), and the header's "Log in" / "Log out as <user>" control reads from it.  Because the access token is in-memory only (§5.4), the store's initial state on every navigation that crosses the SSR / client-only boundary is "logged out" until the user logs in again — see §8.6.
+The `useOAuthSession` composable is called from [app/layouts/default.vue](/home/moriel/code/wikimedia/frontdoor/app/layouts/default.vue) so the Pinia store hydrates on every page (content pages and Explorer alike), and the header's "Log in" / "Log out as <user>" control reads from it.  The access token is in-memory only (§5.4), so the store starts empty on every boot that crosses the SSR / client-only boundary — but `oauth-handoff.client.ts` immediately restores the session from the refresh-token cookie on that boot (§8.6), so the user stays logged in across the boundary rather than reverting to "logged out."
 
 ### 5.9 Scalar's Authentication panel — hidden unconditionally
 
@@ -377,11 +377,13 @@ This is a prototype — a single OAuth consumer is acceptable and we register on
 
 ### 8.3 Resolved: minimise server-side surface
 
-Server-side state is kept to the bare minimum the browser cannot do itself:
+Server-side state is kept to the minimum the browser cannot do itself:
 
-- **One** server route for token exchange (CORS forces this).
-- **One** encrypted cookie via `h3.useSession` for the PKCE handshake (transient — cleared after callback).
-- **No** server-side storage of access tokens.  Tokens live in the Pinia store in browser memory only.
+- Server routes: token exchange (CORS forces this), plus session restore (`session.post.ts`) and logout (`logout.post.ts`) for the refresh-token flow added in §8.6.
+- **Two** encrypted cookies via `h3.useSession`: the transient PKCE handshake cookie (`oauth-pkce`, cleared after callback) and the login-lifetime refresh-token cookie (`oauth-session`, §8.6).
+- **No** server-side storage of *access* tokens.  Access tokens live in the Pinia store in browser memory only.  Only the **refresh** token is persisted, sealed inside the HttpOnly `oauth-session` cookie and never exposed to browser JS.
+
+The §8.6 refresh flow deliberately expands this footprint (two more routes, one more cookie) to fix a real UX bug — the session was lost whenever the app re-booted (reload, or entering the `ssr: false` `/account` route).  The refresh token, unlike the access token, is only ever handled server-side, so this does not widen the client's XSS-exposed surface (§8.4).
 
 ### 8.4 Resolved: Option B — token in browser memory, injected into Scalar via `authentication` config
 
@@ -401,13 +403,19 @@ A Meta-issued OAuth 2.0 bearer is *expected* to work against every SUL-linked wi
 
 **To verify (later, if needed):** small standalone script that takes a Meta-issued bearer and hits `/v1/page/` (or any read endpoint requiring auth) against each entry in [config/instances.ts](/home/moriel/code/wikimedia/frontdoor/config/instances.ts).  Add to `scripts/` if we hit issues.
 
-### 8.6 Resolved: in-memory token, no rehydration on reload
+### 8.6 Resolved: session survives reload via a refresh-token cookie
 
-A reload drops the access token; the user re-logs-in.  This is acceptable for the prototype.
+The access token still lives in browser memory only.  What now survives an app re-boot is the **refresh token**, sealed in the HttpOnly, encrypted `oauth-session` cookie; a fresh access token is minted from it on mount.
 
-The single-navigation `sessionStorage` handoff described in §5.4 and §10 Step B4 does not weaken this invariant: the handoff key is read-and-cleared by a client plugin on the destination page before its first render, so any subsequent reload finds no key and boots into the logged-out state.
+**Why this replaced the original "reload = logged out" design.**  The in-memory-only session was lost on any full app re-boot.  This surfaced as a bug: after logging in on a content page, clicking the header username to reach `/account` (which is `ssr: false`, so entering it re-boots into a fresh app context) dropped the session and rendered the logged-out gate.  The one-shot `sessionStorage` handoff (§5.4, §10 Step B4) is consumed on the *first* boot after OAuth, so it could not carry the session across that later boundary crossing.
 
-**Documented for future improvement:** storing a refresh token (HttpOnly, encrypted) in the session cookie and refreshing transparently on mount would let the session survive reloads without exposing the access token to JS storage.  Not implemented in this iteration because it expands server-side surface and contradicts §8.3's directive.
+**Mechanism (the improvement previously deferred here).**
+
+- `exchange.post.ts` captures the `refresh_token` from the token response and writes `{ refreshToken, username }` into the `oauth-session` cookie (`server/utils/oauthSession.ts`).
+- On every client boot, `app/plugins/oauth-handoff.client.ts` first tries the one-shot handoff (fast path, right after login); on any other boot it POSTs to `server/api/auth/oauth/session.post.ts`, which mints a fresh access token from the cookie's refresh token, **rotates** the refresh token back into the cookie (MediaWiki revokes the old one on use), and returns `{ accessToken, expiresAt, username }` for the in-memory store.  The plugin awaits this only on `/account` (its first paint branches on login state); elsewhere it restores in the background so hydration is not gated on a Meta round-trip.
+- `logout.post.ts` clears the cookie; `useOAuthSession.logout()` calls it so a later reload does not silently restore the session.
+
+**What this does and does not change to the security posture.**  The *access* token is still memory-only and never written to browser storage (§8.4 unchanged).  The *refresh* token is only ever handled server-side, sealed in the cookie, so it is not reachable by XSS.  The observable invariant changes from "any reload logs you out" to "the session persists for the cookie's lifetime (30 days) or until refresh fails / logout."  The trade-off (a longer-lived credential exists, held server-side) was accepted deliberately to fix the `/account` bug; see §8.3 for the expanded server footprint.
 
 ### 8.7 Resolved: `basic` scope only — flag what else might be needed
 
@@ -562,7 +570,7 @@ Generates a 32-byte random `code_verifier`, derives `code_challenge` (S256), gen
 
 #### Step B3 — `server/api/auth/oauth/exchange.post.ts`
 
-Accepts `{ code, state }` from the client.  Reads `{ verifier, state, returnTo }` from the `h3.useSession` cookie and verifies that the body `state` matches the cookie `state`.  POSTs to the Meta token endpoint with `grant_type=authorization_code`, the same `redirect_uri`, the `code_verifier` (from the cookie), and the `client_id`.  On success, fetches the profile.  Returns `{ accessToken, expiresAt, username, returnTo }` and clears the session cookie (`clearSession`) in the same response.  On any upstream failure: `createError({ statusCode, statusMessage })` — mirror the pattern in `discovery.get.ts`.
+Accepts `{ code, state }` from the client.  Reads `{ verifier, state, returnTo }` from the `h3.useSession` cookie and verifies that the body `state` matches the cookie `state`.  POSTs to the Meta token endpoint with `grant_type=authorization_code`, the same `redirect_uri`, the `code_verifier` (from the cookie), and the `client_id`.  On success, fetches the profile.  Clears the PKCE handshake cookie, and — when the token response carries a `refresh_token` — writes it plus the username into the persistent `oauth-session` cookie for the §8.6 restore flow.  Returns `{ accessToken, expiresAt, username, returnTo }`.  On any upstream failure: `createError({ statusCode, statusMessage })` — mirror the pattern in `discovery.get.ts`.
 
 **Verify:** A manual end-to-end run produces a token and a username.  A `state` mismatch returns `400`.  An invalid `code` returns the upstream's 4xx with a readable error.  The PKCE session cookie is cleared on the success response.
 
@@ -572,11 +580,11 @@ Vue page.  On mount: read `route.query.code` and `route.query.state`.  Call `POS
 
 This detour exists because `app/plugins/explorer-route-navigation.client.ts` forces a full document reload on any transition into or out of `/explorer` so Scalar's `ApiReference` can remount cleanly — a router-level transition either fights that reload (wiping the in-memory Pinia store) or bypasses it (breaking Scalar's mount with a `Cannot destructure property 'bum'` error).  The handoff hops the token across the reload.
 
-A companion client plugin, `app/plugins/oauth-handoff.client.ts`, runs on the destination page, reads the sessionStorage entry once, removes it, and calls `oauthSession.set(payload)`.  The token is in storage only during that one navigation; every reload after that clears it and the UI returns to logged-out (preserves §8.6).
+A companion client plugin, `app/plugins/oauth-handoff.client.ts`, runs on the destination page, reads the sessionStorage entry once, removes it, and calls `oauthSession.set(payload)`.  The token is in storage only during that one navigation.  On any *later* boot (a reload, or entering the `ssr: false` `/account` route) the handoff key is gone, so the plugin restores the session from the `oauth-session` refresh-token cookie instead (§8.6).
 
-The `code_verifier` is never read by the page — it lives only in the HttpOnly session cookie and is consumed server-side by the exchange route.  No client-side state-helper endpoint is needed.  `window.location.replace` (not `assign`) keeps the callback URL, with its single-use `code`, out of the browser history.
+The `code_verifier` is never read by the page — it lives only in the HttpOnly session cookie and is consumed server-side by the exchange route.  `window.location.replace` (not `assign`) keeps the callback URL, with its single-use `code`, out of the browser history.
 
-**Verify:** Land on `/oauth/callback?code=…&state=…` after a real authorize flow; arrive on `returnTo` logged in (header shows username, Scalar's Authentication panel carries the bearer token), no `bum` unmount errors in the console, and reloading `returnTo` returns to logged-out.
+**Verify:** Land on `/oauth/callback?code=…&state=…` after a real authorize flow; arrive on `returnTo` logged in (header shows username, Scalar's Authentication panel carries the bearer token), no `bum` unmount errors in the console.  Clicking the header username reaches the `/account` dashboard (not the logged-out gate), and reloading `returnTo` or `/account` stays logged in (§8.6); logging out then reloading does not silently restore the session.
 
 #### Step B5 — `stores/oauthSession.js`
 

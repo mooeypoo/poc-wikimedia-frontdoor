@@ -33,11 +33,16 @@ export function useOAuthSession() {
 	}
 
 	/**
-	 * Logs out by clearing the in-memory session. No server round trip is
-	 * needed — there is no server-side session state (ADR §8.3).
+	 * Logs out by clearing the in-memory session, then clears the persistent
+	 * refresh-token cookie server-side so a later reload does not silently
+	 * restore the session (ADR §8.6). The store is cleared immediately for a
+	 * snappy UI; the cookie clear is fire-and-forget.
 	 */
 	function logout(): void {
 		store.clear()
+		$fetch( '/api/auth/oauth/logout', { method: 'POST' } ).catch( () => {
+			// Best effort — the in-memory session is already gone.
+		} )
 	}
 
 	/**

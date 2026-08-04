@@ -67,7 +67,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
 │   │   ├── banana-i18n.js      # Registers banana-i18n globally; provides $i18n
-│   │   ├── oauth-handoff.client.ts  # Reads one-shot sessionStorage OAuth payload into Pinia
+│   │   ├── oauth-handoff.client.ts  # Hydrates OAuth session on boot: one-shot sessionStorage handoff, else refresh-token cookie
 │   │   └── explorer-route-navigation.client.ts  # Full reload across /explorer boundary
 │   ├── utils/
 │   │   ├── localeAwarePath.ts   # Locale-prefixed paths (account, content)
@@ -933,9 +933,13 @@ The flow:
 2. `useOAuthSession().login(returnTo)` navigates to `GET /api/auth/oauth/login?returnTo=…` (header defaults to the current route; account gate passes the locale-aware account path)
 3. Nitro stores PKCE verifier + state in an encrypted HttpOnly session cookie, then 302s to Meta’s authorize endpoint with `code_challenge`
 4. Meta redirects to `/oauth/callback?code=…&state=…` (Vue page — not a Nitro route)
-5. The page `POST`s to `/api/auth/oauth/exchange`; Nitro validates state, exchanges the code (PKCE verifier from the cookie), fetches the profile, and returns `{ username, accessToken, expiresAt, returnTo }`
+5. The page `POST`s to `/api/auth/oauth/exchange`; Nitro validates state, exchanges the code (PKCE verifier from the cookie), fetches the profile, writes the `refresh_token` into the persistent `oauth-session` cookie (see **Session persistence** below), and returns `{ username, accessToken, expiresAt, returnTo }`
 6. Callback stashes the payload in `sessionStorage` (`oauthHandoff`) and `window.location.replace(returnTo)`; `oauth-handoff.client.ts` hydrates `oauthSession` Pinia once and clears the handoff key
 7. `useOAuthSession()` / `useShellAuthNavigation()` expose session state to the shell: header shows **username only** as a progressive `NuxtLink` to locale-aware `/account` (`header-auth-link-aria` for the accessible name)
+
+**Session persistence (ADR §8.6).** The access token is in-memory only (Pinia), so every full app re-boot — a reload, or entering the `ssr: false` `/account`/`/explorer` routes — starts with an empty store. To keep the user logged in across those boots (the header username showing but `/account` rendering the logged-out gate was the symptom before this), the **refresh token** is sealed in the HttpOnly encrypted `oauth-session` cookie (`server/utils/oauthSession.ts`) and never exposed to browser JS:
+- On boot, `oauth-handoff.client.ts` uses the one-shot handoff right after login; on any other boot it `POST`s `/api/auth/oauth/session`, which mints a fresh access token from the cookie's refresh token, **rotates** the refresh token back into the cookie, and returns the in-memory payload. It awaits this only on `/account` (first paint branches on login state); elsewhere it restores in the background.
+- `useOAuthSession().logout()` clears the store and `POST`s `/api/auth/oauth/logout` to clear the cookie, so a later reload does not silently restore the session.
 
 Requires `NUXT_OAUTH_COOKIE_SECRET` and `NUXT_PUBLIC_OAUTH_CLIENT_ID`. Callback URL must match the consumer registration for the request origin (production: `https://wikifrodo.netlify.app/oauth/callback`; localhost only if registered separately). Deploy-preview hostnames are not registered — end-to-end login is verified on production or local, not arbitrary PR previews.
 
@@ -1502,6 +1506,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css`, `app/assets/css/shell-codex-overrides.css` (`fd-cdx-popover--arrow-seam-fix`, preferences body padding), `app/composables/useColorMode.ts`, `config/colorMode.ts`, `app/assets/css/color-modes.css` |
 | Header auth (Log in / username→account) | `app/composables/useShellAuthNavigation.ts`, `app/composables/useShellHeaderUtilityMenu.ts` (`SHELL_HEADER_UTILITY_MENU_VALUE`), `app/composables/useOAuthSession.ts`, `app/stores/oauthSession.js` |
 | OAuth PKCE flow | `server/api/auth/oauth/login.get.ts`, `server/api/auth/oauth/exchange.post.ts`, `app/pages/oauth/callback.vue`, `app/plugins/oauth-handoff.client.ts`, `app/utils/oauthHandoff.ts`, `docs/adr-wikimedia-oauth-authentication.md` |
+| OAuth session persistence (refresh-token cookie) | `server/utils/oauthSession.ts`, `server/api/auth/oauth/session.post.ts`, `server/api/auth/oauth/logout.post.ts`, `app/plugins/oauth-handoff.client.ts`, `app/composables/useOAuthSession.ts`, `docs/adr-wikimedia-oauth-authentication.md` §8.6 |
 | Account dashboard | `app/pages/account.vue`, `app/components/account/*` (incl. `AccountLoggedOutGate.vue`, `AccountTokenListItemLayout.vue`, `AccountOAuthConsumerListItem.vue`, `AccountResetApiKeyDialog.vue`, `AccountResetCredentialCopyButton.vue`), `app/composables/useAccountDashboardPage.ts`, `app/composables/useDeveloperTokenDashboard.ts`, `app/composables/useAccountResetApiKeyDialog.ts`, `app/composables/useCopyWithCopiedTooltip.ts`, `app/composables/usePrototypeAuthSession.ts`, `stores/prototypeDeveloperTokens.ts`, `config/tokenManagement.ts`, `config/auth.ts`, `config/explorerSurfaces.ts` / `app/assets/css/page-grid.css` (shared exploratory **4px** radius), `app/middleware/content-sidebar.global.ts` |
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `app/composables/useMainNavigationLinks.ts`, `app/composables/usePrimaryNavigationTab.ts` |
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
