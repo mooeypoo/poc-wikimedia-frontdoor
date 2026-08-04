@@ -76,6 +76,8 @@
   "api-catalog-filter-project-wikifunctions": "API catalog project filter option for Wikifunctions APIs.",
   "api-catalog-filter-project-wikipedia": "API catalog project filter option for Wikipedia (universal multi-project cards still show).",
   "app-title": "Application header brand text.",
+  "brand-prototype-chip-label": "Label for the warning InfoChip after the header brand lockup (Figma 1238:24310). Label-only — no status icon. Shown on all pages via ShellHeaderBrand.",
+  "brand-prototype-chip-tooltip": "Codex v-tooltip text on hover/focus of the header Prototype InfoChip. Two short sentences; keep brief.",
   "brand-wordmark-developer-portal": "Second line of the compact header wordmark (Developer Portal). Translate; keep similar visual weight to English.",
   "brand-wordmark-wikimedia": "Top line of the compact header wordmark (WIKIMEDIA).",
   "color-mode-auto-label": "Radio option label for following the operating system color scheme (System default) in the header settings preferences popover.",
