@@ -23,7 +23,7 @@ Wikimedia Enterprise offers reliable, high-volume access to Wikimedia data throu
 ::navigation-card{url="https://enterprise.wikimedia.com/docs/on-demand/" title="On-demand API" description="The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime." supporting-text="Read the docs" chips="notice:Multi-project|success:Stable"}
 ::
 
-::navigation-card{url="https://enterprise.wikimedia.com/api/structured-contents/" title="Structured contents" description="Extracts infoboxes, sections, tables, references, and more from raw wikitext and HTML and delivers them as structured, machine-readable JSON." supporting-text="Read the docs" chips="notice:Wikipedia|warning:Beta"}
+::navigation-card{url="https://enterprise.wikimedia.com/docs/realtime/#article-updates-streaming" title="Realtime API" description="Receive real-time event updates from all supported Wikimedia projects using a streaming endpoint, or via batch file endpoints that are generated hourly." supporting-text="Read the docs" chips="notice:Multi-project|success:Stable"}
 ::
 :::
 
