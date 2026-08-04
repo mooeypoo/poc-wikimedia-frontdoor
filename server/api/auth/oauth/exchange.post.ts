@@ -1,9 +1,7 @@
 import { createError, defineEventHandler, getRequestURL, readBody, useSession } from 'h3'
+import { OAUTH_TOKEN_URL, OAUTH_USER_AGENT, useOAuthPersistentSession } from '../../../utils/oauthSession'
 
-const OAUTH_TOKEN_URL = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token'
 const OAUTH_PROFILE_URL = 'https://meta.wikimedia.org/w/rest.php/oauth2/resource/profile'
-const OAUTH_USER_AGENT =
-	'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
 
 // Must match the session options in login.get.ts so the same cookie decrypts.
 const OAUTH_SESSION_NAME = 'oauth-pkce'
@@ -12,6 +10,7 @@ const OAUTH_SESSION_MAX_AGE_SECONDS = 300
 interface OAuthTokenResponse {
 	access_token: string
 	expires_in: number
+	refresh_token?: string
 }
 
 interface OAuthProfileResponse {
@@ -125,6 +124,19 @@ export default defineEventHandler( async ( event ) => {
 
 	// The handshake cookie is single-use: clear it once the exchange succeeds.
 	await session.clear()
+
+	// Persist the refresh token in a separate encrypted HttpOnly cookie so the
+	// session can be restored (a fresh access token minted) after a full reload
+	// or when entering the `ssr: false` /account route, without ever exposing a
+	// token to browser storage (ADR §8.6). The access token itself is returned
+	// only to the in-memory client store below.
+	if ( tokenResponse.refresh_token ) {
+		const persistentSession = await useOAuthPersistentSession( event, config.oauthCookieSecret )
+		await persistentSession.update( {
+			refreshToken: tokenResponse.refresh_token,
+			username: profileResponse.username
+		} )
+	}
 
 	return {
 		accessToken: tokenResponse.access_token,
