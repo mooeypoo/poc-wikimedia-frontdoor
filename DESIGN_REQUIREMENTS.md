@@ -76,13 +76,13 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 ### Brand logo
 
-**Decision:** The **header** shows a compact lockup: **32px** Wikimedia mark (inlined `WikimediaLogoMark` from [Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` so light/dark follow `--color-base`) plus a **two-line wordmark** via banana-i18n — `brand-wordmark-wikimedia` (top line) and **`brand-wordmark-developer-portal`** (bottom line, translatable per locale). Typography uses **Montserrat** (`--font-family-brand-wordmark`, loaded from `config/brandTypography.ts` / `nuxt.config.ts`). Links to the locale **home** through `ShellHeaderBrand.vue` (`aria-label` from `app-title`). The start column does not show a logo.
+**Decision:** The **header** shows a compact lockup: **32px** Wikimedia mark (inlined `WikimediaLogoMark` from [Commons Wikimedia-logo_black.svg](https://upload.wikimedia.org/wikipedia/commons/8/8b/Wikimedia-logo_black.svg) with `currentColor` so light/dark follow `--color-base`) plus a **two-line wordmark** via banana-i18n — `brand-wordmark-wikimedia` (top line) and **`brand-wordmark-developer-portal`** (bottom line, translatable per locale). After the lockup: Codex warning **`CdxInfoChip`** **Prototype** (`brand-prototype-chip-label`) — **label-only** (status icon hidden; same approved exception as catalog / explorer audience chips), **`--spacing-50` (8px)** horizontal gap from the wordmark (Figma [1238:24310](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1238-24310)). Chip is **outside** the home link (non-interactive). Hover/focus shows Codex **`v-tooltip`** (`brand-prototype-chip-tooltip`: “Test prototype. For internal use only”) on a host `<span>` around the chip. Typography uses **Montserrat** (`--font-family-brand-wordmark`, loaded from `config/brandTypography.ts` / `nuxt.config.ts`). Lockup links to the locale **home** through `ShellHeaderBrand.vue` (`aria-label` from `app-title`). The start column does not show a logo. Footer brand does **not** include the Prototype chip.
 
 **Focus / active chrome:** The brand `NuxtLink` has **no** `:focus` / `:focus-visible` / `:active` / router-active **outline** (quiet lockup). Accessible name remains via `aria-label`. Documented in `ARCHITECTURE.md` → Codex exceptions (shell chrome) #6 — do not reintroduce a focus ring without revisiting this decision.
 
 **Footer (separate):** **14px mark** + single-line wordmark from the same banana keys as the header (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in **Montserrat** — not the Figma **227×14px** horizontal lockup asset yet.
 
-**Source:** `app/components/shared/ShellHeaderBrand.vue`, `config/brandTypography.ts`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`).
+**Source:** `app/components/shared/ShellHeaderBrand.vue`, `config/brandTypography.ts`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`, `brand-prototype-chip-label`, `brand-prototype-chip-tooltip`).
 
 ### Start column section navigation
 
@@ -228,7 +228,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Change | Implementation | Disclaimer |
 |--------|----------------|------------|
 | v2 primary nav IA (Figma 284:11443) | `config/mainNavigation.ts`, `useMainNavigationLinks` | Use content and data, Tools and bots; Enterprise/About removed |
-| Header brand in utility row | `ShellHeaderBrand.vue`, `developer-portal-logo-mark.svg` | 32px mark + two-line banana wordmark; **Montserrat**; **no** focus/active outline |
+| Header brand in utility row | `ShellHeaderBrand.vue`, `developer-portal-logo-mark.svg` | 32px mark + two-line banana wordmark + label-only warning **Prototype** chip (`--spacing-50`); **Montserrat**; **no** focus/active outline on link |
 | APIs primary tab | `config/mainNavigation.ts` (`apis` / `nav-api` → `/apis`), `usePrimaryNavigationTab` | Selected on `/apis` (+ children) and `/explorer` (+ children); start-column heading on explorer remains **API Explorer** |
 | Legacy URL redirects | `config/contentRedirects.ts` → `nuxt.config` `routeRules` | `/learn`, `/about`, `/enterprise` → 301 |
 | Start column section nav | `ShellSidePanelNav`, `usePageSectionNav` | Panel always mounted; nav when sections exist; explorer **mode** links functional; **Tools and bots** empty |
@@ -264,7 +264,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 | Row | Contents |
 |-----|----------|
-| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **quiet** — opens color-theme preferences popover), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
+| **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`: mark + wordmark + label-only **Prototype** warning chip), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **quiet** — opens color-theme preferences popover), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account` |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/apis` (catalog); explorer keeps the tab selected |
 
 **Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid columns (`281px` start + fluid body).
@@ -848,6 +848,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |
 | *(uncommitted)* | Test Request modal shell fit | Pin Test Request into visible Scalar shell (scroll snap + absolute overlay); freeze reference only; keep page body scroll; no shell `overflow: hidden` |
 | *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |

@@ -76,6 +76,8 @@
   "api-catalog-filter-project-wikifunctions": "Wikifunctions",
   "api-catalog-filter-project-wikipedia": "Wikipedia",
   "app-title": "Portal de Desarrolladores de Wikimedia",
+  "brand-prototype-chip-label": "Prototipo",
+  "brand-prototype-chip-tooltip": "Prototipo de prueba. Solo para uso interno",
   "brand-wordmark-developer-portal": "PORTAL DE DESARROLLADORES",
   "brand-wordmark-wikimedia": "WIKIMEDIA",
   "color-mode-auto-label": "Predeterminado del sistema",
