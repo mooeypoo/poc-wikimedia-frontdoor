@@ -8,6 +8,7 @@
     "dev": "nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
+    "generate-module-source-of-truth": "node scripts/generate-module-source-of-truth.mjs",
     "generate": "nuxt generate",
     "generate:static": "nuxt generate",
     "preview": "nuxt preview",

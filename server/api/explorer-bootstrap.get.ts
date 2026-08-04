@@ -2,6 +2,8 @@ import { createError, defineEventHandler, getQuery } from 'h3'
 import { getWikiInstanceById } from '../../config/instances'
 import { resolveExplorerModuleRailHeading } from '../../app/utils/explorerModuleRailHeading'
 import { normalizeOpenApiModuleDescription } from '../../app/utils/explorerModuleDescription'
+import { normalizeDiscoveryModules } from '../../app/utils/normalizeDiscoveryModules'
+import type { DiscoveryResponse } from '../../app/utils/normalizeDiscoveryModules'
 
 const EXPLORER_BOOTSTRAP_USER_AGENT =
 	'frontdoor-dev-portal/0.1 (https://www.mediawiki.org/wiki/Front_Door_Developer_Portal)'
@@ -21,28 +23,6 @@ interface OpenApiDocument {
 		description?: string
 	}
 	paths?: Record<string, Record<string, OpenApiOperationObject>>
-}
-
-interface DiscoveryModule {
-	name: string
-	title?: string
-	version?: string
-	specUrl: string
-}
-
-interface DiscoveryModuleObjectShape {
-	moduleId?: string
-	version?: string
-	info?: {
-		title?: string
-		version?: string
-	}
-	spec?: string
-	specUrl?: string
-}
-
-interface DiscoveryResponse {
-	modules?: DiscoveryModule[] | Record<string, DiscoveryModuleObjectShape>
 }
 
 interface ExplorerModuleOperation {
@@ -230,123 +210,6 @@ export default defineEventHandler( async ( event ) => {
 
 	return payload
 } )
-
-/**
- * Resolves a discovery spec URL to an absolute URL.
- *
- * @param baseUrl - Base URL for the selected wiki instance.
- * @param specUrl - Spec URL from discovery payload.
- * @returns Absolute spec URL.
- */
-function normalizeSpecUrl( baseUrl: string, specUrl: string ): string {
-	try {
-		return new URL( specUrl, baseUrl ).toString()
-	} catch {
-		return specUrl
-	}
-}
-
-/**
- * Normalizes discovery modules from known array/object response shapes.
- *
- * @param discoveryModules - Discovery modules payload.
- * @param baseUrl - Base URL for the selected wiki instance.
- * @returns Normalized modules list.
- */
-function normalizeDiscoveryModules(
-	discoveryModules: DiscoveryResponse[ 'modules' ],
-	baseUrl: string
-): DiscoveryModule[] {
-	const isUsableVersion = ( version: unknown ): version is string => {
-		return typeof version === 'string' && version.trim() !== '' && version !== 'undefined'
-	}
-
-	if ( Array.isArray( discoveryModules ) ) {
-		return discoveryModules
-			.filter( ( rawModule ) => typeof rawModule.specUrl === 'string' )
-			.map( ( rawModule ) => {
-				const specUrl = normalizeSpecUrl( baseUrl, rawModule.specUrl )
-
-				return {
-					name: resolveDiscoveryModuleName( rawModule.name, specUrl ),
-					title: typeof rawModule.title === 'string' ? rawModule.title : undefined,
-					version: isUsableVersion( rawModule.version ) ? rawModule.version : undefined,
-					specUrl
-				}
-			} )
-	}
-
-	if ( discoveryModules && typeof discoveryModules === 'object' ) {
-		return Object.entries( discoveryModules )
-			.flatMap( ( [ moduleKey, moduleValue ] ) => {
-				const rawSpecUrl =
-					typeof moduleValue.spec === 'string'
-						? moduleValue.spec
-						: typeof moduleValue.specUrl === 'string'
-							? moduleValue.specUrl
-							: ''
-
-				if ( !rawSpecUrl ) {
-					return []
-				}
-
-				const specUrl = normalizeSpecUrl( baseUrl, rawSpecUrl )
-				const moduleName = resolveDiscoveryModuleName(
-					typeof moduleValue.moduleId === 'string' ? moduleValue.moduleId : moduleKey,
-					specUrl
-				)
-				const moduleVersion =
-					isUsableVersion( moduleValue.info?.version )
-						? moduleValue.info.version
-						: isUsableVersion( moduleValue.version )
-							? moduleValue.version
-							: undefined
-				const moduleTitle = typeof moduleValue.info?.title === 'string'
-					? moduleValue.info.title
-					: undefined
-
-				const normalizedModule: DiscoveryModule = {
-					name: moduleName,
-					specUrl
-				}
-
-				if ( moduleTitle ) {
-					normalizedModule.title = moduleTitle
-				}
-
-				if ( moduleVersion ) {
-					normalizedModule.version = moduleVersion
-				}
-
-				return [ normalizedModule ]
-			} )
-	}
-
-	return []
-}
-
-/**
- * Resolves a stable, non-empty module name for discovery entries.
- *
- * Core REST modules may expose an empty moduleId; in that case the name is
- * taken from the `/module/{id}` segment in the spec URL (for example `-`).
- *
- * @param rawModuleName - Module id or object key from discovery.
- * @param specUrl - Absolute OpenAPI spec URL for the module.
- * @returns Non-empty module name used for selection and module rail state.
- */
-function resolveDiscoveryModuleName( rawModuleName: string, specUrl: string ): string {
-	if ( typeof rawModuleName === 'string' && rawModuleName.trim() !== '' ) {
-		return rawModuleName.trim()
-	}
-
-	const modulePathMatch = specUrl.match( /\/module\/([^/?#]+)/ )
-	if ( modulePathMatch?.[ 1 ] ) {
-		return modulePathMatch[ 1 ]
-	}
-
-	return 'unknown-module'
-}
 
 /**
  * Formats the module label shown by the explorer interface.

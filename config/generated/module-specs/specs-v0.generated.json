@@ -1,0 +1,390 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "mediawikiwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "mediawikiwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "mediawikiwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"externalDocs": {
+		"description": "API documentation",
+		"url": "https://www.mediawiki.org/wiki/API:REST_API"
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "Self-documentation module providing discovery, specs, and schemas for all available modules.",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "Specs API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/discovery": {
+			"get": {
+				"operationId": "getDiscovery",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$id": "https://www.mediawiki.org/schema/discovery-1.0",
+									"$schema": "http://json-schema.org/draft-06/schema#",
+									"definitions": {
+										"Info": {
+											"description": "Information about the wiki site that offers the API",
+											"properties": {
+												"contact": {
+													"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28#/definitions/Contact"
+												},
+												"license": {
+													"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28#/definitions/License"
+												},
+												"mediawiki": {
+													"description": "The version of the MediaWiki software serving the document",
+													"type": "string"
+												},
+												"title": {
+													"description": "The name of the wiki",
+													"type": "string"
+												}
+											},
+											"required": [
+												"title",
+												"mediawiki"
+											],
+											"type": "object"
+										},
+										"Module": {
+											"description": "Information about a given REST module available of the wiki. Corresponds to the https://www.mediawiki.org/schema/mwapi-1.0 schema.",
+											"properties": {
+												"base": {
+													"description": "The base path of the module, to be appended to the server URL. This may or may not be a functioning endpoint, as defined by the module's specification.",
+													"type": "string"
+												},
+												"info": {
+													"$ref": "#/definitions/ModuleInfo"
+												},
+												"spec": {
+													"description": "URL of the module's OpenAPI specification. The version of OpenAPI used may vary.",
+													"type": "string"
+												}
+											},
+											"required": [
+												"info",
+												"base",
+												"spec"
+											],
+											"title": "REST API Module",
+											"type": "object"
+										},
+										"ModuleInfo": {
+											"$ref": "https://www.mediawiki.org/schema/mwapi-1.0#/definitions/Info"
+										}
+									},
+									"description": "Discovery documents provide all information needed to locate and access REST APIs on a given wiki.",
+									"properties": {
+										"info": {
+											"$ref": "#/definitions/Info"
+										},
+										"modules": {
+											"additionalProperties": {
+												"$ref": "#/definitions/Module"
+											},
+											"description": "Information about the API modules available for interacting with the wiki. Depends on the extensions installed on the wiki, and may further vary with the wiki's version and configuration.",
+											"minProperties": 1,
+											"type": "object"
+										},
+										"mw-discovery": {
+											"description": "The version of the MediaWiki discovery schema used by the discovery document.",
+											"type": "string"
+										},
+										"servers": {
+											"description": "A list of servers that can be used to access the APIs.",
+											"items": {
+												"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28#/definitions/Server"
+											},
+											"minItems": 1,
+											"type": "array"
+										}
+									},
+									"required": [
+										"info",
+										"servers",
+										"modules"
+									],
+									"title": "MediaWiki REST API discovery document",
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"tags": [
+					"Discovery"
+				]
+			}
+		},
+		"/module/{module}": {
+			"get": {
+				"operationId": "getModuleByModule",
+				"parameters": [
+					{
+						"description": "Module spec module",
+						"in": "path",
+						"name": "module",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"tags": [
+					"Modules"
+				]
+			}
+		},
+		"/module/{module}/{version}": {
+			"get": {
+				"operationId": "getModuleByModuleByVersion",
+				"parameters": [
+					{
+						"description": "Module spec module",
+						"in": "path",
+						"name": "module",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Module spec version",
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"tags": [
+					"Modules"
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://www.mediawiki.org/w/rest.php/specs/v0"
+		}
+	],
+	"tags": [
+		{
+			"description": "REST API discovery and specification endpoints",
+			"name": "Discovery"
+		},
+		{
+			"description": "REST API module specification endpoints",
+			"name": "Modules"
+		}
+	]
+}

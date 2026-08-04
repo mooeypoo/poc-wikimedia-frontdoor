@@ -1,0 +1,1391 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "mediawikiwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "mediawikiwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "mediawikiwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "ReadingLists REST API",
+		"version": "0.1.1"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/lists": {
+			"get": {
+				"operationId": "getLists",
+				"parameters": [
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"description": "sort parameter",
+						"in": "query",
+						"name": "sort",
+						"required": false,
+						"schema": {
+							"default": "name",
+							"enum": [
+								"name",
+								"updated"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "dir parameter",
+						"in": "query",
+						"name": "dir",
+						"required": false,
+						"schema": {
+							"default": "ascending",
+							"enum": [
+								"ascending",
+								"descending"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"operationId": "postLists",
+				"parameters": [
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"description": "missing_example",
+								"name": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"description": {
+										"default": "",
+										"description": "description parameter",
+										"type": "string"
+									},
+									"name": {
+										"description": "name parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/": {
+			"get": {
+				"operationId": "getLists2",
+				"parameters": [
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"description": "sort parameter",
+						"in": "query",
+						"name": "sort",
+						"required": false,
+						"schema": {
+							"default": "name",
+							"enum": [
+								"name",
+								"updated"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "dir parameter",
+						"in": "query",
+						"name": "dir",
+						"required": false,
+						"schema": {
+							"default": "ascending",
+							"enum": [
+								"ascending",
+								"descending"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"operationId": "postLists2",
+				"parameters": [
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"description": "missing_example",
+								"name": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"description": {
+										"default": "",
+										"description": "description parameter",
+										"type": "string"
+									},
+									"name": {
+										"description": "name parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/{id}": {
+			"delete": {
+				"operationId": "deleteListsById",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"get": {
+				"operationId": "getListsById",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"put": {
+				"operationId": "putListsById",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"description": "missing_example",
+								"name": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"description": {
+										"description": "description parameter",
+										"type": "string"
+									},
+									"name": {
+										"description": "name parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/{id}/entries": {
+			"get": {
+				"operationId": "getListsByIdEntries",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "sort parameter",
+						"in": "query",
+						"name": "sort",
+						"required": false,
+						"schema": {
+							"default": "name",
+							"enum": [
+								"name",
+								"updated"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "dir parameter",
+						"in": "query",
+						"name": "dir",
+						"required": false,
+						"schema": {
+							"default": "ascending",
+							"enum": [
+								"ascending",
+								"descending"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"operationId": "postListsByIdEntries",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"project": "missing_example",
+								"title": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"project": {
+										"description": "project parameter",
+										"type": "string"
+									},
+									"title": {
+										"description": "title parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"project",
+									"title"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/{id}/entries/": {
+			"get": {
+				"operationId": "getListsByIdEntries2",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "sort parameter",
+						"in": "query",
+						"name": "sort",
+						"required": false,
+						"schema": {
+							"default": "name",
+							"enum": [
+								"name",
+								"updated"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "dir parameter",
+						"in": "query",
+						"name": "dir",
+						"required": false,
+						"schema": {
+							"default": "ascending",
+							"enum": [
+								"ascending",
+								"descending"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"operationId": "postListsByIdEntries2",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"project": "missing_example",
+								"title": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"project": {
+										"description": "project parameter",
+										"type": "string"
+									},
+									"title": {
+										"description": "title parameter",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"project",
+									"title"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/{id}/entries/{entry_id}": {
+			"delete": {
+				"operationId": "deleteListsByIdEntriesByEntry_id",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "entry_id parameter",
+						"in": "path",
+						"name": "entry_id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/{id}/entries/batch": {
+			"post": {
+				"operationId": "postListsByIdEntriesBatch",
+				"parameters": [
+					{
+						"description": "id parameter",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"batch": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"batch": {
+										"description": "batch parameter",
+										"type": "object"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"batch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/batch": {
+			"post": {
+				"operationId": "postListsBatch",
+				"parameters": [
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"batch": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"batch": {
+										"description": "batch parameter",
+										"type": "object"
+									},
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"required": [
+									"batch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/changes/since/{date}": {
+			"get": {
+				"operationId": "getListsChangesSinceByDate",
+				"parameters": [
+					{
+						"description": "date parameter",
+						"in": "path",
+						"name": "date",
+						"required": true,
+						"schema": {
+							"format": "mw-timestamp",
+							"type": "string"
+						}
+					},
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"description": "sort parameter",
+						"in": "query",
+						"name": "sort",
+						"required": false,
+						"schema": {
+							"default": "updated",
+							"enum": [
+								"updated"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "dir parameter",
+						"in": "query",
+						"name": "dir",
+						"required": false,
+						"schema": {
+							"default": "ascending",
+							"enum": [
+								"ascending",
+								"descending"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/pages/{project}/{title}": {
+			"get": {
+				"operationId": "getListsPagesByProjectByTitle",
+				"parameters": [
+					{
+						"description": "project parameter",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "title parameter",
+						"in": "path",
+						"name": "title",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "next parameter",
+						"in": "query",
+						"name": "next",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/setup": {
+			"post": {
+				"operationId": "postListsSetup",
+				"parameters": [
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/lists/teardown": {
+			"post": {
+				"operationId": "postListsTeardown",
+				"parameters": [
+					{
+						"description": "csrf_token parameter",
+						"in": "query",
+						"name": "csrf_token",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "token parameter",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://www.mediawiki.org/w/rest.php/readinglists/v0"
+		}
+	]
+}

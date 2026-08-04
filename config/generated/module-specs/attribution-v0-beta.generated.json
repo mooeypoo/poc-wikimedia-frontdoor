@@ -1,0 +1,689 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "mediawikiwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "mediawikiwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "mediawikiwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"externalDocs": {
+		"description": "API documentation",
+		"url": "https://www.mediawiki.org/wiki/API:REST_API"
+	},
+	"info": {
+		"contact": {
+			"name": "MediaWiki Interfaces Team",
+			"url": "https://www.mediawiki.org/wiki/Talk:Attribution_API"
+		},
+		"description": "The Attribution API provides well-structured attribution data for content across Wikimedia projects. For more information about the Attribution API, see the [docs on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Attribution_API). For more information about attribution guidelines, expectations, and style guides when reusing Wikimedia content, see the [Attribution Framework](https://wikimedia-attribution.toolforge.org/attribution-signals/overview.html).\n\nHave questions or comments about this API? Help shape the experience and functionality while during the beta period by [joining the discussion](https://www.mediawiki.org/wiki/Talk:Attribution_API).",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use#12._API_Terms",
+		"title": "Attribution API (Beta)",
+		"version": "0.1.0-beta"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/pages/{title}/signals": {
+			"get": {
+				"description": "Attribution signals are the individual elements that keep Wikimedia projects visible when their content is surfaced in external contexts. Signals provide direct acknowledgment and access to sources, and present additional information that helps end users evaluate and engage with the knowledge they encounter.\n\nAttribution signals may be pulled for any Wikimedia content page, but are most applicable to articles and media files. Not all information will be returned for every type of page; for example, the credit is only returned on media files. To differentiate page type differences from missing data, only fields applicable to the given page type are included in the response, and `null` values are used in cases where data is expected but unavailable.",
+				"operationId": "getGetAttributionInformationForAPage",
+				"parameters": [
+					{
+						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"in": "path",
+						"name": "title",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"in": "query",
+						"name": "redirect",
+						"required": false,
+						"schema": {
+							"default": true,
+							"type": "boolean"
+						}
+					},
+					{
+						"description": "Allows the caller to include additional types of signals in the response, following the [Attribution Framework](https://wikimedia-attribution.toolforge.org/) categories. By default, only `Essential` signals are returned. Additional categories can be specified as a comma-separated list. Available values: `trust_and_relevance`, `calls_to_action`.",
+						"in": "query",
+						"name": "expand",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Attribution information for a page.",
+									"properties": {
+										"calls_to_action": {
+											"description": "Calls to action",
+											"properties": {
+												"donation_ctas": {
+													"description": "Calls to action for donation",
+													"properties": {
+														"default": {
+															"description": "Default call to action for donation",
+															"properties": {
+																"description": {
+																	"example": "Wikipedia is the backbone of the internet's knowledge.",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Donate to Wikipedia",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://donate.wikimedia.org/",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														},
+														"foundation": {
+															"description": "Call to action for donation to the Wikimedia Foundation",
+															"properties": {
+																"description": {
+																	"example": "Wikimedia Foundation hosts the technology infrastructure that makes possible billions of visits to Wikipedia on a monthly basis.",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Support the Wikimedia Foundation",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://donate.wikimedia.org/",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														},
+														"special": {
+															"description": "Call to action for donation for a special campaign",
+															"properties": {
+																"description": {
+																	"example": "After 25 year, Wikipedia is still here.",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Celebrate 25 years of free knowledge",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://donate.wikipedia25.org/",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														}
+													},
+													"type": "object"
+												},
+												"participation_ctas": {
+													"description": "Calls to action for participation. The URL value includes a Wikimedia-specific provenance parameter (`wprov`). This helps Wikimedia evaluate whether participation calls to action are effective, without changing the destination page or attribution data. We recommend keeping the parameter when possible.",
+													"properties": {
+														"create_account": {
+															"properties": {
+																"description": {
+																	"example": "Create a free account and get more out of Wikipedia!",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Create a Wikipedia account",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://auth.wikimedia.org/enwiki/wiki/Special:CreateAccount",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														},
+														"download_app": {
+															"properties": {
+																"description": {
+																	"example": "Download the free Wikipedia app for the best way to explore knowledge on the go.",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Download the Wikipedia app",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://play.google.com/store/apps/details?id=org.wikipedia",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														},
+														"learn_more": {
+															"properties": {
+																"description": {
+																	"example": "Wikipedia is a free encyclopedia, written collaboratively by the people who use it.",
+																	"type": "string"
+																},
+																"link_text": {
+																	"example": "Learn more about Wikipedia",
+																	"type": "string"
+																},
+																"url": {
+																	"example": "https://en.wikipedia.org/wiki/Help:Introduction_to_Wikipedia",
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"required": [
+												"donation_ctas",
+												"participation_ctas"
+											],
+											"type": "object"
+										},
+										"essential": {
+											"description": "Essential attribution signals",
+											"properties": {
+												"credit": {
+													"description": "Artist or author of the file",
+													"example": "Anass ERRIHANI",
+													"nullable": true,
+													"type": "string"
+												},
+												"default_brand_marks": {
+													"description": "Icons and logos for the wiki",
+													"items": {
+														"properties": {
+															"name": {
+																"description": "Brand mark name",
+																"example": "Default logo",
+																"type": "string"
+															},
+															"type": {
+																"description": "Type of brand mark, such as `icon`, `logo`, or `audio`",
+																"example": "logo",
+																"type": "string"
+															},
+															"url": {
+																"description": "URL to download the brand mark",
+																"example": "https://commons.wikimedia.org/static/images/project-logos/commonswiki.png",
+																"type": "string"
+															}
+														},
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"license": {
+													"description": "Content license",
+													"properties": {
+														"title": {
+															"description": "License name",
+															"example": "CC BY-SA 4.0",
+															"nullable": true,
+															"type": "string"
+														},
+														"url": {
+															"description": "Link to license details",
+															"example": "https://creativecommons.org/licenses/by-sa/4.0",
+															"nullable": true,
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"link": {
+													"description": "Page URL. The URL value includes a Wikimedia-specific provenance parameter (`wprov`). This helps Wikimedia evaluate whether participation calls to action are effective, without changing the destination page or attribution data. We recommend keeping the parameter when possible.",
+													"example": "https://commons.wikimedia.org/wiki/File:Fennec_Fox_Peek.jpg",
+													"type": "string"
+												},
+												"source_wiki": {
+													"description": "Details about the wiki",
+													"properties": {
+														"page_language": {
+															"description": "Content language of the page, formatted as a language code",
+															"example": "en",
+															"type": "string"
+														},
+														"project_family": {
+															"description": "Type of wiki, such as `wikipedia` or `wiktionary`",
+															"example": "wikipedia",
+															"type": "string"
+														},
+														"site_id": {
+															"description": "Wiki identifier",
+															"example": "commonswiki",
+															"type": "string"
+														},
+														"site_language": {
+															"description": "Content language of the wiki, formatted as a language code",
+															"example": "en",
+															"type": "string"
+														},
+														"site_name": {
+															"description": "Localized wiki name",
+															"example": "Wikimedia Commons",
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"title": {
+													"description": "Page title",
+													"example": "File:Fennec Fox Peek.jpg",
+													"type": "string"
+												}
+											},
+											"required": [
+												"title",
+												"license",
+												"link",
+												"default_brand_marks",
+												"source_wiki"
+											],
+											"type": "object"
+										},
+										"trust_and_relevance": {
+											"description": "Trust and relevance signals",
+											"properties": {
+												"contributor_counts": {
+													"description": "Number of contributors",
+													"example": 142,
+													"nullable": true,
+													"type": "number"
+												},
+												"last_updated": {
+													"description": "Timestamp of the latest update in ISO 8601 format",
+													"example": "2026-02-08T14:50:07Z",
+													"type": "string"
+												},
+												"page_views": {
+													"description": "Number of page views in the last 30 days",
+													"example": 3658,
+													"nullable": true,
+													"type": "number"
+												},
+												"reference_count": {
+													"description": "Number of references cited. This property is omitted for file pages and may be `null` if the count cannot be determined.",
+													"example": 308,
+													"nullable": true,
+													"type": "integer"
+												},
+												"trending": {
+													"description": "Trending indicators show when Wikipedia articles experienced a higher volume of page views, edits or both. Trending activity often correlates with current events.",
+													"properties": {
+														"relative": {
+															"description": "Indicates the page is currently outperforming its average read and edit rates.",
+															"properties": {
+																"edited": {
+																	"description": "The page currently has a higher rate of edits being submitted than its average.",
+																	"example": false,
+																	"type": "boolean"
+																},
+																"read": {
+																	"description": "The page is currently exceeding its average read rate.",
+																	"example": false,
+																	"type": "boolean"
+																},
+																"read_and_edited": {
+																	"description": "The page currently has more read and edit activity than its average performance.",
+																	"example": false,
+																	"type": "boolean"
+																}
+															},
+															"required": [
+																"read",
+																"edited",
+																"read_and_edited"
+															],
+															"type": "object"
+														},
+														"top": {
+															"description": "Indicates whether a Wikipedia article ranked among the project’s most read, most edited, or both over the last 24 hours",
+															"properties": {
+																"edited": {
+																	"description": "The page is currently in the top 100 edited pages for the wiki project, based on number of edits.",
+																	"example": false,
+																	"type": "boolean"
+																},
+																"read": {
+																	"description": "The page is currently in the top 1000 read pages for the wiki project.",
+																	"example": false,
+																	"type": "boolean"
+																},
+																"read_and_edited": {
+																	"description": "The page is currently in the top 1000 read and top 100 edited pages for the wiki project.",
+																	"example": false,
+																	"type": "boolean"
+																}
+															},
+															"required": [
+																"read",
+																"edited",
+																"read_and_edited"
+															],
+															"type": "object"
+														}
+													},
+													"required": [
+														"top",
+														"relative"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"last_updated"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"essential"
+									]
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get attribution information for a page."
+			}
+		},
+		"/site/signals": {
+			"get": {
+				"description": "Attribution signals are the individual elements that keep Wikimedia projects visible when their content is surfaced in external contexts. Signals provide direct acknowledgment and access to sources, and present additional information that helps end users evaluate and engage with the knowledge they encounter.\n\nSite attribution signals may be pulled for any Wikimedia site or project.",
+				"operationId": "getGetAttributionInformationForASite",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Attribution information for a site.",
+									"properties": {
+										"essential": {
+											"description": "Essential attribution signals",
+											"properties": {
+												"default_brand_marks": {
+													"description": "Icons and logos for the wiki",
+													"items": {
+														"properties": {
+															"name": {
+																"description": "Brand mark name",
+																"type": "string"
+															},
+															"type": {
+																"description": "Type of brand mark, such as `icon`, `logo`, or `audio`",
+																"type": "string"
+															},
+															"url": {
+																"description": "URL to download the brand mark",
+																"type": "string"
+															}
+														},
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"license": {
+													"description": "Content license",
+													"properties": {
+														"title": {
+															"description": "License name",
+															"nullable": true,
+															"type": "string"
+														},
+														"url": {
+															"description": "Link to license details",
+															"nullable": true,
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"link": {
+													"description": "Page URL. The URL value includes a Wikimedia-specific provenance parameter (`wprov`). This helps Wikimedia evaluate whether participation calls to action are effective, without changing the destination page or attribution data. We recommend keeping the parameter when possible.",
+													"type": "string"
+												},
+												"source_wiki": {
+													"description": "Details about the wiki",
+													"properties": {
+														"project_family": {
+															"description": "Type of wiki, such as `wikipedia` or `wiktionary`",
+															"type": "string"
+														},
+														"site_id": {
+															"description": "Wiki identifier",
+															"type": "string"
+														},
+														"site_language": {
+															"description": "Content language of the wiki, formatted as a language code",
+															"type": "string"
+														},
+														"site_name": {
+															"description": "Localized wiki name",
+															"type": "string"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"required": [
+												"license",
+												"link",
+												"default_brand_marks",
+												"source_wiki"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"essential"
+									],
+									"x-examples": {
+										"enwikisource": {
+											"summary": "English Wikipedia",
+											"value": {
+												"essential": {
+													"default_brand_marks": [
+														{
+															"name": "Wikipedia",
+															"type": "wordmark",
+															"url": "https://en.wikipedia.org/"
+														}
+													],
+													"license": {
+														"title": "CC BY-SA 4.0",
+														"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+													},
+													"link": "https://en.wikipedia.org?wprov=afsw1",
+													"source_wiki": {
+														"project_family": "wikipedia",
+														"site_id": "enwiki",
+														"site_language": "en",
+														"site_name": "Wikipedia"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get attribution information for a site."
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://www.mediawiki.org/w/rest.php/attribution/v0-beta"
+		}
+	]
+}

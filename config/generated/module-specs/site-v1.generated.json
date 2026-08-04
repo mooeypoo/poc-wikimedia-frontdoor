@@ -1,0 +1,363 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "mediawikiwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "mediawikiwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "mediawikiwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"externalDocs": {
+		"description": "API documentation",
+		"url": "https://www.mediawiki.org/wiki/API:REST_API"
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "Provides information about Wikimedia project sites, including sitemaps. To prevent abusive scraping and ensure fair use of infrastructure, access to endpoints in this API is restricted to specific user groups. For more information about who can access this API, see [CDN/Backend_api/Sitemap_access](https://wikitech.wikimedia.org/wiki/CDN/Backend_api/Sitemap_access) or contact [mailto:bot-traffic@wikimedia.org bot-traffic@wikimedia.org].",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "Site API",
+		"version": "1.0.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/sitemap/{indexId}": {
+			"get": {
+				"description": "Returns an XML list of available pages within the sitemap. The index default is 0; the presence of additional indices will be listed in robots.txt. Up to 10,000 pages are associated with each index.",
+				"operationId": "getGetAListOfSitemapPages",
+				"parameters": [
+					{
+						"description": "The sitemap index, starting at 0. Additional available indices are specified in robots.txt.",
+						"in": "path",
+						"name": "indexId",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/xml": {
+								"example": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap><loc>https://example.org/sitemap/0/page/0</loc></sitemap>\n  <sitemap><loc>https://example.org/sitemap/0/page/1</loc></sitemap>\n</sitemapindex>",
+								"schema": {
+									"properties": {
+										"sitemap": {
+											"items": {
+												"properties": {
+													"loc": {
+														"description": "URL of a sitemap page",
+														"format": "uri",
+														"type": "string",
+														"xml": {
+															"name": "loc"
+														}
+													}
+												},
+												"type": "object",
+												"xml": {
+													"name": "sitemap"
+												}
+											},
+											"type": "array",
+											"xml": {
+												"wrapped": false
+											}
+										}
+									},
+									"type": "object",
+									"xml": {
+										"name": "sitemapindex",
+										"namespace": "http://www.sitemaps.org/schemas/sitemap/0.9"
+									}
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							},
+							"Content-Type": {
+								"description": "Indicates the original media type of a resource before any content encoding is applied.",
+								"schema": {
+									"type": "string"
+								}
+							},
+							"Expires": {
+								"description": "Contains the date and time after which the response is considered expired in the context of HTTP caching.",
+								"schema": {
+									"format": "date-time",
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get a list of sitemap pages",
+				"tags": [
+					"Sitemaps"
+				]
+			}
+		},
+		"/sitemap/{indexId}/page/{pageId}": {
+			"get": {
+				"description": "Returns an XML list of articles present on the site. Each entry contains a URL to the page and the last modified date. Each page contains up to 10,000 URL entries.",
+				"operationId": "getGetAListOfArticleLocationsPerPage",
+				"parameters": [
+					{
+						"description": "The sitemap index, starting at 0. Additional available indices are specified in robots.txt.",
+						"in": "path",
+						"name": "indexId",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "The desired page of articles.",
+						"in": "path",
+						"name": "pageId",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "Namespace IDs to include in the sitemap. If not specified, uses the site default.",
+						"in": "query",
+						"name": "include_namespace",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/xml": {
+								"example": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://example.org/wiki/Main_Page</loc>\n    <lastmod>2024-01-15T10:30:00Z</lastmod>\n  </url>\n  <url>\n    <loc>https://example.org/wiki/Another_Page</loc>\n    <lastmod>2024-01-14T08:20:00Z</lastmod>\n  </url>\n</urlset>",
+								"schema": {
+									"properties": {
+										"url": {
+											"items": {
+												"properties": {
+													"lastmod": {
+														"description": "Last modification date in ISO 8601 format",
+														"format": "date-time",
+														"type": "string",
+														"xml": {
+															"name": "lastmod"
+														}
+													},
+													"loc": {
+														"description": "URL of the article",
+														"format": "uri",
+														"type": "string",
+														"xml": {
+															"name": "loc"
+														}
+													}
+												},
+												"type": "object",
+												"xml": {
+													"name": "url"
+												}
+											},
+											"type": "array",
+											"xml": {
+												"wrapped": false
+											}
+										}
+									},
+									"type": "object",
+									"xml": {
+										"name": "urlset",
+										"namespace": "http://www.sitemaps.org/schemas/sitemap/0.9"
+									}
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							},
+							"Content-Type": {
+								"description": "Indicates the original media type of a resource before any content encoding is applied.",
+								"schema": {
+									"type": "string"
+								}
+							},
+							"Expires": {
+								"description": "Contains the date and time after which the response is considered expired in the context of HTTP caching.",
+								"schema": {
+									"format": "date-time",
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get a list of article locations per page",
+				"tags": [
+					"Sitemaps"
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://www.mediawiki.org/w/rest.php/site/v1"
+		}
+	],
+	"tags": [
+		{
+			"description": "Operations related to sitemaps, which are XML files that provide information about the pages, videos, and other files on a site, and the relationships between them. Search engines read these files to more intelligently crawl a site.",
+			"name": "Sitemaps"
+		}
+	]
+}

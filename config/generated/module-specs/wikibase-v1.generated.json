@@ -1,0 +1,4756 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "commonswikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "commonswikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "commonswikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org"
+		},
+		"description": "OpenAPI definition of Wikibase REST API",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
+		},
+		"title": "Wikibase REST API",
+		"version": "1.0.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/entities/items": {
+			"post": {
+				"description": "Create a Wikibase Item.",
+				"operationId": "postCreateAWikibaseItem",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"item": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"item": {
+										"description": "item parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"item"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Create a Wikibase Item"
+			}
+		},
+		"/entities/items/{item_id}": {
+			"get": {
+				"description": "Retrieve a single Wikibase Item by ID.",
+				"operationId": "getRetrieveASingleWikibaseItemById",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "_fields parameter",
+						"in": "query",
+						"name": "_fields",
+						"required": false,
+						"schema": {
+							"default": "type,labels,descriptions,aliases,statements,sitelinks",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a single Wikibase Item by ID"
+			},
+			"patch": {
+				"description": "Change a single Wikibase Item by ID.",
+				"operationId": "patchChangeASingleWikibaseItemById",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change a single Wikibase Item by ID"
+			}
+		},
+		"/entities/items/{item_id}/aliases": {
+			"get": {
+				"description": "Retrieve an Item's aliases.",
+				"operationId": "getRetrieveAnItemSAliases",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's aliases"
+			},
+			"patch": {
+				"description": "Change an Item's aliases.",
+				"operationId": "patchChangeAnItemSAliases",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change an Item's aliases"
+			}
+		},
+		"/entities/items/{item_id}/aliases/{language_code}": {
+			"get": {
+				"description": "Retrieve an Item's aliases in a specific language.",
+				"operationId": "getRetrieveAnItemSAliasesInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's aliases in a specific language"
+			},
+			"post": {
+				"description": "Create / Add an Item's aliases in a specific language.",
+				"operationId": "postCreateAddAnItemSAliasesInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"aliases": "missing_example",
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"aliases": {
+										"description": "aliases parameter",
+										"type": "object"
+									},
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"aliases"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Create / Add an Item's aliases in a specific language"
+			}
+		},
+		"/entities/items/{item_id}/descriptions": {
+			"get": {
+				"description": "Retrieve an Item's descriptions",
+				"operationId": "getRetrieveAnItemSDescriptions",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's descriptions"
+			},
+			"patch": {
+				"description": "Change an Item's descriptions.",
+				"operationId": "patchChangeAnItemSDescriptions",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change an Item's descriptions"
+			}
+		},
+		"/entities/items/{item_id}/descriptions_with_language_fallback/{language_code}": {
+			"get": {
+				"description": "Retrieve an Item's description in a specific language, with language fallback.",
+				"operationId": "getRetrieveAnItemSDescriptionInASpecificLanguageWithLanguageFallback",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's description in a specific language, with language fallback"
+			}
+		},
+		"/entities/items/{item_id}/descriptions/{language_code}": {
+			"delete": {
+				"description": "Delete an Item's description in a specific language.",
+				"operationId": "deleteDeleteAnItemSDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete an Item's description in a specific language"
+			},
+			"get": {
+				"description": "Retrieve an Item's description in a specific language.",
+				"operationId": "getRetrieveAnItemSDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's description in a specific language"
+			},
+			"put": {
+				"description": "Add / Replace an Item's description in a specific language.",
+				"operationId": "putAddReplaceAnItemSDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"description": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"description": {
+										"description": "description parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"description"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add / Replace an Item's description in a specific language"
+			}
+		},
+		"/entities/items/{item_id}/labels": {
+			"get": {
+				"description": "Retrieve an Item's labels.",
+				"operationId": "getRetrieveAnItemSLabels",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's labels"
+			},
+			"patch": {
+				"description": "Change an Item's Labels.",
+				"operationId": "patchChangeAnItemSLabels",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change an Item's Labels"
+			}
+		},
+		"/entities/items/{item_id}/labels_with_language_fallback/{language_code}": {
+			"get": {
+				"description": "Retrieve an Item's label in a specific language, with language fallback.",
+				"operationId": "getRetrieveAnItemSLabelInASpecificLanguageWithLanguageFallback",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's label in a specific language, with language fallback"
+			}
+		},
+		"/entities/items/{item_id}/labels/{language_code}": {
+			"delete": {
+				"description": "Delete an Item's label in a specific language.",
+				"operationId": "deleteDeleteAnItemSLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete an Item's label in a specific language"
+			},
+			"get": {
+				"description": "Retrieve an Item's label in a specific language.",
+				"operationId": "getRetrieveAnItemSLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's label in a specific language"
+			},
+			"put": {
+				"description": "Add / Replace an Item's label in a specific language.",
+				"operationId": "putAddReplaceAnItemSLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"label": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"label": {
+										"description": "label parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"label"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add / Replace an Item's label in a specific language"
+			}
+		},
+		"/entities/items/{item_id}/sitelinks": {
+			"get": {
+				"description": "Retrieve an Item's Sitelinks.",
+				"operationId": "getRetrieveAnItemSSitelinks",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's Sitelinks"
+			},
+			"patch": {
+				"description": "Change an Item's Sitelinks.",
+				"operationId": "patchChangeAnItemSSitelinks",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change an Item's Sitelinks"
+			}
+		},
+		"/entities/items/{item_id}/sitelinks/{site_id}": {
+			"delete": {
+				"description": "Delete an Item's Sitelink.",
+				"operationId": "deleteDeleteAnItemSSitelink",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "site_id parameter",
+						"in": "path",
+						"name": "site_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete an Item's Sitelink"
+			},
+			"get": {
+				"description": "Retrieve an Item's Sitelink.",
+				"operationId": "getRetrieveAnItemSSitelink",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "site_id parameter",
+						"in": "path",
+						"name": "site_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve an Item's Sitelink"
+			},
+			"put": {
+				"description": "Add / Replace an Item's Sitelink.",
+				"operationId": "putAddReplaceAnItemSSitelink",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "site_id parameter",
+						"in": "path",
+						"name": "site_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"sitelink": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"sitelink": {
+										"description": "sitelink parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"sitelink"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add / Replace an Item's Sitelink"
+			}
+		},
+		"/entities/items/{item_id}/statements": {
+			"get": {
+				"description": "Retrieve Statements from an Item.",
+				"operationId": "getRetrieveStatementsFromAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "property parameter",
+						"in": "query",
+						"name": "property",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve Statements from an Item"
+			},
+			"post": {
+				"description": "Add a new Statement to an Item.",
+				"operationId": "postAddANewStatementToAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"statement": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"statement": {
+										"description": "statement parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"statement"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add a new Statement to an Item"
+			}
+		},
+		"/entities/items/{item_id}/statements/{statement_id}": {
+			"delete": {
+				"description": "Delete a single Statement from an Item.",
+				"operationId": "deleteDeleteASingleStatementFromAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete a single Statement from an Item"
+			},
+			"get": {
+				"description": "Retrieve a single Statement from an Item.",
+				"operationId": "getRetrieveASingleStatementFromAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a single Statement from an Item"
+			},
+			"patch": {
+				"description": "Change elements of a single Statement of an Item.",
+				"operationId": "patchChangeElementsOfASingleStatementOfAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change elements of a single Statement of an Item"
+			},
+			"put": {
+				"description": "Replace a single Statement of an Item.",
+				"operationId": "putReplaceASingleStatementOfAnItem",
+				"parameters": [
+					{
+						"description": "item_id parameter",
+						"in": "path",
+						"name": "item_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"statement": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"statement": {
+										"description": "statement parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"statement"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Replace a single Statement of an Item"
+			}
+		},
+		"/entities/properties": {
+			"post": {
+				"description": "Create a Wikibase Property.",
+				"operationId": "postCreateAWikibaseProperty",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"property": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"property": {
+										"description": "property parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"property"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Create a Wikibase Property"
+			}
+		},
+		"/entities/properties/{property_id}": {
+			"get": {
+				"description": "Retrieve a single Wikibase Property by ID.",
+				"operationId": "getRetrieveASingleWikibasePropertyById",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "_fields parameter",
+						"in": "query",
+						"name": "_fields",
+						"required": false,
+						"schema": {
+							"default": "type,data_type,labels,descriptions,aliases,statements",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a single Wikibase Property by ID"
+			},
+			"patch": {
+				"description": "Change a single Wikibase Property by ID.",
+				"operationId": "patchChangeASingleWikibasePropertyById",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change a single Wikibase Property by ID"
+			}
+		},
+		"/entities/properties/{property_id}/aliases": {
+			"get": {
+				"description": "Retrieve a Property's aliases.",
+				"operationId": "getRetrieveAPropertySAliases",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's aliases"
+			},
+			"patch": {
+				"description": "Change a Property's aliases.",
+				"operationId": "patchChangeAPropertySAliases",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change a Property's aliases"
+			}
+		},
+		"/entities/properties/{property_id}/aliases/{language_code}": {
+			"get": {
+				"description": "Retrieve a Property's aliases in a specific language.",
+				"operationId": "getRetrieveAPropertySAliasesInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's aliases in a specific language"
+			},
+			"post": {
+				"description": "Retrieve a Property's aliases in a specific language.",
+				"operationId": "postRetrieveAPropertySAliasesInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"aliases": "missing_example",
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"aliases": {
+										"description": "aliases parameter",
+										"type": "object"
+									},
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"aliases"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's aliases in a specific language"
+			}
+		},
+		"/entities/properties/{property_id}/descriptions": {
+			"get": {
+				"description": "Retrieve a Property's descriptions.",
+				"operationId": "getRetrieveAPropertySDescriptions",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's descriptions"
+			},
+			"patch": {
+				"description": "Change a Property's descriptions.",
+				"operationId": "patchChangeAPropertySDescriptions",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change a Property's descriptions"
+			}
+		},
+		"/entities/properties/{property_id}/descriptions_with_language_fallback/{language_code}": {
+			"get": {
+				"description": "Retrieve a Property's description in a specific language, with language fallback.",
+				"operationId": "getRetrieveAPropertySDescriptionInASpecificLanguageWithLanguageFallback",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's description in a specific language, with language fallback"
+			}
+		},
+		"/entities/properties/{property_id}/descriptions/{language_code}": {
+			"delete": {
+				"description": "Delete a Property's description in a specific language.",
+				"operationId": "deleteDeleteAPropertySDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete a Property's description in a specific language"
+			},
+			"get": {
+				"description": "Retrieve a Property's description in a specific language.",
+				"operationId": "getRetrieveAPropertySDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's description in a specific language"
+			},
+			"put": {
+				"description": "Add / Replace a Property's description in a specific language.",
+				"operationId": "putAddReplaceAPropertySDescriptionInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"description": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"description": {
+										"description": "description parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"description"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add / Replace a Property's description in a specific language"
+			}
+		},
+		"/entities/properties/{property_id}/labels": {
+			"get": {
+				"description": "Retrieve a Property's labels.",
+				"operationId": "getRetrieveAPropertySLabels",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's labels"
+			},
+			"patch": {
+				"description": "Change a Property's Labels.",
+				"operationId": "patchChangeAPropertySLabels",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change a Property's Labels"
+			}
+		},
+		"/entities/properties/{property_id}/labels_with_language_fallback/{language_code}": {
+			"get": {
+				"description": "Retrieve a Property's label in a specific language, with language fallback.",
+				"operationId": "getRetrieveAPropertySLabelInASpecificLanguageWithLanguageFallback",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's label in a specific language, with language fallback"
+			}
+		},
+		"/entities/properties/{property_id}/labels/{language_code}": {
+			"delete": {
+				"description": "Delete a Property's label in a specific language.",
+				"operationId": "deleteDeleteAPropertySLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete a Property's label in a specific language"
+			},
+			"get": {
+				"description": "Retrieve a Property's label in a specific language.",
+				"operationId": "getRetrieveAPropertySLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a Property's label in a specific language"
+			},
+			"put": {
+				"description": "Add / Replace a Property's label in a specific language.",
+				"operationId": "putAddReplaceAPropertySLabelInASpecificLanguage",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language_code parameter",
+						"in": "path",
+						"name": "language_code",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"label": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"label": {
+										"description": "label parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"label"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add / Replace a Property's label in a specific language"
+			}
+		},
+		"/entities/properties/{property_id}/statements": {
+			"get": {
+				"description": "Retrieve Statements from a Property.",
+				"operationId": "getRetrieveStatementsFromAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "property parameter",
+						"in": "query",
+						"name": "property",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve Statements from a Property"
+			},
+			"post": {
+				"description": "Add a new Statement to a Property.",
+				"operationId": "postAddANewStatementToAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"statement": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"statement": {
+										"description": "statement parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"statement"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add a new Statement to a Property"
+			}
+		},
+		"/entities/properties/{property_id}/statements/{statement_id}": {
+			"delete": {
+				"description": "Delete a single Statement from a Property.",
+				"operationId": "deleteDeleteASingleStatementFromAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete a single Statement from a Property"
+			},
+			"get": {
+				"description": "Retrieve a single Statement from a Property.",
+				"operationId": "getRetrieveASingleStatementFromAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a single Statement from a Property"
+			},
+			"patch": {
+				"description": "Change elements of a single Statement of a Property.",
+				"operationId": "patchChangeElementsOfASingleStatementOfAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change elements of a single Statement of a Property"
+			},
+			"put": {
+				"description": "Replace a single Statement of a Property.",
+				"operationId": "putReplaceASingleStatementOfAProperty",
+				"parameters": [
+					{
+						"description": "property_id parameter",
+						"in": "path",
+						"name": "property_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"statement": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"statement": {
+										"description": "statement parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"statement"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Replace a single Statement of a Property"
+			}
+		},
+		"/openapi.json": {
+			"get": {
+				"description": "Retrieve the module OpenAPI document.",
+				"operationId": "getRetrieveTheModuleOpenapiDocument",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve the module OpenAPI document"
+			}
+		},
+		"/property-data-types": {
+			"get": {
+				"description": "Retrieve the map of Property data types to value types.",
+				"operationId": "getRetrieveTheMapOfPropertyDataTypesToValueTypes",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve the map of Property data types to value types"
+			}
+		},
+		"/search/items": {
+			"get": {
+				"description": "Simple Item search by label and aliases.",
+				"operationId": "getSimpleItemSearchByLabelAndAliases",
+				"parameters": [
+					{
+						"description": "q parameter",
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language parameter",
+						"in": "query",
+						"name": "language",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "offset parameter",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Simple Item search by label and aliases"
+			}
+		},
+		"/search/properties": {
+			"get": {
+				"description": "Simple Property search by label and aliases.",
+				"operationId": "getSimplePropertySearchByLabelAndAliases",
+				"parameters": [
+					{
+						"description": "q parameter",
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language parameter",
+						"in": "query",
+						"name": "language",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "offset parameter",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Simple Property search by label and aliases"
+			}
+		},
+		"/statements/{statement_id}": {
+			"delete": {
+				"description": "Delete a single Statement.",
+				"operationId": "deleteDeleteASingleStatement",
+				"parameters": [
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Delete a single Statement"
+			},
+			"get": {
+				"description": "Retrieve a single Statement.",
+				"operationId": "getRetrieveASingleStatement",
+				"parameters": [
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Retrieve a single Statement"
+			},
+			"patch": {
+				"description": "Change elements of a single Statement.",
+				"operationId": "patchChangeElementsOfASingleStatement",
+				"parameters": [
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"patch": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						},
+						"application/json-patch+json": {
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"patch": {
+										"description": "patch parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"patch"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Change elements of a single Statement"
+			},
+			"put": {
+				"description": "Replace a single Statement.",
+				"operationId": "putReplaceASingleStatement",
+				"parameters": [
+					{
+						"description": "statement_id parameter",
+						"in": "path",
+						"name": "statement_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"bot": "missing_example",
+								"comment": "missing_example",
+								"statement": "missing_example",
+								"tags": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"bot": {
+										"default": false,
+										"description": "bot parameter",
+										"type": "boolean"
+									},
+									"comment": {
+										"description": "comment parameter",
+										"type": "string"
+									},
+									"statement": {
+										"description": "statement parameter",
+										"type": "object"
+									},
+									"tags": {
+										"default": [],
+										"description": "tags parameter",
+										"type": "object"
+									}
+								},
+								"required": [
+									"statement"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Replace a single Statement"
+			}
+		},
+		"/suggest/items": {
+			"get": {
+				"description": "Simple Item search by prefix, for labels and aliases.",
+				"operationId": "getSimpleItemSearchByPrefixForLabelsAndAliases",
+				"parameters": [
+					{
+						"description": "q parameter",
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language parameter",
+						"in": "query",
+						"name": "language",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "offset parameter",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Simple Item search by prefix, for labels and aliases"
+			}
+		},
+		"/suggest/properties": {
+			"get": {
+				"description": "Simple Property search by prefix, for labels and aliases.",
+				"operationId": "getSimplePropertySearchByPrefixForLabelsAndAliases",
+				"parameters": [
+					{
+						"description": "q parameter",
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "language parameter",
+						"in": "query",
+						"name": "language",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "limit parameter",
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "offset parameter",
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{},
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Simple Property search by prefix, for labels and aliases"
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "https://commons.wikimedia.org/w/rest.php/wikibase/v1"
+		}
+	]
+}
