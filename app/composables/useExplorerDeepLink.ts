@@ -4,13 +4,11 @@ import { parseExplorerDeepLink, buildExplorerDirectPath } from '../utils/explore
 import { operationAnchorFromHash } from '../utils/explorerOperationAnchor'
 import { WIKI_INSTANCES } from '../../config/instances'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInternalSidebarExperiment'
+import { useExplorerDeepLinkNotice } from './useExplorerDeepLinkNotice'
 import type { ExplorerDeepLinkIntent } from './useExplorerBootstrap'
 
 /** Default community instance loaded when no deep-link (or an unresolved one) applies. */
 const DEFAULT_WIKI_INSTANCE_ID = WIKI_INSTANCES[ 0 ]?.id ?? 'enwiki'
-
-/** Instance-level deep-link outcomes this composable can surface (ADR §9). */
-export type ExplorerDeepLinkNotice = 'instance-fallback' | 'quick-unresolved' | null
 
 /**
  * Response shape of the quick-resolve route (`/api/explorer-quick-resolve`).
@@ -53,7 +51,9 @@ export function useExplorerDeepLink( selectedWikiInstanceId: Ref<string> ) {
 	// The instance a deep-link asked for, so the fallback watcher (in
 	// useExplorerDeepLinkSync) can tell a deep-link load failure from a normal one.
 	const deepLinkInstanceId = ref<string | null>( null )
-	const deepLinkNotice = ref<ExplorerDeepLinkNotice>( null )
+	// App-scoped (useState) so it survives the page remount an in-explorer URL
+	// adjustment can trigger. See useExplorerDeepLinkNotice.
+	const deepLinkNotice = useExplorerDeepLinkNotice()
 
 	// Deep-link hydration is a client-only concern (the explorer route is ssr: false).
 	if ( import.meta.client ) {
@@ -150,6 +150,9 @@ export function useExplorerDeepLink( selectedWikiInstanceId: Ref<string> ) {
 				path: buildExplorerDirectPath( resolved.instanceId, resolved.moduleName ),
 				hash: route.hash
 			} )
+
+			// Tell the user the shortcut link was expanded to its full address.
+			deepLinkNotice.value = 'quick-canonicalized'
 		} catch {
 			// Unknown module: drop to the default explorer with a notice (ADR §9).
 			initialDeepLinkIntent.value = null

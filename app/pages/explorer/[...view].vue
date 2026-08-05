@@ -67,7 +67,6 @@ const {
 	selectedModuleName,
 	pendingOperationTarget,
 	selectedEndpointOperationId,
-	deepLinkResolution,
 	isInstanceBootstrapping,
 	isExplorerModuleRailVisible,
 	hasInstanceBootstrapError,
@@ -272,23 +271,34 @@ const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-l
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
 
-// Deep-link fallback notice (ADR §9): instance-level notices come from the
-// deep-link composable, module/operation-level ones from the bootstrap resolution.
+// Deep-link notice (ADR §9): every case where the explorer adjusted the URL for
+// the user. Sourced from the shared, remount-surviving useState channel written by
+// the deep-link composables and the bootstrap. See useExplorerDeepLinkNotice.
 const deepLinkNoticeMessage = computed( () => {
-	if ( deepLinkNotice.value === 'instance-fallback' ) {
-		return $bananaI18n( 'explorer-deep-link-instance-fallback' )
+	switch ( deepLinkNotice.value ) {
+		case 'instance-fallback':
+			return $bananaI18n( 'explorer-deep-link-instance-fallback' )
+		case 'module-fallback':
+			return $bananaI18n( 'explorer-deep-link-module-fallback' )
+		case 'operation-missing':
+			return $bananaI18n( 'explorer-deep-link-operation-missing' )
+		case 'quick-unresolved':
+			return $bananaI18n( 'explorer-deep-link-module-unknown' )
+		case 'quick-canonicalized':
+			return $bananaI18n( 'explorer-deep-link-quick-canonicalized' )
+		default:
+			return ''
 	}
-	if ( deepLinkNotice.value === 'quick-unresolved' ) {
-		return $bananaI18n( 'explorer-deep-link-module-unknown' )
-	}
-	if ( deepLinkResolution.value === 'module-not-found' ) {
-		return $bananaI18n( 'explorer-deep-link-module-fallback' )
-	}
-	if ( deepLinkResolution.value === 'operation-not-found' ) {
-		return $bananaI18n( 'explorer-deep-link-operation-missing' )
-	}
-	return ''
 } )
+
+/**
+ * Clears the deep-link notice when the user dismisses it.
+ *
+ * @returns Nothing.
+ */
+function onDeepLinkNoticeDismissed(): void {
+	deepLinkNotice.value = null
+}
 
 watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady, layoutMode ], ( [ , , , nextLayoutMode ] ) => {
 	void nextTick( () => {
@@ -346,6 +356,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				v-if="isCommunityMode && deepLinkNoticeMessage"
 				type="notice"
 				:allow-user-dismiss="true"
+				@user-dismissed="onDeepLinkNoticeDismissed"
 			>
 				{{ deepLinkNoticeMessage }}
 			</CdxMessage>

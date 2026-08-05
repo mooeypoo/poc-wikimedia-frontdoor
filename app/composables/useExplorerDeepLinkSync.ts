@@ -13,7 +13,7 @@ import type {
 	ExplorerOperationTarget,
 	SelectModuleOptions
 } from './useExplorerBootstrap'
-import type { ExplorerDeepLinkNotice } from './useExplorerDeepLink'
+import type { ExplorerDeepLinkNotice } from './useExplorerDeepLinkNotice'
 
 /** Default community instance the explorer falls back to on a failed deep-link load. */
 const DEFAULT_WIKI_INSTANCE_ID = WIKI_INSTANCES[ 0 ]?.id ?? 'enwiki'

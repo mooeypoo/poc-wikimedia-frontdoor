@@ -866,7 +866,7 @@ Enterprise explorer experiences share the unified start column with community mo
 The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
 
 1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation). Skips the router’s **initial** navigation (`from.matched.length === 0`) and skips when `window.location.pathname` already matches the target (avoids full-reload loops on hard load / same-URL assign).
-2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component across route boundaries. Within the explorer the key is the **mode path** (`/explorer`, `/explorer/enterprise`, `/explorer/enterprise-custom`), so a single page instance persists across in-explorer deep-link URL updates (quick→direct canonicalization, instance/module/operation changes) and their notices are not torn down; non-explorer routes key on `fullPath`, so leaving the explorer still remounts. See Deep-linking.
 
 **APIs tab vs explorer:** The primary **APIs** tab lands on `/apis` but stays selected on `/explorer`. Re-clicking **APIs** from explorer (or an `/apis/…` page) navigates to the catalog overview; mount-time tab sync is ignored so load does not bounce through this plugin. `ShellSidePanelNav` does not re-navigate when a mode item’s `to` is already the current path (community → `/explorer`).
 

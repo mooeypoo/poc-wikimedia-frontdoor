@@ -5,6 +5,7 @@ import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../config/explorerOpt
 import { resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
 import { resolveEndpointOperationId } from '../utils/explorerEndpointLabels'
 import { findOperationByAnchor } from '../utils/explorerOperationAnchor'
+import { useExplorerDeepLinkNotice } from './useExplorerDeepLinkNotice'
 
 export interface ExplorerModuleOperation {
 	id: string
@@ -108,9 +109,13 @@ export function useExplorerBootstrap(
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
 	const selectedEndpointOperationId = ref<string | null>( null )
-	// Outcome of applying a deep-link intent to the last bootstrap — drives the
-	// page's fallback notice (ADR §9). Reset at the start of each bootstrap.
+	// Outcome of applying a deep-link intent to the last bootstrap — internal flag.
 	const deepLinkResolution = ref<ExplorerDeepLinkResolution>( null )
+	// Shared, remount-surviving user notice (ADR §9): written for module/operation
+	// fallbacks so it survives the page remount an in-explorer URL adjustment can
+	// trigger. Never reset here (a re-bootstrap must not wipe an instance-fallback
+	// notice set just before it) — cleared only on user action / dismiss / reload.
+	const deepLinkNotice = useExplorerDeepLinkNotice()
 	const { logEvent } = useExplorerDiagnostics()
 
 	let requestGeneration = 0
@@ -232,6 +237,12 @@ export function useExplorerBootstrap(
 			return false
 		}
 
+		// A user-initiated selection dismisses any stale deep-link notice; the
+		// deep-link and bootstrap-default selections that accompany a notice do not.
+		if ( options.source !== 'deep-link' && options.source !== 'bootstrap-default' ) {
+			deepLinkNotice.value = null
+		}
+
 		const isAlreadySelected = selectedModuleName.value === moduleName
 		selectedModuleName.value = moduleName
 		ensureModuleExpanded( moduleName )
@@ -348,12 +359,16 @@ export function useExplorerBootstrap(
 					: { source: 'deep-link' }
 				)
 
-				deepLinkResolution.value = ( pendingIntent.anchor && !targetOperation )
-					? 'operation-not-found'
-					: 'applied'
+				if ( pendingIntent.anchor && !targetOperation ) {
+					deepLinkResolution.value = 'operation-not-found'
+					deepLinkNotice.value = 'operation-missing'
+				} else {
+					deepLinkResolution.value = 'applied'
+				}
 			} else {
 				if ( pendingIntent ) {
 					deepLinkResolution.value = 'module-not-found'
+					deepLinkNotice.value = 'module-fallback'
 				}
 
 				if ( defaultModule ) {

@@ -98,6 +98,7 @@
   "explorer-deep-link-module-fallback": "That module isn’t available on this wiki, so a default module is shown instead.",
   "explorer-deep-link-module-unknown": "That module isn’t recognized, so the default explorer view is shown instead.",
   "explorer-deep-link-operation-missing": "The linked endpoint couldn’t be found, so the module is shown without it.",
+  "explorer-deep-link-quick-canonicalized": "This shortcut link was expanded to its full explorer address.",
   "explorer-description": "Discover APIs and test requests against Wikimedia projects",
   "explorer-discovery-error": "Discovery request failed for this instance.",
   "explorer-empty-modules": "No modules available for this instance.",

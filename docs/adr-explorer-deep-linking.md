@@ -125,8 +125,11 @@ Two facts shape the design:
 | Module not present on the requested instance's live discovery | Load the requested instance with **its default module** (the one a fresh load selects); drop the operation; show a `CdxMessage`. |
 | Instance unknown / unresolvable (not curated, not in fleet) | Load the **default system state** (`enwiki`, default module); show a `CdxMessage`. |
 | Operation anchor not found in the loaded spec | Load the module with no operation focused; the focus engine already tolerates a missing target (it retries then gives up). |
+| Quick link successfully expanded to the `direct` form (§6) | Not an error, but the URL changed under the user; show an informational `CdxMessage` ("this shortcut link was expanded to its full address"). |
 
-**Rationale:** Deep-links are hand-editable and outlive deployments; a mismatched instance+module or a removed endpoint must never blank the page. This mirrors the existing "unknown trailing segment → community" tolerance already in `explorerModeFromPath`.
+**Notices must survive the URL rewrite.** Every case above **adjusts the URL** (`router.replace`), which can remount the explorer page and tear down component-local state. The notice is therefore held in an **app-scoped `useState` channel** (`useExplorerDeepLinkNotice`), set immediately before the URL changes and read by whichever page instance renders next — so it survives a remount (and resets on a full document load / on leaving the explorer). It is written by the deep-link composables (instance-fallback, quick-unresolved, quick-canonicalized) and the bootstrap (module-fallback, operation-missing), cleared on user dismiss and on a user-initiated module selection. As a complementary optimization, `app/app.vue` keys `NuxtPage` on the explorer **mode path** (not the full path) so in-explorer URL updates avoid the remount/flash entirely (Scalar still remounts via `scalarReferenceKey`; mode switches and leaving the explorer still remount). See §7.
+
+**Rationale:** Deep-links are hand-editable and outlive deployments; a mismatched instance+module or a removed endpoint must never blank the page. This mirrors the existing "unknown trailing segment → community" tolerance already in `explorerModeFromPath`. The team asked that **any** URL adjustment — fallback or quick→direct expansion — be surfaced to the user, since the address bar changing without explanation is confusing.
 
 ---
 

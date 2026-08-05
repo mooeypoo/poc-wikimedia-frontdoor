@@ -98,6 +98,7 @@
   "explorer-deep-link-module-fallback": "Notice shown when a deep-link's module is not available on the requested wiki and a default module was loaded instead.",
   "explorer-deep-link-module-unknown": "Notice shown when a quick deep-link (/explorer/q/...) names a module that is not recognized and the default explorer view was loaded instead.",
   "explorer-deep-link-operation-missing": "Notice shown when a deep-link's endpoint anchor did not match any operation in the loaded module.",
+  "explorer-deep-link-quick-canonicalized": "Notice shown when a quick deep-link (/explorer/q/...) was expanded to its full /explorer/direct/... address.",
   "explorer-description": "Short instruction text under the community explorer page heading (\"Discover APIs…\").",
   "explorer-discovery-error": "Shown when discovery request fails.",
   "explorer-empty-modules": "Shown when discovery returns no modules.",
