@@ -12,14 +12,14 @@ Use this file when implementing or reviewing visual styles, grids, layout areas,
 
 ## Scope of the design exploration
 
-The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **product-shaped shell**: site grid, header chrome, primary navigation, placeholder content sections, and a three-column API Explorer layout (left doc nav, centre reference, right module rail).
+The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **product-shaped shell**: site grid, header chrome, primary navigation, placeholder content sections, and an API Explorer layout (start section nav + main column with project controls and Scalar — including Scalar’s **native endpoint sidebar**; custom end-column module rail removed from product UX in PR #40).
 
 **In scope (implemented as design exploration):**
 
 - **Layout system** — Codex responsive grid (mobile 4-col, tablet 8-col, desktop / desktop-wide 24-col), 2-panel desktop pattern, and shell column split; see **Layout system** below for full specification and prototype status
 - Shell header with search, settings, language, and account link
 - Primary site navigation below the header
-- API Explorer page layout, module rail, project controls, loading states
+- API Explorer page layout, Scalar native endpoint sidebar, project controls, loading states
 - Scalar visual alignment with Codex tokens
 
 **Explicitly prototype / not final:**
@@ -127,7 +127,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 ## Layout system
 
-Layout follows the **Codex responsive grid** and the **2-panel desktop layout** pattern so the shell can host section navigation (left) and page-level navigation (e.g. API Explorer module rail) beside primary content.
+Layout follows the **Codex responsive grid** and the **2-panel desktop layout** pattern so the shell can host section navigation (left) and reserved end-column space for page-level navigation beside primary content. Community Explorer collapses the end column and uses Scalar’s native sidebar for endpoints (PR #40).
 
 **Design reference:** [Codex — 2-panel desktop layout (Figma)](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?m=auto&node-id=29258-10335&t=J1XPwW1kabNcWMB6-1)
 
@@ -154,7 +154,7 @@ On **desktop** and **desktop wide**, the implemented shell uses a **fixed start 
 |------|-------|------|
 | **Start** | **281px fixed** (Figma 241px + 40px grid column) | Section navigation only (`ShellSidePanelNav`) when the route has sections |
 | **Main** | **4fr** (≈16/20 of remainder) | Header utilities, primary nav, page content |
-| **End** | **1fr** (≈4/20 of remainder) | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
+| **End** | **1fr** (≈4/20 of remainder) | Reserved on all pages; on community `/explorer` with Scalar native sidebar, **collapsed** (main column takes full body width — PR #40) |
 
 On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
 
@@ -209,13 +209,15 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 
 **Note:** `@media` conditions in `page-grid.css` and `default.vue` use **px literals** aligned to Codex breakpoint tokens (`640px`, `1120px`, `1680px`) plus the project-specific **`1440px`** header lock, because custom properties are unreliable in media query conditions.
 
-### Explorer layout (module rail and reference panel)
+### Explorer layout (Scalar sidebar and reference panel)
 
-**Decision:** On `/explorer`, the **end** column hosts a teleported **module rail** (`#explorer-end-panel`). The **main** column holds project controls and the Scalar reference panel.
+**Decision (PR #40):** On community `/explorer`, endpoint browsing uses **Scalar’s native operation sidebar** (`showSidebar: true` via `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR`). The custom end-column **module rail** is **not** mounted. The shell class **`frontdoor-shell--explorer-internal-sidebar`** collapses the end column so project controls + Scalar stretch across the body width.
 
-**Below desktop (&lt; 1120px):** End column hidden. Module rail teleports **inline** below project controls (`#explorer-module-rail-anchor`); **no** extra gap from `.explorer-page__project-controls-stack`; collapsible endpoint panel per Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968). When expanded, block size follows content for **seven or fewer** endpoints; more than seven cap the endpoint scrollport to seven visible rows with internal scroll (`useExplorerModuleRailInlineEndpointScrollCap`, `config/explorerModuleRail.ts`). Reference panel and Scalar follow below.
+**Main column:** Project controls and the Scalar reference panel (sidebar + operation docs). Endpoint selection is owned by Scalar.
 
 **Wide explorer:** Reference panel and Scalar shell use **natural height** (page scroll) as documented in **API Explorer page layout** below — not a sticky faux-iframe viewport.
+
+**Legacy:** Setting `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` to `false` restores the former teleported `ExplorerModuleRail` (end column ≥ 1120px; inline collapsible below project controls otherwise). That path is rollback-only — not current product UX.
 
 ---
 
@@ -367,7 +369,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | Primary nav | **No** selected tab (same as logged-out gate — not nested under Get started / APIs / …) |
 | Page title | `{username}’s dashboard` (banana before/after + `<bdi>` username). Meta OAuth username only |
 | Vertical rhythm | `.account-page` column gap **`--spacing-200` (32px)** between title, sections, and logout. **Personal → OAuth** adjacent sections: **`--spacing-250` (40px)** total (page gap + `.account-page__section + .account-page__section` remainder). Inside each section: **`--spacing-150`** between intro (heading + **one** description/learn-more paragraph), list/empty state, and Meta registration CTA; intro column gap **`--spacing-75`** is heading → paragraph only |
-| Personal API keys | Section heading + **one paragraph** (description + “Learn more about personal API tokens” inline; no separate learn-more block) above cards; learn-more is an in-app `NuxtLink` to `/apis/authentication#personal-api-tokens` (`MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL` via `resolveContentHref`) — **same tab, no external icon**; list-element card (`--background-color-neutral-subtle`, exploratory **4px** radius via **`--fd-explorer-controls-surface-border-radius`** / `config/explorerSurfaces.ts` — not a Codex token; under consideration as a future system default; same as explorer project controls / module rail and Reset credentials panel; title, quiet **Reset** only — **Delete not shown** until Meta/backend revoke lands; Issued \| Status \| Permissions). Below list/empty state: progressive outlined `CdxButton` **Create API token** (`account-create-api-token-button`) + `cdxIconLinkExternal` → `META_OAUTH2_CONSUMER_REGISTRATION_URL` (new tab; `aria-label` via `externalLinkAccessibleLabel`; does not insert a key into the local placeholder list). **Row data = placeholders** |
+| Personal API keys | Section heading + **one paragraph** (description + “Learn more about personal API tokens” inline; no separate learn-more block) above cards; learn-more is an in-app `NuxtLink` to `/apis/authentication#personal-api-tokens` (`MEDIAWIKI_OWNER_ONLY_CONSUMERS_DOC_URL` via `resolveContentHref`) — **same tab, no external icon**; list-element card (`--background-color-neutral-subtle`, exploratory **4px** radius via **`--fd-explorer-controls-surface-border-radius`** / `config/explorerSurfaces.ts` — not a Codex token; under consideration as a future system default; same as explorer project controls and Reset credentials panel; title, quiet **Reset** only — **Delete not shown** until Meta/backend revoke lands; Issued \| Status \| Permissions). Below list/empty state: progressive outlined `CdxButton` **Create API token** (`account-create-api-token-button`) + `cdxIconLinkExternal` → `META_OAUTH2_CONSUMER_REGISTRATION_URL` (new tab; `aria-label` via `externalLinkAccessibleLabel`; does not insert a key into the local placeholder list). **Row data = placeholders** |
 | Application API keys | Section heading + **one paragraph** (description + “Learn more about OAuth” inline; no separate learn-more block) above cards; learn-more is an in-app `NuxtLink` to `/apis/authentication#oauth-authorization-code-flow` (`MEDIAWIKI_OAUTH_FOR_DEVELOPERS_DOC_URL` via `resolveContentHref`) — **same tab, no external icon**; same list-element card chrome (**`--fd-explorer-controls-surface-border-radius`**); card adds description, Client ID (`dir="ltr"` monospace), meta row — **no** Client secret on the card (Reset dialog only); quiet **Reset** only — **Delete not shown** until Meta/backend revoke lands; **no** write-token `CdxMessage` notice. Below list/empty state: progressive outlined `CdxButton` **Request new OAuth client** (`account-request-new-oauth-client-button`) + `cdxIconLinkExternal` → same `META_OAUTH2_CONSUMER_REGISTRATION_URL` (new tab; same accessible-label pattern). **Row data = placeholders** |
 | Reset confirmation | Quiet **Reset** opens Codex `CdxDialog` ([confirm](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=626-7921) → [success](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=633-7695)): warn → regenerate **placeholder** credentials → show **Client ID**, **Client secret**, **Refresh token** in a subtle panel (`--background-color-neutral-subtle`, exploratory **4px** radius via **`--fd-explorer-controls-surface-border-radius`**; `--spacing-75` / 12px padding; row stack `--spacing-50` / 8px; **label on its own line**, value + quiet copy on the next with `--spacing-50` column-gap and copy **top-aligned** to the value; bold labels `--font-weight-bold`; intro/list/warning stack `--spacing-100`) with quiet copy (`CdxTooltip` “Copied!”; button stays mounted) and inline warning `CdxMessage`; **Done** closes. Banana keys: `account-reset-dialog-*`. **Success credentials are not real** |
 | Log out | Destructive `CdxButton` below a subtle border divider — clears OAuth and navigates home |
@@ -465,7 +467,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Mobile (&lt; 640px):** Stacked interim layout — start nav capped at **`max-block-size: 40dvh`** with scroll on **`.fd-page-grid__start`** when long; drawer reveal clips horizontally with **`overflow-inline: hidden`** (expanded) or **`overflow: hidden`** (collapsed). Main column uses the remaining shell body as its scrollport.
 
-**Sticky panels:** Explorer reference shell and end-column module rail max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus `--fd-layout-shell-chrome-block-size-estimate`) until runtime chrome measurement replaces the estimate.
+**Sticky panels:** Where end-column page nav still uses viewport caps, max-heights use **`--fd-layout-shell-body-block-size-estimate`** (`100dvh` minus `--fd-layout-shell-chrome-block-size-estimate`) until runtime chrome measurement replaces the estimate. Community Explorer reference shell is natural-height (page scroll) — see **Reference panel** above.
 
 **Source:** `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css`, `app/assets/css/shell-end-panel-nav.css`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/pages/explorer/index.vue`.
 
@@ -483,7 +485,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Headings:** Emphasized colour; `h1` uses `--font-size-xx-large`; `h2`–`h6` retain block spacing below titles.
 
-**Monospace:** HTTP methods in module rail, and Scalar code areas use `--font-family-monospace-stack`. Endpoint **names** in the rail use the sans stack (path templates remain available in accessible names).
+**Monospace:** Scalar code areas (and HTTP method chrome inside Scalar) use `--font-family-monospace-stack` as provided by the reference UI.
 
 ### Subtle / secondary text
 
@@ -506,8 +508,8 @@ This is the **product end decision** (not a temporary experiment): manually open
 Top to bottom:
 
 1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, **API to explore** select, Include opt-in checkboxes) when instance bootstrap is ready; **`#explorer-module-rail-anchor`** always present in community mode for inline Teleport (see **Module rail** → narrow layout). **`.explorer-page__project-controls-stack`** has **no** flex gap between controls and the rail anchor
-3. **Reference panel** — Scalar shell (no separate module title / chip header above the shell)
+2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, **API to explore** select, Include opt-in checkboxes) when instance bootstrap is ready
+3. **Reference panel** — Scalar shell with **native endpoint sidebar** (no separate module title / chip header above the shell; no custom module rail)
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps on `.explorer-page` / `.explorer-page__intro`. The project-controls stack itself does **not** add a `--spacing-100` gap after controls.
 
@@ -519,7 +521,7 @@ Top to bottom:
 - Scalar shell grows with spec content (`overflow-block: visible`)
 - Vertical scroll is **`.frontdoor-shell__body-scroll`** (Explorer page scroll scrolls the specs)
 
-**Rationale:** Trial — present Scalar without a faux-iframe height lock so long specs read as a continuous page. Module rail stays independently sticky/scrollable in the end column (viewport max-height fallback, not shell-content height).
+**Rationale:** Trial — present Scalar without a faux-iframe height lock so long specs read as a continuous page. Endpoint navigation lives in Scalar’s native sidebar inside the same shell.
 
 ### Scalar shell containment
 
@@ -529,7 +531,7 @@ Top to bottom:
 
 **Overflow (resize):** **`overflow-inline: clip`** on the shell; **`overflow-block: visible`** so the page scrollport owns vertical travel. After a viewport resize, Scalar introduction cards and sample **`pre`** rows can exceed the shell width; inline clip keeps the frame border visible on the inline-end edge. Sample blocks are width-capped in **`explorer-codex-overrides.css`** (`pre`, `pre code`, `.introduction-card-item`) with internal **`overflow-inline: auto`**.
 
-**Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
+**Z-index (explorer):** Scalar shell `z-index: 2`, shell chrome `z-index: 10` — modals/overlays from Scalar can span the viewport as needed.
 
 **Test Request sticky titles:** Scalar’s `.request-response-header` (endpoint name in the client modal) is sticky without a z-index, so scrolling parameters paint over it. Override in `explorer-codex-overrides.css`: `.explorer-page .scalar-client .request-response-header { z-index: 1 }` (modal-scoped). See `ARCHITECTURE.md` → Scalar Test Request modal sticky headers.
 
@@ -600,7 +602,7 @@ Implementation: scroll shell into view on open; CSS under `--client-modal-open` 
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
 | **Description** | `explorer-rest-api-module-description`: “Select the REST API that you’d like to test on this project” |
 
-**Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select, Scalar spec, and rail stay aligned.
+**Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select and Scalar spec stay aligned.
 
 **Module switching:** Changing the select calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes.
 
@@ -621,67 +623,36 @@ Implementation: scroll shell into view on open; CSS under `--client-modal-open` 
 
 **Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes; Attribution API `attribution/v0-beta` docs / framework / beta-talk links, leaving the one-line product summary). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
-**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): custom `#menu-item` / `#label` slots insert **label-only** warning audience chips (icons hidden) while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (module rail endpoints, start-column section nav) follow separate documented shell exceptions.
+**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): custom `#menu-item` / `#label` slots insert **label-only** warning audience chips (icons hidden) while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (start-column section nav) follow separate documented shell exceptions.
 
 ---
 
-## Module rail (right column)
+## Scalar native endpoint sidebar
 
 ### Purpose
 
-**Decision:** List **endpoints** for the API module selected in project controls; click an endpoint to load/focus that operation in Scalar. Module selection for the Scalar reference panel and the rail is driven by the **API to explore** `CdxSelect` (same discovery order and opt-in rules). Rail rows show each operation’s **name** (OpenAPI `summary`), not the path template.
+**Decision (PR [#40](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/40)):** List and navigate **endpoints** for the OpenAPI document loaded by **API to explore** using **Scalar’s built-in operation sidebar** (`showSidebar: true`). Do **not** mount the custom end-column **`ExplorerModuleRail`** in product UX.
 
-### Title
+Module selection for which spec Scalar loads remains the **API to explore** `CdxSelect` (discovery order + opt-in rules). Endpoint selection, expand/collapse, and in-sidebar scroll are Scalar’s responsibility.
 
-**Decision:** The rail heading is the selected module’s **`headingTitle`** in `<bdi>` (same parsed title as the reference panel `h2`, without beta/version chips in the rail header). Typography: **`--font-size-medium`**, bold.
+### Layout
 
-### Surfaces (project controls + module rail)
+**Decision:** With the native sidebar on, community Explorer adds **`frontdoor-shell--explorer-internal-sidebar`**: end column **collapsed**; main column (project controls + Scalar) uses the full body width (`app/layouts/default.vue`, `config/explorerInternalSidebarExperiment.ts`).
 
-**Decision:** Both **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share surface tokens:
+### Surfaces (project controls)
+
+**Decision:** **`ExplorerProjectControls`** uses surface tokens:
 
 | Token | Value | CSS variable |
 |-------|-------|--------------|
 | Background | Codex **`--background-color-neutral-subtle`** | `--fd-explorer-controls-surface-background-color` |
 | Border radius | **4px** | `--fd-explorer-controls-surface-border-radius` |
 
-Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Background follows the Codex theme token so light/dark modes keep readable contrast — the earlier fixed `#F3F3F3` exploratory hex failed dark-mode text contrast and was superseded. Border radius is an exploratory **4px** value — **not** a Codex design token (Codex **`--border-radius-base`** is **2px**) and is under consideration as a **future system default**. Account list-element cards, the Reset success credentials panel, and the Explorer **Test Request** dialog (UI exploration) consume the same CSS variable (**`--fd-explorer-controls-surface-border-radius`**) so the exploration stays single-sourced.
+Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Border radius is exploratory **4px** — **not** a Codex design token (Codex **`--border-radius-base`** is **2px**) and is under consideration as a **future system default**. Account list-element cards, the Reset success credentials panel, NavigationCard, CodeBlock / CodeTabs, Highlight, and the Explorer **Test Request** dialog consume the same radius variable.
 
-### Endpoint list
+### Legacy custom module rail
 
-**Decision:** Endpoints for the selected module are always shown on **desktop end-column** layout. On **inline** layout (&lt; 1120px), the endpoint list is **collapsed by default** and toggled via a quiet icon `CdxButton` (`cdxIconExpand` / `cdxIconCollapse`); module changes reset to collapsed.
-
-On wide viewports the rail grows to fit its content; **`max-block-size`** matches **`.explorer-page__scalar-shell`** (via `useEndPanelNavAlign`). When endpoints exceed that height, the endpoint list scrolls inside the rail while the module heading stays visible.
-
-On **inline** layout when the endpoint panel is expanded: **seven or fewer** endpoints — panel block size follows content; **more than seven** — **`useExplorerModuleRailInlineEndpointScrollCap`** caps **`.explorer-module-rail__endpoint-scrollport`** to seven visible rows (measured from the first seven `CdxMenuItem` rows); additional endpoints scroll inside the scrollport. Cap constant: **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** in **`config/explorerModuleRail.ts`**.
-
-### Endpoint rows
-
-**Decision:** Each endpoint is a **`CdxMenuItem`** outside a floating `CdxMenu` — same approved shell pattern as **`ShellSidePanelNav`**. The default slot renders method + **name** (OpenAPI `summary`, with path as bootstrap fallback); `:label` supplies the accessible name (includes path when it differs from the name). Row styling:
-
-| Part | Style |
-|------|--------|
-| HTTP method | Monospace, uppercase, bold; **method colour**: GET progressive, POST success, DELETE destructive, PUT/PATCH warning; `dir="ltr"`; **`white-space: nowrap`** |
-| Name | Sans, small; in `<bdi>`; **inline after method** on the same line; wraps only when the row runs out of space |
-
-**Layout:** Method and name use **inline flow** (not flex-wrap rows) so the name always begins after the method tag.
-
-**Interaction:** Click triggers **Scalar operation focus** (scroll + navigation id resolution) for the already-selected module. The focused endpoint row uses **`CdxMenuItem` `:selected`**; the name label uses **`--color-progressive`**. Selected rows **do not** use Codex’s progressive-subtle background fill — name colour only.
-
-**Hover:** Codex menu-item background on hover. **Name** text turns **`--color-progressive`** on hover (same as **`ShellSidePanelNav`** — no underline). **HTTP method** tags **keep their semantic colour** on hover and when selected (GET progressive, POST success, DELETE destructive, PUT/PATCH warning) — do not blanket-apply progressive to the method span.
-
-**Scrolled divider:** When **`.explorer-module-rail__endpoint-scrollport`** is scrolled (`scrollTop > 0`), a sticky **`.explorer-module-rail__scroll-divider`** renders at the top of the scrollport viewport (`border-block-start: 1px solid var(--border-color-subtle)`). **End-column** layout insets the line with **`margin-inline: var(--spacing-75)`**; **inline** layout relies on the rail’s **`padding-inline: var(--spacing-50)`** (`margin-inline: 0` on the divider).
-
-**Scroll:** When the endpoint list exceeds its layout cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls with a **thin visible scrollbar** (transparent track; same tokens as start nav — WebKit **`width: 6px`** exception documented in `ARCHITECTURE.md` → End column module rail). **Wide (≥ 1120px):** cap matches Scalar shell height via `useEndPanelNavAlign`. **Inline (&lt; 1120px, expanded):** cap is seven visible endpoint rows when count exceeds **`EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS`** (`config/explorerModuleRail.ts`).
-
-**Source:** `dafafc3` (endpoint navigation), `ExplorerModuleRail.vue`, `ShellSidePanelNav.vue`, `useExplorerScalarFocus.ts`, `useExplorerModuleRailInlineEndpointScrollCap.ts`, `config/explorerModuleRail.ts`.
-
-### Rail positioning
-
-**Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). The anchor is **always mounted** in community mode; only project controls wait for bootstrap so Teleport can resolve the target on first paint at tablet widths. **No** gap from `.explorer-page__project-controls-stack` between controls and the rail. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
-
-**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor: scalar shell; **no** height-match to natural-height shell content) setting `--frontdoor-end-panel-nav-flow-offset` and `--frontdoor-end-panel-nav-sticky-inset`. **`--frontdoor-end-panel-nav-max-block-size`** falls back to the viewport body-band estimate in `page-grid.css` / `shell-end-panel-nav.css`. The rail’s default block size follows its content. **Future** section page menus in the end column should use the same class and composable pattern.
-
-**Surface:** **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
+**Not product UX.** `ExplorerModuleRail.vue` and related placement / scroll-cap helpers remain for rollback (`EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR = false`). Do not extend that path or treat end-column endpoint `CdxMenuItem` rows as current design requirements.
 
 ---
 
@@ -692,9 +663,9 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 | Instance bootstrap | Full-page overlay inside explorer (absolute, not fixed over header): spinner, “Loading wiki API modules”, wiki name in `<bdi>`; gradient background matching Scalar loading |
 | Scalar client mount | `ClientOnly` fallback with same spinner pattern |
 | Module switch | On wide viewports only: semi-transparent mask over Scalar shell with “Loading selected module…” |
-| No selectable modules | Handled in project controls / bootstrap (rail hidden until `visibleSelectedModule` exists) |
-| Per-module spec error | Inline “Not available” copy in the module rail scrollport |
-| Empty endpoint list | Subtle empty copy in the module rail scrollport |
+| No selectable modules | Handled in project controls / bootstrap |
+| Per-module spec error | Surface via bootstrap / project controls messaging (Scalar may also show empty/error UI for a failed spec) |
+| Empty endpoint list | Scalar’s sidebar / reference empty state for the loaded document |
 | Bootstrap error | Error `CdxMessage` in main column |
 
 **Spinner:** 2.5rem circle, progressive-colour top border, 0.9s rotation.
@@ -705,9 +676,9 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 ### Endpoint → Scalar anchoring
 
-**Decision:** Selecting an endpoint in the rail scrolls/focuses the matching operation in the Scalar reference panel (smooth scroll within the spec shell).
+**Decision:** Everyday endpoint navigation uses **Scalar’s native sidebar**. Programmatic focus (deep-link / pending operation target) still scrolls the matching operation via **`useExplorerScalarFocus`**.
 
-**Architecture (flow, id resolution, retries):** see **`ARCHITECTURE.md` → Module rail → Scalar operation focus**.
+**Architecture (flow, id resolution, retries):** see **`ARCHITECTURE.md` → Scalar operation focus (deep-link / pending target)**.
 
 **UX constraint:** Documented remount via `:key` on `ExplorerScalarReference` when module/spec context changes; `Object.assign` used for in-place spec URL updates when staying on the same module.
 
@@ -893,7 +864,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Navigation card (Get started) | Variant A cards in rows of 3; hover `--border-color-subtle`; base font size; **16px** grid `margin-block` above/below; no icons/chips on Get started |
 | *(uncommitted)* | Get started content typography | Remove `h2` `<hr>` dividers; Codex Heading 1 / 2 / 3 on `.fd-content-page` |
 | *(uncommitted)* | Interface language Lookup + Codex bidi CSS | Globe + code trigger; popover wraps `CdxLookup`; `clearable`; `visibleItemLimit: 7`; Floating UI cancel for menu containment; `codex.style-bidi.css` replaces dual-sheet RTL toggle |
-| *(uncommitted)* | Explorer module rail Teleport + Scalar shell resize | `#explorer-module-rail-anchor` always mounted; shell `overflow-inline: clip` + border frame; `explorer-codex-overrides.css` sample `pre` caps |
+| PR #40 | Scalar native sidebar replaces custom module rail | `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR`; end column collapsed on community Explorer |
 | *(uncommitted)* | Explorer side nav routing | `usePageSectionNav` resolves `to` + active state from `mode` / `explorerModeFromPath`; `ShellSidePanelNav` navigates via `navigateTo` |
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |
 | *(uncommitted)* | Scroll-end symmetry (32px) | `::after` spacer on start scrollport (tablet+ panel, mobile `.fd-page-grid__start`) + overlay panel; footer keeps `padding-block-end` |
@@ -932,7 +903,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
 5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
 6. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
-7. **Mobile explorer** — inline collapsible module rail below project controls is **implemented** (&lt; 1120px); remaining mobile polish (reference panel sticky, Scalar height) may still evolve.
+7. **Mobile explorer** — endpoint list is Scalar’s native sidebar inside the reference panel; remaining mobile polish may still evolve.
 8. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
 9. **Editorial content** for Use content and data, Community, Contribute, Get help.
 10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
@@ -969,7 +940,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
 | Explorer page | `app/pages/explorer/[[view]].vue` |
-| Module rail | `app/components/explorer/ExplorerModuleRail.vue` |
+| Scalar native sidebar flag | `config/explorerInternalSidebarExperiment.ts`, `config/scalar.ts` |
+| Legacy module rail (rollback only) | `app/components/explorer/ExplorerModuleRail.vue` |
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts` |
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |

@@ -1,5 +1,6 @@
 /**
- * Surface tokens for explorer project controls and module rail.
+ * Surface tokens for explorer project controls (and shared exploratory radius
+ * consumers). The former module rail is not product UX (PR #40).
  *
  * CSS custom properties in `app/assets/css/page-grid.css`
  * (`--fd-explorer-controls-surface-*`) must stay in sync with these values.

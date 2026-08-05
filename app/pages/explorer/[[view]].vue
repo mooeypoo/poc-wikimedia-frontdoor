@@ -282,8 +282,9 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 			<!--
 				Teleport anchor stays mounted in community mode (controls alone gate on bootstrap).
-				Vue Teleport requires #explorer-module-rail-anchor in the DOM before the rail mounts.
-				See ARCHITECTURE.md → End column module rail → Teleport mounting.
+				Legacy module rail only (EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR false).
+				Vue Teleport requires #explorer-module-rail-anchor before the rail mounts.
+				See ARCHITECTURE.md → Scalar native endpoint sidebar (legacy note).
 			-->
 			<div
 				v-if="isCommunityMode"

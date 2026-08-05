@@ -8,7 +8,8 @@ const CSS_VAR_INLINE_ENDPOINT_SCROLL_MAX_BLOCK_SIZE =
 const LAYOUT_SETTLE_MAX_ATTEMPTS = 8
 
 /**
- * Caps the inline module rail endpoint scrollport to a fixed number of visible rows.
+ * **Legacy** — caps the inline custom module rail endpoint scrollport (unused
+ * while Scalar’s native sidebar is on — PR #40).
  *
  * When the endpoint count exceeds {@link EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS},
  * measures the block size of the first N rows and sets

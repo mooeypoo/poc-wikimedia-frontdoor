@@ -95,8 +95,9 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   ├── auth.ts                 # Account path, Meta-Wiki OAuth URLs, prototype defaults
 │   ├── tokenManagement.ts      # Placeholder API key seeds + Reset fake secret generators (not real Meta data)
 │   ├── explorerProjectPicker.ts # Explorer project + language picker ids and wiki instance mapping
-│   ├── explorerModuleRail.ts   # Inline module rail endpoint scroll cap constant
-│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer controls + rail; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight)
+│   ├── explorerInternalSidebarExperiment.ts # Community Explorer: Scalar native sidebar (PR #40); gates legacy module rail
+│   ├── explorerModuleRail.ts   # Legacy module-rail inline endpoint scroll cap (unused while native sidebar is on)
+│   ├── explorerSurfaces.ts     # Shared exploratory surface tokens (explorer project controls; 4px radius also used by account cards / Reset panel / NavigationCard / CodeBlock / CodeTabs / Highlight / Test Request dialog)
 │   ├── navigationCardIcons.ts  # Allowlisted Codex icon names for NavigationCard MDC props
 │   ├── navigationCardTitleLogos.ts # Allowlisted brand title logos (gerrit/github/gitlab) for NavigationCard
 │   ├── wikiInstanceTestWikis.ts # Production → test wiki mapping + display-name keys for write-request warning
@@ -191,7 +192,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useLocaleWithFallback(requestedLocale)` | Best available locale given the fallback chain in config |
 | `useOAuthSession()` | Token state, auth initiation, token display data; wraps the Pinia oauthSession store |
 | `useScalarConfig(specUrl)` | Reactive Scalar configuration object for a given spec URL; handles Object.assign update pattern |
-| `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules with `headingTitle`, `moduleDescription`, operations, spec URLs, selection, Scalar switch state) via `/api/explorer-bootstrap`; exposes **`selectedEndpointOperationId`** for module rail `:selected` state |
+| `useExplorerBootstrap(instance)` | Aggregated explorer bootstrap (modules with `headingTitle`, `moduleDescription`, operations, spec URLs, selection, Scalar switch state) via `/api/explorer-bootstrap`; exposes **`selectedEndpointOperationId`** / pending operation target for deep-link and (legacy) rail focus via `useExplorerScalarFocus` |
 | `useExplorerOptInFilteredModules(...)` | Filters bootstrap module lists by opt-in checkboxes (beta prefixes + `*-internal` path segments); exposes visible selection/spec URL; reconciles selection when a gated module is hidden |
 | `useExplorerOptInCheckboxGroup(beta, internal)` | Maps opt-in boolean refs to Codex checkbox group values (`config/explorerOptIn.ts` tokens) |
 | `useExplorerProjectLanguagePicker(instanceId)` | Project + language combobox state; maps picker selections to wiki instance ids (`config/explorerProjectPicker.ts`); syncs with `selectedWikiInstanceId` from `useDirection()` |
@@ -205,8 +206,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
 | `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: omit height-match — viewport CSS fallback; natural-height Scalar shell) |
-| `useExplorerModuleRailPlacement()` | Resolves module rail Teleport target and layout mode: end column (≥ 1120px) vs inline below project controls (< 1120px) |
-| `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | On inline layout when the endpoint panel is expanded and endpoint count exceeds `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (`config/explorerModuleRail.ts`), measures the first N row block size and sets `--explorer-module-rail-inline-endpoint-scroll-max-block-size` on the scrollport |
+| `useExplorerModuleRailPlacement()` | **Legacy** (unused while `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` is true): module rail Teleport target / layout mode |
+| `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | **Legacy** (unused while native sidebar is on): inline rail endpoint scrollport cap |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
 | `useDirection()` | Current text direction ('ltr' or 'rtl') based on active language / wiki instance config |
 | `useColorMode()` | Site light / dark / auto (`fd-theme--*`); localStorage + FOUC script; preferences popover radios call `setMode` only |
@@ -300,7 +301,7 @@ banana-i18n labels + resolved to + single global active item
 
 **Panel edge (not background).** The start column track is **transparent**; separation from main content uses **`border-inline-end: 1px solid var(--border-color-muted)`** on **`.frontdoor-shell__side-panel--start`** in `default.vue` when expanded — on the **scrollport panel**, not the grid track, so the border does not stack beside the scrollbar gutter. Section group dividers in **`ShellSidePanelNav`** use the same token. When **`.frontdoor-shell--nav-collapsed`**, **`border-inline-end-width: 0`** on the panel (scoped rule in `default.vue`). Border width transitions on expand with the drawer (`--transition-duration-medium`). This **supersedes** the earlier `#F3F3F3` panel background exploration. The legacy token `--fd-layout-start-panel-background-color` remains in `page-grid.css` but is **not consumed** — retained only if design reverts to a filled panel. See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 
-**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown), for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**, and for **`ExplorerModuleRail`** endpoint rows. Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. See `DESIGN_REQUIREMENTS.md` → Start column section navigation and Module rail.
+**Codex exception — `CdxMenuItem` outside `CdxMenu`.** `ShellSidePanelNav` renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; this is an intentional shell-chrome exception approved for the side panel (static list, not a dropdown) and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. (Legacy **`ExplorerModuleRail`** endpoint rows used the same pattern; that rail is not mounted while Scalar’s native sidebar is on — PR #40.) Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. See `DESIGN_REQUIREMENTS.md` → Start column section navigation.
 
 **Codex exception — section nav hover colour.** Non-selected menu items use custom CSS (`:hover`) to set label text to **`--color-progressive`**. Codex `CdxMenuItem` hover normally only changes **background** (`--background-color-interactive-subtle--hover`); it does not turn unselected item text progressive. Additionally, when used outside `CdxMenu`, the `highlighted` prop is never toggled (the parent menu normally handles `@change` events), so shell styles must use **`:hover`**, not `.cdx-menu-item--highlighted`. Selected items keep Codex’s built-in `--color-progressive` via `cdx-menu-item--selected`. Implemented in `ShellSidePanelNav.vue`.
 
@@ -344,62 +345,29 @@ Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transiti
 
 ---
 
-## End column module rail (API Explorer)
+## Scalar native endpoint sidebar (API Explorer)
 
-On desktop, the grid **end column** (`#explorer-end-panel` in `app/layouts/default.vue`) hosts the community **module rail** when instance bootstrap succeeds. Enterprise modes hide the rail and leave the end column reserved-empty.
+**Decision (PR [#40](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/40)):** Community Explorer does **not** use the custom end-column **module rail** (`ExplorerModuleRail`). Endpoint browsing is Scalar’s built-in operation sidebar (`showSidebar: true` via `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` in `config/explorerInternalSidebarExperiment.ts` and `config/scalar.ts`).
 
-**Data and selection.**
+**Layout.**
 
 ```
 REST API module select (CdxSelect) → selectedModuleName
        ↓
-useExplorerOptInFilteredModules → visibleSelectedModule
+useExplorerOptInFilteredModules → visibleSelectedModule / visibleOpenApiSpecUrl
        ↓
-ExplorerModuleRail (teleported via useExplorerModuleRailPlacement)
-       ↓  ≥ 1120px → #explorer-end-panel  |  < 1120px → #explorer-module-rail-anchor (below project controls)
+useScalarConfig → ApiReference (showSidebar: true)
        ↓
-@endpoint-click → selectModule(moduleName, { source: 'endpoint-item', operationTarget })
-       ↓
-selectedEndpointOperationId → ExplorerModuleRail :selected on matching CdxMenuItem
+Scalar native sidebar lists operations for the loaded OpenAPI document
 ```
 
-The rail lists **endpoints for `visibleSelectedModule` only** — not every discovered module. Module selection for Scalar is driven by the REST API module select; the rail is an endpoint browser for the active module. Each row shows the operation **name** (OpenAPI `summary` via `resolveEndpointNameLabel()`; path only as fallback / in the accessible label). Spec URLs are never constructed in the rail; bootstrap already resolved them from discovery.
+On `/explorer` when the flag is on, the shell adds **`frontdoor-shell--explorer-internal-sidebar`**: the end column is collapsed and the main column (project controls + Scalar reference) takes the full body width (`app/layouts/default.vue`). Enterprise modes already relied on Scalar’s sidebar; community now matches that pattern for endpoints.
 
-**Component boundary.** `ExplorerModuleRail.vue` is presentational: it receives `selectedModule`, `selectedEndpointOperationId`, and emits `endpoint-click`. The explorer page owns bootstrap state, opt-in filtering, and `useExplorerScalarFocus`. Endpoint labels, accessible names, and operation-id resolution come from `app/utils/explorerEndpointLabels.ts` (`resolveEndpointOperationId()` bridges endpoint clicks to bootstrap `selectedEndpointOperationId`). Inline scrollport capping (`useExplorerModuleRailInlineEndpointScrollCap`) runs inside the rail component because it measures internal scrollport and endpoint-list DOM refs.
+**Surfaces.** **`ExplorerProjectControls`** uses **`--fd-explorer-controls-surface-background-color`** / **`--fd-explorer-controls-surface-border-radius`** from `config/explorerSurfaces.ts` (shared with account cards, NavigationCard, CodeBlock / CodeTabs, Highlight, Test Request dialog). The former rail no longer shares that surface in the live UI.
 
-**Rendering.**
+**Deep-link / operation focus.** URL and bootstrap deep-links still set a pending operation target; **`useExplorerScalarFocus`** scrolls the Scalar reference panel to the matching operation (same resolution helpers as before). Everyday endpoint navigation is owned by Scalar’s sidebar — not a frontdoor `CdxMenuItem` list.
 
-- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards, the Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer **Test Request** dialog consume the same border-radius variable.
-- Heading: selected module **`headingTitle`** in `<bdi>` at **`--font-size-medium`** (no beta/version chips in the rail header).
-- Endpoint rows: **`CdxMenuItem`** outside `CdxMenu` — same Codex shell exception as **`ShellSidePanelNav`**. Default slot renders HTTP method (`dir="ltr"`, method colours) + **name** (`<bdi>`, OpenAPI `summary` via `resolveEndpointNameLabel()`; path only as fallback); `:label` supplies the accessible name (includes path when it differs); **`:selected`** binds to **`selectedEndpointOperationId`**. Non-selected **name** hover uses **`--color-progressive`**; HTTP method tags **keep semantic colours** on hover and when selected. Selected rows override Codex **`progressive-subtle`** background to **transparent** (name colour only).
-- Scroll divider: when **`.explorer-module-rail__endpoint-scrollport`** has `scrollTop > 0`, a sticky **`.explorer-module-rail__scroll-divider`** (real DOM element, not `::before`) pins a **`--border-color-subtle`** line at the scrollport top; end-column insets with **`margin-inline: var(--spacing-75)`**, inline layout via rail **`padding-inline: var(--spacing-50)`**.
-- Method + name layout: inline flow — method `white-space: nowrap`; name follows on the same line and wraps only when needed.
-
-**Layout and scroll (wide viewports, ≥ 1120px).**
-
-```
-useEndPanelNavAlign(
-  scalarShellRef,           // align anchor (top edge)
-  explorerEndPanelElement,  // #explorer-end-panel mount
-  scalarShellRef,           // sticky inset scroll clamp
-  scalarShellRef            // height cap → --frontdoor-end-panel-nav-max-block-size
-)
-```
-
-- Classes: **`frontdoor-end-panel-nav`** + **`explorer-module-rail`** (`app/assets/css/shell-end-panel-nav.css`).
-- Rail **block size follows content**; **`max-block-size`** uses the viewport body-band CSS fallback (not natural-height Scalar shell content height).
-- When endpoints exceed the cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls internally; the module heading stays visible.
-- Scrollbar: thin thumb + transparent track (Firefox `scrollbar-width` / `scrollbar-color`; WebKit pseudo-elements — physical **`width: 6px`** exception, documented alongside start nav in **Shell scroll regions**).
-
-**Layout and scroll (narrow viewports, < 1120px).** The end column is hidden (`display: none` on `.frontdoor-shell__side-panel--end`). The rail **teleports** to `#explorer-module-rail-anchor` in the main column, directly below project controls (no `.explorer-page__project-controls-stack` gap). It renders as a **collapsible** panel (module heading + expand/collapse control; endpoint list hidden until expanded). See `useExplorerModuleRailPlacement()` and Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
-
-- **≤ `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (7) endpoints:** expanded panel block size follows content; no scrollport cap.
-- **> 7 endpoints:** `useExplorerModuleRailInlineEndpointScrollCap` measures the block size spanning the first seven **`CdxMenuItem`** rows and sets **`--explorer-module-rail-inline-endpoint-scroll-max-block-size`** on **`.explorer-module-rail__endpoint-scrollport`** (class **`explorer-module-rail__endpoint-scrollport--inline-capped`**). Additional endpoints scroll inside the scrollport with the same thin scrollbar as the wide layout.
-- Row cap constant: **`config/explorerModuleRail.ts`**. Remeasures on expand/collapse, module change, resize, and endpoint-list `ResizeObserver` updates.
-
-**Teleport mounting.** Inline layout targets **`#explorer-module-rail-anchor`** in `app/pages/explorer/[[view]].vue`. Vue `<Teleport>` resolves its target when the rail first mounts; if the anchor is absent, the rail is not rendered and Vue logs a target warning. The anchor therefore stays in the DOM whenever **`isCommunityMode`** is true; only **`ExplorerProjectControls`** is gated on **`!isInstanceBootstrapping`**. Resizing across the 1120px breakpoint remounts the rail via **`:key="layoutMode"`** and masks the issue on desktop → tablet transitions; a missing anchor on first paint at tablet widths was the original failure mode.
-
-**UI reference.** `DESIGN_REQUIREMENTS.md` → Module rail. Operation focus flow: **Module rail → Scalar operation focus** below.
+**Legacy module rail (not product UX).** `ExplorerModuleRail.vue`, `useExplorerModuleRailPlacement`, `useExplorerModuleRailInlineEndpointScrollCap`, and `config/explorerModuleRail.ts` remain in the tree for rollback (`EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR = false`). Do not document or extend that path as the current Explorer experience. See `DESIGN_REQUIREMENTS.md` → Scalar native endpoint sidebar.
 
 ---
 
@@ -420,7 +388,7 @@ The default layout (`app/layouts/default.vue`) mounts the application shell insi
     └── .fd-page-grid__body         ← `.frontdoor-shell__body-scroll` (main + end scrollport)
         └── .frontdoor-shell__body-columns (main:end 16:4 at desktop)
             ├── .frontdoor-shell__content → .frontdoor-shell__main (page slot) + ShellSiteFooter
-            └── .frontdoor-shell__side-panel--end   ← module rail / reserved space (desktop+)
+            └── .frontdoor-shell__side-panel--end   ← reserved space (desktop+); collapsed on community Explorer when Scalar native sidebar is on
 ```
 
 **Page grid (tablet+).** Two outer tracks: **start** + **body**. The body band contains a **main:end** sub-grid (`4fr | 1fr` at desktop) in `default.vue`. The site footer lives **inside** `.frontdoor-shell__content` (main track only). **`.frontdoor-shell__body-scroll`** is the vertical scrollport for main + end — scrollbar at the **inline-end** edge of the body band; wheel over the empty end column scrolls central content (Discord-style). On short pages, `.frontdoor-shell__content` uses **`min-block-size: 100%`** plus column flex so the footer sits on the shell bottom. See **Site footer** and **Shell scroll regions** below.
@@ -480,8 +448,8 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-shell-chrome-block-size-estimate` | `11rem` | Chrome height estimate for sticky panel max-heights |
 | `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
 | `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
-| `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
-| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer **Test Request** dialog (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
+| `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls background (theme-aware) |
+| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer **Test Request** dialog (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
 | `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `560px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row (search min + controls + **16px** search→preferences + **8px**×2 remaining gaps) |
 | `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
@@ -510,7 +478,7 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 
 ### Codex exceptions (shell chrome)
 
-1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list, for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**, and for **`ExplorerModuleRail`** endpoint rows (default slot for method + **name**; `:label` for accessible name). **Additional override (start nav):** non-selected items use custom `:hover` CSS for **`--color-progressive`** text (see **Shell section navigation** — hover colour). **Module rail differs:** only the **endpoint name** (OpenAPI summary) turns progressive on hover; HTTP method tags keep semantic colours; selected endpoint rows use **`:selected`** with progressive name and **transparent** background (no Codex progressive-subtle fill). **Not** used for explorer **`CdxSelect`** / **`CdxCombobox`** menus — those use Codex’s internal `CdxMenu` and must keep native hover / highlighted / selected behaviour (see **REST API module select** → Codex interaction). Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. **Navigation:** explorer mode items navigate via **`navigateTo(item.to)`** where `to` is resolved in **`usePageSectionNav()`** — the component does not construct URLs.
+1. **`ShellSidePanelNav`** — renders `CdxMenuItem` **outside** a floating `CdxMenu`. Codex documents menu items as menu-only; approved for this static side-panel list and for the collapsed overlay primary list in **`ShellCollapsedNavMenuOverlay`**. **Additional override (start nav):** non-selected items use custom `:hover` CSS for **`--color-progressive`** text (see **Shell section navigation** — hover colour). **Not** used for explorer **`CdxSelect`** / **`CdxCombobox`** menus — those use Codex’s internal `CdxMenu` and must keep native hover / highlighted / selected behaviour (see **REST API module select** → Codex interaction). Legacy **`ExplorerModuleRail`** endpoint rows used the same outside-`CdxMenu` pattern; that rail is not mounted while Scalar’s native sidebar is on (PR #40). Optional prop **`omitSectionTitleMatching`** suppresses a section heading when the collapsed overlay back control already shows that label. **Navigation:** explorer mode items navigate via **`navigateTo(item.to)`** where `to` is resolved in **`usePageSectionNav()`** — the component does not construct URLs.
 2. **`ShellPrimaryNav`** — `CdxTabs` **navigation-only** (tab panels hidden via CSS); route changes via `navigateTo()` on `navigation-select`. Quiet-tabs **header bottom border suppressed** via `shell-primary-nav-overrides.css` (imported from `main.css` after `codex.style-bidi.css`) — `.frontdoor-shell__chrome-band` owns the single header edge (`border-block-end: 1px solid var(--border-color-muted)`) per Figma. **Tab scroll buttons** (`.cdx-tabs__prev-scroller` / `.cdx-tabs__next-scroller`) are **hidden** in the same file — Codex shows them on overflow and they **flicker on first paint** before intersection observers settle; shell chrome will use a separate responsive approach. **Tab label weight:** all labels **`--font-weight-normal`** — Codex sets **700** on every quiet-tab label by default; selected state uses colour/underline only.
 3. **Start column edge** — **`border-inline-end`** with `--border-color-muted` on **`.frontdoor-shell__side-panel--start`** when expanded (scrollport panel, not grid track); section dividers in **`ShellSidePanelNav`** use the same token; **`border-inline-end-width: 0`** when collapsed. **Not** the earlier `#F3F3F3` exploratory surface (token retained but unused). See `DESIGN_REQUIREMENTS.md` → Start column chrome.
 4. **Start column width** — **281px** drawer panel (Figma 241px + one Codex 40px grid column); grid track width is **0 or 281px** via collapse. **Deviation from Figma** side-panel spec; prototype widening only.
@@ -719,12 +687,12 @@ Select menu labels use each module’s **`headingTitle`** (external string) via 
 
 **Codex Select configuration:** **`default-label`** from banana-i18n `explorer-module-placeholder`. **`menu-config`**: `{ boldLabel: true, hideDescriptionOverflow: false }` — descriptions wrap to multiple lines in the dropdown ([Codex Select demos](https://doc.wikimedia.org/codex/latest/components/demos/select.html)). Menu item state (hover background, keyboard **`highlighted`**, **`selected`** progressive text) is owned by Codex; **`app/assets/css/main.css`** may only adjust floating-menu **z-index** and list-style resets under `.explorer-page` — **do not** override `.cdx-menu-item__content` or highlighted/selected colours (regression fixed after descriptions landed).
 
-The end-column **module rail** lists endpoints for **`visibleSelectedModule`** only; endpoint clicks call `selectModule` with optional operation focus.
+Endpoint browsing for the loaded module is Scalar’s native sidebar (`showSidebar: true`). Deep-links may still call `selectModule` with an optional operation focus target.
 
 ### Spec resolution flow
 
 ```
-User selects: wiki instance (project + language picker) + REST module (select or endpoint click in rail)
+User selects: wiki instance (project + language picker) + REST module (API to explore select)
        ↓
 useExplorerBootstrap → GET /api/explorer-bootstrap?wikiInstanceId=…
        ↓
@@ -732,9 +700,9 @@ Server: discovery → fetch each module OpenAPI spec → modules[] with specUrl,
        ↓
 useExplorerOptInFilteredModules → visibleModules, visibleOpenApiSpecUrl
        ↓
-useScalarConfig(visibleOpenApiSpecUrl)   ← reactive Scalar configuration
+useScalarConfig(visibleOpenApiSpecUrl)   ← reactive Scalar configuration (showSidebar: true)
        ↓
-<ApiReference :configuration="scalarConfig" />
+<ApiReference :configuration="scalarConfig" />  ← Scalar native sidebar lists operations
 ```
 
 Per-module language-level spec fallback (`useSpecUrl` + `config/languages.js`) is reserved for a later phase; community explorer uses discovery spec URLs as returned for the selected instance.
@@ -757,14 +725,12 @@ If a future Scalar version changes this behaviour, update the composable and rem
 
 When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (instance + module + spec URL). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
 
-### Module rail → Scalar operation focus
+### Scalar operation focus (deep-link / pending target)
 
-The right-hand **module rail** lists endpoints from bootstrap data. Selecting an endpoint must scroll the **Scalar reference panel** to the matching OpenAPI operation. This is application behaviour (not Scalar configuration): the rail emits a selection, bootstrap state holds a pending target, and a composable drives Scalar navigation once the spec is mounted.
+Everyday endpoint navigation uses **Scalar’s native sidebar**. Front Door still drives programmatic focus when bootstrap (or a deep-link) sets a **pending operation target** — for example landing on a module+operation URL. That path is application behaviour: bootstrap holds the target; **`useExplorerScalarFocus`** navigates Scalar once the spec is mounted.
 
 ```
-User clicks endpoint in ExplorerModuleRail
-       ↓
-useExplorerBootstrap.selectModule(module, { operationTarget })
+Deep-link / selectModule(…, { operationTarget })
        ↓
 pendingOperationTarget set (method, path, operationId, primaryTag, …)
        ↓
@@ -779,22 +745,22 @@ resolveScalarOperationNavigationId()  ← app/utils/scalarOperationNavigation.ts
        ↓
 scalarInterface.eventBus.emit('scroll-to:nav-item', { id })
        ↓
-scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: auto; overflow-inline: clip from 960px)
+scrollOperationIntoView() — .frontdoor-shell__body-scroll (natural-height specs)
 ```
 
 **Resolution strategy.** Scalar assigns each operation a navigation id (typically `{document}/tag/{tag}/{METHOD}{path}` or `{document}/{METHOD}{path}`). `scalarOperationNavigation.ts` mirrors that id generation (GitHub slugger for segments) and searches, in order: the workspace navigation tree exposed by `ApiReference`, sidebar items, then the DOM under the Scalar shell. Candidates are tried until an element with a matching `id` exists.
 
-**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling **`.frontdoor-shell__body-scroll`** (natural-height specs).
+**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling **`.frontdoor-shell__body-scroll`**.
 
 **Triggers.** Focus runs when:
 
-- The user selects an endpoint (pending target set, Scalar already ready)
+- A pending operation target is set and Scalar is already ready
 - Scalar finishes switching modules (`isScalarSwitching` false → true transition)
 - `ApiReference` exposes `eventBus` / workspace handles (`@interface-ready` on `ExplorerScalarReference`)
 
-**Same-module clicks.** Selecting another endpoint in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged), so focus can run immediately without waiting for a spec swap.
+**Same-module targets.** Focusing another operation in the **already active** module does not reload the spec (`selectModule` skips `startScalarSwitch` when the module name is unchanged).
 
-**UI reference.** Visual layout of the rail and endpoint rows is described in `DESIGN_REQUIREMENTS.md` → Module rail. Implementation: `useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `useExplorerScalarFocus.ts`, `ExplorerModuleRail.vue`, `tests/scalarOperationNavigation.test.mjs`.
+**UI reference.** Scalar sidebar behaviour is product-owned by `@scalar/api-reference`. Implementation: `useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts`, `tests/scalarOperationNavigation.test.mjs`. Legacy rail click → focus is dormant while `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` is true.
 
 ### Scalar shell overflow and resize
 
@@ -894,15 +860,14 @@ isExplorerBetaOptInModule(name)?  ← config/explorerOptIn.ts (prefix `attributi
 isExplorerInternalOptInModule(name)?  ← path segment ends with `-internal` (e.g. `discord/v0-internal`)
        ↓
 visibleModules → REST API module select (**API to explore**)
-visibleSelectedModule → ExplorerModuleRail (endpoint list)
-visibleSelectedModule / visibleOpenApiSpecUrl → Scalar
+visibleSelectedModule / visibleOpenApiSpecUrl → Scalar (native sidebar lists endpoints)
 ```
 
 When the active module becomes hidden (for example Attribution API with beta off, or Discord Preview API with internal off), **`resolveFirstExplorerRailModule()`** selects the first remaining healthy module in **discovery order** through `useExplorerBootstrap.selectModule()`. Bootstrap initial selection uses the same helper with **`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`** (beta **on**, internal **off**), so `*-internal` modules stay out of the **API to explore** menu until the internal checkbox is checked.
 
-**Scope note:** Opt-in currently gates **module** visibility (which specs appear in the select / rail / Scalar). Filtering individual operations inside a selected OpenAPI document is not implemented yet.
+**Scope note:** Opt-in currently gates **module** visibility (which specs appear in the select / Scalar). Filtering individual operations inside a selected OpenAPI document is not implemented yet.
 
-The reference panel `h2` and module rail heading use `headingTitle` from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`). In **API to explore**, audience markers are warning InfoChips (Codex exception #14) and version is MenuItem **`supportingText`** (suffixes `-beta` / `-internal` stripped, for example `0.1.0-internal` → `v0.1.0`).
+Module **`headingTitle`** from bootstrap (`resolveExplorerModuleRailHeading` in `app/utils/explorerModuleRailHeading.ts`) feeds **API to explore** labels (and the legacy rail heading if restored). In **API to explore**, audience markers are warning InfoChips (Codex exception #14) and version is MenuItem **`supportingText`** (suffixes `-beta` / `-internal` stripped, for example `0.1.0-internal` → `v0.1.0`).
 
 ### Scalar plugin layer
 
@@ -1501,13 +1466,13 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Start column (always mounted) | `app/layouts/default.vue` (`.frontdoor-shell__side-panel--start.shell-side-panel.shell-side-panel--start`), `app/composables/usePageSectionNav.ts`, `config/sectionNavigation.js`, `config/explorerSideNav.js` |
 | Start column edge + width | `app/layouts/default.vue` (scrollport border), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
-| Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css` (scrollport + scroll-end `::after` spacers), `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-end-panel-nav.css` (module rail scrollport), `app/assets/css/main.css` |
+| Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css` (scrollport + scroll-end `::after` spacers), `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-end-panel-nav.css` (legacy end-panel / rail scrollport), `app/assets/css/main.css` |
 | Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
 | Explorer page + modes | `app/pages/explorer/[[view]].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
 | Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/components/explorer/ExplorerModuleSelectOptionContent.vue` (label-only audience warning chips; Codex exception #14), `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `config/explorerSurfaces.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `tests/explorerModuleRailHeading.test.mjs`, `app/assets/css/main.css` (explorer picker menu stacking only), `app/assets/css/page-grid.css` (`--fd-explorer-controls-surface-*`), `i18n/*` (`explorer-module-beta-chip-label`, `explorer-module-internal-chip-label`) |
-| Explorer module rail + select metadata | `app/components/explorer/ExplorerModuleRail.vue`, `app/composables/useExplorerModuleRailPlacement.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css`, `config/explorerSurfaces.ts`, `app/pages/explorer/[[view]].vue` (`#explorer-module-rail-anchor`), `tests/explorerModuleDescription.test.mjs` |
+| Explorer Scalar sidebar + module select metadata | `config/explorerInternalSidebarExperiment.ts`, `config/scalar.ts` (`showSidebar`), `app/layouts/default.vue` (`frontdoor-shell--explorer-internal-sidebar`), `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `config/explorerSurfaces.ts`, `app/pages/explorer/[[view]].vue`, `tests/explorerModuleDescription.test.mjs` (legacy rail: `ExplorerModuleRail.vue` + placement/scroll-cap composables — not mounted when flag is true) |
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `app/composables/useExplorerOptInCheckboxGroup.ts`, `app/utils/explorerModuleOptInFilter.ts`, `config/explorerOptIn.ts` (`isExplorerBetaOptInModule`, `isExplorerInternalOptInModule`), `tests/explorerModuleOptInFilter.test.mjs` |
 | Write-request production warning (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/createScalarWriteEndpointWarningElement.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `app/scalar/explorerMapConfigPlugins.client.ts` (hooks only — no warning view slots), `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`, `i18n/*` (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-test-wiki-name-*`) |
 | Test Request modal sticky section titles | `app/assets/css/explorer-codex-overrides.css` (`.explorer-page .scalar-client .request-response-header { z-index: 1 }`) — see **Scalar Test Request modal sticky headers** |
@@ -1530,4 +1495,4 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 
 ## Experiment 1 notes
 
-The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select and end-column module rail (endpoints for the selected module) populate from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Write-request Test Request modals include the production **`CdxMessage`** (address-bar only; mocked test-wiki link) documented under **Scalar plugin layer → Write-request production warning**. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.
+The current implementation is Experiment 1 from the project design document: verifying Scalar multi-spec reactivity in Nuxt 4 using real Wikimedia endpoints. The experiment includes the full discovery flow — `useExplorerBootstrap` aggregates `/api/explorer-bootstrap` (discovery + per-module spec fetch), the REST API module select populates from the live response, and module selection drives Scalar via `visibleOpenApiSpecUrl`. Endpoint browsing uses **Scalar’s native sidebar** (PR #40; `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR`). Wiki instance selection uses the project + language picker (`useExplorerProjectLanguagePicker`, `config/explorerProjectPicker.ts`). Spec URLs are read directly from the discovery response and passed to Scalar. Write-request Test Request modals include the production **`CdxMessage`** (address-bar only; mocked test-wiki link) documented under **Scalar plugin layer → Write-request production warning**. Full feature scope is described in `AGENTS.md`. The experiment does not include per-module language-level spec selection, OAuth, wiki content sync, Markdown content pages, or search. It establishes the foundational scaffold for the explorer surface and confirms the core runtime spec-switching mechanism — including RTL shell direction switching — before the remaining experiments build on it.

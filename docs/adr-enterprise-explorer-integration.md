@@ -1,7 +1,21 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** All phases (A–F) complete; pending browser sign-off on C1/E1/F1–F5 QA checklists. **Superseded in part — see the Update (2026-07-22) note below.**
+**Status:** All phases (A–F) complete; pending browser sign-off on C1/E1/F1–F5 QA checklists. **Superseded in part — see the Update (2026-07-30) and Update (2026-07-22) notes below.**
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration, plus a custom (non-Scalar) tag-driven Enterprise viewer
+
+---
+
+## Update (2026-07-30): Community Explorer also uses Scalar’s native sidebar
+
+PR [#40](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/40) eliminated
+the custom community **module rail** (`ExplorerModuleRail`) from product UX.
+Community Explorer now enables Scalar’s built-in operation sidebar
+(`EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` → `showSidebar: true`) and collapses the
+shell end column — the same endpoint-menu approach this ADR already chose for
+Enterprise full mode. Sections below that describe a always-on community module
+rail or community `showSidebar: false` are **historical**; see
+`ARCHITECTURE.md` → Scalar native endpoint sidebar and
+`DESIGN_REQUIREMENTS.md` → Scalar native endpoint sidebar.
 
 ---
 
