@@ -22,6 +22,8 @@ const props = defineProps<{
 	isInstanceBootstrapping: boolean
 	visibleModules: ExplorerBootstrapModule[]
 	hasSelectableModules: boolean
+	/** Display name of the loaded instance, used to label a transient non-curated option. */
+	wikiDisplayName: string
 	selectModule: (
 		moduleName: string,
 		options: { source: 'module-select' }
@@ -51,7 +53,7 @@ const {
 	projectComboboxSelected,
 	languageComboboxSelected,
 	isLanguageSelectorDisabled
-} = useExplorerProjectLanguagePicker( selectedWikiInstanceId )
+} = useExplorerProjectLanguagePicker( selectedWikiInstanceId, toRef( props, 'wikiDisplayName' ) )
 
 const visibleModulesRef = toRef( props, 'visibleModules' )
 const isModuleSelectDisabledRef = computed( () => {

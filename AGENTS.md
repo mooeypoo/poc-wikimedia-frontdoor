@@ -325,7 +325,9 @@ If the same logic appears in more than one place, extract it. Repeated patterns 
 
 Composables live in `composables/` and are named with the `use` prefix describing what they provide:
 
-- `useExplorerProjectLanguagePicker(instanceId)` — project + language combobox state; maps to wiki instance id via `config/explorerProjectPicker.ts`
+- `useExplorerProjectLanguagePicker(instanceId, instanceDisplayName)` — project + language combobox state; maps to wiki instance id via `config/explorerProjectPicker.ts`; injects a **transient selected option** (labelled with the wiki display name) for a non-curated, deep-linked instance the curated comboboxes cannot represent (`isPickerRepresentableInstance`)
+- `useExplorerDeepLink(selectedWikiInstanceId)` — hydrates community selection from a deep-link URL **before** bootstrap (`/explorer/direct/…`, `/explorer/q/…`): sets the instance, hands `useExplorerBootstrap` a module/operation intent, and resolves + canonicalizes quick links via `server/api/explorer-quick-resolve` (see `docs/adr-explorer-deep-linking.md`)
+- `useExplorerDeepLinkSync({ … })` — reflects community selection back into the URL (`push` on operation focus, `replace` on instance/module change; clears the hash on switch), re-focuses on same-module Back/Forward, and falls back to the default wiki when a deep-linked instance fails to load
 - `useExplorerModuleSelect(visibleModules, …)` — REST API module `CdxSelect` menu items (`label`, version-only `supportingText`, `description`), audience-chip resolver, `menu-config`, `default-label`, and selection bridge for project controls
 - `useExplorerOptInFilteredModules(...)` — client-side beta/internal module visibility over bootstrap lists; reconciles selection when a gated module is hidden (`config/explorerOptIn.ts` + `app/utils/explorerModuleOptInFilter.ts`)
 - `useExplorerOptInCheckboxGroup(includeBetaEndpoints, includeInternalEndpoints)` — maps opt-in boolean refs to Codex checkbox-group values (`config/explorerOptIn.ts` tokens)

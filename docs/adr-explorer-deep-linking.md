@@ -1,6 +1,6 @@
 # ADR: Explorer Deep-Linking and Endpoint Search
 
-**Status:** Proposed
+**Status:** PR 1 (deep-linking) implemented; PR 2 (endpoint search) pending. Deferred within PR 1: cross-module Back/Forward re-focus, and scroll-spy hash updates (both need follow-up; see Open questions). The transient non-curated-instance picker option (§5) is implemented.
 **Scope:** A shareable, bidirectional URL scheme for the community API Explorer — path-based deep-links that carry the selected wiki instance, module, and operation, and that update live as the user drives the SPA — plus a keyword search over API endpoints that resolves each result to one of those deep-links. Delivered as **two pull requests**: PR 1 (deep-linking) and PR 2 (endpoint search), which depends on PR 1's URL scheme.
 
 **Related:**
@@ -55,6 +55,8 @@ Two facts shape the design:
 **Decision:** The Explorer continues to **not** use Scalar's `pathRouting` / hash routing. We parse the operation from `window.location.hash` on load, set `pendingOperationTarget`, and let the existing `useExplorerScalarFocus` engine scroll. We write the hash ourselves on operation change.
 
 **Rationale:** Two systems writing `window.location.hash` fight each other, and Scalar's is the buggy one ([scalar#5514](https://github.com/scalar/scalar/issues/5514)). Owning the hash also means **our anchor format is independent of Scalar's `generateOperationSlug`** — we never have to match Scalar's slug, because we translate our anchor to Scalar's internal nav id at runtime (§8), not the reverse.
+
+**Interaction with the internal-sidebar experiment.** The above holds only when Scalar's own sidebar is off (the manual `ExplorerModuleRail`). When `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` is enabled — the current build — Scalar's sidebar **and its native hash routing are active**, and Scalar owns the operation hash in its own `#{METHOD}{path}` format: it scrolls to and selects the operation from the hash on load. So deep-linking is **mode-aware**: with the sidebar on it owns only the **path** (instance + module), does not read an operation anchor into the intent, and must never write or strip the operation hash — it preserves Scalar's hash while the path is unchanged and clears it only when the module/instance changes (`useExplorerDeepLink` / `useExplorerDeepLinkSync` gate on the flag). Our own slug-format hash and imperative `useExplorerScalarFocus` engine apply only in the sidebar-off (module-rail) mode. Whichever mode is active, the URL reflects state — path from us, operation hash from whichever component owns it.
 
 ---
 

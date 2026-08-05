@@ -4,6 +4,7 @@ import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../config/explorerOptIn'
 import { resolveFirstExplorerRailModule } from '../utils/explorerModuleOptInFilter'
 import { resolveEndpointOperationId } from '../utils/explorerEndpointLabels'
+import { findOperationByAnchor } from '../utils/explorerOperationAnchor'
 
 export interface ExplorerModuleOperation {
 	id: string
@@ -45,12 +46,35 @@ export interface ExplorerOperationTarget {
 	primaryTag?: string
 }
 
-type SelectionSource = 'module-title' | 'module-accordion' | 'module-select' | 'endpoint-item' | 'bootstrap-default'
+type SelectionSource = 'module-title' | 'module-accordion' | 'module-select' | 'endpoint-item' | 'bootstrap-default' | 'deep-link'
 
-interface SelectModuleOptions {
+export interface SelectModuleOptions {
 	source: SelectionSource
 	operationTarget?: ExplorerOperationTarget
 }
+
+/**
+ * A deep-link's requested module + operation, applied once after the first
+ * successful bootstrap for its instance. The anchor is resolved against the
+ * loaded module's operations (see {@link findOperationByAnchor}).
+ */
+export interface ExplorerDeepLinkIntent {
+	/** Full discovery module name requested by the deep-link, e.g. `site/v1`. */
+	moduleName: string
+	/** Operation anchor slug (without `#`), or empty for a module-only deep-link. */
+	anchor: string
+}
+
+/**
+ * How an {@link ExplorerDeepLinkIntent} was applied after bootstrap — drives the
+ * page's fallback notice (ADR §9).
+ *
+ * - `applied` — module (and operation, if any) selected as requested.
+ * - `operation-not-found` — module selected, but its anchor matched no operation.
+ * - `module-not-found` — the module is absent on the instance; the default was
+ *   selected instead.
+ */
+export type ExplorerDeepLinkResolution = 'applied' | 'operation-not-found' | 'module-not-found' | null
 
 const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
 
@@ -67,7 +91,11 @@ const SCALAR_SWITCH_FALLBACK_TIMEOUT_MS = 2500
  *   rail mounts together with module data and aligned project controls.
  *   Establishes an `onMounted` bootstrap (post-hydration) and a watcher for wiki instance changes.
  */
-export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabled: Ref<boolean> = ref( true ) ) {
+export function useExplorerBootstrap(
+	selectedWikiInstanceId: Ref<string>,
+	enabled: Ref<boolean> = ref( true ),
+	initialDeepLinkIntent: Ref<ExplorerDeepLinkIntent | null> = ref( null )
+) {
 	const modules = ref<ExplorerBootstrapModule[]>( [] )
 	const wikiDisplayName = ref( '' )
 	const selectedModuleName = ref( '' )
@@ -80,6 +108,9 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 	const instanceBootstrapErrorMessage = ref( '' )
 	const pendingOperationTarget = ref<ExplorerOperationTarget | null>( null )
 	const selectedEndpointOperationId = ref<string | null>( null )
+	// Outcome of applying a deep-link intent to the last bootstrap — drives the
+	// page's fallback notice (ADR §9). Reset at the start of each bootstrap.
+	const deepLinkResolution = ref<ExplorerDeepLinkResolution>( null )
 	const { logEvent } = useExplorerDiagnostics()
 
 	let requestGeneration = 0
@@ -257,6 +288,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		expandedModuleNames.value = []
 		pendingOperationTarget.value = null
 		selectedEndpointOperationId.value = null
+		deepLinkResolution.value = null
 		scalarSwitchState.value = 'idle'
 
 		logEvent( 'bootstrap.start', {
@@ -284,10 +316,51 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 				DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS
 			)
 
-			if ( defaultModule ) {
-				selectModule( defaultModule.name, {
-					source: 'bootstrap-default'
-				} )
+			// Apply a pending deep-link (module + optional operation) once, resolving
+			// its anchor against the freshly loaded operations; otherwise select the
+			// default module. The intent is consumed so a later instance switch falls
+			// back to the default. See docs/adr-explorer-deep-linking.md §4, §9.
+			const pendingIntent = initialDeepLinkIntent.value
+			if ( pendingIntent ) {
+				initialDeepLinkIntent.value = null
+			}
+
+			if ( pendingIntent && isModuleSelectable( pendingIntent.moduleName ) ) {
+				const intentModule = modules.value.find(
+					( moduleItem ) => moduleItem.name === pendingIntent.moduleName
+				)
+				const targetOperation = intentModule
+					? findOperationByAnchor( intentModule.operations, pendingIntent.anchor )
+					: null
+
+				selectModule( pendingIntent.moduleName, targetOperation
+					? {
+						source: 'deep-link',
+						operationTarget: {
+							moduleName: pendingIntent.moduleName,
+							method: targetOperation.method,
+							path: targetOperation.path,
+							summary: targetOperation.summary,
+							operationId: targetOperation.operationId,
+							primaryTag: targetOperation.primaryTag
+						}
+					}
+					: { source: 'deep-link' }
+				)
+
+				deepLinkResolution.value = ( pendingIntent.anchor && !targetOperation )
+					? 'operation-not-found'
+					: 'applied'
+			} else {
+				if ( pendingIntent ) {
+					deepLinkResolution.value = 'module-not-found'
+				}
+
+				if ( defaultModule ) {
+					selectModule( defaultModule.name, {
+						source: 'bootstrap-default'
+					} )
+				}
 			}
 
 			instanceBootstrapState.value = 'ready'
@@ -302,6 +375,10 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 			if ( nextRequestGeneration !== requestGeneration ) {
 				return
 			}
+
+			// Consume any pending deep-link intent on failure so a fallback re-bootstrap
+			// (or a later manual instance switch) is not hijacked by a stale intent.
+			initialDeepLinkIntent.value = null
 
 			instanceBootstrapState.value = 'error'
 			instanceBootstrapErrorMessage.value = error instanceof Error ? error.message : 'Instance bootstrap failed.'
@@ -408,6 +485,7 @@ export function useExplorerBootstrap( selectedWikiInstanceId: Ref<string>, enabl
 		openApiSpecUrl,
 		pendingOperationTarget,
 		selectedEndpointOperationId,
+		deepLinkResolution,
 		isInstanceBootstrapping,
 		isExplorerModuleRailVisible,
 		hasInstanceBootstrapError,
