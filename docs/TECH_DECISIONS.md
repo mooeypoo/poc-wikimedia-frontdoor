@@ -80,13 +80,13 @@ Codex components and banana-i18n work inside plugins natively — no bridge patt
 
 **Confirm-before-Send mock:** A Codex `CdxDialog` intercepts address-bar Send for write methods. Overlay is contained to `#explorer-reference-panel` (Scalar embed; dialog component is a sibling of that panel). Action group stays end-aligned; progressive **Confirm** is left of **Cancel** within the pair (Codex exception #13 — reduces accidental confirms). Title 18px / body 16px. Easy undo: `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED = false` in `config/scalarClientWriteWarnings.ts`.
 
-### Test Request modal — shell fit + reference scroll lock (not page lock)
+### Test Request modal — UI exploration (specs ↔ sandbox)
 
-**Decision:** Keep the Test Request dialog fully inside the **visible Scalar shell** while open (close control reachable). Freeze **`.explorer-page__scalar-shell`** only; leave **`.frontdoor-shell__body-scroll`** unlocked. On open, snap shell `scrollTop` to `0` (restore on close), freeze + block wheel/touch outside `.scalar-client`, and CSS-pin the overlay into the shell client box (`absolute` + shell `%` sizing — not Scalar `100vh` / `90svh`). Do **not** use `overflow: hidden` on the shell.
+**Decision:** Treat Test Request chrome as a **UI exploration** to improve consulting OpenAPI specs and using the sandbox on the same Explorer page. Specs and the modal both use **natural height**. Clear Scalar viewport caps (`90svh` / `h-dvh` / fill-`100%` / `calc(100% - 120px)`) under `--client-modal-open`. Overlay root fills the shell so **`.scalar-app-exit`** dims the entire reference panel. Dialog inset by **`--spacing-250` (40px)**; close control keeps Scalar stock size with **4px** (`--spacing-25`) inset from `.scalar.scalar-app` block-start / inline-end. Dialog radius exploratory **4px** via **`--fd-explorer-controls-surface-border-radius`**. While open, set the dialog **`inert`** on outside-shell pointerdown so Scalar’s focus-trap cannot dismiss the header preferences popover. On open, scroll the Scalar shell into view; restore page `scrollTop` on close. Do **not** freeze page scroll, temporarily viewport-cap the shell, or use `overflow: hidden` on the shell.
 
-**Rationale:** The modal is transform-contained inside the scrollable shell. After the reference scrolls, fixed modal chrome can sit above the visible client box; freezing scroll then traps the close control off-screen. Shell `overflow: hidden` caused a second scrollbar inside Test Request. Page-level lock was rejected — project controls should stay scrollable.
+**Rationale:** After removing the faux-iframe shell, a viewport-capped modal fought the natural-height page. Exit sized to the dialog box left undimmed spec chrome; Scalar’s in-header close competed with modal content. Gutter framing and the shared 4px radius keep the sandbox visually related to other Front Door exploratory surfaces. Scalar’s `allowOutsideClick` focus-trap still reclaims focus on `focusin`, which flickered the preferences `CdxPopover` shut — `inert` pauses that reclaim without closing Test Request.
 
-**Source of truth:** `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock; `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock; `AGENTS.md` RTL checklist.
+**Source of truth:** `ARCHITECTURE.md` → Scalar Test Request modal (natural height); `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request UI exploration; `AGENTS.md` RTL checklist.
 
 ---
 

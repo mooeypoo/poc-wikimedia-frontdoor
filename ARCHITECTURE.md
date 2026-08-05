@@ -204,7 +204,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). **APIs** section (`apis`: catalog + explorer) from `config/explorerSideNav.js`; other content IA from `config/sectionNavigation.js`; fallback `section-nav-site-label` when no config entry. APIs items: `mode` → `pathForExplorerMode()` / `explorerModeFromPath()`; `href` → content routes; `enabled: false` omitted. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
-| `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
+| `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: omit height-match — viewport CSS fallback; natural-height Scalar shell) |
 | `useExplorerModuleRailPlacement()` | Resolves module rail Teleport target and layout mode: end column (≥ 1120px) vs inline below project controls (< 1120px) |
 | `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | On inline layout when the endpoint panel is expanded and endpoint count exceeds `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (`config/explorerModuleRail.ts`), measures the first N row block size and sets `--explorer-module-rail-inline-endpoint-scroll-max-block-size` on the scrollport |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
@@ -220,7 +220,7 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `useShellHeaderUtilityMenu()` | Collapsed utility `CdxMenuButton` items; exports `SHELL_HEADER_UTILITY_MENU_VALUE` (settings→preferences popover handled in parent; username→account; log in/out) |
 | `useScalarClientWriteEndpointWarnings(scalarInterface)` | Injects write-request production **`CdxMessage`** into the Scalar Test Request modal **only** after `.scalar-address-bar`; removes stray warning hosts (e.g. under Response Headers); `$2` test-wiki link is mocked until test instances are discoverable |
 | `useScalarClientWriteRequestConfirmDialog()` | **Mock** Codex confirm before Scalar address-bar Send on write methods; disable via `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` in `config/scalarClientWriteWarnings.ts` |
-| `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` | Keeps Test Request usable in the visible shell: snap shell `scrollTop` to 0 on open (restore on close), freeze + wheel/touch lock outside `.scalar-client`; CSS pins overlay into the shell client box; does **not** lock page body scroll |
+| `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` | Test Request UI exploration: scrolls shell into view on open, toggles `--client-modal-open` CSS; while open, sets dialog `inert` on outside-shell pointerdown so Scalar’s focus-trap cannot dismiss header preferences `CdxPopover`; restores page scroll + clears `inert` on close |
 
 **Account dashboard** (`app/pages/account.vue`):
 
@@ -369,7 +369,7 @@ The rail lists **endpoints for `visibleSelectedModule` only** — not every disc
 
 **Rendering.**
 
-- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards, the Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** consume the same border-radius variable.
+- Surfaces: **`ExplorerProjectControls`** and **`ExplorerModuleRail`** share **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (exploratory **4px** — not a Codex token; Codex `--border-radius-base` is 2px; under consideration as a future system default) from `page-grid.css` / `config/explorerSurfaces.ts`. Account list-element cards, the Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer **Test Request** dialog consume the same border-radius variable.
 - Heading: selected module **`headingTitle`** in `<bdi>` at **`--font-size-medium`** (no beta/version chips in the rail header).
 - Endpoint rows: **`CdxMenuItem`** outside `CdxMenu` — same Codex shell exception as **`ShellSidePanelNav`**. Default slot renders HTTP method (`dir="ltr"`, method colours) + **name** (`<bdi>`, OpenAPI `summary` via `resolveEndpointNameLabel()`; path only as fallback); `:label` supplies the accessible name (includes path when it differs); **`:selected`** binds to **`selectedEndpointOperationId`**. Non-selected **name** hover uses **`--color-progressive`**; HTTP method tags **keep semantic colours** on hover and when selected. Selected rows override Codex **`progressive-subtle`** background to **transparent** (name colour only).
 - Scroll divider: when **`.explorer-module-rail__endpoint-scrollport`** has `scrollTop > 0`, a sticky **`.explorer-module-rail__scroll-divider`** (real DOM element, not `::before`) pins a **`--border-color-subtle`** line at the scrollport top; end-column insets with **`margin-inline: var(--spacing-75)`**, inline layout via rail **`padding-inline: var(--spacing-50)`**.
@@ -387,7 +387,7 @@ useEndPanelNavAlign(
 ```
 
 - Classes: **`frontdoor-end-panel-nav`** + **`explorer-module-rail`** (`app/assets/css/shell-end-panel-nav.css`).
-- Rail **block size follows content**; **`max-block-size`** is capped to **`.explorer-page__scalar-shell`** measured height.
+- Rail **block size follows content**; **`max-block-size`** uses the viewport body-band CSS fallback (not natural-height Scalar shell content height).
 - When endpoints exceed the cap, **`.explorer-module-rail__endpoint-scrollport`** scrolls internally; the module heading stays visible.
 - Scrollbar: thin thumb + transparent track (Firefox `scrollbar-width` / `scrollbar-color`; WebKit pseudo-elements — physical **`width: 6px`** exception, documented alongside start nav in **Shell scroll regions**).
 
@@ -481,7 +481,7 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-shell-body-block-size-estimate` | `calc(100dvh − chrome estimate)` | Visible shell body below chrome band |
 | `--fd-header-search-input-min-inline-size` | `16rem` (256px) | Search field minimum when utility row is expanded |
 | `--fd-explorer-controls-surface-background-color` | `var(--background-color-neutral-subtle)` (`config/explorerSurfaces.ts`) | Explorer project controls + module rail background (theme-aware) |
-| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, and **`CodeTabs`** (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
+| `--fd-explorer-controls-surface-border-radius` | `4px` (`config/explorerSurfaces.ts`) | Shared exploratory corner radius for explorer project controls + module rail, account list-element cards, Reset credentials panel, **`NavigationCard`**, **`.fd-highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer **Test Request** dialog (not a Codex token — Codex `--border-radius-base` is 2px; under consideration as a future system default) |
 | `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` | `560px` (`config/headerChrome.ts`) | `ResizeObserver` threshold for compact utility row (search min + controls + **16px** search→preferences + **8px**×2 remaining gaps) |
 | `HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT` | `7` (`config/headerChrome.ts`) | Codex `visibleItemLimit` for interface-language `CdxLookup` menu (scroll after seven rows) |
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
@@ -784,7 +784,7 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: a
 
 **Resolution strategy.** Scalar assigns each operation a navigation id (typically `{document}/tag/{tag}/{METHOD}{path}` or `{document}/{METHOD}{path}`). `scalarOperationNavigation.ts` mirrors that id generation (GitHub slugger for segments) and searches, in order: the workspace navigation tree exposed by `ApiReference`, sidebar items, then the DOM under the Scalar shell. Candidates are tried until an element with a matching `id` exists.
 
-**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling the **Scalar shell container** (not only `document`) so sticky layout, **`overflow-block: auto`**, and `overscroll-behavior: contain` behave correctly.
+**Timing and retries.** Operations are lazy-loaded in Scalar; the target node may not exist immediately after a spec switch. `useExplorerScalarFocus` polls every 100ms for up to 5s, re-emitting `scroll-to:nav-item` and scrolling **`.frontdoor-shell__body-scroll`** (natural-height specs).
 
 **Triggers.** Focus runs when:
 
@@ -800,14 +800,14 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: a
 
 **`.explorer-page__scalar-shell`** (`app/pages/explorer/[[view]].vue`):
 
-| Breakpoint | Block axis | Inline axis |
-|------------|------------|-------------|
-| **&lt; 960px** | `overflow-block: hidden` | `overflow-inline: clip` |
-| **≥ 960px** (sticky reference panel) | `overflow-block: auto` | `overflow-inline: clip` |
+| Axis | Behaviour |
+|------|-----------|
+| **Block** | `overflow-block: visible` — specs grow with content (no sticky faux-iframe height lock). Vertical scroll is **`.frontdoor-shell__body-scroll`**. |
+| **Inline** | `overflow-inline: clip` — contain horizontal bleed after resize |
 
-**Rationale.** Scalar introduction rows and sample **`pre`** blocks use Tailwind **`w-fit`** / **`nowrap`** and can exceed the shell width after a viewport resize (especially desktop main + end columns). Horizontal bleed previously painted over the shell **`border`** on the inline-end edge. **`overflow-inline: clip`** contains that bleed while preserving a normal **`border`** on all four sides (an inset **`box-shadow`** frame was rejected — it is clipped on the block axis when the shell scrolls). Vertical scrolling stays on the block axis only.
+**Rationale.** Product trial: present Scalar without a height-capped “iframe” shell so scrolling the Explorer page scrolls the full spec. Scalar introduction rows and sample **`pre`** blocks use Tailwind **`w-fit`** / **`nowrap`** and can exceed the shell width after a viewport resize; **`overflow-inline: clip`** contains that bleed while preserving a normal **`border`** on all four sides.
 
-**Codex overrides** (`app/assets/css/explorer-codex-overrides.css`): **`.scalar-app`** uses **`min-inline-size: 0`** and **`max-inline-size: 100%`**; introduction **`.introduction-card-item`** rows and sample **`pre` / `pre code`** cap width with **`overflow-inline: auto`** so wide curl snippets scroll inside the sample instead of widening the shell scrollport.
+**Codex overrides** (`app/assets/css/explorer-codex-overrides.css`): **`.scalar-app`** uses **`min-inline-size: 0`** and **`max-inline-size: 100%`**; introduction **`.introduction-card-item`** rows and sample **`pre` / `pre code`** cap width with **`overflow-inline: auto`** so wide curl snippets scroll inside the sample instead of widening the page.
 
 **UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
 
@@ -821,29 +821,32 @@ scrollOperationIntoView() inside .explorer-page__scalar-shell (overflow-block: a
 
 **UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment.
 
-### Scalar Test Request modal background scroll lock
+### Scalar Test Request modal (natural height)
 
-**Issue.** Scalar’s `ApiClientModal` locks background scroll by setting `document.documentElement.style.overflow = 'hidden'`. Front Door does **not** scroll the document for the explorer reference panel — at ≥ 960px the scrollport is **`.explorer-page__scalar-shell`** (containing `.references-rendered`). Wheel / trackpad input therefore still scrolls the docs behind the open Test Request modal.
+**Issue.** Specs use **natural height** (page scroll). Scalar’s `ApiClientModal` defaults to viewport caps (`90svh` / `h-dvh`), a full-viewport exit layer (`100vw` / `100vh`), and a close control nested in the modal header (`fixed top-2 right-2`). The modal mounts inside `.explorer-page__scalar-shell` (`transform: translateZ(0)` containing block).
 
-**Product intent.** Keep the Test Request dialog **fully inside the visible Scalar shell** (close control reachable). Lock **reference docs only**. Keep **`.frontdoor-shell__body-scroll`** scrollable.
+**Product intent (UI exploration).** Improve the flow of consulting OpenAPI specs and interacting with the Test Request sandbox on the same Explorer page:
+
+- Test Request modal **grows with its content** — no viewport height cap. Tall modals scroll with **`.frontdoor-shell__body-scroll`**.
+- **`.scalar-app-exit`** dims the **entire Scalar reference panel** (`.scalar.scalar-app` / shell), not only the dialog box.
+- Dialog sits in a **`--spacing-250` (40px)** gutter; **`.app-exit-button`** is **centered** in the block-start / inline-end gutter corner so spacing to the Scalar container and to the dialog is equal on all sides of the control (outside the dialog panel).
+- Dialog corner radius uses exploratory **4px** **`--fd-explorer-controls-surface-border-radius`** (shared with explorer controls / account cards — not a Codex token).
+- Never `overflow: hidden` on the shell (second scrollbar inside Test Request).
 
 **Workaround.** `useScalarClientModalBackgroundScrollLock(scalarShellRef, scalarInterface)` (wired from `app/pages/explorer/[[view]].vue`) + CSS in `explorer-codex-overrides.css`:
 
 | Mechanism | Role |
 |-----------|------|
 | Scalar `ui:open:client-modal` / `ui:close:client-modal` | Sole open/close signal — **no** body-wide MutationObserver (that freezes the explorer tab during Scalar mount) |
-| Snap shell `scrollTop` → `0` on open; restore on close | Modal is transform-contained; after the reference scrolls, fixed chrome can sit **above** the visible client box — freeze alone trapped the close control off-screen |
-| `scrollTop` freeze at `0` while open | Holds the shell so the pinned overlay stays aligned |
-| Capture-phase `wheel` / `touchmove` `preventDefault` | Blocks gestures over the shell **outside** `.scalar-client[role="dialog"]` |
-| Class `explorer-page__scalar-shell--client-modal-open` | Pins `.scalar.scalar-app` / `.scalar-container` with `position: absolute; inset: 0`, **`z-index: 10000`** (must beat Scalar `.t-doc__sidebar` at `10`), sizes `.scalar-app-layout` to the shell (not `90svh`), and sizes `.scalar-app-exit` to `100%` (not `100vh`) |
+| Scroll page so shell top is in view; restore page `scrollTop` on close | Modal mounts at the shell top — bring it into view |
+| Class `explorer-page__scalar-shell--client-modal-open` | Overlay **`z-index: 10000`** (beats Scalar `.t-doc__sidebar` at `10`); overlay root **`inset: 0`** (definite shell box — not `min-height: 100%` + `height: auto`, which leaves percentage children / exit sized to the dialog only); clears Scalar **`90svh` / `h-dvh` / `calc(100% - 120px)`**; container fills that box with **`padding: var(--spacing-250)`**; exit absolute to the container (not `100vw`/`100vh`); close button fixed at block-start / inline-end with **4px** (`--spacing-25`) inset from `.scalar.scalar-app` (keeps Scalar stock `p-2` / `rounded-full` size); dialog **`border-radius: var(--fd-explorer-controls-surface-border-radius)`** + **`overflow: hidden`** on the dialog only (clips square `.bg-b-1` children so the 4px radius is visible — never `overflow: hidden` on the shell) |
+| Dialog `inert` while shell chrome is used | Scalar `useFocusTrap` (`allowOutsideClick: true`) still reclaims focus on `focusin`, which immediately dismisses header **preferences** `CdxPopover`. Capture-phase `pointerdown` outside `.explorer-page__scalar-shell` sets **`inert`** on `.scalar-client[role="dialog"]`. Cleared on shell pointerdown (with `elementFromPoint` retarget to `.app-exit-button` — inert skips hit-testing on the close control), when preferences are dismissed after a theme change, or when the modal closes. Without the retarget, changing appearance left the dialog inert and the close control unresponsive until reload |
 
-**Why not `overflow: hidden` on the shell.** Clipping the transform containing block produced a **second scrollbar inside the Test Request modal**. Geometry pin + scroll snap avoid that.
+**Does not** freeze page scroll or temporarily viewport-cap the shell.
 
-**Does not** lock `.frontdoor-shell__body-scroll`.
+**FRAGILITY:** Depends on `.scalar-client[role="dialog"]`, Scalar modal class names (`.scalar-container`, `.scalar-app-layout`, `.scalar-app-exit`, `.app-exit-button`), Tailwind height utilities, and Scalar’s focus-trap behaviour — re-verify on `@scalar/api-client` upgrades.
 
-**FRAGILITY:** Depends on `.scalar-client[role="dialog"]` and Scalar modal class names (`.scalar-container`, `.scalar-app-layout`, `.scalar-app-exit`) — re-verify on `@scalar/api-client` upgrades.
-
-**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request reference scroll lock.
+**UI reference.** `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request UI exploration.
 
 ### Explorer modes and start-column routing
 
@@ -1046,7 +1049,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerOptIn.ts` | Codex checkbox values, beta-gated module name prefixes (`attribution/`), `isExplorerBetaOptInModule()`, `isExplorerInternalOptInModule()` (`*-internal` path segments), `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` |
 | `config/explorerProjectPicker.ts` | Explorer project + language picker ids, defaults, and mapping to wiki instance ids |
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
-| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, and CodeTabs |
+| `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, CodeTabs, and Test Request dialog |
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
 | `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
 | `config/brandTypography.ts` | Brand wordmark font URL (`BRAND_WORDMARK_FONT_STYLESHEET_URL` for Google Fonts Montserrat in `nuxt.config.ts`) |
@@ -1508,7 +1511,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `app/composables/useExplorerOptInCheckboxGroup.ts`, `app/utils/explorerModuleOptInFilter.ts`, `config/explorerOptIn.ts` (`isExplorerBetaOptInModule`, `isExplorerInternalOptInModule`), `tests/explorerModuleOptInFilter.test.mjs` |
 | Write-request production warning (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/createScalarWriteEndpointWarningElement.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `app/scalar/explorerMapConfigPlugins.client.ts` (hooks only — no warning view slots), `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`, `i18n/*` (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-test-wiki-name-*`) |
 | Test Request modal sticky section titles | `app/assets/css/explorer-codex-overrides.css` (`.explorer-page .scalar-client .request-response-header { z-index: 1 }`) — see **Scalar Test Request modal sticky headers** |
-| Test Request modal background scroll lock | `app/composables/useScalarClientModalBackgroundScrollLock.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css` (shell-pinned modal geometry under `--client-modal-open`) — see **Scalar Test Request modal background scroll lock** |
+| Test Request modal natural height | `app/composables/useScalarClientModalBackgroundScrollLock.ts`, `app/pages/explorer/[[view]].vue`, `app/assets/css/explorer-codex-overrides.css` (clear `90svh` / `h-dvh` under `--client-modal-open`) — see **Scalar Test Request modal (natural height)** |
 | Write-request confirm dialog (Test Request Send, mock) | `app/components/explorer/scalar/ScalarClientWriteRequestConfirmDialog.vue`, `app/composables/useScalarClientWriteRequestConfirmDialog.ts`, `config/scalarClientWriteWarnings.ts` (`SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED`), `app/assets/css/explorer-codex-overrides.css` (containment + actions + title 18px; Codex exception #13), `app/pages/explorer/[[view]].vue` (`#explorer-reference-panel` sibling mount), `app/utils/resolveInterfaceMessage.ts` / `resolveActiveInterfaceLocale.ts` / `getInterfaceMessageTemplate.ts`, `i18n/*` (`explorer-scalar-write-confirm-*`) |
 | Enterprise custom viewer | `app/components/explorer/ExplorerEnterpriseCustom.vue`, `app/composables/useEnterpriseSpecOutline.ts`, `server/api/enterprise-spec*.ts` |
 | Header chrome | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/assets/css/shell-primary-nav-overrides.css`, `app/assets/css/shell-codex-overrides.css` (`fd-cdx-popover--arrow-seam-fix`, preferences body padding), `app/composables/useColorMode.ts`, `config/colorMode.ts`, `app/assets/css/color-modes.css` |

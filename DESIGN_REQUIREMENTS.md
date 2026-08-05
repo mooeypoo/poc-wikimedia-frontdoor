@@ -215,7 +215,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 
 **Below desktop (&lt; 1120px):** End column hidden. Module rail teleports **inline** below project controls (`#explorer-module-rail-anchor`); **no** extra gap from `.explorer-page__project-controls-stack`; collapsible endpoint panel per Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968). When expanded, block size follows content for **seven or fewer** endpoints; more than seven cap the endpoint scrollport to seven visible rows with internal scroll (`useExplorerModuleRailInlineEndpointScrollCap`, `config/explorerModuleRail.ts`). Reference panel and Scalar follow below.
 
-**Wide (≥ 960px on explorer page):** Reference panel and Scalar shell use sticky, viewport-height scrolling as documented in **API Explorer page layout** below.
+**Wide explorer:** Reference panel and Scalar shell use **natural height** (page scroll) as documented in **API Explorer page layout** below — not a sticky faux-iframe viewport.
 
 ---
 
@@ -511,31 +511,43 @@ Top to bottom:
 
 **Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps on `.explorer-page` / `.explorer-page__intro`. The project-controls stack itself does **not** add a `--spacing-100` gap after controls.
 
-### Reference panel (wide ≥ 960px)
+### Reference panel (natural height)
 
 **Decision:**
 
-- Panel is **sticky** with `inset-block-start: --spacing-150`
-- Panel height: `calc(100vh - 2 * --spacing-150)`
-- Scalar shell fills remaining grid row (`minmax(0, 1fr)`), **block-scrollable** (`overflow-block: auto`) with `overscroll-behavior: contain`
+- Panel is **not** sticky and is **not** viewport-height capped
+- Scalar shell grows with spec content (`overflow-block: visible`)
+- Vertical scroll is **`.frontdoor-shell__body-scroll`** (Explorer page scroll scrolls the specs)
 
-**Rationale:** Keeps spec in view while module rail scrolls independently in the end column.
+**Rationale:** Trial — present Scalar without a faux-iframe height lock so long specs read as a continuous page. Module rail stays independently sticky/scrollable in the end column (viewport max-height fallback, not shell-content height).
 
 ### Scalar shell containment
 
 **Decision:** `transform: translateZ(0)` on `.explorer-page__scalar-shell` to contain Scalar `position: fixed` UI so it does not cover the global header.
 
-**Border:** `1px solid var(--border-color-subtle)` on all sides with `--border-radius-base`. Do not replace with an inset `box-shadow` frame — it disappears on the block axis when the shell scrolls at ≥ 960px.
+**Border:** `1px solid var(--border-color-subtle)` on all sides with `--border-radius-base`. Do not replace with an inset `box-shadow` frame.
 
-**Overflow (resize):** **`overflow-inline: clip`** on the shell at all explorer breakpoints; **`overflow-block: hidden`** below 960px and **`overflow-block: auto`** from 960px (sticky reference panel). After a viewport resize, Scalar introduction cards and sample **`pre`** rows can exceed the shell width; inline clip keeps the frame border visible on the inline-end edge. Sample blocks are width-capped in **`explorer-codex-overrides.css`** (`pre`, `pre code`, `.introduction-card-item`) with internal **`overflow-inline: auto`**.
+**Overflow (resize):** **`overflow-inline: clip`** on the shell; **`overflow-block: visible`** so the page scrollport owns vertical travel. After a viewport resize, Scalar introduction cards and sample **`pre`** rows can exceed the shell width; inline clip keeps the frame border visible on the inline-end edge. Sample blocks are width-capped in **`explorer-codex-overrides.css`** (`pre`, `pre code`, `.introduction-card-item`) with internal **`overflow-inline: auto`**.
 
 **Z-index (explorer):** Scalar shell `z-index: 2`, module rail `z-index: 1`, shell chrome `z-index: 10` — modals/overlays from Scalar can span viewport but rail stays beside panel when possible.
 
 **Test Request sticky titles:** Scalar’s `.request-response-header` (endpoint name in the client modal) is sticky without a z-index, so scrolling parameters paint over it. Override in `explorer-codex-overrides.css`: `.explorer-page .scalar-client .request-response-header { z-index: 1 }` (modal-scoped). See `ARCHITECTURE.md` → Scalar Test Request modal sticky headers.
 
-**Test Request reference scroll lock + shell fit:** While the Test Request modal is open, the dialog must stay **fully inside the visible Scalar shell** (close control and address bar reachable). **Reference docs** must not scroll behind the modal; the **page** scrollport (`.frontdoor-shell__body-scroll`) **must remain scrollable**. Do **not** use `overflow: hidden` on the shell (second scrollbar inside Test Request). Implementation: snap shell scroll to top on open (restore on close), freeze + wheel/touch lock outside the modal, and CSS-pin the Scalar overlay into the shell client box (`useScalarClientModalBackgroundScrollLock` + `explorer-codex-overrides.css`). See `ARCHITECTURE.md` → Scalar Test Request modal background scroll lock.
+**Test Request UI exploration (specs ↔ sandbox):** Exploratory framing to improve the flow of consulting OpenAPI specs and interacting with the Test Request modal on the same page (not a finalized Codex pattern).
 
-**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal background scroll lock.
+| Decision | Detail |
+|----------|--------|
+| Natural height | Sandbox modal **grows with its content** (no viewport / `90svh` cap). Tall modals scroll with **`.frontdoor-shell__body-scroll`**. |
+| Full-panel exit | **`.scalar-app-exit`** covers the **full Scalar reference panel** (`.scalar.scalar-app` / shell), not only the dialog box. |
+| Gutter | Dialog inset by **`--spacing-250` (40px)** on all sides. |
+| Close control | **`.app-exit-button`** lives in the block-start / inline-end gutter **outside** the dialog; **4px** (`--spacing-25`) inset from the `.scalar.scalar-app` / shell edges at block-start and inline-end (light and dark; BiDi via logical insets; keep Scalar stock `p-2` size). |
+| Shell chrome while open | Header preferences (and other outside-shell chrome) must stay usable — Scalar’s focus-trap must not dismiss the preferences `CdxPopover` (see `ARCHITECTURE.md` → dialog `inert` workaround). |
+| Radius | Dialog uses exploratory **4px** **`--fd-explorer-controls-surface-border-radius`** (same as explorer controls / account cards / NavigationCard — not a Codex token; under consideration as a future system default). Dialog keeps **`overflow: hidden`** so Scalar’s square inner panels do not paint over the corners. |
+| Shell overflow | Do **not** use `overflow: hidden` on the shell (second scrollbar inside Test Request). Dialog-only overflow clip is OK. |
+
+Implementation: scroll shell into view on open; CSS under `--client-modal-open` (`useScalarClientModalBackgroundScrollLock` + `explorer-codex-overrides.css`). See `ARCHITECTURE.md` → Scalar Test Request modal (natural height).
+
+**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `config/explorerSurfaces.ts` (shared 4px radius), `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal (natural height).
 
 ### Write-request production warning (Test Request modal)
 
@@ -632,7 +644,7 @@ Top to bottom:
 | Background | Codex **`--background-color-neutral-subtle`** | `--fd-explorer-controls-surface-background-color` |
 | Border radius | **4px** | `--fd-explorer-controls-surface-border-radius` |
 
-Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Background follows the Codex theme token so light/dark modes keep readable contrast — the earlier fixed `#F3F3F3` exploratory hex failed dark-mode text contrast and was superseded. Border radius is an exploratory **4px** value — **not** a Codex design token (Codex **`--border-radius-base`** is **2px**) and is under consideration as a **future system default**. Account list-element cards and the Reset success credentials panel consume the same CSS variable (**`--fd-explorer-controls-surface-border-radius`**) so the exploration stays single-sourced.
+Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Background follows the Codex theme token so light/dark modes keep readable contrast — the earlier fixed `#F3F3F3` exploratory hex failed dark-mode text contrast and was superseded. Border radius is an exploratory **4px** value — **not** a Codex design token (Codex **`--border-radius-base`** is **2px**) and is under consideration as a **future system default**. Account list-element cards, the Reset success credentials panel, and the Explorer **Test Request** dialog (UI exploration) consume the same CSS variable (**`--fd-explorer-controls-surface-border-radius`**) so the exploration stays single-sourced.
 
 ### Endpoint list
 
@@ -667,7 +679,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). The anchor is **always mounted** in community mode; only project controls wait for bootstrap so Teleport can resolve the target on first paint at tablet widths. **No** gap from `.explorer-page__project-controls-stack` between controls and the rail. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
 
-**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
+**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor: scalar shell; **no** height-match to natural-height shell content) setting `--frontdoor-end-panel-nav-flow-offset` and `--frontdoor-end-panel-nav-sticky-inset`. **`--frontdoor-end-panel-nav-max-block-size`** falls back to the viewport body-band estimate in `page-grid.css` / `shell-end-panel-nav.css`. The rail’s default block size follows its content. **Future** section page menus in the end column should use the same class and composable pattern.
 
 **Surface:** **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
@@ -848,9 +860,10 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control centered in gutter corner (equal spacing), exploratory **4px** dialog radius — improves specs ↔ sandbox flow |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |
-| *(uncommitted)* | Test Request modal shell fit | Pin Test Request into visible Scalar shell (scroll snap + absolute overlay); freeze reference only; keep page body scroll; no shell `overflow: hidden` |
+| *(superseded)* | Test Request modal shell fit (pre natural-height) | Was: freeze shell scroll only, keep page body scrollable — superseded by natural-height row above |
 | *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |
 | *(uncommitted)* | Internal opt-in module gate | Hide `*-internal` discovery modules (e.g. Discord Preview / `discord/v0-internal`) from **API to explore** until Internal checkbox is on |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |

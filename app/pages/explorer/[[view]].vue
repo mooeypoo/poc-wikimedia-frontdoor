@@ -127,10 +127,14 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 
 const { layoutMode, moduleRailTeleportTarget } = useExplorerModuleRailPlacement()
 
+/*
+ * Align rail top with the Scalar shell. Do not height-match the shell: specs now
+ * grow with content (page scroll), so rail max height uses the CSS viewport
+ * fallback (`--fd-layout-shell-body-block-size-estimate`) instead.
+ */
 const { refreshEndPanelNavAlign, scheduleLayoutSettledRefresh } = useEndPanelNavAlign(
 	scalarShellRef,
 	explorerEndPanelElement,
-	scalarShellRef,
 	scalarShellRef
 )
 
@@ -483,11 +487,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
-	overflow: hidden;
+	/* Natural-height specs: do not clip the grown Scalar embed. */
+	overflow: visible;
 }
 
 .explorer-page__scalar-shell {
-	/* Contain Scalar `position: fixed` UI so it cannot cover the shell header. */
+	/*
+	 * Contain Scalar `position: fixed` UI so it cannot cover the shell header.
+	 * Specs grow with content; `.frontdoor-shell__body-scroll` is the vertical
+	 * scrollport (no faux-iframe height lock). Test Request also uses natural
+	 * height (see explorer-codex-overrides.css + useScalarClientModalBackgroundScrollLock).
+	 */
 	position: relative;
 	transform: translateZ( 0 );
 	min-inline-size: 0;
@@ -495,11 +505,12 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	border: 1px solid var( --border-color-subtle );
 	border-radius: var( --border-radius-base );
 	/*
-	 * Clip horizontal bleed after resize; vertical scroll is enabled from 960px below.
-	 * overflow-inline: clip keeps the inline-end border visible (border sits outside padding).
+	 * Clip horizontal bleed after resize; keep vertical overflow visible so the
+	 * page scrollport scrolls the full spec. overflow-inline: clip keeps the
+	 * inline-end border visible (border sits outside padding).
 	 */
 	overflow-inline: clip;
-	overflow-block: hidden;
+	overflow-block: visible;
 	background-color: var( --background-color-base );
 	padding-inline: var( --spacing-150 );
 	padding-block: 0;
@@ -549,26 +560,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__scalar-loading-overlay p {
 	margin: 0;
-}
-
-@media screen and ( min-width: 960px ) {
-	.explorer-page__reference-panel {
-		position: sticky;
-		inset-block-start: var( --spacing-150 );
-		block-size: calc(
-			var( --fd-layout-shell-body-block-size-estimate ) - ( var( --spacing-150 ) * 2 )
-		);
-		grid-template-rows: auto minmax( 0, 1fr );
-		overflow: hidden;
-	}
-
-	.explorer-page__scalar-shell {
-		block-size: 100%;
-		min-block-size: 0;
-		overflow-block: auto;
-		overflow-inline: clip;
-		overscroll-behavior: contain;
-	}
 }
 
 @keyframes explorer-loading-spin {

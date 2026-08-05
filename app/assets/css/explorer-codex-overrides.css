@@ -220,29 +220,58 @@
 }
 
 /*
- * Test Request modal — pin into the visible Scalar shell client box.
+ * Test Request modal — UI exploration (natural height + overlay gutter).
  *
- * Scalar mounts the client modal inside `.explorer-page__scalar-shell`
- * (`transform: translateZ(0)` containing block). After the reference scrolls,
- * `position: fixed` chrome can sit above the visible client area; combined with
- * scroll freeze that traps the close control. JS snaps `scrollTop` to 0 on open
- * (restored on close). These rules then pin the overlay with `absolute` + shell
- * percentages (not Scalar’s `100vh` / `90svh`) so the dialog fits the shell.
+ * Specs and the sandbox modal both use natural height. Scalar mounts the modal
+ * inside `.explorer-page__scalar-shell` (`transform: translateZ(0)` containing
+ * block). While open (exploratory framing for consulting specs ↔ Test Request):
+ * 1. Overlay root fills the Scalar shell so `.scalar-app-exit` dims the whole
+ *    reference panel, not only the dialog box.
+ * 2. Dialog sits in a Codex `--spacing-250` (40px) gutter on all sides.
+ * 3. `.app-exit-button` is centered in the block-start / inline-end gutter
+ *    corner (equal space to the `.scalar.scalar-app` edges and the dialog) —
+ *    Scalar defaults nest it in the modal header with `fixed top-2 right-2`.
+ * 4. Dialog uses the shared exploratory **4px** radius
+ *    (`--fd-explorer-controls-surface-border-radius`).
  *
  * Physical `top` / `right` / `bottom` / `left` / `width` / `height` / `max-height`
  * override Scalar’s physical modal rules (no logical equivalents for those resets).
- * Do **not** set `overflow: hidden` on the shell itself (double scrollbar).
- * Page body scroll stays unlocked.
+ * `!important` beats Scalar Tailwind utilities (`max-h-[90svh]`, `h-dvh`, …).
  *
- * FRAGILITY: `.scalar-container` / `.scalar-app-layout` / `.scalar-app-exit` are
- * @scalar/api-client class names — re-verify on upgrades.
+ * FRAGILITY: `.scalar-container` / `.scalar-app-layout` / `.scalar-app-exit` /
+ * `.app-exit-button` and Tailwind height utilities are @scalar class names —
+ * re-verify on upgrades.
  *
- * @see ARCHITECTURE.md → Scalar Test Request modal background scroll lock
- * @see DESIGN_REQUIREMENTS.md → Scalar shell containment → Test Request reference scroll lock
+ * @see ARCHITECTURE.md → Scalar Test Request modal (natural height)
+ * @see DESIGN_REQUIREMENTS.md → Scalar shell containment → Test Request UI exploration
  */
+.explorer-page__scalar-shell--client-modal-open {
+	/* Mirror of Codex --spacing-250; named knob for the Test Request gutter. */
+	--fd-explorer-test-request-modal-padding: var( --spacing-250 );
+	/* Close control inset from `.scalar.scalar-app` block-start / inline-end (4px). */
+	--fd-explorer-test-request-exit-button-inset: var( --spacing-25 );
+}
+
 .explorer-page__scalar-shell--client-modal-open .scalar.scalar-app {
+	/*
+	 * Pin to the shell so height is definite (percentage children / exit can fill
+	 * the reference panel). `min-height: 100%` + `height: auto` does **not**
+	 * establish a percentage base — exit then shrank to the dialog box only.
+	 * Tall dialog content may paint past the shell via `overflow: visible`.
+	 */
 	position: absolute;
 	inset: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	inline-size: 100%;
+	width: 100%;
+	block-size: 100%;
+	height: 100%;
+	max-block-size: none;
+	max-height: none;
+	overflow: visible;
 	/*
 	 * Must beat Scalar’s `.t-doc__sidebar { z-index: 10 }` (internal endpoint
 	 * nav). Keep Scalar’s own overlay scale (`z-overlay` = 10000) — our earlier
@@ -252,30 +281,123 @@
 }
 
 .explorer-page__scalar-shell--client-modal-open .scalar-container {
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	inline-size: 100%;
-	block-size: 100%;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
+	/* Fill the definite overlay root so `.scalar-app-exit` covers the full shell. */
+	position: absolute !important;
+	inset: 0 !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: stretch;
+	box-sizing: border-box;
+	inline-size: 100% !important;
+	width: 100% !important;
+	block-size: 100% !important;
+	height: 100% !important;
+	max-block-size: none !important;
+	max-height: none !important;
+	min-block-size: 100%;
+	min-height: 100%;
+	/* 40px gutter — dialog inset; close control lives in this padding area. */
+	padding: var( --fd-explorer-test-request-modal-padding );
+	/* Do not clip the gutter-positioned close control or tall dialog. */
+	overflow: visible !important;
 }
 
-.explorer-page__scalar-shell--client-modal-open .scalar .scalar-app-layout {
-	block-size: calc( 100% - var( --spacing-200 ) );
-	max-block-size: calc( 100% - var( --spacing-200 ) );
-	height: calc( 100% - var( --spacing-200 ) );
-	max-height: none;
+.explorer-page__scalar-shell--client-modal-open .scalar .scalar-app-layout,
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app .h-dvh,
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app .max-h-dvh,
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app .max-h-\[90svh\] {
+	/* Clear Scalar `height: calc(100% - 120px)` / viewport utilities. */
+	block-size: auto !important;
+	height: auto !important;
+	max-block-size: none !important;
+	max-height: none !important;
+	min-block-size: 0 !important;
+	min-height: 0 !important;
+	/* Gutter owns the inset; drop Scalar’s auto margin centering. */
+	margin: 0 !important;
+	inline-size: 100%;
+	width: 100%;
+	max-inline-size: none;
+	max-width: none;
+	/*
+	 * Shared exploratory 4px radius (Scalar default is 8px). Fallback `4px` if the
+	 * custom property is missing so the declaration cannot become invalid.
+	 * Do **not** use `clip-path` here — it also clips the gutter-positioned
+	 * `.app-exit-button` (DOM child of the layout, `position: fixed` into the pad).
+	 */
+	border-radius: var( --fd-explorer-controls-surface-border-radius, 4px ) !important;
+	/* Stack above `.scalar-app-exit` (`z-index: -1`). */
+	position: relative;
+	z-index: 0;
+	/*
+	 * Clip square inner panels (`.bg-b-1`) to the dialog radius. `overflow: visible`
+	 * let those children paint over the corners so the 4px radius was invisible.
+	 * This is on the dialog only — never on `.explorer-page__scalar-shell` (that
+	 * caused a second scrollbar inside Test Request).
+	 */
+	overflow: hidden !important;
+}
+
+/*
+ * Inner Scalar panels use square `.bg-b-1` fills. Inherit the dialog radius so
+ * the 4px corner is visible even when a child paints edge-to-edge.
+ */
+.explorer-page__scalar-shell--client-modal-open .scalar-app-layout .bg-b-1.flex.h-full {
+	border-radius: inherit;
+}
+
+.explorer-page__scalar-shell--client-modal-open .scalar.scalar-app .min-h-dvh {
+	min-block-size: 0 !important;
+	min-height: 0 !important;
 }
 
 .explorer-page__scalar-shell--client-modal-open .scalar-app-exit {
-	inline-size: 100%;
-	block-size: 100%;
-	width: 100%;
-	height: 100%;
+	/*
+	 * Cover the full overlay root (at least the reference panel). Scalar defaults
+	 * to `position: fixed; width/height: 100vw/100vh` — pin to the container box
+	 * instead. Physical width/height clear those viewport rules.
+	 */
+	position: absolute !important;
+	inset: 0 !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	inline-size: 100% !important;
+	block-size: 100% !important;
+	width: 100% !important;
+	height: 100% !important;
+	z-index: -1;
+}
+
+/*
+ * Close control in the top-end gutter (outside the dialog).
+ *
+ * Shell `transform: translateZ(0)` makes `position: fixed` resolve against the
+ * shell / `.scalar.scalar-app` box. Keep Scalar’s stock size (`p-2` /
+ * `rounded-full` — do not zero padding or shrink the icon). Offset the control
+ * by **4px** (`--spacing-25`) from block-start and inline-end so that padding
+ * sits around the full circular button (light and dark). Logical insets mirror
+ * in RTL; clear Scalar’s physical `top-2 right-2` (8px).
+ */
+.explorer-page__scalar-shell--client-modal-open .app-exit-button {
+	position: fixed !important;
+	/*
+	 * Clear Scalar `top-2 right-2`, then pin with logical insets so LTR/RTL both
+	 * get 4px from the outer block-start / inline-end edges.
+	 */
+	top: unset !important;
+	right: unset !important;
+	bottom: unset !important;
+	left: unset !important;
+	inset-block: var( --fd-explorer-test-request-exit-button-inset ) auto !important;
+	inset-inline: auto var( --fd-explorer-test-request-exit-button-inset ) !important;
+	z-index: 1;
 }
 
 /*

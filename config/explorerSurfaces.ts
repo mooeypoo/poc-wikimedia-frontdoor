@@ -11,9 +11,10 @@
  * (Codex `--border-radius-base` is **2px**). It is under consideration as a
  * future system default. Account list-element cards, the Reset success
  * credentials panel, content **`NavigationCard`**, **`.fd-highlight`** /
- * **`Highlight`**, **`CodeBlock`**, and **`CodeTabs`** consume the mirrored
- * CSS variable `--fd-explorer-controls-surface-border-radius` (do not
- * hardcode `4px` there).
+ * **`Highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer
+ * **Test Request** dialog (UI exploration under `--client-modal-open`)
+ * consume the mirrored CSS variable
+ * `--fd-explorer-controls-surface-border-radius` (do not hardcode `4px` there).
  */
 export const EXPLORER_CONTROLS_SURFACE_BACKGROUND_COLOR = 'var(--background-color-neutral-subtle)'
 
