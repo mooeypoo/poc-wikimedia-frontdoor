@@ -88,7 +88,16 @@ Two facts shape the design:
 
 ## 6. Quick links resolve, then canonicalize to the verbose form
 
-**Decision:** A `/q/<module…>` link is always translated by the system into concrete state and then **rewritten** (via `router.replace`) to the full `/direct/<instance>/<module…>` URL, where `<instance>` is the module's resolved default — `getModuleByName(name).specSourceInstance` from the source of truth. `/q/` is an *input* shorthand; the address bar always ends up showing the unambiguous verbose form.
+**Decision:** A `/q/<module…>` link is always translated by the system into concrete state and then **rewritten** (via `router.replace`) to the full `/direct/<instance>/<module…>` URL. `/q/` is an *input* shorthand; the address bar always ends up showing the unambiguous verbose form.
+
+**Instance selection (QA-driven preference).** The resolved `<instance>` is **not** the generator's `specSourceInstance`. It is the first instance in a curated preference list that actually exposes the module — `QUICK_LINK_INSTANCE_PREFERENCE` in `config/moduleSourceOfTruth.ts` (`resolvePreferredModuleInstance`), in order:
+
+1. `enwiki` (English Wikipedia)
+2. `mediawikiwiki` (mediawiki.org)
+3. `wikidatawiki` (Wikidata)
+4. `commonswiki` (Wikimedia Commons)
+
+If none of those expose the module, it falls back to the module's **first (sorted) instance** (and finally `specSourceInstance` as a safety net). This favours familiar, high-traffic wikis over the module's arbitrary first-sorted or representative instance, and is editable policy separate from the source-of-truth generation. Resolution is server-side (`server/api/explorer-quick-resolve.get.ts`) to avoid bundling the registries client-side (§4).
 
 **Rationale:** Quick links are convenient to author but ambiguous to share (the resolved instance is implicit and could change as the fleet evolves). Canonicalizing on load makes every shared/copied URL explicit and stable. `replace` (not `push`) ensures Back does not return to the transient `/q/` URL.
 

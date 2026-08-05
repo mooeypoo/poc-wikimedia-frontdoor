@@ -1,5 +1,5 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
-import { getModuleByName } from '../../config/moduleSourceOfTruth'
+import { getModuleByName, resolvePreferredModuleInstance } from '../../config/moduleSourceOfTruth'
 
 /**
  * Resolves a quick community deep-link (`/explorer/q/<module>`) to the instance
@@ -8,8 +8,10 @@ import { getModuleByName } from '../../config/moduleSourceOfTruth'
  * The client cannot resolve this itself without bundling the source-of-truth
  * registries (the accessor builds an 841-instance lookup map at module load, so
  * it is not tree-shakeable). This route keeps that data server-side and returns
- * only the representative instance id for the requested module, which the client
- * uses to canonicalize the URL to the verbose `direct` form (ADR §6).
+ * the preferred instance id for the requested module — the first of
+ * `QUICK_LINK_INSTANCE_PREFERENCE` that exposes it, else the module's first
+ * instance — which the client uses to canonicalize the URL to the verbose
+ * `direct` form (ADR §6).
  *
  * @returns `{ moduleName, instanceId }` for a known module.
  * @throws 400 when no module is given; 404 when the module is unknown.
@@ -36,6 +38,6 @@ export default defineEventHandler( ( event ) => {
 
 	return {
 		moduleName: resolvedModule.name,
-		instanceId: resolvedModule.specSourceInstance
+		instanceId: resolvePreferredModuleInstance( resolvedModule )
 	}
 } )
