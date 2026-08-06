@@ -2,13 +2,14 @@
 import { CdxMessage } from '@wikimedia/codex'
 import { computed, onMounted, ref, watch } from 'vue'
 import { getWikiInstanceById } from '../../../../config/instances'
-import {
-	getTestWikiDisplayNameMessageKey,
-	hasTestWikiForWikiInstance
-} from '../../../../config/wikiInstanceTestWikis'
+import { getTestWikiDisplayNameMessageKey } from '../../../../config/wikiInstanceTestWikis'
 import { activeExplorerWikiInstanceId } from '../../../utils/explorerWikiInstanceContext'
 import { findOpenScalarClientModal } from '../../../utils/findOpenScalarClientModal'
-import { getInterfaceMessageTemplate, splitMessageAtTwoPositionalParameters } from '../../../utils/getInterfaceMessageTemplate'
+import {
+	getInterfaceMessageTemplate,
+	splitMessageAtFirstPositionalParameter,
+	splitMessageAtTwoPositionalParameters
+} from '../../../utils/getInterfaceMessageTemplate'
 import { isWriteHttpMethod } from '../../../utils/isWriteHttpMethod'
 import { resolveHttpMethodFromModalElement } from '../../../utils/scalarClientModalHttpMethod'
 
@@ -21,6 +22,16 @@ const props = defineProps<{
 	slotKey: string
 	/** HTTP method when mounted via DOM injection (address bar or slot probes). */
 	httpMethod?: string
+	/**
+	 * Whether the mapped test wiki host appears among Scalar address-bar servers
+	 * (OpenAPI `servers`). Drives select-vs-caution warning copy.
+	 */
+	isTestServerSelectable?: boolean
+	/**
+	 * Whether the address bar’s active server is already the mapped test wiki.
+	 * When true, the production warning is hidden.
+	 */
+	isActiveServerTestWiki?: boolean
 	/** OpenAPI operation; Scalar does not pass `method` on this object — use DOM or `httpMethod`. */
 	operation?: OperationShape
 }>()
@@ -37,22 +48,29 @@ const resolvedTestWikiDisplayName = computed( () => {
 	)
 } )
 
-const hasMappedTestWiki = computed( () => {
-	return hasTestWikiForWikiInstance( activeExplorerWikiInstanceId.value )
-} )
+const canSelectTestServer = computed( () => Boolean( props.isTestServerSelectable ) )
 
-const warningMessageSegments = computed( () => {
+const warningMessageWithTestWikiSegments = computed( () => {
 	const messageTemplate = getInterfaceMessageTemplate( 'explorer-scalar-write-endpoint-warning' )
 
 	return splitMessageAtTwoPositionalParameters( messageTemplate )
 } )
 
+const warningMessageWithoutTestWikiSegments = computed( () => {
+	const messageTemplate = getInterfaceMessageTemplate(
+		'explorer-scalar-write-endpoint-warning-no-test-wiki'
+	)
+
+	return splitMessageAtFirstPositionalParameter( messageTemplate )
+} )
+
 const shouldShowProductionWarning = computed( () => {
 	// Address-bar DOM injection only. Ignore legacy ClientPlugin request/response slots
-	// (those mount under Response Headers after Send).
+	// (those mount under Response Headers after Send). Hide while the active server is
+	// already the mapped test wiki — warning returns if the user switches back to production.
 	return props.slotKey === 'address-bar'
 		&& isWriteHttpMethod( resolvedHttpMethod.value )
-		&& hasMappedTestWiki.value
+		&& !props.isActiveServerTestWiki
 } )
 
 /**
@@ -68,18 +86,6 @@ function refreshHttpMethodFromModal(): void {
 
 	const modalRoot = findOpenScalarClientModal()
 	resolvedHttpMethod.value = resolveHttpMethodFromModalElement( modalRoot ) ?? ''
-}
-
-/**
- * Placeholder handler for the test-wiki link until test instances are discoverable.
- *
- * @param clickEvent - Click event from the mocked progressive link.
- * @returns Nothing.
- */
-function onTestWikiLinkClick( clickEvent: MouseEvent ): void {
-	// QUESTION: Wire this to switch the explorer to the mapped test wiki instance
-	// (same module + endpoint) once those wikis are available via discovery.
-	clickEvent.preventDefault()
 }
 
 watch( () => props.httpMethod, () => {
@@ -99,11 +105,12 @@ onMounted( () => {
 		>
 			<div class="scalar-client-write-endpoint-warning">
 				<CdxMessage type="warning">
-					{{ warningMessageSegments.beforeFirstParameter }}<bdi>{{ resolvedProductionWikiDisplayName }}</bdi>{{ warningMessageSegments.betweenParameters }}<a
-						href="#"
-						class="scalar-client-write-endpoint-controls__test-wiki-link"
-						@click="onTestWikiLinkClick"
-					><bdi>{{ resolvedTestWikiDisplayName }}</bdi></a>{{ warningMessageSegments.afterSecondParameter }}
+					<template v-if="canSelectTestServer">
+						{{ warningMessageWithTestWikiSegments.beforeFirstParameter }}<bdi>{{ resolvedProductionWikiDisplayName }}</bdi>{{ warningMessageWithTestWikiSegments.betweenParameters }}<bdi>{{ resolvedTestWikiDisplayName }}</bdi>{{ warningMessageWithTestWikiSegments.afterSecondParameter }}
+					</template>
+					<template v-else>
+						{{ warningMessageWithoutTestWikiSegments.beforeParameter }}<bdi>{{ resolvedProductionWikiDisplayName }}</bdi>{{ warningMessageWithoutTestWikiSegments.afterParameter }}
+					</template>
 				</CdxMessage>
 			</div>
 		</div>
@@ -121,19 +128,5 @@ onMounted( () => {
 
 .scalar-client-write-endpoint-controls--address-bar {
 	margin: 0;
-}
-
-.scalar-client-write-endpoint-controls__test-wiki-link {
-	color: var( --color-progressive );
-	text-decoration: none;
-}
-
-.scalar-client-write-endpoint-controls__test-wiki-link:hover {
-	color: var( --color-progressive--hover );
-	text-decoration: underline;
-}
-
-.scalar-client-write-endpoint-controls__test-wiki-link:active {
-	color: var( --color-progressive--active );
 }
 </style>

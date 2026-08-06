@@ -125,7 +125,6 @@ const {
 	onWriteRequestConfirmDialogPrimary,
 	onWriteRequestConfirmDialogCancel
 } = useScalarClientWriteRequestConfirmDialog()
-useScalarClientWriteEndpointWarnings( scalarInterface, selectedWikiInstanceId )
 useHideScalarClientAuthSection()
 
 watch( selectedWikiInstanceId, ( wikiInstanceId ) => {

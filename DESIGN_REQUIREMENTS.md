@@ -539,15 +539,18 @@ Top to bottom:
 
 ### Write-request production warning (Test Request modal)
 
-**Decision:** For write HTTP methods (`POST` / `PUT` / `PATCH` / `DELETE`) on instances with a mapped test wiki, show a Codex **`CdxMessage`** (warning) **only directly under the Test Request address bar**. Do not show the warning in request/response body sections (including under **Response Headers** after Send).
+**Decision:** For write HTTP methods (`POST` / `PUT` / `PATCH` / `DELETE`), show a Codex **`CdxMessage`** (warning) **only directly under the Test Request address bar**. Do not show the warning in request/response body sections (including under **Response Headers** after Send).
 
-**Copy:** banana-i18n `explorer-scalar-write-endpoint-warning` — `$1` is the production wiki display name; `$2` is the mapped test wiki display name (`Test Wikipedia` / `Test Wikidata` / `Test Wikimedia Commons` via `explorer-scalar-write-test-wiki-name-*`). Both names use `<bdi>`. `$2` is a progressive-styled link; navigation is mocked until test wikis are discoverable in the explorer.
+**Copy:**
+- Test server selectable in the address bar (`isTestWikiSelectableInAddressBar` — OpenAPI / address-bar servers include a host other than the production wiki): banana-i18n `explorer-scalar-write-endpoint-warning` — `$1` production wiki display name; `$2` mapped test wiki display name (`Test Wikipedia` / `Test Wikidata` / `Test Wikimedia Commons` via `explorer-scalar-write-test-wiki-name-*`). Both names use `<bdi>` as plain text (no link). Instructs the user to **select** the test server **using the address bar above**. Wikipedia sandbox host is `test.wikimedia.org`.
+- Test server not selectable: banana-i18n `explorer-scalar-write-endpoint-warning-no-test-wiki` — `$1` production wiki display name in `<bdi>`; asks the user to operate with caution.
+- **Hide while on test:** If the address bar’s active server host is not the production wiki (`isActiveAddressBarServerTestWiki`), the warning is not shown. Selecting a production host again restores it.
 
-**Routing:** Write requests go to the **production** wiki in this phase (no checkbox, no rewrite to a test host). Further guardrails are expected later.
+**Routing:** Front Door does not rewrite write requests to a test host. The user may still send to a test wiki by selecting that server in Scalar’s address bar when the OpenAPI document lists it.
 
 **Confirm dialog (mock):** Before address-bar **Send** on write methods, a **`CdxDialog`** asks for confirmation (title / body with production wiki `$1`). Action buttons stay **end-aligned** like the default Dialog; within that group, progressive **Confirm** sits to the **left** of neutral **Cancel** — **Codex exception #13** (Codex defaults primary to the end of the pair via `row-reverse`; Confirm is swapped leftward to prevent habitual error clicks on live writes). Title **18px** (`--font-size-large`); body **16px** (`--font-size-medium`, Codex default). The dialog component is a **sibling** of **`#explorer-reference-panel`** and teleports into that panel so the backdrop circumscribes the Scalar embed section only (not the whole viewport / shell chrome; physical viewport clears documented in AGENTS.md rule 8). Gated by `SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED` — set `false` to undo quickly. See `ARCHITECTURE.md` → Write-request confirm dialog and Codex exceptions #13.
 
-**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `ScalarClientWriteRequestConfirmDialog.vue`, `useScalarClientWriteRequestConfirmDialog.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`.
+**Source:** `ARCHITECTURE.md` → Write-request production warning; `ScalarClientWriteEndpointWarning.vue`, `useScalarClientWriteEndpointWarnings.ts`, `isTestWikiSelectableInAddressBar.ts` / `isActiveAddressBarServerTestWiki`, `collectScalarDocumentServerUrls.ts` / `collectScalarAddressBarServerUrls`, `ScalarClientWriteRequestConfirmDialog.vue`, `useScalarClientWriteRequestConfirmDialog.ts`, `config/wikiInstanceTestWikis.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`.
 
 ---
 
