@@ -200,8 +200,11 @@ const scalarReferenceKey = computed( () => {
 
 // Re-arm the loading overlay whenever the Scalar instance is about to remount
 // (mode change, module switch, or wiki instance change). onScalarLoaded clears it.
+// Clear the interface handle so Test Request shell-clamp state cannot stick to a
+// destroyed ApiReference (Scalar often tears down the modal without ui:close).
 watch( scalarReferenceKey, () => {
 	isScalarReady.value = false
+	scalarInterface.value = null
 } )
 
 // Title matches the side-nav label for the active mode (same wording,
