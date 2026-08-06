@@ -9,7 +9,7 @@ import { useColorMode } from './useColorMode'
 /**
  * State-marker class on `.explorer-page__scalar-shell` while Test Request is open.
  * Pairs with explorer-codex-overrides.css (overlay / gutter) and scoped shell
- * clamp styles in `app/pages/explorer/[[view]].vue` (natural height — see
+ * clamp styles in `app/pages/explorer/[...view].vue` (natural height — see
  * ARCHITECTURE.md / DESIGN_REQUIREMENTS.md).
  */
 export const EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS =
@@ -127,7 +127,7 @@ function isPointInsideElement(
  * **`scrollHeight` + vertical gutter** (`ResizeObserver`, deadband from
  * `config/explorerSurfaces.ts`) so page scroll cannot continue into the OpenAPI
  * document under the overlay. Shell **`block-size` / `overflow-block: clip`**
- * must stay in **scoped** `explorer/[[view]].vue` styles (unscoped overrides
+ * must stay in **scoped** `explorer/[...view].vue` styles (unscoped overrides
  * lose to `[data-v-*]`). Content above the shell and the site footer remain
  * reachable. Spec remount (module / instance change) nulls `scalarInterface` and
  * clears the clamp — Scalar often destroys the modal without `ui:close`. While

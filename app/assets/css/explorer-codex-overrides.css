@@ -251,7 +251,7 @@
 	/* Close control inset from `.scalar.scalar-app` block-start / inline-end (4px). */
 	--fd-explorer-test-request-exit-button-inset: var( --spacing-25 );
 	/*
-	 * Shell block-size / overflow clamp lives in explorer/[[view]].vue scoped
+	 * Shell block-size / overflow clamp lives in explorer/[...view].vue scoped
 	 * CSS so it beats `[data-v-*]` rules. Custom properties stay here for the
 	 * Scalar overlay descendants below.
 	 */

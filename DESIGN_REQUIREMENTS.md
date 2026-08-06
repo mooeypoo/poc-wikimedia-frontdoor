@@ -547,9 +547,9 @@ Top to bottom:
 | Radius | Dialog uses exploratory **4px** **`--fd-explorer-controls-surface-border-radius`** (same as explorer controls / account cards / NavigationCard — not a Codex token; under consideration as a future system default). Dialog keeps **`overflow: hidden`** so Scalar’s square inner panels do not paint over the corners. |
 | Scroll extent while open | Shell **block size = dialog `scrollHeight` + vertical gutter** (`ResizeObserver`; gutter / deadband from `config/explorerSurfaces.ts`; ignore collapsed heights). **`overflow-block: clip`** in **scoped** explorer shell CSS (must beat `[data-v-*]`). Overlay uses **`height: auto`**. Spec remount (change **API to explore** / instance) must clear the clamp via nulling **`scalarInterface`** — do not leave an ~80px shell. Content above the shell and the footer stay reachable; close restores full-spec scroll. |
 
-Implementation: scroll shell into view on open; `--client-modal-open` overlay in `explorer-codex-overrides.css`; shell clamp in **scoped** `explorer/[[view]].vue`; sizing in `useScalarClientModalBackgroundScrollLock`. See `ARCHITECTURE.md` → Scalar Test Request modal (natural height).
+Implementation: scroll shell into view on open; `--client-modal-open` overlay in `explorer-codex-overrides.css`; shell clamp in **scoped** `explorer/[...view].vue`; sizing in `useScalarClientModalBackgroundScrollLock`. See `ARCHITECTURE.md` → Scalar Test Request modal (natural height).
 
-**Source:** `app/pages/explorer/[[view]].vue` (scoped clamp), `config/scalar.ts`, `config/explorerSurfaces.ts` (4px radius, Test Request gutter / deadband), `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal (natural height).
+**Source:** `app/pages/explorer/[...view].vue` (scoped clamp), `config/scalar.ts`, `config/explorerSurfaces.ts` (4px radius, Test Request gutter / deadband), `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal (natural height).
 
 ### Write-request production warning (Test Request modal)
 
@@ -939,7 +939,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 | Section nav config | `config/sectionNavigation.js`, `config/explorerSideNav.js`, `app/utils/contentRoute.ts` |
 | Primary nav | `config/mainNavigation.ts`, `app/composables/useMainNavigationLinks.ts` |
-| Explorer page | `app/pages/explorer/[[view]].vue` |
+| Explorer page | `app/pages/explorer/[...view].vue` |
 | Scalar native sidebar flag | `config/explorerInternalSidebarExperiment.ts`, `config/scalar.ts` |
 | Legacy module rail (rollback only) | `app/components/explorer/ExplorerModuleRail.vue` |
 | Project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts` |

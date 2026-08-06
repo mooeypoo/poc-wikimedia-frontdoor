@@ -170,7 +170,7 @@ export default defineNuxtConfig( {
 		 * Pre-bundle deps used on first paint / first explorer entry. Without
 		 * this, Vite discovers them at runtime, invalidates `/_nuxt/pages/…`
 		 * modules mid-navigation, and the browser shows 500 “Failed to fetch
-		 * dynamically imported module” for `pages/explorer/[[view]].vue`.
+		 * dynamically imported module” for `pages/explorer/[...view].vue`.
 		 */
 		optimizeDeps: {
 			include: [
