@@ -49,7 +49,7 @@ export const WIKI_INSTANCES: WikiInstanceConfig[] = [
 		language: 'en'
 	},
 	{
-		id: 'wikidata',
+		id: 'wikidatawiki',
 		displayName: 'Wikidata',
 		baseUrl: 'https://www.wikidata.org',
 		dir: 'ltr',

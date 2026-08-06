@@ -755,7 +755,7 @@ Object.assign( scalarConfig, { spec: { url: newSpecUrl } } )
 
 If a future Scalar version changes this behaviour, update the composable and remove this comment.
 
-When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (instance + module + spec URL). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
+When `Object.assign` is insufficient (route-boundary entry, recovery from a stuck mount), the explorer page remounts `ExplorerScalarReference` using `:key="scalarReferenceKey"` (route path + instance + module + mode + spec URL). It is keyed on `route.path`, **not** `route.fullPath`, so deep-link operation-hash writes do not remount Scalar (see Deep-linking). This is an explicit, documented exception to config-only updates — see `AGENTS.md` failure signals.
 
 ### Module rail → Scalar operation focus
 
@@ -866,7 +866,7 @@ Enterprise explorer experiences share the unified start column with community mo
 The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or from** `/explorer` can leave Scalar DOM in the shell or prevent ApiReference from mounting. Two mitigations work together:
 
 1. **`app/plugins/explorer-route-navigation.client.ts`** — `router.beforeEach` calls `window.location.assign()` when crossing the explorer boundary (full document navigation). Skips the router’s **initial** navigation (`from.matched.length === 0`) and skips when `window.location.pathname` already matches the target (avoids full-reload loops on hard load / same-URL assign).
-2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component on every route change.
+2. **`app/app.vue`** — `<NuxtPage :page-key="resolvePageKey" />` remounts the page component across route boundaries. Within the explorer the key is the **mode path** (`/explorer`, `/explorer/enterprise`, `/explorer/enterprise-custom`), so a single page instance persists across in-explorer deep-link URL updates (quick→direct canonicalization, instance/module/operation changes) and their notices are not torn down; non-explorer routes key on `fullPath`, so leaving the explorer still remounts. See Deep-linking.
 
 **APIs tab vs explorer:** The primary **APIs** tab lands on `/apis` but stays selected on `/explorer`. Re-clicking **APIs** from explorer (or an `/apis/…` page) navigates to the catalog overview; mount-time tab sync is ignored so load does not bounce through this plugin. `ShellSidePanelNav` does not re-navigate when a mode item’s `to` is already the current path (community → `/explorer`).
 
@@ -875,6 +875,16 @@ The explorer route uses `ssr: false`. Client-side Vue Router transitions **to or
 Bootstrap for the explorer starts in `useExplorerBootstrap` **`onMounted`** (after hydration), not from an immediate watcher, so `/api/explorer-bootstrap` does not hang on SPA entry.
 
 **Dev — Vite `optimizeDeps.include`:** First navigation into `/explorer` (and other cold client mounts) can trigger Vite dependency discovery (`@scalar/api-reference`, Codex, `banana-i18n`, `markdown-it` from Enterprise custom mode, …). That invalidates `/_nuxt/pages/explorer/[[view]].vue` mid-load and surfaces as **500 / Failed to fetch dynamically imported module**. Those packages are listed under `vite.optimizeDeps.include` in `nuxt.config.ts` so they pre-bundle at `nuxt dev` startup. If the error returns after cache clears or new deps, hard-refresh or restart `npm run dev`; extend the include list when Vite logs “discovered new dependencies at runtime”.
+
+### Deep-linking
+
+Community explorer state (wiki instance, module, operation) is addressable via **path-based deep-link URLs**, so a view is shareable and gives the planned endpoint search a link target. Enterprise modes are unaffected. See `docs/adr-explorer-deep-linking.md`.
+
+- **Grammar** (community only): `/explorer/direct/<instance>/<module…>#<operation>` (verbose — explicit instance) and `/explorer/q/<module…>#<operation>` (quick — instance resolved from the module source of truth, then canonicalized to the `direct` form). The module name is the multi-segment tail (`site/v1`); the operation is a readable anchor slug (e.g. `#get_v1_page_title`). The page is a catch-all route (`app/pages/explorer/[...view].vue`); the grammar is parsed/built by `app/utils/explorerRoute.ts`, and `direct` / `q` join `enterprise` / `enterprise-custom` as reserved first segments.
+- **We own the hash** — Scalar's native hash routing stays off. On load, `useExplorerDeepLink` parses the URL (before bootstrap) and hands `useExplorerBootstrap` a module/operation intent; the operation anchor is resolved against the loaded module's operations (`app/utils/explorerOperationAnchor.ts`) and scrolled via the existing imperative focus engine. `scalarReferenceKey` keys on `route.path` (not `route.fullPath`), so writing the operation hash never remounts Scalar (see Reactive spec switching).
+- **State ↔ URL** — `useExplorerDeepLinkSync` reflects selection into the URL (`push` on a newly focused operation so Back steps through operations, `replace` on instance/module change; the hash clears on any instance/module change). Same-module Back/Forward re-focuses; cross-module Back is a documented follow-up.
+- **Fleet instances** — a deep-link may name any public, open wiki. `server/api/explorer-bootstrap.get.ts` resolves `baseUrl` curated-first (`config/instances.ts`), then via the generated fleet registry (`config/moduleSourceOfTruth.ts`); quick links resolve their representative instance through `server/api/explorer-quick-resolve.get.ts`. A non-curated instance is surfaced in the project picker as a transient selected option labelled with its display name (`isPickerRepresentableInstance`, `useExplorerProjectLanguagePicker`).
+- **Fallbacks** — a deep-link that cannot fully resolve degrades with a dismissible `CdxMessage`: module-not-on-instance → default module; unknown instance → default wiki (`enwiki`); unmatched operation anchor → module without focus.
 
 ### Opt-in module visibility
 

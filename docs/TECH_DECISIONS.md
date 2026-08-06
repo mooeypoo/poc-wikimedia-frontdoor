@@ -100,6 +100,8 @@ Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
 `config/instances.js` contains only base URLs, direction, and language metadata. No spec URLs.
 
+**Fleet-wide instance resolution (deep-linking).** `server/api/explorer-bootstrap.get.ts` resolves an instance's `baseUrl` **curated-first** (`config/instances.ts`), then falls back to the **generated fleet registry** (`config/moduleSourceOfTruth.ts`). This lets deep-links (`/explorer/direct/<instance>/…`, and quick links) load any public, open wiki, not just the six curated instances. Curated wins on a match so hand-curated policy (display name, direction) stays authoritative. See `docs/adr-explorer-deep-linking.md`.
+
 **Offline, fleet-wide.** The same discovery flow is run offline across the entire public wiki fleet by the standalone `generate-module-source-of-truth` script to produce a committed source of truth under `config/generated/`: the fleet registry, the unique modules and which instances expose each, and each module's full OpenAPI spec. It is reviewed via git diff and independent of the runtime flow above — the explorer still resolves specs live. See `docs/adr-module-source-of-truth.md`.
 
 ---
@@ -108,7 +110,7 @@ Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
 Six instances configured for the initial build. All modules and spec URLs for each are derived from their respective `/w/rest.php/specs/v0/discovery` endpoints at runtime.
 
-> These six are the *curated* explorer set (`config/instances.ts`). The full public fleet (~840 wikis) is enumerated separately as generated data in `config/generated/wikiInstances.generated.ts`; the two are distinct concerns and are not merged.
+> These six are the *curated* explorer set (`config/instances.ts`). The full public fleet (~840 wikis) is enumerated separately as generated data in `config/generated/wikiInstances.generated.ts`; the two are distinct concerns and are not merged as datasets — though the bootstrap route now falls back to the generated registry to resolve an instance's `baseUrl` for deep-links (see Discovery and spec resolution).
 
 | ID | Base URL | Direction |
 |---|---|---|
@@ -116,7 +118,7 @@ Six instances configured for the initial build. All modules and spec URLs for ea
 | `arwiki` | `https://ar.wikipedia.org` | RTL |
 | `frwiki` | `https://fr.wikipedia.org` | LTR |
 | `hewiki` | `https://he.wikipedia.org` | RTL |
-| `wikidata` | `https://www.wikidata.org` | LTR |
+| `wikidatawiki` | `https://www.wikidata.org` | LTR |
 | `mediawiki` | `https://www.mediawiki.org` | LTR |
 
 ---

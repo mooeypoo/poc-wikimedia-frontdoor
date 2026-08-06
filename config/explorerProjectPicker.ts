@@ -69,7 +69,9 @@ export function resolveExplorerWikiInstanceId(
 	}
 
 	if ( projectId === 'wikidata' ) {
-		return 'wikidata'
+		// Curated instance id is the fleet dbname `wikidatawiki` (ADR: explorer deep-linking §3);
+		// `projectId` above is the picker's project namespace, which stays `wikidata`.
+		return 'wikidatawiki'
 	}
 
 	return WIKIPEDIA_INSTANCE_ID_BY_LANGUAGE[ languageCode ]
@@ -90,7 +92,7 @@ export function parseExplorerWikiInstanceSelection( wikiInstanceId: string ): {
 	switch ( wikiInstanceId ) {
 		case 'commonswiki':
 			return { projectId: 'commons', languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE }
-		case 'wikidata':
+		case 'wikidatawiki':
 			return { projectId: 'wikidata', languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE }
 		case 'eswiki':
 			return { projectId: 'wikipedia', languageCode: 'es' }
@@ -106,4 +108,25 @@ export function parseExplorerWikiInstanceSelection( wikiInstanceId: string ): {
 				languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE
 			}
 	}
+}
+
+/**
+ * Returns whether the project + language picker can faithfully represent an
+ * instance id (i.e. it round-trips through parse → resolve).
+ *
+ * Deep-links can load any public wiki in the fleet (ADR: explorer deep-linking §4),
+ * but the curated project/language comboboxes only map the six curated instances.
+ * A non-representable ("transient") instance — e.g. `dewiki`, `frwiktionary` — must
+ * be surfaced as an injected transient option rather than silently shown as
+ * Wikipedia/English (the `parse` default).
+ *
+ * @param wikiInstanceId - Wiki instance id (dbname).
+ * @returns True when the picker's project/language state maps back to this exact id.
+ */
+export function isPickerRepresentableInstance( wikiInstanceId: string ): boolean {
+	const parsedSelection = parseExplorerWikiInstanceSelection( wikiInstanceId )
+	return resolveExplorerWikiInstanceId(
+		parsedSelection.projectId,
+		parsedSelection.languageCode
+	) === wikiInstanceId
 }

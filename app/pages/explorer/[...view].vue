@@ -4,10 +4,13 @@ import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
+import { useExplorerDeepLink } from '../../composables/useExplorerDeepLink'
+import { useExplorerDeepLinkSync } from '../../composables/useExplorerDeepLinkSync'
 import { useExplorerOptInFilteredModules } from '../../composables/useExplorerOptInFilteredModules'
 import { useEndPanelNavAlign } from '../../composables/useEndPanelNavAlign'
 import { useExplorerModuleRailPlacement } from '../../composables/useExplorerModuleRailPlacement'
 import { useExplorerScalarFocus, type ScalarInterfaceHandle } from '../../composables/useExplorerScalarFocus'
+import { useExplorerScalarSidebarScroll } from '../../composables/useExplorerScalarSidebarScroll'
 import { useScalarClientModalBackgroundScrollLock } from '../../composables/useScalarClientModalBackgroundScrollLock'
 import { useScalarClientWriteEndpointWarnings } from '../../composables/useScalarClientWriteEndpointWarnings'
 import { useScalarClientWriteRequestConfirmDialog } from '../../composables/useScalarClientWriteRequestConfirmDialog'
@@ -40,12 +43,27 @@ const { explorerMode } = useExplorerMode()
 const isCommunityMode = computed( () => explorerMode.value === 'community' )
 const isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )
 
+// Hydrate selection from a deep-link URL. Runs before bootstrap so it can steer
+// the instance and hand over the module/operation intent. See docs/adr-explorer-deep-linking.md.
+const {
+	initialDeepLinkIntent,
+	isBootstrapReady: isDeepLinkBootstrapReady,
+	deepLinkInstanceId,
+	deepLinkNotice
+} = useExplorerDeepLink( selectedWikiInstanceId )
+
+// Defer the first community bootstrap while a quick link resolves its instance.
+const isCommunityBootstrapEnabled = computed(
+	() => isCommunityMode.value && isDeepLinkBootstrapReady.value
+)
+
 const { specUrl: enterpriseSpecUrl, scalarOverrides: enterpriseScalarOverrides } =
 	useEnterpriseExplorer()
 const {
 	modules,
 	failedModules,
 	wikiDisplayName,
+	selectedModule,
 	selectedModuleName,
 	pendingOperationTarget,
 	selectedEndpointOperationId,
@@ -57,7 +75,20 @@ const {
 	selectModule,
 	markScalarReady,
 	clearPendingOperationTarget
-} = useExplorerBootstrap( selectedWikiInstanceId, isCommunityMode )
+} = useExplorerBootstrap( selectedWikiInstanceId, isCommunityBootstrapEnabled, initialDeepLinkIntent )
+
+// Keep the URL in sync with selection state and recover from a failed deep-link load.
+useExplorerDeepLinkSync( {
+	selectedWikiInstanceId,
+	selectedModuleName,
+	selectedModule,
+	pendingOperationTarget,
+	isCommunityMode,
+	hasInstanceBootstrapError,
+	deepLinkInstanceId,
+	deepLinkNotice,
+	selectModule
+} )
 
 const includeBetaEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints )
 const includeInternalEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints )
@@ -78,6 +109,9 @@ const {
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+
+// Sidebar-mode only: bring Scalar's own sidebar entry into view on a deep-link load.
+const { scrollSidebarToActiveOperation } = useExplorerScalarSidebarScroll( scalarShellRef )
 
 useScalarClientWriteEndpointWarnings( scalarInterface )
 useScalarClientModalBackgroundScrollLock( scalarShellRef, scalarInterface )
@@ -154,6 +188,15 @@ function onScalarLoaded(): void {
 	requestAnimationFrame( () => {
 		focusPendingOperationInScalar()
 	} )
+
+	// In internal-sidebar mode Scalar scrolls the main content and highlights the
+	// sidebar entry from the hash, but does not scroll the sidebar list itself; bring
+	// the deep-linked entry into view. No-op when there is no operation hash.
+	if ( EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR ) {
+		requestAnimationFrame( () => {
+			scrollSidebarToActiveOperation()
+		} )
+	}
 }
 
 // Per-mode Scalar configurations — keeping them separate avoids mutating a
@@ -183,10 +226,14 @@ const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
  * Object.assign on the Scalar config handles in-place URL updates, but a full remount
  * is still required when crossing the explorer route boundary or recovering from a
  * stuck client-only mount (documented in ARCHITECTURE.md → API explorer).
+ *
+ * Keyed on `route.path` (not `route.fullPath`) so that writing the operation hash
+ * for deep-linking does not remount Scalar — only path, instance, module, mode, or
+ * spec-URL changes do. See docs/adr-explorer-deep-linking.md §2, §7.
  */
 const scalarReferenceKey = computed( () => {
 	return [
-		route.fullPath,
+		route.path,
 		selectedWikiInstanceId.value,
 		selectedModuleName.value,
 		explorerMode.value,
@@ -223,6 +270,35 @@ const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-inst
 const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
 const scalarSwitchingLabel = computed( () => $bananaI18n( 'explorer-scalar-switching' ) )
+
+// Deep-link notice (ADR §9): every case where the explorer adjusted the URL for
+// the user. Sourced from the shared, remount-surviving useState channel written by
+// the deep-link composables and the bootstrap. See useExplorerDeepLinkNotice.
+const deepLinkNoticeMessage = computed( () => {
+	switch ( deepLinkNotice.value ) {
+		case 'instance-fallback':
+			return $bananaI18n( 'explorer-deep-link-instance-fallback' )
+		case 'module-fallback':
+			return $bananaI18n( 'explorer-deep-link-module-fallback' )
+		case 'operation-missing':
+			return $bananaI18n( 'explorer-deep-link-operation-missing' )
+		case 'quick-unresolved':
+			return $bananaI18n( 'explorer-deep-link-module-unknown' )
+		case 'quick-canonicalized':
+			return $bananaI18n( 'explorer-deep-link-quick-canonicalized' )
+		default:
+			return ''
+	}
+} )
+
+/**
+ * Clears the deep-link notice when the user dismisses it.
+ *
+ * @returns Nothing.
+ */
+function onDeepLinkNoticeDismissed(): void {
+	deepLinkNotice.value = null
+}
 
 watch( [ isExplorerModuleRailVisible, visibleSelectedModule, isScalarReady, layoutMode ], ( [ , , , nextLayoutMode ] ) => {
 	void nextTick( () => {
@@ -276,6 +352,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<p v-if="explorerDescription">{{ explorerDescription }}</p>
 			</header>
 
+			<CdxMessage
+				v-if="isCommunityMode && deepLinkNoticeMessage"
+				type="notice"
+				:allow-user-dismiss="true"
+				@user-dismissed="onDeepLinkNoticeDismissed"
+			>
+				{{ deepLinkNoticeMessage }}
+			</CdxMessage>
+
 			<!--
 				Teleport anchor stays mounted in community mode (controls alone gate on bootstrap).
 				Vue Teleport requires #explorer-module-rail-anchor in the DOM before the rail mounts.
@@ -294,6 +379,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					:visible-modules="visibleModules"
 					:has-selectable-modules="hasVisibleSelectableModules"
 					:select-module="selectModule"
+						:wiki-display-name="wikiDisplayName"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 				/>
 				<div
