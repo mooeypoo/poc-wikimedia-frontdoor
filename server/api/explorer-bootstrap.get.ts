@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
-import { getWikiInstanceById } from '../../config/instances'
+import { getWikiInstanceById as getCuratedWikiInstanceById } from '../../config/instances'
+import { getWikiInstanceById as getFleetWikiInstanceById } from '../../config/moduleSourceOfTruth'
 import { resolveExplorerModuleRailHeading } from '../../app/utils/explorerModuleRailHeading'
 import { normalizeOpenApiModuleDescription } from '../../app/utils/explorerModuleDescription'
 import { normalizeDiscoveryModules } from '../../app/utils/normalizeDiscoveryModules'
@@ -63,6 +64,49 @@ interface BootstrapCacheEntry {
 
 const explorerBootstrapCacheByInstance = new Map<string, BootstrapCacheEntry>()
 
+/** Minimal instance fields the bootstrap route needs to fetch and label a wiki. */
+interface ResolvedBootstrapWikiInstance {
+	id: string
+	baseUrl: string
+	displayName: string
+}
+
+/**
+ * Resolves a wiki instance by id, curated list first, then the generated fleet
+ * registry.
+ *
+ * Deep-links (`/explorer/direct/<instance>/…`, and quick links resolving to a
+ * module's representative instance) can name any public, open wiki — not just
+ * the six curated instances in `config/instances.ts`. Falling back to the
+ * source-of-truth fleet registry lets those instances load. Curated wins on a
+ * match so hand-curated policy (display name, direction) stays authoritative.
+ * See docs/adr-explorer-deep-linking.md §4.
+ *
+ * @param wikiInstanceId - Instance id (dbname), e.g. `enwiki` or `frwiktionary`.
+ * @returns The resolved instance's id, baseUrl, and displayName, or null when unknown.
+ */
+function resolveBootstrapWikiInstance( wikiInstanceId: string ): ResolvedBootstrapWikiInstance | null {
+	const curatedInstance = getCuratedWikiInstanceById( wikiInstanceId )
+	if ( curatedInstance ) {
+		return {
+			id: curatedInstance.id,
+			baseUrl: curatedInstance.baseUrl,
+			displayName: curatedInstance.displayName
+		}
+	}
+
+	const fleetInstance = getFleetWikiInstanceById( wikiInstanceId )
+	if ( fleetInstance ) {
+		return {
+			id: fleetInstance.id,
+			baseUrl: fleetInstance.baseUrl,
+			displayName: fleetInstance.displayName
+		}
+	}
+
+	return null
+}
+
 /**
  * Proxies discovery and module spec fetches for a selected wiki instance.
  *
@@ -74,7 +118,7 @@ export default defineEventHandler( async ( event ) => {
 	const query = getQuery( event )
 	const wikiInstanceId = typeof query.wikiInstanceId === 'string' ? query.wikiInstanceId : ''
 	const forceRefresh = query.refresh === '1'
-	const selectedWikiInstance = getWikiInstanceById( wikiInstanceId )
+	const selectedWikiInstance = resolveBootstrapWikiInstance( wikiInstanceId )
 
 	if ( !selectedWikiInstance ) {
 		throw createError( {

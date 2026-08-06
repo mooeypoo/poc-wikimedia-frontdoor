@@ -6,6 +6,7 @@ import {
 	EXPLORER_PICKER_PROJECT_IDS,
 	EXPLORER_PICKER_PROJECT_MESSAGE_KEYS,
 	isExplorerProjectLanguageApplicable,
+	isPickerRepresentableInstance,
 	parseExplorerWikiInstanceSelection,
 	resolveExplorerWikiInstanceId,
 	type ExplorerPickerLanguageCode,
@@ -25,9 +26,15 @@ export interface ExplorerPickerMenuItem {
  * store a single wiki instance id via {@link useDirection}.
  *
  * @param selectedWikiInstanceId - Reactive wiki instance id from {@link useDirection}.
+ * @param instanceDisplayName - Reactive display name of the loaded instance (from
+ *   bootstrap), used to label the injected transient option for a non-curated,
+ *   deep-linked instance the project/language comboboxes cannot represent.
  * @returns Menu items, combobox bridges, and language disable state.
  */
-export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<string> ): {
+export function useExplorerProjectLanguagePicker(
+	selectedWikiInstanceId: Ref<string>,
+	instanceDisplayName: Ref<string> = ref( '' )
+): {
 	projectMenuItems: ComputedRef<ExplorerPickerMenuItem[]>
 	languageMenuItems: ComputedRef<ExplorerPickerMenuItem[]>
 	projectComboboxSelected: WritableComputedRef<string>
@@ -39,6 +46,13 @@ export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<st
 	const initialSelection = parseExplorerWikiInstanceSelection( selectedWikiInstanceId.value )
 	const selectedProjectId = ref<ExplorerPickerProjectId>( initialSelection.projectId )
 	const selectedLanguageCode = ref<ExplorerPickerLanguageCode>( initialSelection.languageCode )
+
+	// A deep-linked, non-curated instance the project/language comboboxes cannot
+	// represent (ADR §5). It is surfaced as an injected, selected project option
+	// labelled with the wiki's display name rather than the wrong Wikipedia/English
+	// default. Falls back to the raw id until the display name arrives from bootstrap.
+	const isTransientInstance = computed( () => !isPickerRepresentableInstance( selectedWikiInstanceId.value ) )
+	const transientProjectLabel = computed( () => instanceDisplayName.value || selectedWikiInstanceId.value )
 
 	/**
 	 * Resolves the banana label for a project id.
@@ -61,13 +75,23 @@ export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<st
 	}
 
 	const projectMenuItems = computed<ExplorerPickerMenuItem[]>( () => {
-		return EXPLORER_PICKER_PROJECT_IDS.map( ( projectId ) => {
+		const curatedItems = EXPLORER_PICKER_PROJECT_IDS.map( ( projectId ) => {
 			const label = projectLabelForId( projectId )
 			return {
 				value: label,
 				label: isolatePickerLabel( label )
 			}
 		} )
+
+		if ( isTransientInstance.value ) {
+			const transientLabel = transientProjectLabel.value
+			return [
+				{ value: transientLabel, label: isolatePickerLabel( transientLabel ) },
+				...curatedItems
+			]
+		}
+
+		return curatedItems
 	} )
 
 	const languageMenuItems = computed<ExplorerPickerMenuItem[]>( () => {
@@ -82,22 +106,40 @@ export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<st
 
 	const projectComboboxSelected = computed( {
 		get(): string {
-			return projectLabelForId( selectedProjectId.value )
+			return isTransientInstance.value
+				? transientProjectLabel.value
+				: projectLabelForId( selectedProjectId.value )
 		},
 		set( nextSelectedLabel: string ) {
+			// Re-selecting the injected transient option keeps the current instance.
+			if ( isTransientInstance.value && nextSelectedLabel === transientProjectLabel.value ) {
+				return
+			}
+
 			const matchingProjectId = EXPLORER_PICKER_PROJECT_IDS.find( ( projectId ) => {
 				return projectLabelForId( projectId ) === nextSelectedLabel
 			} )
 
-			if ( matchingProjectId ) {
-				selectedProjectId.value = matchingProjectId
+			if ( !matchingProjectId ) {
+				return
+			}
+
+			selectedProjectId.value = matchingProjectId
+			// Apply the instance directly so leaving a transient instance switches even
+			// when selectedProjectId is unchanged (the project→instance watch below only
+			// fires on a change, and a transient instance parses to the Wikipedia default).
+			const nextWikiInstanceId = resolveExplorerWikiInstanceId( matchingProjectId, selectedLanguageCode.value )
+			if ( selectedWikiInstanceId.value !== nextWikiInstanceId ) {
+				selectedWikiInstanceId.value = nextWikiInstanceId
 			}
 		}
 	} )
 
 	const languageComboboxSelected = computed( {
 		get(): string {
-			return languageLabelForCode( selectedLanguageCode.value )
+			// A transient instance's language is not one of the curated codes; show
+			// nothing rather than a misleading default (the selector is disabled).
+			return isTransientInstance.value ? '' : languageLabelForCode( selectedLanguageCode.value )
 		},
 		set( nextSelectedLabel: string ) {
 			const matchingLanguageCode = EXPLORER_PICKER_LANGUAGE_CODES.find( ( languageCode ) => {
@@ -111,7 +153,7 @@ export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<st
 	} )
 
 	const isLanguageSelectorDisabled = computed( () => {
-		return !isExplorerProjectLanguageApplicable( selectedProjectId.value )
+		return isTransientInstance.value || !isExplorerProjectLanguageApplicable( selectedProjectId.value )
 	} )
 
 	watch(
@@ -126,6 +168,12 @@ export function useExplorerProjectLanguagePicker( selectedWikiInstanceId: Ref<st
 	)
 
 	watch( selectedWikiInstanceId, ( wikiInstanceId ) => {
+		// A transient (non-curated) instance has no faithful project/language mapping;
+		// leave the combobox state as-is so the injected transient option stays shown.
+		if ( !isPickerRepresentableInstance( wikiInstanceId ) ) {
+			return
+		}
+
 		const parsedSelection = parseExplorerWikiInstanceSelection( wikiInstanceId )
 
 		if ( selectedProjectId.value !== parsedSelection.projectId ) {
