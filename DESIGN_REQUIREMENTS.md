@@ -545,11 +545,11 @@ Top to bottom:
 | Close control | **`.app-exit-button`** lives in the block-start / inline-end gutter **outside** the dialog; **4px** (`--spacing-25`) inset from the `.scalar.scalar-app` / shell edges at block-start and inline-end (light and dark; BiDi via logical insets; keep Scalar stock `p-2` size). |
 | Shell chrome while open | Header preferences (and other outside-shell chrome) must stay usable — Scalar’s focus-trap must not dismiss the preferences `CdxPopover` (see `ARCHITECTURE.md` → dialog `inert` workaround). |
 | Radius | Dialog uses exploratory **4px** **`--fd-explorer-controls-surface-border-radius`** (same as explorer controls / account cards / NavigationCard — not a Codex token; under consideration as a future system default). Dialog keeps **`overflow: hidden`** so Scalar’s square inner panels do not paint over the corners. |
-| Shell overflow | Do **not** use `overflow: hidden` on the shell (second scrollbar inside Test Request). Dialog-only overflow clip is OK. |
+| Scroll extent while open | Shell **block size = dialog `scrollHeight` + vertical gutter** (`ResizeObserver`; gutter / deadband from `config/explorerSurfaces.ts`); **`overflow-block: clip`** in **scoped** explorer shell CSS (must beat `[data-v-*]` `overflow-block: visible`). Overlay uses **`height: auto`** so clamp measurement is not circular. Content above the shell and the footer stay reachable; close restores full-spec scroll. |
 
-Implementation: scroll shell into view on open; CSS under `--client-modal-open` (`useScalarClientModalBackgroundScrollLock` + `explorer-codex-overrides.css`). See `ARCHITECTURE.md` → Scalar Test Request modal (natural height).
+Implementation: scroll shell into view on open; `--client-modal-open` overlay in `explorer-codex-overrides.css`; shell clamp in **scoped** `explorer/[[view]].vue`; sizing in `useScalarClientModalBackgroundScrollLock`. See `ARCHITECTURE.md` → Scalar Test Request modal (natural height).
 
-**Source:** `app/pages/explorer/[[view]].vue`, `config/scalar.ts`, `config/explorerSurfaces.ts` (shared 4px radius), `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal (natural height).
+**Source:** `app/pages/explorer/[[view]].vue` (scoped clamp), `config/scalar.ts`, `config/explorerSurfaces.ts` (4px radius, Test Request gutter / deadband), `app/assets/css/explorer-codex-overrides.css`, `app/composables/useScalarClientModalBackgroundScrollLock.ts`. Technical detail: `ARCHITECTURE.md` → Scalar shell overflow and resize; Scalar Test Request modal sticky headers; Scalar Test Request modal (natural height).
 
 ### Write-request production warning (Test Request modal)
 
@@ -831,7 +831,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control centered in gutter corner (equal spacing), exploratory **4px** dialog radius — improves specs ↔ sandbox flow |
+| *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |
 | *(superseded)* | Test Request modal shell fit (pre natural-height) | Was: freeze shell scroll only, keep page body scrollable — superseded by natural-height row above |

@@ -250,25 +250,33 @@
 	--fd-explorer-test-request-modal-padding: var( --spacing-250 );
 	/* Close control inset from `.scalar.scalar-app` block-start / inline-end (4px). */
 	--fd-explorer-test-request-exit-button-inset: var( --spacing-25 );
+	/*
+	 * Shell block-size / overflow clamp lives in explorer/[[view]].vue scoped
+	 * CSS so it beats `[data-v-*]` rules. Custom properties stay here for the
+	 * Scalar overlay descendants below.
+	 */
 }
 
 .explorer-page__scalar-shell--client-modal-open .scalar.scalar-app {
 	/*
-	 * Pin to the shell so height is definite (percentage children / exit can fill
-	 * the reference panel). `min-height: 100%` + `height: auto` does **not**
-	 * establish a percentage base — exit then shrank to the dialog box only.
-	 * Tall dialog content may paint past the shell via `overflow: visible`.
+	 * Pin to the shell top/inline edges; height follows the dialog (auto), not
+	 * a percentage of the shell. Percentage height made dialog measurement and
+	 * shell clamp chase each other (~1px/s ResizeObserver loop).
 	 */
 	position: absolute;
-	inset: 0;
+	inset-inline: 0;
+	inset-block-start: 0;
+	inset-block-end: auto;
 	top: 0;
 	right: 0;
-	bottom: 0;
+	bottom: auto;
 	left: 0;
 	inline-size: 100%;
 	width: 100%;
-	block-size: 100%;
-	height: 100%;
+	block-size: auto;
+	height: auto;
+	min-block-size: 100%;
+	min-height: 100%;
 	max-block-size: none;
 	max-height: none;
 	overflow: visible;
@@ -281,13 +289,17 @@
 }
 
 .explorer-page__scalar-shell--client-modal-open .scalar-container {
-	/* Fill the definite overlay root so `.scalar-app-exit` covers the full shell. */
-	position: absolute !important;
-	inset: 0 !important;
-	top: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	left: 0 !important;
+	/*
+	 * Size to the dialog + gutter (not `height: 100%` of the shell — that fed
+	 * the ResizeObserver feedback loop). `min-height: 100%` keeps the exit
+	 * layer covering a short shell while the dialog is still mounting.
+	 */
+	position: relative !important;
+	inset: auto !important;
+	top: auto !important;
+	right: auto !important;
+	bottom: auto !important;
+	left: auto !important;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-start;
@@ -295,8 +307,8 @@
 	box-sizing: border-box;
 	inline-size: 100% !important;
 	width: 100% !important;
-	block-size: 100% !important;
-	height: 100% !important;
+	block-size: auto !important;
+	height: auto !important;
 	max-block-size: none !important;
 	max-height: none !important;
 	min-block-size: 100%;
@@ -337,8 +349,8 @@
 	/*
 	 * Clip square inner panels (`.bg-b-1`) to the dialog radius. `overflow: visible`
 	 * let those children paint over the corners so the 4px radius was invisible.
-	 * This is on the dialog only — never on `.explorer-page__scalar-shell` (that
-	 * caused a second scrollbar inside Test Request).
+	 * Dialog-only clip for the 4px radius. Shell clip while modal-open is a
+	 * separate, height-matched rule in scoped explorer page CSS.
 	 */
 	overflow: hidden !important;
 }

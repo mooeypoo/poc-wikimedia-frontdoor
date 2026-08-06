@@ -496,8 +496,9 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	/*
 	 * Contain Scalar `position: fixed` UI so it cannot cover the shell header.
 	 * Specs grow with content; `.frontdoor-shell__body-scroll` is the vertical
-	 * scrollport (no faux-iframe height lock). Test Request also uses natural
-	 * height (see explorer-codex-overrides.css + useScalarClientModalBackgroundScrollLock).
+	 * scrollport (no faux-iframe height lock). While Test Request is open the
+	 * shell is clamped to dialog + gutter so scroll cannot continue into specs
+	 * (see --client-modal-open below + useScalarClientModalBackgroundScrollLock).
 	 */
 	position: relative;
 	transform: translateZ( 0 );
@@ -515,6 +516,19 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	background-color: var( --background-color-base );
 	padding-inline: var( --spacing-150 );
 	padding-block: 0;
+}
+
+/*
+ * Must live in this scoped block: unscoped explorer-codex-overrides cannot beat
+ * `.explorer-page__scalar-shell[data-v-*]` for overflow / min-block-size (that
+ * left specs visible and scrollable under a short shell).
+ */
+.explorer-page__scalar-shell--client-modal-open {
+	block-size: var( --fd-explorer-test-request-shell-block-size );
+	max-block-size: var( --fd-explorer-test-request-shell-block-size );
+	min-block-size: 0;
+	overflow-block: clip;
+	overflow-inline: clip;
 }
 
 .explorer-page__scalar-shell--loading {
