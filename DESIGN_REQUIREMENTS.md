@@ -680,9 +680,9 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 | State | UX |
 |-------|-----|
-| Instance bootstrap | Full-page overlay inside explorer (absolute, not fixed over header): spinner, “Loading wiki API modules”, wiki name in `<bdi>`; gradient background matching Scalar loading |
+| Instance bootstrap | Full-page overlay inside explorer (absolute, not fixed over header): spinner, “Loading API documentation” / “Fetching APIs per Wikimedia project”; gradient background matching Scalar loading |
 | Scalar client mount | `ClientOnly` fallback with same spinner pattern |
-| Module switch | On wide viewports only: semi-transparent mask over Scalar shell with “Loading selected module…” |
+| Module switch | On wide viewports only: semi-transparent mask over Scalar shell with “Loading selected API in reference view…” |
 | No selectable modules | Handled in project controls / bootstrap (rail hidden until `visibleSelectedModule` exists) |
 | Per-module spec error | Inline “Not available” copy in the module rail scrollport |
 | Empty endpoint list | Subtle empty copy in the module rail scrollport |
