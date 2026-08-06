@@ -83,9 +83,9 @@ export function isTestWikiSelectableInAddressBar(
 /**
  * Returns whether the address bar’s currently selected server is a non-production host.
  *
- * When true, the write-request production warning is hidden — the user is already
- * targeting a sandbox (e.g. `test.wikimedia.org`). Selecting the production host
- * again clears this and restores the warning.
+ * When true, the write-request production warning is hidden and the confirm-before-Send
+ * dialog is skipped — the user is already targeting a sandbox (e.g. `test.wikimedia.org`).
+ * Selecting the production host again clears this and restores both.
  *
  * @param wikiInstanceId - Active explorer wiki instance id.
  * @param modalRoot - Open Test Request modal root, when available.

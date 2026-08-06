@@ -4,6 +4,7 @@ import { getWikiInstanceById } from '../../config/instances'
 import { SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED } from '../../config/scalarClientWriteWarnings'
 import { activeExplorerWikiInstanceId } from '../utils/explorerWikiInstanceContext'
 import { findOpenScalarClientModal } from '../utils/findOpenScalarClientModal'
+import { isActiveAddressBarServerTestWiki } from '../utils/isTestWikiSelectableInAddressBar'
 import { isWriteHttpMethod } from '../utils/isWriteHttpMethod'
 import { resolveHttpMethodFromModalElement } from '../utils/scalarClientModalHttpMethod'
 import { resolveInterfaceMessage } from '../utils/resolveInterfaceMessage'
@@ -53,6 +54,8 @@ function resolveScalarAddressBarSendButton( clickTarget: EventTarget | null ): H
  * Intercepts Scalar Test Request Send for write methods and opens a Codex confirm dialog.
  *
  * Mock / easy to undo: disable via {@link SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED}.
+ * Skips the dialog when the address bar’s active server is a non-production host
+ * ({@link isActiveAddressBarServerTestWiki}) — same gate as hiding the production warning.
  * On Confirm, re-clicks the captured Send button once; Cancel dismisses without sending.
  * The presentational dialog teleports into `#explorer-reference-panel` (Codex exception #13 —
  * containment, Confirm-left-of-Cancel, title 18px); mount it as a **sibling** of that panel.
@@ -115,6 +118,12 @@ export function useScalarClientWriteRequestConfirmDialog(): {
 		const httpMethod = resolveHttpMethodFromModalElement( modalRoot )
 
 		if ( !isWriteHttpMethod( httpMethod ) ) {
+			return
+		}
+
+		// Sandbox address-bar hosts (e.g. test.wikimedia.org) skip confirm — same as
+		// hiding the production CdxMessage warning.
+		if ( isActiveAddressBarServerTestWiki( activeExplorerWikiInstanceId.value, modalRoot ) ) {
 			return
 		}
 
