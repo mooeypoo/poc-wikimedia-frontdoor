@@ -84,6 +84,25 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 **Source:** `app/components/shared/ShellHeaderBrand.vue`, `config/brandTypography.ts`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`, `brand-prototype-chip-label`, `brand-prototype-chip-tooltip`).
 
+### On-this-page navigation
+
+**Decision:** Documentation pages with **≥ 3 `h2`** headings show an in-page TOC (“On this page”) listing each `h2` and nested `h3` (deepest level). Exclude platform landing, explorer, account, and OAuth callback.
+
+| Viewport | Placement |
+|----------|-----------|
+| **≥ 1280px** | End-column quiet list (`ShellOnThisPageNav` in `.frontdoor-shell__on-this-page-end`; Figma [EndNavPanel 354:32476](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-32476)). **CSS sticky** at the end-column top (`inset-block-start: 0`) — not explorer `useEndPanelNavAlign` (resize remeasure caused flicker). End column stretched via `:has(.frontdoor-shell__on-this-page-end)` so sticky has a full-height containing block. |
+| **&lt; 1280px** | Quiet neutral **`CdxMenuButton`** in the primary-nav row, **`margin-inline-start: auto`** + **`margin-block-end: var(--spacing-75)` (12px)** so the trigger aligns with quiet-tab label padding (Figma [Off-wiki 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)). When primary nav is collapsed, the MenuButton stays on the **end** of that row. |
+
+**Scrollspy:** The heading currently in view uses **`--color-progressive`** (Codex progressive / `#36c` in light theme). Hover matches progressive. Resting links use **`--color-subtle`**. Programmatic TOC jumps suspend scrollspy until `scrollend` (with timeout fallback) so the clicked item stays active; near scroll-end activates the last heading when it cannot reach the activation band.
+
+**Typography exception:** TOC heading and links use **`--font-size-small`** (compact end-column list).
+
+**Copy:** Banana keys `on-this-page-label` / `on-this-page-nav-aria` — not `content-page-nav-label` (prev/next). Heading titles are content (`<bdi>` / `isolatePickerLabel`).
+
+**Config:** `config/onThisPageNav.ts` (`ON_THIS_PAGE_NAV_MIN_H2_COUNT`, `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`).
+
+**Source:** `useOnThisPageNav`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `app/layouts/default.vue`. See `ARCHITECTURE.md` → On-this-page navigation.
+
 ### Start column section navigation
 
 **Decision:** Every page mounts the **start column panel** (`.shell-side-panel.shell-side-panel--start` on the wrapper in `default.vue`). When section config defines links, the column shows a **flat** vertical section menu (no logo in the start column — brand lives in the header). When sections are **empty** (e.g. **Tools and bots**) or the route has no dedicated config, the panel still renders — only the `<nav>` is omitted.
@@ -154,9 +173,9 @@ On **desktop** and **desktop wide**, the implemented shell uses a **fixed start 
 |------|-------|------|
 | **Start** | **281px fixed** (Figma 241px + 40px grid column) | Section navigation only (`ShellSidePanelNav`) when the route has sections |
 | **Main** | **4fr** (≈16/20 of remainder) | Header utilities, primary nav, page content |
-| **End** | **1fr** (≈4/20 of remainder) | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
+| **End** | **1fr** (≈4/20 of remainder) | On `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`); on documentation pages with ≥3 `h2`s, **On this page** TOC at ≥1280px (`ShellOnThisPageNav`); otherwise reserved-empty |
 
-On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
+On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes without a qualifying on-this-page TOC keep the end column as empty reserved space.
 
 **Column gutters:** Uniform **`--fd-layout-grid-gutter`** (`--spacing-150`, **24px** at tablet and desktop) between all grid columns, including between the start panel and main column.
 
@@ -197,6 +216,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 | Explorer side nav mode links | **Implemented** | `usePageSectionNav` + `ShellSidePanelNav` + `explorerRoute.ts`; Overview items still placeholders |
+| On-this-page TOC (≥3 `h2`, `h3` nest) | **Implemented** | `useOnThisPageNav` — CSS-sticky end column ≥1280px (`--font-size-small`); quiet MenuButton &lt;1280px (`--spacing-75` block-end); scrollspy `--color-progressive`; not `useEndPanelNavAlign` |
 
 **Responsive behaviour summary:**
 
@@ -667,7 +687,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). The anchor is **always mounted** in community mode; only project controls wait for bootstrap so Teleport can resolve the target on first paint at tablet widths. **No** gap from `.explorer-page__project-controls-stack` between controls and the rail. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
 
-**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
+**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Documentation on-this-page TOC** does **not** use this class/composable — it uses CSS sticky on `.frontdoor-shell__on-this-page-end` (resize remeasure + `--fd-explorer-rail-offset` fallback caused flicker; see **On-this-page navigation**).
 
 **Surface:** **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
@@ -733,17 +753,21 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision:** Markdown content pages (`app/pages/[...slug].vue` → `.fd-content-page`) use Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html) heading styles:
 
-| Element | Style | Tokens |
-|---------|-------|--------|
-| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
-| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
-| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
+| Element | Style | Type tokens | `margin-block-start` |
+|---------|-------|-------------|----------------------|
+| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` | `0` (shell main padding) |
+| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` | **`--spacing-250` (40px)** on `.fd-content-page` only |
+| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` | **`--spacing-200` (32px)** site-wide |
 
-Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
+Content-page **type** tokens are scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged. **`h3` spacing** is a global `main.css` rule (reaffirmed under `.fd-content-page`); `h2` spacing override is content-page-only. `margin-block-end` for `h2` / `h3` stays **`--spacing-75` (12px)**.
 
-**Decision (section spacing):** Between documentation sections, each `h2` uses **`margin-block-start: var(--spacing-250)` (40px)**. Do **not** use the global heading default `--spacing-150` (24px) for content-page `h2`. `margin-block-end` stays **`--spacing-75` (12px)** (shared with other headings). Applies to all `.fd-content-page` routes (Get started and other prose docs), not explorer or shell chrome.
+**Decision (section spacing):** Between documentation sections, each `h2` uses **`margin-block-start: var(--spacing-250)` (40px)**. Do **not** use the global heading default `--spacing-150` (24px) for content-page `h2`. Applies to all `.fd-content-page` routes (Get started and other prose docs), not explorer or shell chrome.
 
 **Rationale:** 24px was too tight between major section blocks once cards and longer section bodies shipped; **40px** is the next Codex spacing step (`--spacing-250`) and keeps rhythm on the design-token scale.
+
+**Decision (subsection spacing):** Site-wide, each `h3` uses **`margin-block-start: var(--spacing-200)` (32px)** (global `h3` rule in `main.css`; reaffirmed under `.fd-content-page`). Do **not** use the former shared `--spacing-150` (24px) heading default for `h3`. UI chrome that uses `h3` for non-prose titles (search locale headings, account list-card titles, landing API demo sample heading) keeps local margin resets / `auto` as documented.
+
+**Rationale:** 24px was too tight above project / subsection titles (e.g. Contribute by language); **32px** is Codex `--spacing-200` and sits between body gaps and the 40px `h2` section rhythm.
 
 **Platform landing / home** ([`/`](https://wikifrodo.netlify.app/), Figma [Latest 1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177)): `.fd-content-page.fd-landing-page` on `app/pages/index.vue`. **Exception:** section backgrounds are **full viewport width** (shell class `frontdoor-shell--landing` via `isLandingRoutePath()` — drops page-grid / body-scroll horizontal insets and the end column; body-columns max-width unlocked). Content stays **centered** at **1000px** (`LANDING_CONTENT_MAX_INLINE_SIZE` / `62.5rem` in `config/landingSurfaces.ts`, bound as `--fd-landing-content-max-inline-size` from `index.vue`) with `--fd-layout-page-margin` inline padding. Hero uses monospace bold H1 at exploratory **`2rem`** (not a Codex font-size token; not content-page serif) and intro paragraph at **`--font-size-x-large`** (`LandingHero.vue` scoped styles — do not set via `landing-page.css` `:where(p)`); centered large progressive primary **Get started** CTA (`::app-button` → `CdxButton` + `arrowNext`), ascii globe + soft radial dither (`LANDING_ASSETS` — light `hero-dither.svg`, dark `hero-dither-dark.svg` swapped under `fd-theme--*` to match [Figma 1202:27291](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27291): progressive blue glow over `#101418`). Hero intro links (Wikipedia / other Wikimedia projects): **no** external-link icon. **All** home-surface links (hero prose, navigation-card supporting-text, section CTAs) suppress `:visited` colour — unvisited / hover / active only. **No** heading permalink anchors on the home page (`ProseHeading` skips them on landing routes). Section `h2` → following content uses **`--spacing-150` (24px)**. Persona / API / apps / join sections use MDC `:::landing-section` / `:::landing-band` / `:::landing-api-demo` / `::landing-section-cta`. Persona card order: communities → research → enterprise. Persona cards: `leading-icon` (`userGroup`, `labFlask`) top-aligned with title (+ **2px** optical padding) or `title-logo="wikimediaEnterprise"` + text title; **keep** writer `supporting-text` on these internal destinations (approved exception to the usual “no supporting-text on internal cards” rule — see `AGENTS.md`). Join grid uses `:::navigation-card-grid{columns="2"}` (also keeps internal supporting-text). API demo is a two-column layout: band intro + `:::code-block` curl (`bash`, Shiki, soft-wrap, exploratory **4px** radius) beside Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html) article previews from `LANDING_API_ARTICLE_PREVIEWS` (**Codex exception:** muted resting border + exploratory **4px** radius — stock Card is unframed here). Home `index.vue` emits `<link rel="preload" as="image">` for each preview `thumbnailSrc` so Codex `CdxThumbnail` (client `Image()` after mount) can hit cache without a custom `<img>` bypass. At desktop (≥ 1120px), the example column matches the stacked preview-cards column height; free space sits between the intro `p` and the `h3` + code-block group (`margin-block-start: auto` on `h3` so the heading stays with the sample). Preview cards keep a fixed `--spacing-75` gap. Section CTAs always use a trailing **arrow** (including external Toolhub — still opens in a new tab). No Markdown `---` `<hr>` dividers. Metrics row in Figma is **hidden** — do not implement. Discover community-built apps band uses **`--background-color-base`** (not a gradient); Lexica / Paulina / Listen cards follow the Codex **Portrait card** design ([Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634) — **not implemented in Codex yet**, [T310632](https://phabricator.wikimedia.org/T310632)): committed `media` screenshots with **`--spacing-75` (12px)** inset around the image, **no** external-link icons (`hide-external-icon`), and Lexica/Paulina/Listen Coolest Tool `CdxInfoChip`s (`chips="award:…"`, `cdxIconStar`, purple100 background / purple600 text+icon via `LANDING_AWARD_CHIP`; dark mode inverts fill and text). API / join gradient band stops live in `config/landingSurfaces.ts` — light lavender hexes; dark mode for both bands is `#233566` → `#101418` (Codex light `background-color-progressive--active` → `background-color-inverted`; [APIs 1202:27489](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27489) / [join 1202:28482](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-28482)), swapped under `fd-theme--*` (hex intentional — dark `var(--background-color-inverted)` flips to light). **Source:** `app/components/content/LandingHero.vue` (hero intro type), `app/assets/css/landing-page.css` (H1 / bands), `app/layouts/default.vue` (`.frontdoor-shell--landing`), `ARCHITECTURE.md` → Platform landing / home.
 
@@ -761,7 +785,17 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
 
-**Source:** `app/assets/css/main.css` (`.fd-content-page` heading + `h2` section spacing), `app/pages/[...slug].vue`, `content/en/get-started*.md`, `ARCHITECTURE.md` → Content typography, `AGENTS.md` RTL checklist → Content page typography.
+**Source:** `app/assets/css/main.css` (`.fd-content-page` heading + `h2` / `h3` section spacing; global `h3` `--spacing-200`), `app/pages/[...slug].vue`, `content/en/get-started*.md`, `ARCHITECTURE.md` → Content typography, `AGENTS.md` RTL checklist → Content page typography.
+
+---
+
+## Code block (fenced samples)
+
+**Decision:** Every hand-authored fenced code sample uses **`:::code-block`** (`CodeBlock.vue`) — the same bordered panel as the platform-home API curl (muted border, exploratory **4px** radius via `--fd-explorer-controls-surface-border-radius`, `--spacing-75` padding, intentional `dir="ltr"`). Soft-wrap long lines **by default**; authors may opt into horizontal scroll with `:::code-block{no-soft-wrap}` (`overflow-inline: auto` on `pre`). Fence language must be in `nuxt.config.ts` highlight `langs` (`bash` / `shell` / `sh` for curl and URL templates — **not** `text`; `@shikijs/langs` has no `./text` export). Inline `` `code` `` keeps the existing subtle monospace chip (not the panel). Prefer **`::::code-tabs`** when switching languages (framed tabs already share panel chrome; soft-wrap opt-out is CodeBlock-only today).
+
+**Open question:** Whether remote/wiki HTML→MDC conversion should auto-wrap imported fences in `:::code-block` is postponed — see `ARCHITECTURE.md` → Code block / Remote content fetching and `docs/adr-remote-content-fetching.md` §11.8. Do not change the converter until decided.
+
+**Source:** `CodeBlock.vue`, `content/en/index.md`, `content/en/apis/authentication.md`, `content/en/get-started/quick-start.md`, `content/en/use-content-and-data.md`, `ARCHITECTURE.md` → Code block, `AGENTS.md` → content components / RTL checklist.
 
 ---
 
@@ -778,6 +812,21 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Block margin | `--spacing-100` (default vertical rhythm vs adjacent prose) |
 
 **Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/apis.md`, `ARCHITECTURE.md` → Highlight.
+
+## Link row
+
+**Decision:** Sections that only need one or more destination links (no card title/description) use `:::link-row` (`LinkRow.vue`) — plain progressive prose links with external icons via `ProseA`, not supporting-text-only `NavigationCard`s. `LinkRow` is a layout wrapper (not a second card component). Prefer destination **cards** when each item needs its own title/description/chips/whole-card click; prefer **link rows** when heading + description already exist as prose and only the links remain.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Column gap | `--spacing-150` (**24px**) between links |
+| Row gap | `--spacing-50` when wrapped |
+| Block margin | `--spacing-100` (vertical rhythm vs adjacent prose) |
+| Adjacent prose | Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in `main.css` (same pattern as `:::navigation-card-grid`) so the 16px block margin is not collapsed |
+| Authoring | One Markdown link per paragraph inside `:::link-row`; keep writer labels |
+| BiDi / i18n | Page content (per-locale Markdown), not banana-i18n; first-party CSS uses logical properties; inherits interface `dir` |
+
+**Source:** `app/components/content/LinkRow.vue`, `app/assets/css/main.css` (adjacent margin zeroing), `content/en/contribute/by-language.md`, `content/en/get-help.md`, MediaWiki section of `content/en/contribute/by-topic.md`, `ARCHITECTURE.md` → Link row, `AGENTS.md` → Link-only rows.
 
 ---
 
@@ -797,7 +846,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
 
-**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels); platform home persona/join → keep internal supporting-text per Figma.
+**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels); platform home persona/join → keep internal supporting-text per Figma. **Link-only** sections (no card title/description) → `:::link-row` — see **Link row** above; do not wrap those destinations in supporting-text-only cards.
 
 | Token / behaviour | Value |
 |-------------------|--------|
@@ -811,7 +860,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 | Top icon | Optional, above title row; progressive colour |
 | Leading icon | Optional, inline with title |
 | Trailing icon | `cdxIconLinkExternal` for off-platform destinations — on **supporting-text** when present, otherwise beside the title |
-| Title logo | Optional MDC `title-logo` (`gerrit` / `github` / `gitlab`) — monochrome brand SVG in the title position at **`--size-icon-medium`**, colour **`--color-base`** via `currentColor` (dark mode via tokens). Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg). Demo: Browse repositories on `/get-started/by-language` |
+| Title logo | Optional MDC `title-logo` (`gerrit` / `github` / `gitlab`) — monochrome brand SVG in the title position at **`--size-icon-medium`**, colour **`--color-base`** via `currentColor` (dark mode via tokens). Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg). Demos: Browse repositories on `/get-started/by-language` and `/contribute/search` |
 | Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a [Codex Link](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) to the same destination (`--color-link` / `--color-link--hover` / visited / active / focus-visible — **platform home suppresses visited**); external icon when off-platform (`color: inherit`) unless `hide-external-icon`; **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline; **min `--spacing-50` (8px)** from description (`padding-block-start` on `.navigation-card__supporting-text`) |
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
 | Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
@@ -861,7 +910,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Language trigger Codex Button with icon | Remove custom gap/color/type on globe+code; use native quiet `CdxButton` + `CdxIcon` |
 | *(uncommitted)* | Header utility row polish | Quiet preferences; **16px** search→preferences / **8px** other options; collapse threshold **560px** aligned in `headerChrome.ts`; vertical center |
 | *(uncommitted)* | Header color theme preferences | Settings → preferences `CdxPopover` + Color theme radios (`COLOR_THEME_PREFERENCE_OPTIONS` / `useColorMode`); stay open on select; no close chrome; remove toggle group |
+| *(uncommitted)* | Code block panel everywhere (authored) | Hand-authored fences wrap in `:::code-block`; soft-wrap default + `no-soft-wrap`; Quick start / Authentication / demos; remote auto-wrap open question |
 | *(uncommitted)* | Content `h2` section gap (decision) | Docs `.fd-content-page h2` → **`--spacing-250` (40px)** `margin-block-start` — official; see Content page typography |
+| *(uncommitted)* | `h3` subsection gap (decision) | Site-wide `h3` → **`--spacing-200` (32px)** `margin-block-start` — official; see Content page typography |
 | *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |
 | *(uncommitted)* | Codex Link states on card / content links | Supporting-text + `.frontdoor-shell__main a` use `--color-link*` (hover colour, visited, active, focus) per [Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) |
@@ -870,6 +921,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
 | *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
+| *(uncommitted)* | Link row (link-only destinations) | `:::link-row` — `--spacing-150` (24px) column gap; not supporting-text-only cards; see Link row |
 | *(uncommitted)* | API catalog project filter layout | Header `--spacing-150` rhythm; chip↔filter wrap at 24px; content `title`/`chip` + banana chrome; static-page island (not `ClientOnly`) |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
@@ -961,5 +1013,6 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
-| End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
+| End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` (explorer module rail only) |
+| On-this-page TOC | `useOnThisPageNav.ts`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `config/onThisPageNav.ts`, `default.vue` (`.frontdoor-shell__on-this-page-end` CSS sticky) |
 | Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark, link tokens, introduction `pre` width caps) |

@@ -215,6 +215,8 @@
   "nav-use-content-and-data": "Use content and data",
   "nav-utility-label": "Navegacion de utilidades",
   "nav-wiki-translate": "Imported wiki page",
+  "on-this-page-label": "En esta página",
+  "on-this-page-nav-aria": "En esta página",
   "oauth-callback-completing-label": "Completando el inicio de sesión…",
   "oauth-callback-error-label": "No se pudo iniciar sesión. Inténtalo de nuevo.",
   "search-all-languages-cta": "Buscar en todos los idiomas",
