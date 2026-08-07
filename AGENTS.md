@@ -278,7 +278,7 @@ For the full feature status and implementation plan see `ARCHITECTURE.md` → "M
 
 **Description + separate off-platform mention:** If the card destination is Wikitech (supporting-text) but a product name in the description should open elsewhere (e.g. PAWS → hub-paws), put the description Markdown in the **default slot** and keep supporting-text as the writer label for the card `url`. Example: `content/en/get-started/tools-and-bots.md` → “Run scripts in your browser”.
 
-**Brand title logos (exception):** Use allowlisted `title-logo="gerrit|github|gitlab|wikimediaEnterprise"` from `config/navigationCardTitleLogos.ts` — monochrome SVG at `--size-icon-medium`, `currentColor` / `--color-base` (not progressive). Logo-only titles: Browse repositories on `/get-started/by-language`. Logo **before** a text title: Enterprise persona card on the platform home (`content/en/index.md`). Keep writer `supporting-text`. Do not invent new brand ids without adding them to that config.
+**Brand title logos (exception):** Use allowlisted `title-logo="gerrit|github|gitlab|wikimediaEnterprise"` from `config/navigationCardTitleLogos.ts` — monochrome SVG at `--size-icon-medium`, `currentColor` / `--color-base` (not progressive). Logo-only titles: Browse repositories on `/get-started/by-language` and `/contribute/search`. Logo **before** a text title: Enterprise persona card on the platform home (`content/en/index.md`). Keep writer `supporting-text`. Do not invent new brand ids without adding them to that config.
 
 **Do not** add an inline link in the description to the same off-platform destination the card already opens (e.g. Wikibase/Wikidata on About Wikimedia) — supporting-text (or the title icon) already exposes that URL.
 
