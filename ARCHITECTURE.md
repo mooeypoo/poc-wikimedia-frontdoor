@@ -1147,13 +1147,17 @@ Prose pages are Markdown files in `content/[locale]/`. The catch-all route `app/
 
 Markdown page titles and section headings follow the Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html), scoped under `.fd-content-page` in `app/assets/css/main.css` (so explorer / shell chrome keep their own heading rules):
 
-| Element | Codex style | Tokens |
-|---------|-------------|--------|
-| `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
-| `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
-| `h3` | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
+| Element | Codex style | Type tokens | `margin-block-start` |
+|---------|-------------|-------------|----------------------|
+| `h1` | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` | `0` (top spacing from `.frontdoor-shell__main` padding) |
+| `h2` | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` | **`--spacing-250` (40px)** under `.fd-content-page` (global default remains `--spacing-150`) |
+| `h3` | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` | **`--spacing-200` (32px)** site-wide (global `h3` + `.fd-content-page`) |
 
-**Section spacing:** Content-page `h2` overrides the global heading `margin-block-start` (`--spacing-150` / 24px) with **`--spacing-250` (40px)**. Implemented as `.fd-content-page :where(h2) { margin-block-start: var(--spacing-250); }`. `margin-block-end` remains **`--spacing-75`**. Do not change this for one-off pages — it is the documentation section rhythm for all `.fd-content-page` routes. Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography.
+`margin-block-end` for `h2` / `h3` remains **`--spacing-75` (12px)**. Type tokens for content headings are scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome keep their own heading rules.
+
+**Section spacing:** Content-page `h2` overrides the global heading `margin-block-start` (`--spacing-150` / 24px) with **`--spacing-250` (40px)**. Implemented as `.fd-content-page :where(h2) { margin-block-start: var(--spacing-250); }`. Do not change this for one-off pages — it is the documentation section rhythm for all `.fd-content-page` routes. Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography.
+
+**Subsection spacing:** Site-wide `h3` uses **`margin-block-start: var(--spacing-200)` (32px)** (global `h3` in `main.css`; also set under `.fd-content-page :where(h3)`). Unlike content-page `h2` spacing, this is **not** limited to `.fd-content-page` — it is the site default for prose `h3`. UI chrome that reuses `h3` for non-prose titles must reset margin locally (search locale headings, account list-card titles; landing API demo uses `margin-block-start: auto` on the sample `h3`). Product decision: `DESIGN_REQUIREMENTS.md` → Content page typography → Decision (subsection spacing).
 
 **Get started landing** (`content/en/get-started.md`): section `---` horizontal rules between `h2` blocks are omitted (no visual `<hr>` dividers). Topic destinations under each `h2` use `:::navigation-card-grid` + `::navigation-card` (whole-card links; no “Learn more” prose links; title + description only — no icons, chips, or supporting-text on that page). The quick-start CTA at the top uses `::highlight` (progressive-subtle panel — see Highlight below).
 
@@ -1225,7 +1229,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 **About Wikimedia Enterprise** (`content/en/get-started/wikimedia-enterprise.md`): intro ends the SLA sentence with a full stop; the high-volume access sentence + **Get started with Wikimedia Enterprise** CTA (no arrow, new line) sit in `::highlight` (`https://enterprise.wikimedia.com`). Body sections remain **prose** (not navigation cards): Explore use cases bullets + commercial-use-cases link; Download / On-demand / Realtime `##` sections with writer links; Get started for free + Free access for Wikimedia communities.
 
-**Bulk data for research** (`content/en/get-started/data-for-research.md`), **Featured apps** (`featured-apps.md`), and **Browse by programming language** (`by-language.md`): mockup stubs so Get started / section-nav links resolve (same pattern as `on-wiki.md` / `tutorials.md`). **Browse repositories** on `by-language.md` and `contribute/search.md` use external cards with allowlisted **`title-logo`** (`gerrit` / `github` / `gitlab`) plus writer supporting-text — see Navigation card → Title logos.
+**Bulk data for research** (`content/en/get-started/data-for-research.md`), **Featured apps** (`featured-apps.md`), and **Browse by programming language** (`get-started/by-language.md`): mockup stubs so Get started / section-nav links resolve (same pattern as `on-wiki.md` / `tutorials.md`). **Browse repositories** on `get-started/by-language.md` and `contribute/search.md` use external cards with allowlisted **`title-logo`** (`gerrit` / `github` / `gitlab`) plus writer supporting-text — see Navigation card → Title logos. **Contribute by programming language** (`contribute/by-language.md`), **Get help** (`get-help.md`), and the MediaWiki section of **Contribute by topic** use **`:::link-row`** for link-only destinations (topic overview cards on by-topic remain a `:::navigation-card-grid`) — see **Link row**.
 
 **Commercial use cases** (`content/en/get-started/commercial-use-cases.md`): Markdown under `.fd-content-page` (Codex Heading 1–3). Card conversion not applied yet.
 
@@ -1260,6 +1264,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ProseA.vue` | `CdxIcon` + `cdxIconLinkExternal` | Overrides all `<a>` in prose; adds icon when `href` is external; external links default to `target="_blank"` + `rel="noopener noreferrer"`. Link colours/states come from Codex Link tokens on `.frontdoor-shell__main a` in `main.css` (`--color-link*`). On `.fd-landing-page`, hero hides the external icon and **all** home links suppress `:visited` via `landing-page.css` |
 | `Callout.vue` | `CdxMessage` (`type`: `notice` / `warning` / `error` / `success`) | `::callout{type="warning"}` block — see **Callouts** below |
 | `Highlight.vue` | — (shared `.fd-highlight` surface) | `::highlight` block — see **Highlight** below |
+| `LinkRow.vue` | — (flex row; `ProseA` for links) | `:::link-row` — see **Link row** below |
 | `SectionHeading.vue` | `CdxInfoChip` + `ProseHeading` | `::section-heading{title="…" chip="…"}` — see **Section heading** below |
 | `ApiCatalogWikimediaSection.vue` | `CdxField` + `CdxCombobox` + `SectionHeading` + `NavigationCard` | `::api-catalog-wikimedia-section` — see **API catalog project filter** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
@@ -1281,15 +1286,16 @@ Markdown page titles and section headings follow the Codex [typography style gui
 
 `NavigationCard.vue` is Front Door’s vertical **content / navigation card** — not a thin wrapper around stock `CdxCard`. It follows Figma variant A ([Content card 79:4339](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339)) for Get started and other Markdown documentation pages.
 
-**Agent playbook:** When converting or authoring destination tiles, follow **`AGENTS.md` → Navigation card authoring playbook**. That section defines the two required styles (same component):
+**Agent playbook:** When converting or authoring destination tiles, follow **`AGENTS.md` → Navigation card authoring playbook**. That section defines the two required **card** styles (same component). For **link-only** rows (no title/description card chrome), use **`:::link-row`** instead — see **Link row** below; do not invent supporting-text-only cards.
 
 | Style | When | Signature | Reference Markdown |
 |-------|------|-----------|--------------------|
 | **Internal** | Same-origin path (`/get-started/…`, `/explorer`, …) | `url` + `title` + `description` only — **no** `supporting-text` | `get-started.md`, `build-for-communities.md` |
 | **External** | Off-platform `https://…` | `url` + `title` + `description` + **`supporting-text`** (writer label; external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
 | **Platform home (exception)** | Persona / join on `index.md` | Internal `url` **with** writer `supporting-text`; apps band = Portrait `media` + optional `award:` chips + `hide-external-icon` | `content/en/index.md` — see **Platform landing / home** |
+| **Link-only (not a card)** | One or more plain destination links under existing heading + prose | `:::link-row` + one Markdown link per paragraph | `contribute/by-language.md`, `get-help.md`, MediaWiki on `contribute/by-topic.md` |
 
-Mixed pages apply the table **per card**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
+Mixed pages apply the table **per destination**. Empty former links → ask or omit `url` (non-clickable). New internal paths need a matching `content/<locale>/` file.
 
 | Aspect | Stock `CdxCard` | `NavigationCard` |
 |--------|-----------------|------------------|
@@ -1343,7 +1349,7 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 
 **Helpers:** `config/navigationCardIcons.ts` (allowlisted Codex icon names for MDC), `config/navigationCardTitleLogos.ts` (allowlisted brand title logos), `app/utils/parseNavigationCardChips.ts` (pipe-separated chip attribute → `CdxInfoChip` props).
 
-**Demos:** `content/en/index.md` (platform home — persona/join with internal supporting-text exception; Portrait app cards + `award:` chips); `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `by-language.md`; `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link).
+**Demos:** `content/en/index.md` (platform home — persona/join with internal supporting-text exception; Portrait app cards + `award:` chips); `content/en/get-started.md` and `content/en/get-started/build-for-communities.md` (internal whole-card links, no icons/chips/supporting-text; destinations include `wiki-content`, `open-data`, `tools-and-bots`, `on-wiki`); `content/en/apis.md` (API catalog — chips + mixed internal/external; best practices as `::highlight`); `content/en/get-started/wiki-content.md`, `open-data.md`, and `tools-and-bots.md` (mixed internal `/explorer` + external writer-authored supporting-text; tools-and-bots also links PAWS in a description default slot); `content/en/get-started/wikimedia-enterprise.md` (`::highlight` intro CTA; body sections are prose, not cards); mockup stubs `on-wiki.md`, `tutorials.md`, `data-for-research.md`, `featured-apps.md`, `get-started/by-language.md` (Browse repositories `title-logo` cards); `content/en/contribute/by-topic.md` (**topic overview** external cards only — MediaWiki section is **`:::link-row`**, not cards); `content/en/get-started/about-wikimedia.md` (external cards with bottom-aligned supporting-text links + external icon on supporting-text; one description uses the default slot for a Wikidata inline link). Link-only Contribute / Get help / by-topic MediaWiki rows use **`:::link-row`**, not cards — see **Link row**.
 
 #### Section heading
 
@@ -1417,6 +1423,34 @@ CSS lives in `app/assets/css/main.css` so Vue templates may apply `class="fd-hig
 Highlight copy is **page content** (per-locale Markdown or Vue slots) — not banana-i18n interface strings. The name is independent of code syntax highlighting (Shiki / `mw-highlight`).
 
 **Demo:** `content/en/get-started.md` — quick-start CTA (“Ready to start using Wikimedia APIs? …” with arrow, single paragraph). Also `content/en/get-started/wikimedia-enterprise.md` — high-volume access blurb + **Get started with Wikimedia Enterprise** as a **second paragraph** inside the highlight (**no** arrow; `https://enterprise.wikimedia.com`). Enterprise **body** sections are prose (not cards). Also `content/en/apis.md` — catalog Quick start highlight and stacked API best-practice highlights (Attribution, Authentication, Rate limits).
+
+#### Link row
+
+`LinkRow.vue` (`:::link-row`) lays out one or more prose links in a horizontal flex row when a section needs **link-only** destinations (no `NavigationCard` chrome). Prefer this over `:::navigation-card-grid` of supporting-text-only cards. It is a **layout wrapper**, not a second card component — links stay normal Markdown → `ProseA` (Codex link colours + external icon). Codex has no flex “link row” widget; this is an intentional small bespoke layout helper (same category as `NavigationCardGrid` spacing chrome).
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Layout | `display: flex`; `flex-wrap: wrap`; `align-items: baseline` |
+| Column gap | `--spacing-150` (**24px**) between links |
+| Row gap | `--spacing-50` when links wrap |
+| Block margin | `--spacing-100` (vertical rhythm vs adjacent prose) |
+| Adjacent prose | Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in `main.css` (same pattern as `NavigationCardGrid`) so the 16px block margin is not collapsed |
+| Links | Normal Markdown → `ProseA` (external icon, Codex `--color-link*` tokens) |
+| BiDi / i18n | Link labels are **page content** (per-locale Markdown) — not banana-i18n; direction inherits from the shell; first-party CSS uses logical properties |
+
+**When to use:** Heading + description already exist as prose; the section only needs one or more destination links (often multiple off-platform URLs with distinct writer labels). **When not to use:** Destination tiles that need title / description / chips / whole-card click → keep `NavigationCard`. Logo-only repository browsers (`title-logo`) stay as cards.
+
+**Authoring:** Put each link in its own paragraph so each becomes a flex item. Keep writer link labels. References: `content/en/contribute/by-language.md`, `content/en/get-help.md`, MediaWiki section of `content/en/contribute/by-topic.md` (topic overview cards above that section remain `:::navigation-card-grid`). See `AGENTS.md` → Navigation card authoring playbook → Link-only rows and `DESIGN_REQUIREMENTS.md` → Link row.
+
+```md
+:::link-row
+[Get the source code](https://github.com/scribe-org)
+
+[Contribute (Android)](https://github.com/scribe-org/Scribe-Android/blob/main/CONTRIBUTING.md)
+
+[Contribute (iOS)](https://github.com/scribe-org/Scribe-iOS/blob/main/CONTRIBUTING.md)
+:::
+```
 
 #### Callouts
 

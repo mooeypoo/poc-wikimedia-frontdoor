@@ -47,13 +47,15 @@ touch them.
 
 # My page title
 
-Body content in Markdown. MDC components (`::callout`, `::highlight`, `::partial`, `::navigation-card`, …) work here —
+Body content in Markdown. MDC components (`::callout`, `::highlight`, `:::link-row`, `::partial`, `::navigation-card`, …) work here —
 see the import guide and `ARCHITECTURE.md` → MDC content components for the full list.
 ```
 
 - The file name (minus `.md`) is the URL slug. `content/en/guides.md` → `/guides`.
 - Nested folders work: `content/en/guides/reuse.md` → `/guides/reuse`.
 - The first `# ` heading is the page title.
+- Heading rhythm is CSS (not Markdown): content-page `##` sections get **40px** above (`--spacing-250`); `###` subsections get **32px** above site-wide (`--spacing-200`). See `DESIGN_REQUIREMENTS.md` → Content page typography.
+- For **link-only** destination lists under a heading (no card title/description), use `:::link-row` — not supporting-text-only navigation cards. See **Link row** below.
 
 ### Code blocks (fenced samples)
 
@@ -113,7 +115,7 @@ Discover our curated selection of production-ready APIs…
 
 ### Navigation cards (destination tiles)
 
-**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.
+**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component. When a section only needs plain destination links (no card title/description), use **`:::link-row`** instead — see below.
 
 | Style | Destination | MDC shape | Copy from |
 |-------|-------------|-----------|-----------|
@@ -144,6 +146,29 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 ::
 :::
 ```
+
+### Link row (link-only destinations)
+
+Do **not** use supporting-text-only navigation cards for a list of links under a heading. Use **`:::link-row`**:
+
+- Keep the section heading + description as normal Markdown (`##` or `###` as appropriate).
+- Put **each** destination link in its own paragraph inside the row (**24px** / `--spacing-150` between links; wraps with `--spacing-50` row gap).
+- Keep the technical writer’s link labels.
+- Links use normal Markdown → `ProseA` (external icon for off-platform URLs).
+
+Examples: `content/en/contribute/by-language.md` (`###` project + link row), `content/en/get-help.md`, MediaWiki section of `content/en/contribute/by-topic.md` (`## MediaWiki` + link row; **topic overview cards** on that page stay as `:::navigation-card-grid`).
+
+```md
+:::link-row
+[Get the source code](https://github.com/scribe-org)
+
+[Contribute (Android)](https://github.com/scribe-org/Scribe-Android/blob/main/CONTRIBUTING.md)
+
+[Contribute (iOS)](https://github.com/scribe-org/Scribe-iOS/blob/main/CONTRIBUTING.md)
+:::
+```
+
+See `ARCHITECTURE.md` → Link row and `AGENTS.md` → Navigation card authoring playbook → Link-only rows.
 
 **2. (Optional) add previous / next links.** On content pages, a footer nav renders
 when you set `prev` / `next` in frontmatter:

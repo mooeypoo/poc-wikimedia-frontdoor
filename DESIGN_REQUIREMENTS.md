@@ -753,17 +753,21 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision:** Markdown content pages (`app/pages/[...slug].vue` → `.fd-content-page`) use Codex [typography style guide](https://doc.wikimedia.org/codex/latest/style-guide/typography.html) heading styles:
 
-| Element | Style | Tokens |
-|---------|-------|--------|
-| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` |
-| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` |
-| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` |
+| Element | Style | Type tokens | `margin-block-start` |
+|---------|-------|-------------|----------------------|
+| Page title (`h1`) | Heading 1 | `--font-family-serif`, `--font-size-xxx-large`, `--font-weight-normal`, `--line-height-xxx-large` | `0` (shell main padding) |
+| Section (`h2`) | Heading 2 | `--font-family-serif`, `--font-size-xx-large`, `--font-weight-normal`, `--line-height-xx-large` | **`--spacing-250` (40px)** on `.fd-content-page` only |
+| Subsection (`h3`) | Heading 3 | `--font-family-base`, `--font-size-x-large`, `--font-weight-bold`, `--line-height-x-large` | **`--spacing-200` (32px)** site-wide |
 
-Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged.
+Content-page **type** tokens are scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell chrome headings are unchanged. **`h3` spacing** is a global `main.css` rule (reaffirmed under `.fd-content-page`); `h2` spacing override is content-page-only. `margin-block-end` for `h2` / `h3` stays **`--spacing-75` (12px)**.
 
-**Decision (section spacing):** Between documentation sections, each `h2` uses **`margin-block-start: var(--spacing-250)` (40px)**. Do **not** use the global heading default `--spacing-150` (24px) for content-page `h2`. `margin-block-end` stays **`--spacing-75` (12px)** (shared with other headings). Applies to all `.fd-content-page` routes (Get started and other prose docs), not explorer or shell chrome.
+**Decision (section spacing):** Between documentation sections, each `h2` uses **`margin-block-start: var(--spacing-250)` (40px)**. Do **not** use the global heading default `--spacing-150` (24px) for content-page `h2`. Applies to all `.fd-content-page` routes (Get started and other prose docs), not explorer or shell chrome.
 
 **Rationale:** 24px was too tight between major section blocks once cards and longer section bodies shipped; **40px** is the next Codex spacing step (`--spacing-250`) and keeps rhythm on the design-token scale.
+
+**Decision (subsection spacing):** Site-wide, each `h3` uses **`margin-block-start: var(--spacing-200)` (32px)** (global `h3` rule in `main.css`; reaffirmed under `.fd-content-page`). Do **not** use the former shared `--spacing-150` (24px) heading default for `h3`. UI chrome that uses `h3` for non-prose titles (search locale headings, account list-card titles, landing API demo sample heading) keeps local margin resets / `auto` as documented.
+
+**Rationale:** 24px was too tight above project / subsection titles (e.g. Contribute by language); **32px** is Codex `--spacing-200` and sits between body gaps and the 40px `h2` section rhythm.
 
 **Platform landing / home** ([`/`](https://wikifrodo.netlify.app/), Figma [Latest 1179:23177](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1179-23177)): `.fd-content-page.fd-landing-page` on `app/pages/index.vue`. **Exception:** section backgrounds are **full viewport width** (shell class `frontdoor-shell--landing` via `isLandingRoutePath()` — drops page-grid / body-scroll horizontal insets and the end column; body-columns max-width unlocked). Content stays **centered** at **1000px** (`LANDING_CONTENT_MAX_INLINE_SIZE` / `62.5rem` in `config/landingSurfaces.ts`, bound as `--fd-landing-content-max-inline-size` from `index.vue`) with `--fd-layout-page-margin` inline padding. Hero uses monospace bold H1 at exploratory **`2rem`** (not a Codex font-size token; not content-page serif) and intro paragraph at **`--font-size-x-large`** (`LandingHero.vue` scoped styles — do not set via `landing-page.css` `:where(p)`); centered large progressive primary **Get started** CTA (`::app-button` → `CdxButton` + `arrowNext`), ascii globe + soft radial dither (`LANDING_ASSETS` — light `hero-dither.svg`, dark `hero-dither-dark.svg` swapped under `fd-theme--*` to match [Figma 1202:27291](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27291): progressive blue glow over `#101418`). Hero intro links (Wikipedia / other Wikimedia projects): **no** external-link icon. **All** home-surface links (hero prose, navigation-card supporting-text, section CTAs) suppress `:visited` colour — unvisited / hover / active only. **No** heading permalink anchors on the home page (`ProseHeading` skips them on landing routes). Section `h2` → following content uses **`--spacing-150` (24px)**. Persona / API / apps / join sections use MDC `:::landing-section` / `:::landing-band` / `:::landing-api-demo` / `::landing-section-cta`. Persona card order: communities → research → enterprise. Persona cards: `leading-icon` (`userGroup`, `labFlask`) top-aligned with title (+ **2px** optical padding) or `title-logo="wikimediaEnterprise"` + text title; **keep** writer `supporting-text` on these internal destinations (approved exception to the usual “no supporting-text on internal cards” rule — see `AGENTS.md`). Join grid uses `:::navigation-card-grid{columns="2"}` (also keeps internal supporting-text). API demo is a two-column layout: band intro + `:::code-block` curl (`bash`, Shiki, soft-wrap, exploratory **4px** radius) beside Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html) article previews from `LANDING_API_ARTICLE_PREVIEWS` (**Codex exception:** muted resting border + exploratory **4px** radius — stock Card is unframed here). Home `index.vue` emits `<link rel="preload" as="image">` for each preview `thumbnailSrc` so Codex `CdxThumbnail` (client `Image()` after mount) can hit cache without a custom `<img>` bypass. At desktop (≥ 1120px), the example column matches the stacked preview-cards column height; free space sits between the intro `p` and the `h3` + code-block group (`margin-block-start: auto` on `h3` so the heading stays with the sample). Preview cards keep a fixed `--spacing-75` gap. Section CTAs always use a trailing **arrow** (including external Toolhub — still opens in a new tab). No Markdown `---` `<hr>` dividers. Metrics row in Figma is **hidden** — do not implement. Discover community-built apps band uses **`--background-color-base`** (not a gradient); Lexica / Paulina / Listen cards follow the Codex **Portrait card** design ([Figma](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?node-id=13072-136634) — **not implemented in Codex yet**, [T310632](https://phabricator.wikimedia.org/T310632)): committed `media` screenshots with **`--spacing-75` (12px)** inset around the image, **no** external-link icons (`hide-external-icon`), and Lexica/Paulina/Listen Coolest Tool `CdxInfoChip`s (`chips="award:…"`, `cdxIconStar`, purple100 background / purple600 text+icon via `LANDING_AWARD_CHIP`; dark mode inverts fill and text). API / join gradient band stops live in `config/landingSurfaces.ts` — light lavender hexes; dark mode for both bands is `#233566` → `#101418` (Codex light `background-color-progressive--active` → `background-color-inverted`; [APIs 1202:27489](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-27489) / [join 1202:28482](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=1202-28482)), swapped under `fd-theme--*` (hex intentional — dark `var(--background-color-inverted)` flips to light). **Source:** `app/components/content/LandingHero.vue` (hero intro type), `app/assets/css/landing-page.css` (H1 / bands), `app/layouts/default.vue` (`.frontdoor-shell--landing`), `ARCHITECTURE.md` → Platform landing / home.
 
@@ -781,7 +785,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Commercial use cases** ([`/get-started/commercial-use-cases`](https://wikifrodo.netlify.app/get-started/commercial-use-cases)): Codex Heading 1–3 via `.fd-content-page` (no card conversion yet).
 
-**Source:** `app/assets/css/main.css` (`.fd-content-page` heading + `h2` section spacing), `app/pages/[...slug].vue`, `content/en/get-started*.md`, `ARCHITECTURE.md` → Content typography, `AGENTS.md` RTL checklist → Content page typography.
+**Source:** `app/assets/css/main.css` (`.fd-content-page` heading + `h2` / `h3` section spacing; global `h3` `--spacing-200`), `app/pages/[...slug].vue`, `content/en/get-started*.md`, `ARCHITECTURE.md` → Content typography, `AGENTS.md` RTL checklist → Content page typography.
 
 ---
 
@@ -809,6 +813,21 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Source:** `app/assets/css/main.css`, `app/components/content/Highlight.vue`, `content/en/get-started.md`, `content/en/get-started/wikimedia-enterprise.md`, `content/en/apis.md`, `ARCHITECTURE.md` → Highlight.
 
+## Link row
+
+**Decision:** Sections that only need one or more destination links (no card title/description) use `:::link-row` (`LinkRow.vue`) — plain progressive prose links with external icons via `ProseA`, not supporting-text-only `NavigationCard`s. `LinkRow` is a layout wrapper (not a second card component). Prefer destination **cards** when each item needs its own title/description/chips/whole-card click; prefer **link rows** when heading + description already exist as prose and only the links remain.
+
+| Token / behaviour | Value |
+|-------------------|--------|
+| Column gap | `--spacing-150` (**24px**) between links |
+| Row gap | `--spacing-50` when wrapped |
+| Block margin | `--spacing-100` (vertical rhythm vs adjacent prose) |
+| Adjacent prose | Under `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in `main.css` (same pattern as `:::navigation-card-grid`) so the 16px block margin is not collapsed |
+| Authoring | One Markdown link per paragraph inside `:::link-row`; keep writer labels |
+| BiDi / i18n | Page content (per-locale Markdown), not banana-i18n; first-party CSS uses logical properties; inherits interface `dir` |
+
+**Source:** `app/components/content/LinkRow.vue`, `app/assets/css/main.css` (adjacent margin zeroing), `content/en/contribute/by-language.md`, `content/en/get-help.md`, MediaWiki section of `content/en/contribute/by-topic.md`, `ARCHITECTURE.md` → Link row, `AGENTS.md` → Link-only rows.
+
 ---
 
 ## API catalog
@@ -827,7 +846,7 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 **Decision:** Content / navigation destinations on prose pages (Get started and other `.md` docs) use Figma **variant A** — [`NavigationCard`](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=79-4339) (`app/components/content/NavigationCard.vue`), inspired by Codex [`CdxCard`](https://doc.wikimedia.org/codex/latest/components/demos/card.html).
 
-**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels); platform home persona/join → keep internal supporting-text per Figma.
+**Agent / automation:** Use **`AGENTS.md` → Navigation card authoring playbook** to choose **internal** vs **external** card style (same component). Prompt cues: “internal navigation cards” → Get started / Build for communities shape (no supporting-text); “external navigation cards” → About Wikimedia shape (`supporting-text` + writer labels); platform home persona/join → keep internal supporting-text per Figma. **Link-only** sections (no card title/description) → `:::link-row` — see **Link row** above; do not wrap those destinations in supporting-text-only cards.
 
 | Token / behaviour | Value |
 |-------------------|--------|
@@ -893,6 +912,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Header color theme preferences | Settings → preferences `CdxPopover` + Color theme radios (`COLOR_THEME_PREFERENCE_OPTIONS` / `useColorMode`); stay open on select; no close chrome; remove toggle group |
 | *(uncommitted)* | Code block panel everywhere (authored) | Hand-authored fences wrap in `:::code-block`; soft-wrap default + `no-soft-wrap`; Quick start / Authentication / demos; remote auto-wrap open question |
 | *(uncommitted)* | Content `h2` section gap (decision) | Docs `.fd-content-page h2` → **`--spacing-250` (40px)** `margin-block-start` — official; see Content page typography |
+| *(uncommitted)* | `h3` subsection gap (decision) | Site-wide `h3` → **`--spacing-200` (32px)** `margin-block-start` — official; see Content page typography |
 | *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |
 | *(uncommitted)* | Codex Link states on card / content links | Supporting-text + `.frontdoor-shell__main a` use `--color-link*` (hover colour, visited, active, focus) per [Link mixin](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) |
@@ -901,6 +921,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Lift Wing API card titles | `open-data.md` + `tools-and-bots.md` — current ecosystem name (not “Machine Learning API”) until modules / accessibility renames |
 | *(uncommitted)* | Enterprise page highlight (no cards) | `wikimedia-enterprise.md` — `::highlight` CTA (no arrow, new line); prose body restored; playbook “do not cardify” exception |
 | *(uncommitted)* | Highlight (Get started CTA) | `.fd-highlight` / `::highlight` — progressive-subtle, 4px radius, 12px padding |
+| *(uncommitted)* | Link row (link-only destinations) | `:::link-row` — `--spacing-150` (24px) column gap; not supporting-text-only cards; see Link row |
 | *(uncommitted)* | API catalog project filter layout | Header `--spacing-150` rhythm; chip↔filter wrap at 24px; content `title`/`chip` + banana chrome; static-page island (not `ClientOnly`) |
 | *(uncommitted)* | Navigation card agent playbook | `AGENTS.md` internal vs external styles + prompt phrases; cross-links in ARCHITECTURE / authoring / DESIGN |
 | *(uncommitted)* | Tools and bots navigation cards | Section grids + intros; Toolhub/Wikitech/etc. supporting-text; `/explorer` APIs; PAWS in description + Wikitech card link |
