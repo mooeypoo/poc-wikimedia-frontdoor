@@ -1,4 +1,4 @@
-import { createApp, onBeforeUnmount, watch, type App, type Ref } from 'vue'
+import { createApp, h, onBeforeUnmount, reactive, watch, type App, type Ref } from 'vue'
 import { getWikiInstanceById } from '../../config/instances'
 import { getTestWikiDisplayNameMessageKey } from '../../config/wikiInstanceTestWikis'
 import {
@@ -10,6 +10,10 @@ import type { ScalarInterfaceHandle } from './useExplorerScalarFocus'
 import { activeExplorerWikiInstanceId } from '../utils/explorerWikiInstanceContext'
 import { createScalarWriteEndpointWarningElement } from '../utils/createScalarWriteEndpointWarningElement'
 import { findOpenScalarClientModal } from '../utils/findOpenScalarClientModal'
+import {
+	isActiveAddressBarServerTestWiki,
+	isTestWikiSelectableInAddressBar
+} from '../utils/isTestWikiSelectableInAddressBar'
 import {
 	ensureScalarClientModalAddressBarWarningPlacement,
 	resolveScalarClientModalAddressBarWarningPlacement,
@@ -37,67 +41,16 @@ interface MountedWriteWarning {
 }
 
 /**
- * Inserts a write-endpoint warning into a Scalar modal region.
- *
- * @param parentElement - Container to receive the mount node.
- * @param insertBefore - Optional sibling inserted before the warning.
- * @param slotKey - Slot identifier stored on the mount node for deduplication.
- * @param httpMethod - HTTP method for write-endpoint gating inside the warning component.
- * @returns Mounted warning handles.
- */
-function mountWriteWarning(
-	parentElement: Element,
-	insertBefore: Element | null,
-	slotKey: string,
-	httpMethod: string
-): MountedWriteWarning {
-	let mountElement: HTMLElement
-	let application: App<Element> | null = null
-
-	if ( SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE ) {
-		const productionWikiDisplayName = getWikiInstanceById( activeExplorerWikiInstanceId.value )?.displayName ?? ''
-		const testWikiDisplayName = resolveInterfaceMessage(
-			getTestWikiDisplayNameMessageKey( activeExplorerWikiInstanceId.value )
-		)
-
-		mountElement = createScalarWriteEndpointWarningElement(
-			slotKey,
-			resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [
-				productionWikiDisplayName,
-				testWikiDisplayName
-			] )
-		)
-	} else {
-		mountElement = document.createElement( 'div' )
-		mountElement.setAttribute( WRITE_WARNING_ATTRIBUTE, slotKey )
-		mountElement.className = 'scalar-client-write-endpoint-warning-mount'
-
-		application = createApp( ScalarClientWriteEndpointWarning, {
-			slotKey,
-			httpMethod
-		} )
-	}
-
-	if ( insertBefore ) {
-		parentElement.insertBefore( mountElement, insertBefore )
-	} else {
-		parentElement.appendChild( mountElement )
-	}
-
-	if ( application ) {
-		application.mount( mountElement )
-	}
-
-	return { application, mountElement }
-}
-
-/**
  * Injects a Codex write-endpoint production warning under the Scalar Test Request address bar.
  *
  * Scalar's modal is a separate Vue app; DOM injection mounts {@link ScalarClientWriteEndpointWarning}
- * (`CdxMessage`) immediately below `.scalar-address-bar` only. Stray warning hosts outside that mount
- * (e.g. under Response Headers from legacy ClientPlugin slots) are removed on each scan.
- * Plain HTML probe mode is available via config.
+ * (`CdxMessage`) immediately below `.scalar-address-bar` only. Warning copy either names a mapped
+ * test server when that host appears in OpenAPI / address-bar servers
+ * ({@link isTestWikiSelectableInAddressBar}), or asks the user to operate with caution.
+ * The warning is hidden while the address bar’s active server is already the mapped test
+ * wiki ({@link isActiveAddressBarServerTestWiki}) and returns if production is selected again.
+ * Stray warning hosts outside that mount (e.g. under Response Headers from legacy ClientPlugin
+ * slots) are removed on each scan. Plain HTML probe mode is available via config.
  *
  * @param scalarInterface - Scalar handles from {@link ExplorerScalarReference} (event bus for method).
  * @returns Nothing.
@@ -113,6 +66,99 @@ export function useScalarClientWriteEndpointWarnings(
 	let trackedHttpMethod = ''
 	let boundEventBus: ScalarWorkspaceEventBus | null = null
 	let addressBarAlignResizeListener: (() => void) | null = null
+
+	/** Reactive props for the mounted warning app (updated on each modal scan). */
+	const warningProps = reactive( {
+		slotKey: 'address-bar',
+		httpMethod: '',
+		isTestServerSelectable: false,
+		isActiveServerTestWiki: false
+	} )
+
+	/**
+	 * Resolves whether the mapped test wiki is among Scalar address-bar servers.
+	 *
+	 * @param modalDialog - Open Test Request modal root, if any.
+	 * @returns True when select-copy warning variant should be used.
+	 */
+	function resolveIsTestServerSelectable( modalDialog: Element | null ): boolean {
+		return isTestWikiSelectableInAddressBar(
+			activeExplorerWikiInstanceId.value,
+			scalarInterface.value?.workspaceStore,
+			modalDialog
+		)
+	}
+
+	/**
+	 * Resolves whether the address bar is already pointed at the mapped test wiki.
+	 *
+	 * @param modalDialog - Open Test Request modal root, if any.
+	 * @returns True when the production warning should be hidden.
+	 */
+	function resolveIsActiveServerTestWiki( modalDialog: Element | null ): boolean {
+		return isActiveAddressBarServerTestWiki(
+			activeExplorerWikiInstanceId.value,
+			modalDialog
+		)
+	}
+
+	/**
+	 * Inserts a write-endpoint warning into a Scalar modal region.
+	 *
+	 * @param parentElement - Container to receive the mount node.
+	 * @param insertBefore - Optional sibling inserted before the warning.
+	 * @returns Mounted warning handles.
+	 */
+	function mountWriteWarning(
+		parentElement: Element,
+		insertBefore: Element | null
+	): MountedWriteWarning {
+		let mountElement: HTMLElement
+		let application: App<Element> | null = null
+
+		if ( SCALAR_CLIENT_WRITE_WARNING_PLAIN_HTML_PROBE ) {
+			const productionWikiDisplayName = getWikiInstanceById( activeExplorerWikiInstanceId.value )?.displayName ?? ''
+			const wikiInstanceId = activeExplorerWikiInstanceId.value
+			const messageText = warningProps.isActiveServerTestWiki
+				? ''
+				: warningProps.isTestServerSelectable
+					? resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [
+						productionWikiDisplayName,
+						resolveInterfaceMessage( getTestWikiDisplayNameMessageKey( wikiInstanceId ) )
+					] )
+					: resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning-no-test-wiki', [
+						productionWikiDisplayName
+					] )
+
+			mountElement = createScalarWriteEndpointWarningElement( warningProps.slotKey, messageText )
+		} else {
+			mountElement = document.createElement( 'div' )
+			mountElement.setAttribute( WRITE_WARNING_ATTRIBUTE, warningProps.slotKey )
+			mountElement.className = 'scalar-client-write-endpoint-warning-mount'
+
+			/*
+			 * Render through a reactive props object so later scans can flip
+			 * isTestServerSelectable without tearing down the mount.
+			 */
+			application = createApp( {
+				setup() {
+					return () => h( ScalarClientWriteEndpointWarning, warningProps )
+				}
+			} )
+		}
+
+		if ( insertBefore ) {
+			parentElement.insertBefore( mountElement, insertBefore )
+		} else {
+			parentElement.appendChild( mountElement )
+		}
+
+		if ( application ) {
+			application.mount( mountElement )
+		}
+
+		return { application, mountElement }
+	}
 
 	/**
 	 * Returns the address-bar warning mount in the modal, if present.
@@ -267,6 +313,10 @@ export function useScalarClientWriteEndpointWarnings(
 	): void {
 		removeStrayWriteWarningHosts( modalDialog )
 
+		warningProps.httpMethod = httpMethod
+		warningProps.isTestServerSelectable = resolveIsTestServerSelectable( modalDialog )
+		warningProps.isActiveServerTestWiki = resolveIsActiveServerTestWiki( modalDialog )
+
 		const existingMount = findAddressBarWarningMount( modalDialog )
 
 		if ( existingMount ) {
@@ -287,9 +337,7 @@ export function useScalarClientWriteEndpointWarnings(
 
 		const mountedWarning = mountWriteWarning(
 			placement.parentElement,
-			placement.insertBefore,
-			'address-bar',
-			httpMethod
+			placement.insertBefore
 		)
 		mountedWarnings.push( mountedWarning )
 

@@ -272,6 +272,7 @@ const explorerDescription = computed( () =>
 )
 const missingSpecLabel = computed( () => $bananaI18n( 'explorer-spec-missing' ) )
 const explorerInterfaceLoadingLabel = computed( () => $bananaI18n( 'explorer-loading-interface' ) )
+const enterpriseCustomLoadingLabel = computed( () => $bananaI18n( 'explorer-enterprise-custom-loading' ) )
 const loadingInstanceLabel = computed( () => $bananaI18n( 'explorer-loading-instance' ) )
 const loadingInstanceDescriptionLabel = computed( () => $bananaI18n( 'explorer-loading-instance-description' ) )
 const bootstrapErrorLabel = computed( () => $bananaI18n( 'explorer-bootstrap-error' ) )
@@ -419,7 +420,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 		>
 			<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
 			<h2>{{ loadingInstanceLabel }}</h2>
-			<p>{{ loadingInstanceDescriptionLabel }} <bdi>{{ wikiDisplayName }}</bdi></p>
+			<p>{{ loadingInstanceDescriptionLabel }}</p>
 		</section>
 
 		<template v-else>
@@ -452,7 +453,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
 								<div class="explorer-page__scalar-loading">
 									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
-									<p>{{ explorerInterfaceLoadingLabel }}</p>
+									<p>{{ enterpriseCustomLoadingLabel }}</p>
 								</div>
 							</div>
 						</template>
