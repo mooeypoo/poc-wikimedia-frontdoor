@@ -1,5 +1,7 @@
 /**
- * config/explorerModuleRail.ts — API Explorer module rail layout constants.
+ * config/explorerModuleRail.ts — **Legacy** custom module rail layout constants.
+ *
+ * Unused in product UX while `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` is true (PR #40).
  */
 
 /**

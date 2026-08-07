@@ -21,8 +21,8 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	// driven from it in useScalarConfig. Hide Scalar's own toggle so there is a
 	// single control — the shell header switch — as the source of truth.
 	hideDarkModeToggle: true,
-	// Experiment: Scalar's own sidebar replaces the manual endpoints rail when
-	// the flag is on. See config/explorerInternalSidebarExperiment.ts.
+	// Product (PR #40): Scalar's own sidebar is the community endpoint menu.
+	// See config/explorerInternalSidebarExperiment.ts.
 	showSidebar: EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR,
 	searchHotKey: 'k',
 	// Disable Scalar's "Ask AI" Agent feature everywhere. Without this the

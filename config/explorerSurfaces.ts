@@ -1,5 +1,6 @@
 /**
- * Surface tokens for explorer project controls and module rail.
+ * Surface tokens for explorer project controls (and shared exploratory radius
+ * consumers). The former module rail is not product UX (PR #40).
  *
  * CSS custom properties in `app/assets/css/page-grid.css`
  * (`--fd-explorer-controls-surface-*`) must stay in sync with these values.
@@ -11,11 +12,29 @@
  * (Codex `--border-radius-base` is **2px**). It is under consideration as a
  * future system default. Account list-element cards, the Reset success
  * credentials panel, content **`NavigationCard`**, **`.fd-highlight`** /
- * **`Highlight`**, **`CodeBlock`**, and **`CodeTabs`** consume the mirrored
- * CSS variable `--fd-explorer-controls-surface-border-radius` (do not
- * hardcode `4px` there).
+ * **`Highlight`**, **`CodeBlock`**, **`CodeTabs`**, and the Explorer
+ * **Test Request** dialog (UI exploration under `--client-modal-open`)
+ * consume the mirrored CSS variable
+ * `--fd-explorer-controls-surface-border-radius` (do not hardcode `4px` there).
+ *
+ * Test Request shell-clamp knobs (`EXPLORER_TEST_REQUEST_*`) pair with
+ * `--fd-explorer-test-request-modal-padding` in `explorer-codex-overrides.css`
+ * and `useScalarClientModalBackgroundScrollLock` — keep gutter in sync with
+ * Codex **`--spacing-250`**.
  */
 export const EXPLORER_CONTROLS_SURFACE_BACKGROUND_COLOR = 'var(--background-color-neutral-subtle)'
 
 /** Border radius (px) for shared exploratory surfaces — not a Codex token (see file JSDoc). */
 export const EXPLORER_CONTROLS_SURFACE_BORDER_RADIUS_PX = 4
+
+/**
+ * Test Request modal gutter on each side (px).
+ * Must match Codex `--spacing-250` and CSS `--fd-explorer-test-request-modal-padding`.
+ */
+export const EXPLORER_TEST_REQUEST_MODAL_GUTTER_PX = 40
+
+/**
+ * Minimum change (px) before updating `--fd-explorer-test-request-shell-block-size`.
+ * Prevents ResizeObserver + subpixel layout from chasing ~1px/s.
+ */
+export const EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX = 2

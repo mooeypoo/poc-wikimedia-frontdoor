@@ -160,10 +160,14 @@ function onScalarInterfaceReady( nextScalarInterface: ScalarInterfaceHandle ): v
 
 const { layoutMode, moduleRailTeleportTarget } = useExplorerModuleRailPlacement()
 
+/*
+ * Align rail top with the Scalar shell. Do not height-match the shell: specs now
+ * grow with content (page scroll), so rail max height uses the CSS viewport
+ * fallback (`--fd-layout-shell-body-block-size-estimate`) instead.
+ */
 const { refreshEndPanelNavAlign, scheduleLayoutSettledRefresh } = useEndPanelNavAlign(
 	scalarShellRef,
 	explorerEndPanelElement,
-	scalarShellRef,
 	scalarShellRef
 )
 
@@ -242,8 +246,11 @@ const scalarReferenceKey = computed( () => {
 
 // Re-arm the loading overlay whenever the Scalar instance is about to remount
 // (mode change, module switch, or wiki instance change). onScalarLoaded clears it.
+// Clear the interface handle so Test Request shell-clamp state cannot stick to a
+// destroyed ApiReference (Scalar often tears down the modal without ui:close).
 watch( scalarReferenceKey, () => {
 	isScalarReady.value = false
+	scalarInterface.value = null
 } )
 
 // Title matches the side-nav label for the active mode (same wording,
@@ -363,8 +370,9 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 			<!--
 				Teleport anchor stays mounted in community mode (controls alone gate on bootstrap).
-				Vue Teleport requires #explorer-module-rail-anchor in the DOM before the rail mounts.
-				See ARCHITECTURE.md → End column module rail → Teleport mounting.
+				Legacy module rail only (EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR false).
+				Vue Teleport requires #explorer-module-rail-anchor before the rail mounts.
+				See ARCHITECTURE.md → Scalar native endpoint sidebar (legacy note).
 			-->
 			<div
 				v-if="isCommunityMode"
@@ -569,11 +577,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	gap: var( --spacing-100 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
-	overflow: hidden;
+	/* Natural-height specs: do not clip the grown Scalar embed. */
+	overflow: visible;
 }
 
 .explorer-page__scalar-shell {
-	/* Contain Scalar `position: fixed` UI so it cannot cover the shell header. */
+	/*
+	 * Contain Scalar `position: fixed` UI so it cannot cover the shell header.
+	 * Specs grow with content; `.frontdoor-shell__body-scroll` is the vertical
+	 * scrollport (no faux-iframe height lock). While Test Request is open the
+	 * shell is clamped to dialog + gutter so scroll cannot continue into specs
+	 * (see --client-modal-open below + useScalarClientModalBackgroundScrollLock).
+	 */
 	position: relative;
 	transform: translateZ( 0 );
 	min-inline-size: 0;
@@ -581,14 +596,28 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 	border: 1px solid var( --border-color-subtle );
 	border-radius: var( --border-radius-base );
 	/*
-	 * Clip horizontal bleed after resize; vertical scroll is enabled from 960px below.
-	 * overflow-inline: clip keeps the inline-end border visible (border sits outside padding).
+	 * Clip horizontal bleed after resize; keep vertical overflow visible so the
+	 * page scrollport scrolls the full spec. overflow-inline: clip keeps the
+	 * inline-end border visible (border sits outside padding).
 	 */
 	overflow-inline: clip;
-	overflow-block: hidden;
+	overflow-block: visible;
 	background-color: var( --background-color-base );
 	padding-inline: var( --spacing-150 );
 	padding-block: 0;
+}
+
+/*
+ * Must live in this scoped block: unscoped explorer-codex-overrides cannot beat
+ * `.explorer-page__scalar-shell[data-v-*]` for overflow / min-block-size (that
+ * left specs visible and scrollable under a short shell).
+ */
+.explorer-page__scalar-shell--client-modal-open {
+	block-size: var( --fd-explorer-test-request-shell-block-size );
+	max-block-size: var( --fd-explorer-test-request-shell-block-size );
+	min-block-size: 0;
+	overflow-block: clip;
+	overflow-inline: clip;
 }
 
 .explorer-page__scalar-shell--loading {
@@ -635,26 +664,6 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__scalar-loading-overlay p {
 	margin: 0;
-}
-
-@media screen and ( min-width: 960px ) {
-	.explorer-page__reference-panel {
-		position: sticky;
-		inset-block-start: var( --spacing-150 );
-		block-size: calc(
-			var( --fd-layout-shell-body-block-size-estimate ) - ( var( --spacing-150 ) * 2 )
-		);
-		grid-template-rows: auto minmax( 0, 1fr );
-		overflow: hidden;
-	}
-
-	.explorer-page__scalar-shell {
-		block-size: 100%;
-		min-block-size: 0;
-		overflow-block: auto;
-		overflow-inline: clip;
-		overscroll-behavior: contain;
-	}
 }
 
 @keyframes explorer-loading-spin {

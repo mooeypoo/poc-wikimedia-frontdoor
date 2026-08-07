@@ -14,7 +14,7 @@
 
 ## Problem
 
-The community Explorer holds all of its meaningful state **in memory, invisible to the URL**: `selectedWikiInstanceId` (`useState`), `selectedModuleName` and `pendingOperationTarget` (refs in `useExplorerBootstrap`). Only the coarse *mode* (`community` / `enterprise-full` / `enterprise-custom`) is encoded, as a path segment in `app/pages/explorer/[[view]].vue`. Consequences:
+The community Explorer holds all of its meaningful state **in memory, invisible to the URL**: `selectedWikiInstanceId` (`useState`), `selectedModuleName` and `pendingOperationTarget` (refs in `useExplorerBootstrap`). Only the coarse *mode* (`community` / `enterprise-full` / `enterprise-custom`) is encoded, as a path segment in `app/pages/explorer/[...view].vue`. Consequences:
 
 1. **Nothing is shareable.** A user who has navigated to a specific operation on a specific wiki cannot send that view to anyone; the link resolves to the default Explorer.
 2. **No entry point for search.** We want keyword search to surface individual API endpoints and, on click, drop the user *directly* onto that operation in the Explorer. With no addressable URL for "instance + module + operation," there is nothing for a search result to link to.
@@ -30,7 +30,7 @@ Two facts shape the design:
 
 ## 1. Path-based URL grammar, not query parameters
 
-**Decision:** Deep-links are **path segments**, not query parameters. The operation stays in the **hash fragment**. `app/pages/explorer/[[view]].vue` (optional single segment, `:view?`) becomes a **catch-all** `app/pages/explorer/[...view].vue` (`:view(.*)*`), which still matches the bare `/explorer` and matches arbitrarily deep paths. The first segment after `/explorer/` is a reserved discriminator:
+**Decision:** Deep-links are **path segments**, not query parameters. The operation stays in the **hash fragment**. The former optional single-segment page (`[[view]].vue`, `:view?`) becomes a **catch-all** `app/pages/explorer/[...view].vue` (`:view(.*)*`), which still matches the bare `/explorer` and matches arbitrarily deep paths. The first segment after `/explorer/` is a reserved discriminator:
 
 | URL | Meaning |
 |---|---|
