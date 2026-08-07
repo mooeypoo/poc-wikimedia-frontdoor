@@ -765,6 +765,16 @@ Scoped under `.fd-content-page` in `app/assets/css/main.css` so explorer / shell
 
 ---
 
+## Code block (fenced samples)
+
+**Decision:** Every hand-authored fenced code sample uses **`:::code-block`** (`CodeBlock.vue`) — the same bordered panel as the platform-home API curl (muted border, exploratory **4px** radius via `--fd-explorer-controls-surface-border-radius`, `--spacing-75` padding, intentional `dir="ltr"`). Soft-wrap long lines **by default**; authors may opt into horizontal scroll with `:::code-block{no-soft-wrap}` (`overflow-inline: auto` on `pre`). Fence language must be in `nuxt.config.ts` highlight `langs` (`bash` / `shell` / `sh` for curl and URL templates — **not** `text`; `@shikijs/langs` has no `./text` export). Inline `` `code` `` keeps the existing subtle monospace chip (not the panel). Prefer **`::::code-tabs`** when switching languages (framed tabs already share panel chrome; soft-wrap opt-out is CodeBlock-only today).
+
+**Open question:** Whether remote/wiki HTML→MDC conversion should auto-wrap imported fences in `:::code-block` is postponed — see `ARCHITECTURE.md` → Code block / Remote content fetching and `docs/adr-remote-content-fetching.md` §11.8. Do not change the converter until decided.
+
+**Source:** `CodeBlock.vue`, `content/en/index.md`, `content/en/apis/authentication.md`, `content/en/get-started/quick-start.md`, `content/en/use-content-and-data.md`, `ARCHITECTURE.md` → Code block, `AGENTS.md` → content components / RTL checklist.
+
+---
+
 ## Highlight
 
 **Decision:** Prose CTA / featured-blurb surfaces (Get started quick-start banner; API catalog intro) use a shared **`.fd-highlight`** class and optional MDC `::highlight` (`Highlight.vue`). **Do not** use this for status messages — those remain `::callout` / `CdxMessage`. Name is independent of code syntax highlighting.
@@ -861,6 +871,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Language trigger Codex Button with icon | Remove custom gap/color/type on globe+code; use native quiet `CdxButton` + `CdxIcon` |
 | *(uncommitted)* | Header utility row polish | Quiet preferences; **16px** search→preferences / **8px** other options; collapse threshold **560px** aligned in `headerChrome.ts`; vertical center |
 | *(uncommitted)* | Header color theme preferences | Settings → preferences `CdxPopover` + Color theme radios (`COLOR_THEME_PREFERENCE_OPTIONS` / `useColorMode`); stay open on select; no close chrome; remove toggle group |
+| *(uncommitted)* | Code block panel everywhere (authored) | Hand-authored fences wrap in `:::code-block`; soft-wrap default + `no-soft-wrap`; Quick start / Authentication / demos; remote auto-wrap open question |
 | *(uncommitted)* | Content `h2` section gap (decision) | Docs `.fd-content-page h2` → **`--spacing-250` (40px)** `margin-block-start` — official; see Content page typography |
 | *(uncommitted)* | Header/footer Wikimedia mark dark mode | Inlined `WikimediaLogoMark` from Commons SVG (`currentColor`); replaces `<img>` |
 | *(uncommitted)* | Browse repositories title logos | `by-language.md` — `title-logo` gerrit/github/gitlab at `--size-icon-medium`, `--color-base` / dark mode |

@@ -507,6 +507,16 @@ The wiki author (who controls the source page) marks an insertion point with an 
 - **Attribution** — the fetched page keeps its CC BY-SA footer (§9.5); the shared partial is portal-authored content and needs none.
 - **Nesting** — a shared partial may itself use `::callout` etc.; guard against `::partial` cycles is out of scope (author responsibility).
 
+### 11.8 Open question — auto-wrap fenced code in `:::code-block`
+
+**Status:** Postponed (no converter change yet).
+
+Hand-authored content pages must wrap every fenced sample in `:::code-block` so samples share the landing / docs panel chrome (`ARCHITECTURE.md` → Code block; `AGENTS.md`). The conversion registry today emits **bare** fenced code with a language tag (and inline code unchanged).
+
+**Undecided:** Should `scripts/lib/wikiContentConversion.mjs` (or a `componentMapping` toggle) wrap imported fences in `:::code-block` automatically?
+
+Until decided: leave imported fences bare; do not silently change the converter; keep this question listed in `ARCHITECTURE.md` → Remote content fetching, `AGENTS.md` (CodeBlock rule), `DESIGN_REQUIREMENTS.md` → Code block, `docs/content-authoring-guide.md`, and `docs/content-import-guide.md`.
+
 ---
 
 ## Future phases

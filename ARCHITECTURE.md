@@ -1228,7 +1228,7 @@ Markdown page titles and section headings follow the Codex [typography style gui
 | `ApiCatalogWikimediaSection.vue` | `CdxField` + `CdxCombobox` + `SectionHeading` + `NavigationCard` | `::api-catalog-wikimedia-section` — see **API catalog project filter** below |
 | `NavigationCard.vue` | Custom card chrome + `CdxIcon` / `CdxInfoChip` (inspired by `CdxCard`) | `::navigation-card{…}` — see **Navigation card** below |
 | `NavigationCardGrid.vue` | — | `:::navigation-card-grid` (optional `columns="2"` for two-up rows, e.g. landing Join) wrapping `::navigation-card` — equal-height rows; default max **3** columns at desktop |
-| `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap; `dir="ltr"`); see **Code block** below |
+| `CodeBlock.vue` | — | `:::code-block` — single bordered code panel (same chrome as code tabs, no tab header; exploratory **4px** radius; soft-wrap by default, `no-soft-wrap` for horizontal scroll; `dir="ltr"`); see **Code block** below |
 | `CodeTabs.vue` + `CodeTab.vue` | `CdxTabs` (`framed`) + `CdxTab` | `::::code-tabs` / `:::code-tab{label="…"}` block — see **Code tabs** below |
 | `AppButton.vue` | `CdxButton` (`action="progressive"` `weight="primary"`) + optional `CdxIcon` end icon | `::app-button{href="…" label="…" size="large" icon-end="arrowNext"}` — `/…` paths always `navigateTo` (path wins over MDC `external` / `external=""`); absolute `http(s):` (or `external` on non-path hrefs) open in a new tab; label BiDi-isolated. Real Codex button chrome so shell prose-link colours cannot wash out inverted label text |
 | `LandingHero.vue` | — | `:::landing-hero` — dither + globe; intro `p` **`--font-size-x-large`** (scoped); H1 type in `landing-page.css` (exploratory **2rem**). See **Platform landing / home** |
@@ -1395,11 +1395,13 @@ Imported wiki message boxes map to `::callout{type=…}` via the remote-content 
 
 `CodeBlock.vue` is the standalone (non-tabbed) code module. It reuses the same bordered panel chrome as framed **Code tabs** — muted border, exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`), `--background-color-base`, and `--spacing-75` padding on `pre` — without a `CdxTabs` header.
 
-**MDC:** `:::code-block` wrapping a normal fenced code block (Shiki highlighting, line numbers, and diffs still apply). Use a language tag present in `nuxt.config.ts` `content.build.markdown.highlight.langs` (e.g. `bash` / `shell` for curl — not an unknown tag, or highlighting is skipped). The wrapper pins `dir="ltr"` because code / shell / curl samples are inherently LTR. Long lines **soft-wrap** inside the panel (`white-space: pre-wrap`); authors still use `\` + indent for intentional multi-line commands.
+**MDC:** `:::code-block` wrapping a normal fenced code block (Shiki highlighting, line numbers, and diffs still apply). Use a language tag present in `nuxt.config.ts` `content.build.markdown.highlight.langs` (e.g. `bash` / `shell` / `sh` for curl and URL templates). Do **not** add `text` — `@shikijs/langs` has no `./text` export and Nuxt Content fails at build when it is listed. The wrapper pins `dir="ltr"` because code / shell / curl samples are inherently LTR. Long lines **soft-wrap** inside the panel by default (`white-space: pre-wrap`); authors still use `\` + indent for intentional multi-line commands. Opt out with `:::code-block{no-soft-wrap}` for `overflow-x: auto` horizontal scroll instead.
 
-**When to use:** One sample (landing API curl, a single language example). Prefer **Code tabs** when authors need language or variant switching.
+**When to use:** **Every** hand-authored fenced sample on content pages (landing API curl, Quick start, Authentication, demos). Prefer **Code tabs** when authors need language or variant switching. Do **not** restyle inline `` `code` `` — that keeps the subtle monospace chip in `main.css`. Do **not** rely on bare fences for product pages. Soft-wrap / `no-soft-wrap` apply to **`CodeBlock` only**; framed **Code tabs** keep shared border / radius / `pre` padding but do not yet expose the soft-wrap prop (add there only if product asks for parity).
 
-**Demo / polish surface:** `content/en/index.md` (API band) and `content/en/use-content-and-data.md` → Code block.
+**Demo / polish surface:** `content/en/index.md` (API band), `content/en/apis/authentication.md`, `content/en/get-started/quick-start.md`, and `content/en/use-content-and-data.md` (including a `no-soft-wrap` example).
+
+**Open question — remote / wiki-imported fences:** Whether `scripts/lib/wikiContentConversion.mjs` (or the conversion registry) should **auto-wrap** imported fenced code in `:::code-block` is **postponed**. Hand-authored pages wrap explicitly today; imported pages may still emit bare fences until product decides. Document any future decision here, in `AGENTS.md`, and in `docs/adr-remote-content-fetching.md`.
 
 #### Code tabs
 
@@ -1447,6 +1449,8 @@ Content import is handled by `scripts/fetch-remote-content.mjs`, reading sources
 **Wipe-and-recreate lifecycle.** Every run first deletes all previously-imported files (frontmatter `remoteImport: true`) and prunes emptied locale dirs, then recreates them — so removed sources, changed slugs/locales, and dropped translations leave no orphan. Authored content has no marker and is never touched. Output is idempotent (no volatile fields), so an unchanged page produces no diff. A failed fetch writes an empty placeholder (no stale-copy fallback); the build never fails.
 
 **Conversion registry & shared partials.** HTML→MDC mapping is a registry of conversions: content conversions (message-box→`::callout`, fenced code with language) gated per source by `componentMapping`, plus a structural one — **shared partials**. A wiki page marks an insertion point with an empty `<div class="frontdoor-partial" data-partial="name">`; the converter replaces it with a `::partial{name}` directive. The partial's content is portal-authored (`content/_partials/shared/<name>.md`, committed, never fetched/wiped) and rendered by `app/components/content/Partial.vue`, which resolves the name against the allowlist in `config/sharedPartials.ts` — the security boundary for wiki-driven names. See `docs/adr-remote-content-fetching.md` (§8, §10, §11) for the full decision record.
+
+**Open question — `:::code-block` for imports:** Hand-authored fences must use `:::code-block` (see **Code block** above). Auto-wrapping imported wiki/markdown fences in that directive during conversion is **not decided yet** — leave bare imported fences as-is until a human/product decision; do not silently change the converter.
 
 ---
 

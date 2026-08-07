@@ -16,6 +16,11 @@ sources (`config/remoteContentSources.ts`) and shared partials
   regenerated, so removed sources / renamed slugs / dropped translations never
   leave a stale file behind. Hand-authored content (including shared partials) is
   never touched.
+- **Open question — fenced code chrome:** Hand-authored pages wrap every fence in
+  `:::code-block`. Whether the wiki/Markdown converter should auto-wrap imported
+  fences the same way is **not decided yet** — leave imports as bare fences until
+  product decides (`docs/adr-remote-content-fetching.md` §11.8; `ARCHITECTURE.md`
+  → Code block). Do not change the converter without that decision.
 
 ### The workflow for any change below
 
