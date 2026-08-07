@@ -1,13 +1,30 @@
-import { onBeforeUnmount, onMounted, watch, type Ref } from 'vue'
+import { onBeforeUnmount, watch, type Ref } from 'vue'
+import {
+	EXPLORER_TEST_REQUEST_MODAL_GUTTER_PX,
+	EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX
+} from '../../config/explorerSurfaces'
 import type { ScalarInterfaceHandle } from './useExplorerScalarFocus'
+import { useColorMode } from './useColorMode'
 
 /**
  * State-marker class on `.explorer-page__scalar-shell` while Test Request is open.
- * Pairs with explorer-codex-overrides.css rules that pin the modal into the shell
- * client box (see ARCHITECTURE.md / DESIGN_REQUIREMENTS.md).
+ * Pairs with explorer-codex-overrides.css (overlay / gutter) and scoped shell
+ * clamp styles in `app/pages/explorer/[...view].vue` (natural height — see
+ * ARCHITECTURE.md / DESIGN_REQUIREMENTS.md).
  */
 export const EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS =
 	'explorer-page__scalar-shell--client-modal-open'
+
+/**
+ * CSS custom property on the Scalar shell: block size while Test Request is open
+ * (dialog `scrollHeight` + vertical gutter). Clips the OpenAPI document under
+ * the overlay so page scroll cannot travel into specs past the sandbox.
+ */
+export const EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_CSS_VAR =
+	'--fd-explorer-test-request-shell-block-size'
+
+/** How many animation frames to wait for Scalar to mount the dialog after open. */
+const DIALOG_MOUNT_MAX_FRAMES = 30
 
 interface ScalarWorkspaceEventBus {
 	on: ( eventName: string, handler: ( payload: unknown ) => void ) => void
@@ -15,38 +32,112 @@ interface ScalarWorkspaceEventBus {
 }
 
 /**
- * Returns whether a scroll/wheel event targets content inside an open Test Request modal.
- *
- * @param eventTarget - Event target from wheel or touchmove.
- * @param openModalRoot - Visible Scalar client modal root, if any.
- * @returns True when the event should keep scrolling the modal (not the reference).
+ * @returns The shell main+end page scrollport, if mounted.
  */
-function isEventInsideOpenScalarClientModal(
-	eventTarget: EventTarget | null,
-	openModalRoot: HTMLElement | null
+function getExplorerBodyScrollElement(): HTMLElement | null {
+	if ( typeof document === 'undefined' ) {
+		return null
+	}
+
+	const bodyScrollElement = document.querySelector( '.frontdoor-shell__body-scroll' )
+
+	return bodyScrollElement instanceof HTMLElement ? bodyScrollElement : null
+}
+
+/**
+ * @returns The open Test Request dialog element inside the marked shell, if any.
+ */
+function getOpenScalarClientDialog(): HTMLElement | null {
+	if ( typeof document === 'undefined' ) {
+		return null
+	}
+
+	const dialogElement = document.querySelector(
+		`.${ EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS } .scalar-client[role="dialog"]`
+	)
+
+	return dialogElement instanceof HTMLElement ? dialogElement : null
+}
+
+/**
+ * Reads the Test Request gutter (block padding) from the shell CSS variable.
+ *
+ * @param scalarShell - Explorer Scalar shell element.
+ * @returns Gutter in CSS pixels (one side).
+ */
+function getTestRequestModalGutterPx( scalarShell: HTMLElement ): number {
+	const resolvedPadding = getComputedStyle( scalarShell )
+		.getPropertyValue( '--fd-explorer-test-request-modal-padding' )
+		.trim()
+	const parsedPaddingPx = Number.parseFloat( resolvedPadding )
+
+	return Number.isFinite( parsedPaddingPx )
+		? parsedPaddingPx
+		: EXPLORER_TEST_REQUEST_MODAL_GUTTER_PX
+}
+
+/**
+ * Returns whether a target is inside the Scalar shell (modal / exit overlay).
+ *
+ * @param target - Event target node.
+ * @param scalarShell - Explorer Scalar shell element.
+ * @returns True when the target is within the shell.
+ */
+function isTargetInsideScalarShell(
+	target: EventTarget | null,
+	scalarShell: HTMLElement | null
 ): boolean {
 	return Boolean(
-		openModalRoot
-		&& eventTarget instanceof Node
-		&& openModalRoot.contains( eventTarget )
+		target instanceof Node &&
+		scalarShell &&
+		scalarShell.contains( target )
 	)
 }
 
 /**
- * Keeps the Test Request modal usable inside the visible Scalar shell.
+ * Returns whether a client point lies inside an element’s border box.
  *
- * Scalar mounts the modal inside `.explorer-page__scalar-shell` (transform
- * containing block). After the reference has scrolled, the modal chrome can sit
- * above the visible client box; freezing `scrollTop` then traps the close control
- * off-screen. On open this composable snaps the shell to `scrollTop = 0` (restored
- * on close), freezes that position, blocks wheel/touch on the shell outside the
- * modal, and relies on CSS under
- * {@link EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS} to pin the overlay into
- * the shell client box. Open/close comes from the Scalar event bus only — a
- * body-wide MutationObserver freezes the explorer tab during Scalar mount.
- * Does **not** lock `.frontdoor-shell__body-scroll`.
+ * @param element - Element to test.
+ * @param clientX - Viewport X.
+ * @param clientY - Viewport Y.
+ * @returns True when the point is inside the element.
+ */
+function isPointInsideElement(
+	element: Element,
+	clientX: number,
+	clientY: number
+): boolean {
+	const box = element.getBoundingClientRect()
+
+	return (
+		clientX >= box.left &&
+		clientX <= box.right &&
+		clientY >= box.top &&
+		clientY <= box.bottom
+	)
+}
+
+/**
+ * Manages Test Request open state for natural-height explorer specs.
  *
- * @param scalarShellElement - Explorer Scalar shell element (scrollport at ≥ 960px).
+ * Specs and the Test Request modal both grow with content; vertical travel is
+ * `.frontdoor-shell__body-scroll`. On open this composable scrolls the Scalar
+ * shell into view, toggles {@link EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS},
+ * and sets {@link EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_CSS_VAR} from dialog
+ * **`scrollHeight` + vertical gutter** (`ResizeObserver`, deadband from
+ * `config/explorerSurfaces.ts`) so page scroll cannot continue into the OpenAPI
+ * document under the overlay. Shell **`block-size` / `overflow-block: clip`**
+ * must stay in **scoped** `explorer/[...view].vue` styles (unscoped overrides
+ * lose to `[data-v-*]`). Content above the shell and the site footer remain
+ * reachable. Spec remount (module / instance change) nulls `scalarInterface` and
+ * clears the clamp — Scalar often destroys the modal without `ui:close`. While
+ * open, pointerdown outside the Scalar shell sets `inert` on Scalar’s
+ * `aria-modal` dialog so its focus-trap cannot reclaim focus from shell chrome
+ * (e.g. header preferences `CdxPopover`). Clears `inert` when the user points
+ * back at the shell (including retargeting `.app-exit-button`), when the color
+ * theme changes after preferences dismiss, or when the modal closes.
+ *
+ * @param scalarShellElement - Explorer Scalar shell element.
  * @param scalarInterface - Scalar event bus / workspace handle from ApiReference.
  * @returns Nothing. Establishes listeners and cleans up on unmount.
  */
@@ -55,156 +146,368 @@ export function useScalarClientModalBackgroundScrollLock(
 	scalarInterface: Ref<ScalarInterfaceHandle | null>
 ): void {
 	let lastKnownModalOpen = false
-	let lockedShellScrollTop = 0
-	let shellScrollTopBeforeModalOpen = 0
-	let boundShellElement: HTMLElement | null = null
+	let bodyScrollTopBeforeModalOpen = 0
 	let boundEventBus: ScalarWorkspaceEventBus | null = null
+	let dialogResizeObserver: ResizeObserver | null = null
+	let dialogMountFrameCount = 0
+	let dialogMountRafId = 0
+	let lastAppliedShellBlockSizePx = 0
+
+	const { resolvedMode } = useColorMode()
 
 	/**
-	 * Attaches the scroll-freeze listener to the current shell element.
+	 * Scrolls the page so the Scalar shell top aligns with the body-scroll top.
+	 *
+	 * @param scalarShell - Scalar shell element.
+	 * @param bodyScrollElement - Page scrollport.
+	 * @returns Nothing.
+	 */
+	function scrollShellIntoPageView(
+		scalarShell: HTMLElement,
+		bodyScrollElement: HTMLElement
+	): void {
+		const shellTopPx = scalarShell.getBoundingClientRect().top
+		const bodyTopPx = bodyScrollElement.getBoundingClientRect().top
+		bodyScrollElement.scrollTop += ( shellTopPx - bodyTopPx )
+	}
+
+	/**
+	 * Sets the shell block-size CSS variable from the open dialog + gutter.
+	 *
+	 * Uses `scrollHeight` (content size) rather than the laid-out border box so
+	 * a percentage-sized ancestor cannot feed a ResizeObserver loop. Skips
+	 * updates smaller than
+	 * {@link EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX}.
+	 * Ignores collapsed / teardown sizes (gutter-only ~80px shells).
+	 *
+	 * @returns True when a dialog was measured (variable may be unchanged).
+	 */
+	function syncShellBlockSizeToOpenDialog(): boolean {
+		const scalarShell = scalarShellElement.value
+		const dialogElement = getOpenScalarClientDialog()
+
+		if ( !scalarShell || !dialogElement ) {
+			return false
+		}
+
+		const gutterPx = getTestRequestModalGutterPx( scalarShell )
+		/*
+		 * Prefer content size. `getBoundingClientRect().height` can equal the
+		 * shell-constrained box and re-enter the clamp loop.
+		 */
+		const dialogHeightPx = Math.max(
+			dialogElement.scrollHeight,
+			dialogElement.offsetHeight
+		)
+
+		/*
+		 * During module remount Scalar can leave a zero-height dialog node
+		 * briefly. Clamping to gutter×2 (~80px) collapses the reference shell
+		 * after the modal is gone — skip until content has real height.
+		 */
+		if ( dialogHeightPx < gutterPx ) {
+			return false
+		}
+
+		/*
+		 * Container padding is gutter on block-start and block-end (40px each).
+		 * Shell height = dialog + both paddings so the sandbox is the scroll
+		 * extent; specs under the overlay are clipped.
+		 */
+		const shellBlockSizePx = Math.ceil( dialogHeightPx + ( gutterPx * 2 ) )
+
+		if (
+			lastAppliedShellBlockSizePx > 0 &&
+			Math.abs( shellBlockSizePx - lastAppliedShellBlockSizePx ) <
+				EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX
+		) {
+			return true
+		}
+
+		lastAppliedShellBlockSizePx = shellBlockSizePx
+		scalarShell.style.setProperty(
+			EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_CSS_VAR,
+			`${ shellBlockSizePx }px`
+		)
+
+		return true
+	}
+
+	/**
+	 * Clears the shell height clamp used while Test Request is open.
 	 *
 	 * @returns Nothing.
 	 */
-	function bindShellScrollFreeze(): void {
+	function clearShellBlockSizeClamp(): void {
+		lastAppliedShellBlockSizePx = 0
 		const scalarShell = scalarShellElement.value
 
-		if ( boundShellElement === scalarShell ) {
-			return
-		}
-
-		if ( boundShellElement ) {
-			boundShellElement.removeEventListener( 'scroll', onShellScrollFreeze )
-		}
-
-		boundShellElement = scalarShell
-
-		if ( boundShellElement ) {
-			boundShellElement.addEventListener( 'scroll', onShellScrollFreeze, { passive: true } )
+		if ( scalarShell ) {
+			scalarShell.style.removeProperty(
+				EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_CSS_VAR
+			)
 		}
 	}
 
 	/**
-	 * Reverts reference-shell scroll while the Test Request modal is open.
+	 * Stops observing the Test Request dialog for size changes.
 	 *
 	 * @returns Nothing.
 	 */
-	function onShellScrollFreeze(): void {
-		if ( !lastKnownModalOpen || !boundShellElement ) {
+	function stopDialogResizeObservation(): void {
+		if ( dialogMountRafId !== 0 ) {
+			cancelAnimationFrame( dialogMountRafId )
+			dialogMountRafId = 0
+		}
+
+		dialogMountFrameCount = 0
+
+		if ( dialogResizeObserver ) {
+			dialogResizeObserver.disconnect()
+			dialogResizeObserver = null
+		}
+
+	}
+
+	/**
+	 * Observes the open dialog and keeps the shell height in sync as content grows.
+	 *
+	 * @returns Nothing.
+	 */
+	function startDialogResizeObservation(): void {
+		stopDialogResizeObservation()
+
+		if ( typeof ResizeObserver === 'undefined' ) {
+			syncShellBlockSizeToOpenDialog()
 			return
 		}
 
-		if ( boundShellElement.scrollTop !== lockedShellScrollTop ) {
-			boundShellElement.scrollTop = lockedShellScrollTop
+		/**
+		 * Waits for Scalar to mount `[role="dialog"]`, then observes it.
+		 *
+		 * @returns Nothing.
+		 */
+		function tryAttachObserver(): void {
+			if ( !lastKnownModalOpen ) {
+				return
+			}
+
+			const dialogElement = getOpenScalarClientDialog()
+
+			if ( !dialogElement ) {
+				dialogMountFrameCount += 1
+
+				if ( dialogMountFrameCount < DIALOG_MOUNT_MAX_FRAMES ) {
+					dialogMountRafId = requestAnimationFrame( tryAttachObserver )
+					return
+				}
+
+				/*
+				 * Modal open was reported but the dialog never mounted, or the
+				 * ApiReference remounted without ui:close — release the clamp.
+				 */
+				clearClientModalOpenState( { restorePageScroll: false } )
+				return
+			}
+
+			dialogMountRafId = 0
+			syncShellBlockSizeToOpenDialog()
+
+			dialogResizeObserver = new ResizeObserver( () => {
+				if ( lastKnownModalOpen ) {
+					syncShellBlockSizeToOpenDialog()
+				}
+			} )
+			dialogResizeObserver.observe( dialogElement )
+		}
+
+		dialogMountRafId = requestAnimationFrame( tryAttachObserver )
+	}
+
+	/**
+	 * Marks the Test Request dialog inert so Scalar’s focus-trap cannot steal
+	 * focus from shell chrome / teleported Codex overlays.
+	 *
+	 * @returns Nothing.
+	 */
+	function pauseScalarClientFocusTrapForShellChrome(): void {
+		const dialogElement = getOpenScalarClientDialog()
+
+		if ( dialogElement ) {
+			dialogElement.inert = true
 		}
 	}
 
 	/**
-	 * Applies or clears the reference-shell scroll lock.
+	 * Clears inert on the Test Request dialog so the focus-trap can resume and
+	 * close / exit controls receive pointer events again.
+	 *
+	 * @returns Nothing.
+	 */
+	function resumeScalarClientFocusTrap(): void {
+		const dialogElement = getOpenScalarClientDialog()
+
+		if ( dialogElement ) {
+			dialogElement.inert = false
+		}
+	}
+
+	/**
+	 * Capture-phase pointerdown: pause the trap for outside-shell chrome;
+	 * resume for any interaction aimed at the Scalar shell (including close).
+	 *
+	 * @param event - Pointer event.
+	 * @returns Nothing.
+	 */
+	function onDocumentPointerDownCapture( event: PointerEvent ): void {
+		if ( !lastKnownModalOpen ) {
+			return
+		}
+
+		const scalarShell = scalarShellElement.value
+		const eventTarget = event.target
+		const dialogElement = getOpenScalarClientDialog()
+
+		/*
+		 * While the dialog is inert, hit-testing skips it (and the close button
+		 * inside it). If the pointer is over the shell, clear inert and — when
+		 * the point lands on the close control — activate it so theme changes
+		 * cannot leave the modal uncloseable.
+		 */
+		if (
+			dialogElement?.inert &&
+			scalarShell &&
+			isPointInsideElement( scalarShell, event.clientX, event.clientY )
+		) {
+			resumeScalarClientFocusTrap()
+
+			const elementUnderPointer = document.elementFromPoint(
+				event.clientX,
+				event.clientY
+			)
+			const exitButton = elementUnderPointer instanceof Element
+				? elementUnderPointer.closest( '.app-exit-button' )
+				: null
+
+			if ( exitButton instanceof HTMLElement ) {
+				exitButton.click()
+				event.preventDefault()
+				event.stopPropagation()
+			}
+
+			return
+		}
+
+		if ( isTargetInsideScalarShell( eventTarget, scalarShell ) ) {
+			resumeScalarClientFocusTrap()
+			return
+		}
+
+		/*
+		 * Outside the Scalar shell (header settings, language, teleported
+		 * `.cdx-popover` / `.cdx-menu`, project controls, etc.). Scalar’s
+		 * useFocusTrap uses allowOutsideClick but still pulls focus back on
+		 * focusin — which dismisses CdxPopover immediately after open.
+		 */
+		pauseScalarClientFocusTrapForShellChrome()
+	}
+
+	/**
+	 * Applies or clears the natural-height modal open class, shell height clamp,
+	 * and optional page scroll restore.
 	 *
 	 * @param isModalOpen - Whether the Test Request modal is open.
+	 * @param options - Close behaviour; `restorePageScroll` defaults to true.
 	 * @returns Nothing.
 	 */
-	function syncBackgroundScrollLock( isModalOpen: boolean ): void {
-		bindShellScrollFreeze()
-
+	function syncClientModalOpenState(
+		isModalOpen: boolean,
+		options: { restorePageScroll?: boolean } = {}
+	): void {
+		const shouldRestorePageScroll = options.restorePageScroll !== false
 		const scalarShell = scalarShellElement.value
+		const bodyScrollElement = getExplorerBodyScrollElement()
 
 		if ( lastKnownModalOpen === isModalOpen ) {
 			if ( isModalOpen && scalarShell ) {
 				scalarShell.classList.add( EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS )
-				onShellScrollFreeze()
+				startDialogResizeObservation()
 			}
 
 			return
 		}
 
 		if ( isModalOpen && scalarShell ) {
-			// Snap to the shell client top so the transform-contained modal chrome
-			// (close control, address bar) is inside the visible box; restore on close.
-			shellScrollTopBeforeModalOpen = scalarShell.scrollTop
-			scalarShell.scrollTop = 0
-			lockedShellScrollTop = 0
+			if ( bodyScrollElement ) {
+				bodyScrollTopBeforeModalOpen = bodyScrollElement.scrollTop
+				scrollShellIntoPageView( scalarShell, bodyScrollElement )
+			}
+
 			lastKnownModalOpen = true
 			scalarShell.classList.add( EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS )
-			onShellScrollFreeze()
+			startDialogResizeObservation()
 			return
 		}
 
 		lastKnownModalOpen = false
+		stopDialogResizeObservation()
+		resumeScalarClientFocusTrap()
+		clearShellBlockSizeClamp()
 
 		if ( scalarShell ) {
 			scalarShell.classList.remove( EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS )
-			scalarShell.scrollTop = shellScrollTopBeforeModalOpen
+		}
+
+		if ( shouldRestorePageScroll && bodyScrollElement ) {
+			bodyScrollElement.scrollTop = bodyScrollTopBeforeModalOpen
 		}
 	}
 
 	/**
-	 * Clears the reference-shell scroll lock and restores pre-modal scroll.
+	 * Clears the open class and shell height clamp.
 	 *
+	 * @param options - Close behaviour; `restorePageScroll` defaults to true.
 	 * @returns Nothing.
 	 */
-	function clearBackgroundScrollLock(): void {
+	function clearClientModalOpenState(
+		options: { restorePageScroll?: boolean } = {}
+	): void {
 		const wasOpen = lastKnownModalOpen
+		const shouldRestorePageScroll = options.restorePageScroll !== false
 		lastKnownModalOpen = false
+		stopDialogResizeObservation()
+		resumeScalarClientFocusTrap()
+		clearShellBlockSizeClamp()
 
 		const scalarShell = scalarShellElement.value
+		const bodyScrollElement = getExplorerBodyScrollElement()
 
 		if ( scalarShell ) {
 			scalarShell.classList.remove( EXPLORER_SCALAR_SHELL_CLIENT_MODAL_OPEN_CLASS )
+		}
 
-			if ( wasOpen ) {
-				scalarShell.scrollTop = shellScrollTopBeforeModalOpen
-			}
+		if ( wasOpen && shouldRestorePageScroll && bodyScrollElement ) {
+			bodyScrollElement.scrollTop = bodyScrollTopBeforeModalOpen
 		}
 	}
 
 	/**
-	 * Prevents wheel / touch scrolling of the reference shell while the modal is open.
+	 * Unsubscribes from a previous event bus, if any.
 	 *
-	 * Modal-internal scroll regions are left alone. Does not touch page body scroll.
-	 *
-	 * @param scrollEvent - Wheel or touchmove event.
 	 * @returns Nothing.
 	 */
-	function onReferenceShellScrollGesture( scrollEvent: Event ): void {
-		if ( !lastKnownModalOpen ) {
+	function unbindEventBus(): void {
+		if ( !boundEventBus ) {
 			return
 		}
 
-		const scalarShell = scalarShellElement.value
-
-		if ( !scalarShell ) {
-			return
-		}
-
-		const eventTarget = scrollEvent.target
-
-		if ( !( eventTarget instanceof Node ) ) {
-			return
-		}
-
-		const isOverScalarShell = scalarShell.contains( eventTarget ) || scalarShell === eventTarget
-
-		if ( !isOverScalarShell ) {
-			return
-		}
-
-		const openModalRoot = scalarShell.querySelector( '.scalar-client[role="dialog"]' )
-
-		if (
-			isEventInsideOpenScalarClientModal(
-				eventTarget,
-				openModalRoot instanceof HTMLElement ? openModalRoot : null
-			)
-		) {
-			return
-		}
-
-		scrollEvent.preventDefault()
+		boundEventBus.off( 'ui:open:client-modal', onModalOpen )
+		boundEventBus.off( 'ui:close:client-modal', onModalClose )
+		boundEventBus = null
 	}
 
 	/**
-	 * Subscribes to Scalar event-bus modal open/close for lock sync.
+	 * Subscribes to Scalar event-bus modal open/close.
 	 *
 	 * @param eventBus - Workspace event bus from ApiReference.
 	 * @returns Nothing.
@@ -214,57 +517,95 @@ export function useScalarClientModalBackgroundScrollLock(
 			return
 		}
 
-		if ( boundEventBus ) {
-			boundEventBus.off( 'ui:open:client-modal', onModalOpen )
-			boundEventBus.off( 'ui:close:client-modal', onModalClose )
-		}
-
+		unbindEventBus()
 		boundEventBus = eventBus
 		eventBus.on( 'ui:open:client-modal', onModalOpen )
 		eventBus.on( 'ui:close:client-modal', onModalClose )
 	}
 
 	/**
-	 * Locks the reference shell when Scalar reports the Test Request modal opened.
+	 * Marks the shell when Scalar reports the Test Request modal opened.
 	 *
 	 * @param _payload - Unused Scalar event payload.
 	 * @returns Nothing.
 	 */
 	function onModalOpen( _payload: unknown ): void {
-		syncBackgroundScrollLock( true )
+		syncClientModalOpenState( true )
 	}
 
 	/**
-	 * Unlocks the reference shell when Scalar reports the Test Request modal closed.
+	 * Clears the shell mark when Scalar reports the Test Request modal closed.
 	 *
 	 * @param _payload - Unused Scalar event payload.
 	 * @returns Nothing.
 	 */
 	function onModalClose( _payload: unknown ): void {
-		syncBackgroundScrollLock( false )
+		syncClientModalOpenState( false )
 	}
 
-	onMounted( () => {
-		bindShellScrollFreeze()
+	if ( typeof document !== 'undefined' ) {
+		document.addEventListener( 'pointerdown', onDocumentPointerDownCapture, true )
+	}
 
-		document.addEventListener( 'wheel', onReferenceShellScrollGesture, { capture: true, passive: false } )
-		document.addEventListener( 'touchmove', onReferenceShellScrollGesture, { capture: true, passive: false } )
+	/*
+	 * Changing appearance updates Scalar `darkMode` in place. Do not clear
+	 * `inert` while the preferences popover is still open (that re-enables the
+	 * focus-trap flicker). Shell pointerdown retargets close while inert; once
+	 * preferences dismiss, clear inert if it was left stuck. Remeasure shell
+	 * height after theme paint in case dialog chrome metrics change.
+	 */
+	watch( resolvedMode, () => {
+		if ( !lastKnownModalOpen ) {
+			return
+		}
+
+		queueMicrotask( () => {
+			const settingsButton = document.querySelector(
+				'.shell-header-utility-actions__settings-button'
+			)
+			const isPreferencesOpen =
+				settingsButton?.getAttribute( 'aria-expanded' ) === 'true'
+
+			if ( !isPreferencesOpen ) {
+				resumeScalarClientFocusTrap()
+			}
+
+			syncShellBlockSizeToOpenDialog()
+		} )
 	} )
 
 	watch( scalarShellElement, () => {
 		const wasOpen = lastKnownModalOpen
-		lastKnownModalOpen = false
-		bindShellScrollFreeze()
+		clearClientModalOpenState( { restorePageScroll: false } )
 
 		if ( wasOpen ) {
-			syncBackgroundScrollLock( true )
+			syncClientModalOpenState( true )
 		}
 	} )
 
+	/*
+	 * Module / instance remounts replace ApiReference. Scalar often destroys the
+	 * Test Request DOM without emitting ui:close — clear clamp so the shell does
+	 * not stay at gutter-only height (~80px).
+	 */
 	watch(
 		scalarInterface,
-		( nextScalarInterface ) => {
-			const eventBus = nextScalarInterface?.eventBus as ScalarWorkspaceEventBus | undefined
+		( nextScalarInterface, previousScalarInterface ) => {
+			if (
+				previousScalarInterface &&
+				previousScalarInterface !== nextScalarInterface
+			) {
+				clearClientModalOpenState( { restorePageScroll: false } )
+				unbindEventBus()
+			}
+
+			if ( !nextScalarInterface ) {
+				clearClientModalOpenState( { restorePageScroll: false } )
+				unbindEventBus()
+				return
+			}
+
+			const eventBus = nextScalarInterface.eventBus as ScalarWorkspaceEventBus | undefined
 
 			if ( eventBus?.on ) {
 				bindEventBus( eventBus )
@@ -274,20 +615,11 @@ export function useScalarClientModalBackgroundScrollLock(
 	)
 
 	onBeforeUnmount( () => {
-		document.removeEventListener( 'wheel', onReferenceShellScrollGesture, true )
-		document.removeEventListener( 'touchmove', onReferenceShellScrollGesture, true )
-
-		if ( boundShellElement ) {
-			boundShellElement.removeEventListener( 'scroll', onShellScrollFreeze )
-			boundShellElement = null
+		if ( typeof document !== 'undefined' ) {
+			document.removeEventListener( 'pointerdown', onDocumentPointerDownCapture, true )
 		}
 
-		if ( boundEventBus ) {
-			boundEventBus.off( 'ui:open:client-modal', onModalOpen )
-			boundEventBus.off( 'ui:close:client-modal', onModalClose )
-			boundEventBus = null
-		}
-
-		clearBackgroundScrollLock()
+		unbindEventBus()
+		clearClientModalOpenState()
 	} )
 }

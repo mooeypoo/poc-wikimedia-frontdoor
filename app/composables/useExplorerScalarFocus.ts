@@ -33,23 +33,45 @@ function isOperationElementPresent( navigationId: string ): boolean {
 }
 
 /**
- * Scrolls an operation section into view inside the Scalar shell scroll container.
+ * Resolves the scrollport that should move when focusing a Scalar operation.
+ *
+ * Natural-height specs scroll with `.frontdoor-shell__body-scroll`.
+ *
+ * @param _scalarShellElement - Explorer Scalar shell element (unused; kept for call-site stability).
+ * @returns Preferable scroll container, or `null` to use `scrollIntoView`.
+ */
+function resolveExplorerOperationScrollContainer(
+	_scalarShellElement: HTMLElement | null
+): HTMLElement | null {
+	if ( typeof document === 'undefined' ) {
+		return null
+	}
+
+	const bodyScrollElement = document.querySelector( '.frontdoor-shell__body-scroll' )
+
+	return bodyScrollElement instanceof HTMLElement ? bodyScrollElement : null
+}
+
+/**
+ * Scrolls an operation section into view in the explorer page (or shell) scrollport.
  *
  * Scalar's lazy loader also calls scrollIntoView on the document; this aligns the
- * explorer shell (`overflow: auto`) when the browser does not scroll that container.
+ * real Front Door scrollport when the browser does not.
  *
  * @param navigationId - Scalar navigation id for the operation.
- * @param scrollContainer - Scrollable Scalar shell element, if available.
+ * @param scalarShellElement - Scalar shell element (used to resolve the scrollport).
  * @returns True when the element was found and scrolled.
  */
 function scrollOperationIntoView(
 	navigationId: string,
-	scrollContainer: HTMLElement | null
+	scalarShellElement: HTMLElement | null
 ): boolean {
 	const matchedElement = document.getElementById( navigationId )
 	if ( !matchedElement ) {
 		return false
 	}
+
+	const scrollContainer = resolveExplorerOperationScrollContainer( scalarShellElement )
 
 	if ( scrollContainer ) {
 		const containerRect = scrollContainer.getBoundingClientRect()

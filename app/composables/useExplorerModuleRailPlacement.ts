@@ -8,15 +8,13 @@ const EXPLORER_END_PANEL_TELEPORT_TARGET = '#explorer-end-panel'
 const EXPLORER_INLINE_RAIL_ANCHOR_TARGET = '#explorer-module-rail-anchor'
 
 /**
- * Resolves where the API Explorer module rail is mounted across Codex desktop breakpoints.
+ * **Legacy** — resolves where the custom API Explorer module rail would mount.
  *
- * At desktop (≥ 1120px) the rail teleports to the grid end column; below that it
- * teleports inline below project controls in the main column.
+ * Unused in product UX while `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` is true
+ * (PR #40; Scalar’s native sidebar). At desktop (≥ 1120px) the rail teleports
+ * to the grid end column; below that it teleports inline below project controls.
  *
- * The inline anchor (`#explorer-module-rail-anchor`) must exist in the DOM before
- * `ExplorerModuleRail` mounts — it is always rendered in community mode while
- * `ExplorerProjectControls` alone waits for bootstrap. See `ARCHITECTURE.md` →
- * End column module rail → Teleport mounting.
+ * See `ARCHITECTURE.md` → Scalar native endpoint sidebar (legacy note).
  *
  * @returns Desktop end-column flag, layout mode, and Teleport target selector.
  */
