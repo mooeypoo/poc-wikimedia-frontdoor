@@ -270,6 +270,8 @@ All planned markdown features are achievable with packages already installed:
 | Code tabs | ✅ Implemented | `CodeTabs.vue` + `CodeTab.vue` with **`CdxTabs` (`framed`)** — see **Framed code tabs** below |
 | Buttons | ✅ Implemented | `AppButton.vue` — `/…` paths always `navigateTo` (path wins over MDC `external` / `external=""`); `http(s):` or `external` on non-path hrefs → new tab; see `ARCHITECTURE.md` → Content components |
 | Next / Previous navigation | ✅ Implemented | `[...slug].vue` frontmatter `prev` / `next` |
+| On-this-page navigation | ✅ Implemented | Docs TOC from rendered `h2` + nested `h3` (≥3 `h2`s); CSS sticky end column ≥1280px (not `useEndPanelNavAlign` — resize flicker); quiet `CdxMenuButton` &lt;1280px; scrollspy progressive + jump suspension; banana `on-this-page-*`; see `ARCHITECTURE.md` / `DESIGN_REQUIREMENTS.md` → On-this-page navigation |
+
 | File inclusion (locale-relative) | ✅ Implemented | `Include.vue` |
 | Shared partials | ✅ Implemented | `Partial.vue` + `config/sharedPartials.ts` (remote-content ADR §11) |
 | Wiki attribution footer | ✅ Implemented | `Attribution.vue` |

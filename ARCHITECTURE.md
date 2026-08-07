@@ -63,6 +63,8 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │       ├── WikimediaLogoMark.vue   # Commons Wikimedia logo (currentColor) for header/footer
 │   │       ├── ShellHeaderUtilityActions.vue  # Search, settings→color-theme popover, language, Log in / username→account
 │   │       ├── ShellSidePanelNav.vue   # Start-column section menu (when sections exist)
+│   │       ├── ShellOnThisPageNav.vue  # End-column on-this-page TOC (≥1280px)
+│   │       ├── ShellOnThisPageMenuButton.vue # Header on-this-page MenuButton (<1280px)
 │   │       └── ShellPrimaryNav.vue     # Header primary nav quiet tabs
 │   ├── composables/            # All shared logic; see Composables section below
 │   ├── plugins/
@@ -204,7 +206,8 @@ All composables live in `app/composables/` and follow the `use` naming conventio
 | `usePageSectionNav()` | Resolves start-column section navigation for the current route; always returns a navigation source (sections may be empty). Honours `sidebar` frontmatter via `useContentPageSidebar` (`false` hides/collapses start column — used for `/account`). **APIs** section (`apis`: catalog + explorer) from `config/explorerSideNav.js`; other content IA from `config/sectionNavigation.js`; fallback `section-nav-site-label` when no config entry. APIs items: `mode` → `pathForExplorerMode()` / `explorerModeFromPath()`; `href` → content routes; `enabled: false` omitted. Layout always mounts `.shell-side-panel`; `ShellSidePanelNav` when sections are non-empty (stays mounted when nav collapsed — `inert` / `aria-hidden`) |
 | `useExplorerMode()` | Reactive explorer mode (`community`, `enterprise-full`, `enterprise-custom`) from the current route via `explorerModeFromPath()` |
 | `useEnterpriseExplorer()` | Spec URL and Scalar overrides for the Scalar-bearing enterprise mode (`enterprise-full`) |
-| `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**) |
+| `useEndPanelNavAlign(alignAnchor, endPanel, scrollClamp?, heightMatch?)` | Aligns end-column page navigation with a main-column anchor; optional fourth argument sets `--frontdoor-end-panel-nav-max-block-size` from a height-match element (explorer: **`.explorer-page__scalar-shell`**). **Not** used for documentation on-this-page TOC (CSS sticky instead) |
+| `useOnThisPageNav(contentRoot, bodyScroll)` | In-page TOC for documentation routes: collects `h2` / nested `h3` from the content root, shows when ≥ `ON_THIS_PAGE_NAV_MIN_H2_COUNT` (`config/onThisPageNav.ts`), scrollspy on the body scrollport (jump suspends until `scrollend`/timeout; near scroll-end → last heading), ≥1280px CSS-sticky end panel vs &lt;1280px header MenuButton |
 | `useExplorerModuleRailPlacement()` | Resolves module rail Teleport target and layout mode: end column (≥ 1120px) vs inline below project controls (< 1120px) |
 | `useExplorerModuleRailInlineEndpointScrollCap(scrollport, endpointList, …)` | On inline layout when the endpoint panel is expanded and endpoint count exceeds `EXPLORER_MODULE_RAIL_INLINE_MAX_VISIBLE_ENDPOINTS` (`config/explorerModuleRail.ts`), measures the first N row block size and sets `--explorer-module-rail-inline-endpoint-scroll-max-block-size` on the scrollport |
 | `useContentLocale()` | Current content locale, falling back per the configured chain |
@@ -344,9 +347,40 @@ Codex **transition** tokens: `--transition-duration-medium` (250ms), `--transiti
 
 ---
 
+## On-this-page navigation
+
+Documentation content pages can show an in-page section TOC (“On this page”) built from rendered `h2` / nested `h3` headings (deeper levels ignored).
+
+**Eligibility.** `isOnThisPageNavRoute()` excludes platform landing (`/`), `/explorer/**`, `/account` (+ locale), and `/oauth/callback`. Remaining content routes are eligible when the page has ≥ **`ON_THIS_PAGE_NAV_MIN_H2_COUNT`** (`3`) `h2` headings (`config/onThisPageNav.ts`).
+
+**Data flow.**
+
+```
+.content (.fd-content-page) → collectOnThisPageHeadings() → h2 tree + nested h3
+       ↓
+useOnThisPageNav(contentRoot, bodyScroll)
+       ↓  ≥ 1280px → ShellOnThisPageNav in end column (.frontdoor-shell__on-this-page-end)
+       ↓  < 1280px → ShellOnThisPageMenuButton in primary-nav row (margin-inline-start: auto; margin-block-end: --spacing-75)
+       ↓
+scrollspy → activeHeadingId → --color-progressive on the in-view link
+jumpToHeading → smooth scroll on .frontdoor-shell__body-scroll + history.replaceState hash
+       (scrollspy suspended until scrollend / timeout so the clicked item stays active;
+        near scroll-end activates the last heading when it cannot reach the activation band)
+```
+
+**Component boundary.** Layout (`default.vue`) owns mount points and banana labels (`on-this-page-label`, `on-this-page-nav-aria`). Components are presentational. Heading labels are **content** strings (`<bdi>` in the end panel; `isolatePickerLabel` in the MenuButton). Do not reuse `content-page-nav-label` (prev/next footer). Logic stays in `useOnThisPageNav` (no fetch/URL construction in the Vue components).
+
+**Layout.** End-column TOC is **CSS sticky** (`position: sticky; inset-block-start: 0`) on `.frontdoor-shell__on-this-page-end` — **not** explorer `frontdoor-end-panel-nav` / `useEndPanelNavAlign`. That composable remeasures flow/sticky offsets on resize and falls back to `--fd-explorer-rail-offset`, which made the TOC jump during viewport resize. Because `.frontdoor-shell__body-columns` uses `align-items: start`, the end panel is stretched only when it hosts the TOC (`:has(.frontdoor-shell__on-this-page-end)` → `align-self: stretch; min-block-size: 100%`); otherwise the sticky containing block is TOC-tall and scrolls away with the row. Typography uses **`--font-size-small`** (compact TOC exception). The shell end column already appears at ≥1120px; the TOC itself only mounts at ≥1280px (`ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`) — below that (`ON_THIS_PAGE_NAV_HEADER_MAX_VIEWPORT_PX` = 1279) the header MenuButton is used and the end column stays empty for non-explorer routes.
+
+**Source:** `config/onThisPageNav.ts`, `app/utils/collectOnThisPageHeadings.ts`, `app/utils/isOnThisPageNavRoute.ts`, `app/composables/useOnThisPageNav.ts`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `app/layouts/default.vue`.
+
+See `DESIGN_REQUIREMENTS.md` → On-this-page navigation.
+
+---
+
 ## End column module rail (API Explorer)
 
-On desktop, the grid **end column** (`#explorer-end-panel` in `app/layouts/default.vue`) hosts the community **module rail** when instance bootstrap succeeds. Enterprise modes hide the rail and leave the end column reserved-empty.
+On desktop, the grid **end column** (`#explorer-end-panel` in `app/layouts/default.vue`) hosts the community **module rail** when instance bootstrap succeeds. Enterprise modes hide the rail and leave the end column reserved-empty. On documentation routes with a qualifying heading tree, the same end column hosts **on-this-page** navigation at ≥1280px (see **On-this-page navigation**).
 
 **Data and selection.**
 
@@ -499,6 +533,8 @@ Media queries in `page-grid.css` and `default.vue` use **px literals** aligned t
 | `ShellHeaderUtilityActions.vue` | Utility row (search, settings→preferences / color theme, language, Log in or username→`/account`; responsive collapse) | `useShellAuthNavigation`, `useShellHeaderUtilityMenu`, `useColorMode`, `useContentSearch`, `config/headerChrome.ts`, `config/colorMode.ts` |
 | `ShellHeaderBrand.vue` | Header brand (32px inlined Wikimedia mark + two-line banana wordmark in Montserrat) + label-only warning **Prototype** `CdxInfoChip` (`--spacing-50` after lockup; Figma 1238:24310); home link is mark+wordmark only; **no focus/active outline** on the link (Codex exception #6) | `useMainNavigationLinks()`, `WikimediaLogoMark`, `CdxInfoChip`, `config/brandTypography.ts` |
 | `ShellSidePanelNav.vue` | Flat section menu in start column (mounted when sections exist) | `usePageSectionNav()` (`to`, `isActive`); `navigateTo` on click when `to` set; optional `omitSectionTitleMatching` in collapsed overlay |
+| `ShellOnThisPageNav.vue` | End-column in-page TOC (`h2` + nested `h3`, `--font-size-small`) | `useOnThisPageNav()`; CSS sticky; progressive scrollspy active |
+| `ShellOnThisPageMenuButton.vue` | Header quiet MenuButton TOC (&lt;1280px) | Same heading tree; Codex `MenuGroupData` for `h3` nesting |
 | `ShellSiteFooter.vue` | Static site footer (main column band) | `config/siteFooter.ts` |
 | `ShellCollapsedNavigation.vue` | Collapsed header nav (hamburger + breadcrumbs) | `useShellNavigationBreadcrumbs()`; emits menu toggle; `aria-expanded` when overlay open |
 | `ShellCollapsedNavMenuOverlay.vue` | Full-screen collapsed nav overlay (section + primary views) | Props + events from `default.vue`; `ShellSidePanelNav`; `useShellCollapsedNavMenu` state |
@@ -1513,6 +1549,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Start column edge + width | `app/layouts/default.vue` (scrollport border), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`) |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css` (scrollport + scroll-end `::after` spacers), `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-end-panel-nav.css` (module rail scrollport), `app/assets/css/main.css` |
+| On-this-page navigation | `config/onThisPageNav.ts`, `app/utils/collectOnThisPageHeadings.ts`, `app/utils/isOnThisPageNavRoute.ts`, `app/composables/useOnThisPageNav.ts`, `app/components/shared/ShellOnThisPageNav.vue`, `app/components/shared/ShellOnThisPageMenuButton.vue`, `app/layouts/default.vue` (`.frontdoor-shell__on-this-page-end` CSS sticky; `.frontdoor-shell__on-this-page-menu`), `tests/onThisPageNav.test.mjs`, `i18n/*` (`on-this-page-label`, `on-this-page-nav-aria`) |
 | Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
 | Section menu component | `app/components/shared/ShellSidePanelNav.vue` |
 | Explorer side nav routing | `app/composables/usePageSectionNav.ts`, `app/utils/explorerRoute.ts`, `config/explorerSideNav.js` |
@@ -1534,6 +1571,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Route → nav id | `app/utils/contentRoute.ts`, `app/utils/explorerRoute.ts` |
 | Interface strings (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
 | Interface strings (collapsed nav overlay) | `i18n/*` (`shell-collapsed-nav-menu-*`, `shell-collapsed-nav-label`) |
+| Interface strings (on-this-page TOC) | `i18n/*` (`on-this-page-label`, `on-this-page-nav-aria`) — not `content-page-nav-label` |
 | Interface strings (account / header auth) | `i18n/*` (`account-*` incl. `account-logged-out-*`, `header-account-label`, `header-auth-link-aria`, `header-login-label`, `header-logout-label`) |
 | Interface strings (color theme preferences) | `i18n/*` (`color-mode-group-label`, `color-mode-light-label`, `color-mode-dark-label`, `color-mode-auto-label`, `header-settings-label`) |
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SUPPORTED_LANGUAGES } from '../../config/languages'
 import { useDirection } from '../composables/useDirection'
+import { useOnThisPageNav } from '../composables/useOnThisPageNav'
 import { usePageSectionNav } from '../composables/usePageSectionNav'
 import { usePrimaryNavigationTab } from '../composables/usePrimaryNavigationTab'
 import { useShellNavigationBreadcrumbs } from '../composables/useShellNavigationBreadcrumbs'
@@ -17,6 +18,8 @@ import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInter
  * plus the two-panel page grid below. The shell locks to the viewport; the start
  * column and main content band each scroll independently when content overflows.
  * The start column panel is always mounted (empty when a route has no section links).
+ * Documentation on-this-page TOC mounts in the end column (≥1280px, CSS sticky) or
+ * as a header MenuButton below that width — see `ARCHITECTURE.md` → On-this-page navigation.
  *
  * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
  */
@@ -114,11 +117,32 @@ const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-coll
 
 const primaryNavRowRef = useTemplateRef<HTMLElement>( 'primaryNavRowRef' )
 const expandedNavContentRef = useTemplateRef<HTMLElement>( 'expandedNavContentRef' )
+const bodyScrollRef = useTemplateRef<HTMLElement>( 'bodyScrollRef' )
+const pageSlotRef = useTemplateRef<HTMLElement>( 'pageSlotRef' )
+const contentRootElement = computed( () => {
+	return pageSlotRef.value?.querySelector<HTMLElement>( '.fd-content-page' ) ?? pageSlotRef.value
+} )
 
 const { isNavigationCollapsed, isNavDrawerExpanding } = useShellNavigationCollapse(
 	primaryNavRowRef,
 	expandedNavContentRef
 )
+
+const {
+	isOnThisPageNavVisible,
+	isEndPanelLayout: isOnThisPageEndPanelLayout,
+	isHeaderMenuLayout: isOnThisPageHeaderMenuLayout,
+	onThisPageSections,
+	activeHeadingId: onThisPageActiveHeadingId,
+	jumpToHeading: jumpToOnThisPageHeading
+} = useOnThisPageNav( contentRootElement, bodyScrollRef )
+
+const showOnThisPageEndPanel = computed( () => {
+	return isOnThisPageNavVisible.value && isOnThisPageEndPanelLayout.value && !isExplorerRoute.value
+} )
+
+const onThisPageHeadingLabel = computed( () => $bananaI18n( 'on-this-page-label' ) )
+const onThisPageNavAriaLabel = computed( () => $bananaI18n( 'on-this-page-nav-aria' ) )
 
 const hasSectionNavigation = computed( () => pageSectionNavigationSections.value.length > 0 )
 
@@ -260,6 +284,13 @@ useHead( {
 								:is-menu-open="isCollapsedNavMenuOpen"
 								@menu-toggle="toggleCollapsedNavMenu"
 							/>
+							<SharedShellOnThisPageMenuButton
+								v-if="isOnThisPageHeaderMenuLayout"
+								class="frontdoor-shell__on-this-page-menu"
+								:label="onThisPageHeadingLabel"
+								:sections="onThisPageSections"
+								@heading-select="jumpToOnThisPageHeading"
+							/>
 						</div>
 					</div>
 				</div>
@@ -297,12 +328,16 @@ useHead( {
 				</div>
 			</template>
 
-			<div class="frontdoor-shell__body-scroll">
+			<div
+				ref="bodyScrollRef"
+				class="frontdoor-shell__body-scroll"
+			>
 				<div class="frontdoor-shell__body-columns">
 					<div class="frontdoor-shell__content">
 						<main class="frontdoor-shell__main">
 							<div
 								:key="route.path"
+								ref="pageSlotRef"
 								class="frontdoor-shell__page-slot"
 							>
 								<slot />
@@ -312,13 +347,27 @@ useHead( {
 					</div>
 					<div
 						class="frontdoor-shell__side-panel frontdoor-shell__side-panel--end"
-						:class="{ 'frontdoor-shell__side-panel--active': isExplorerRoute }"
+						:class="{
+							'frontdoor-shell__side-panel--active': isExplorerRoute || showOnThisPageEndPanel
+						}"
 					>
 						<div
 							v-if="isExplorerRoute"
 							id="explorer-end-panel"
 							class="frontdoor-shell__explorer-end"
 						/>
+						<div
+							v-else-if="showOnThisPageEndPanel"
+							class="frontdoor-shell__on-this-page-end"
+						>
+							<SharedShellOnThisPageNav
+								:aria-label="onThisPageNavAriaLabel"
+								:heading-label="onThisPageHeadingLabel"
+								:sections="onThisPageSections"
+								:active-heading-id="onThisPageActiveHeadingId"
+								@heading-select="jumpToOnThisPageHeading"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -632,7 +681,34 @@ useHead( {
 	display: flex;
 	align-items: flex-end;
 	flex-wrap: nowrap;
+	gap: var( --spacing-100 );
 	min-inline-size: 0;
+}
+
+/*
+ * Opposite the primary tabs / collapsed breadcrumb (Figma Off-wiki 50:2563).
+ * Block-end spacing matches quiet-tab label padding so the trigger aligns with tabs.
+ */
+.frontdoor-shell__on-this-page-menu {
+	margin-inline-start: auto;
+	margin-block-end: var( --spacing-75 );
+}
+
+/*
+ * Docs TOC sticky — CSS-only (no useEndPanelNavAlign). Explorer rail alignment
+ * remeasures on resize/scroll and falls back to --fd-explorer-rail-offset, which
+ * caused the on-this-page menu to jump during viewport resize.
+ */
+.frontdoor-shell__on-this-page-end {
+	position: sticky;
+	inset-block-start: 0;
+	align-self: start;
+	inline-size: 100%;
+	max-inline-size: 100%;
+	max-block-size: var( --fd-layout-shell-body-block-size-estimate );
+	overflow-block: auto;
+	overscroll-behavior: contain;
+	box-sizing: border-box;
 }
 
 .frontdoor-shell__primary-nav-expanded {
@@ -744,6 +820,16 @@ useHead( {
 	.frontdoor-shell__side-panel--end:not( .frontdoor-shell__side-panel--active ) {
 		/* Reserved end column — empty area still participates in body scroll hit target. */
 		background-color: var( --background-color-base );
+		min-block-size: 100%;
+	}
+
+	/*
+	 * On-this-page sticky needs a full-height end column. body-columns uses
+	 * align-items: start, so without stretch the end panel is only TOC-tall and
+	 * scrolls away with the row (sticky never engages).
+	 */
+	.frontdoor-shell__side-panel--end:has( .frontdoor-shell__on-this-page-end ) {
+		align-self: stretch;
 		min-block-size: 100%;
 	}
 

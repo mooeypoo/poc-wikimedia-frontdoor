@@ -84,6 +84,25 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 **Source:** `app/components/shared/ShellHeaderBrand.vue`, `config/brandTypography.ts`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`, `brand-prototype-chip-label`, `brand-prototype-chip-tooltip`).
 
+### On-this-page navigation
+
+**Decision:** Documentation pages with **≥ 3 `h2`** headings show an in-page TOC (“On this page”) listing each `h2` and nested `h3` (deepest level). Exclude platform landing, explorer, account, and OAuth callback.
+
+| Viewport | Placement |
+|----------|-----------|
+| **≥ 1280px** | End-column quiet list (`ShellOnThisPageNav` in `.frontdoor-shell__on-this-page-end`; Figma [EndNavPanel 354:32476](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-32476)). **CSS sticky** at the end-column top (`inset-block-start: 0`) — not explorer `useEndPanelNavAlign` (resize remeasure caused flicker). End column stretched via `:has(.frontdoor-shell__on-this-page-end)` so sticky has a full-height containing block. |
+| **&lt; 1280px** | Quiet neutral **`CdxMenuButton`** in the primary-nav row, **`margin-inline-start: auto`** + **`margin-block-end: var(--spacing-75)` (12px)** so the trigger aligns with quiet-tab label padding (Figma [Off-wiki 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)). When primary nav is collapsed, the MenuButton stays on the **end** of that row. |
+
+**Scrollspy:** The heading currently in view uses **`--color-progressive`** (Codex progressive / `#36c` in light theme). Hover matches progressive. Resting links use **`--color-subtle`**. Programmatic TOC jumps suspend scrollspy until `scrollend` (with timeout fallback) so the clicked item stays active; near scroll-end activates the last heading when it cannot reach the activation band.
+
+**Typography exception:** TOC heading and links use **`--font-size-small`** (compact end-column list).
+
+**Copy:** Banana keys `on-this-page-label` / `on-this-page-nav-aria` — not `content-page-nav-label` (prev/next). Heading titles are content (`<bdi>` / `isolatePickerLabel`).
+
+**Config:** `config/onThisPageNav.ts` (`ON_THIS_PAGE_NAV_MIN_H2_COUNT`, `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`).
+
+**Source:** `useOnThisPageNav`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `app/layouts/default.vue`. See `ARCHITECTURE.md` → On-this-page navigation.
+
 ### Start column section navigation
 
 **Decision:** Every page mounts the **start column panel** (`.shell-side-panel.shell-side-panel--start` on the wrapper in `default.vue`). When section config defines links, the column shows a **flat** vertical section menu (no logo in the start column — brand lives in the header). When sections are **empty** (e.g. **Tools and bots**) or the route has no dedicated config, the panel still renders — only the `<nav>` is omitted.
@@ -154,9 +173,9 @@ On **desktop** and **desktop wide**, the implemented shell uses a **fixed start 
 |------|-------|------|
 | **Start** | **281px fixed** (Figma 241px + 40px grid column) | Section navigation only (`ShellSidePanelNav`) when the route has sections |
 | **Main** | **4fr** (≈16/20 of remainder) | Header utilities, primary nav, page content |
-| **End** | **1fr** (≈4/20 of remainder) | Reserved on all pages; on `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`) |
+| **End** | **1fr** (≈4/20 of remainder) | On `/explorer`, API Explorer **module rail** (teleported to `#explorer-end-panel`); on documentation pages with ≥3 `h2`s, **On this page** TOC at ≥1280px (`ShellOnThisPageNav`); otherwise reserved-empty |
 
-On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes keep the end column as empty reserved space for future page-level navigation.
+On **desktop** and **desktop wide**, both side columns are **always present** in the grid. Non-explorer routes without a qualifying on-this-page TOC keep the end column as empty reserved space.
 
 **Column gutters:** Uniform **`--fd-layout-grid-gutter`** (`--spacing-150`, **24px** at tablet and desktop) between all grid columns, including between the start panel and main column.
 
@@ -197,6 +216,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 | Explorer side nav mode links | **Implemented** | `usePageSectionNav` + `ShellSidePanelNav` + `explorerRoute.ts`; Overview items still placeholders |
+| On-this-page TOC (≥3 `h2`, `h3` nest) | **Implemented** | `useOnThisPageNav` — CSS-sticky end column ≥1280px (`--font-size-small`); quiet MenuButton &lt;1280px (`--spacing-75` block-end); scrollspy `--color-progressive`; not `useEndPanelNavAlign` |
 
 **Responsive behaviour summary:**
 
@@ -667,7 +687,7 @@ On **inline** layout when the endpoint panel is expanded: **seven or fewer** end
 
 **Decision (narrow):** Rail teleports below project controls in the main column (`useExplorerModuleRailPlacement`, anchor `#explorer-module-rail-anchor`). The anchor is **always mounted** in community mode; only project controls wait for bootstrap so Teleport can resolve the target on first paint at tablet widths. **No** gap from `.explorer-page__project-controls-stack` between controls and the rail. Collapsible panel — medium-bold module title + expand/collapse control. When expanded: block size follows content for **≤ 7** endpoints; **> 7** endpoints use internal scroll on **`.explorer-module-rail__endpoint-scrollport`** capped to seven visible rows (`useExplorerModuleRailInlineEndpointScrollCap`). Figma [477:4968](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=477-4968).
 
-**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Future** section page menus in the end column should use the same class and composable pattern.
+**Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Documentation on-this-page TOC** does **not** use this class/composable — it uses CSS sticky on `.frontdoor-shell__on-this-page-end` (resize remeasure + `--fd-explorer-rail-offset` fallback caused flicker; see **On-this-page navigation**).
 
 **Surface:** **`--fd-explorer-controls-surface-background-color`** (`var(--background-color-neutral-subtle)`) and **`--fd-explorer-controls-surface-border-radius`** (4px); internal endpoint scroll when content exceeds the layout cap (Scalar shell height on wide viewports; seven-row cap on inline when expanded).
 
@@ -972,5 +992,6 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Explorer side nav (mode links) | `usePageSectionNav.ts`, `ShellSidePanelNav.vue`, `config/explorerSideNav.js`, `app/utils/explorerRoute.ts` |
 | Explorer side nav (legacy component) | `app/components/explorer/ExplorerSideNav.vue` — superseded; not mounted |
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
-| End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` |
+| End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` (explorer module rail only) |
+| On-this-page TOC | `useOnThisPageNav.ts`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `config/onThisPageNav.ts`, `default.vue` (`.frontdoor-shell__on-this-page-end` CSS sticky) |
 | Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark, link tokens, introduction `pre` width caps) |

@@ -1,8 +1,9 @@
 /**
  * shell-end-panel-nav.css — end-column page navigation (2-panel desktop layout).
  *
- * Used by the API Explorer module rail and future section page menus in the grid end column.
+ * Used by the API Explorer module rail in the grid end column.
  * Vertical alignment with main-column anchors is driven by useEndPanelNavAlign (CSS variables).
+ * Documentation on-this-page TOC uses CSS sticky on `.frontdoor-shell__on-this-page-end` instead.
  */
 
 .frontdoor-end-panel-nav {
