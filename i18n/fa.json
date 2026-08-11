@@ -212,6 +212,8 @@
   "nav-remote-md": "Remote MD",
   "nav-use-content-and-data": "Use content and data",
   "nav-wiki-translate": "Imported wiki page",
+  "on-this-page-label": "در این صفحه",
+  "on-this-page-nav-aria": "در این صفحه",
   "oauth-callback-completing-label": "در حال تکمیل ورود…",
   "oauth-callback-error-label": "ورود ناموفق بود. لطفاً دوباره تلاش کنید.",
   "search-all-languages-cta": "جستجو در همه زبان‌ها",

@@ -47,13 +47,34 @@ touch them.
 
 # My page title
 
-Body content in Markdown. MDC components (`::callout`, `::highlight`, `::partial`, `::navigation-card`, …) work here —
+Body content in Markdown. MDC components (`::callout`, `::highlight`, `:::link-row`, `::partial`, `::navigation-card`, …) work here —
 see the import guide and `ARCHITECTURE.md` → MDC content components for the full list.
 ```
 
 - The file name (minus `.md`) is the URL slug. `content/en/guides.md` → `/guides`.
 - Nested folders work: `content/en/guides/reuse.md` → `/guides/reuse`.
 - The first `# ` heading is the page title.
+- Heading rhythm is CSS (not Markdown): content-page `##` sections get **40px** above (`--spacing-250`); `###` subsections get **32px** above site-wide (`--spacing-200`). See `DESIGN_REQUIREMENTS.md` → Content page typography.
+- For **link-only** destination lists under a heading (no card title/description), use `:::link-row` — not supporting-text-only navigation cards. See **Link row** below.
+
+### Code blocks (fenced samples)
+
+Wrap **every** fenced sample in **`:::code-block`** so it matches the platform-home / docs panel (muted border, exploratory **4px** radius, soft-wrap). Inline `` `code` `` is unchanged.
+
+````md
+:::code-block
+```bash
+curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
+```
+:::
+````
+
+- Language must be in `nuxt.config.ts` highlight `langs` (`bash` / `sh` / `shell` for curl and URL templates — not `text`; Shiki has no `text` export).
+- Soft-wrap is default; use `:::code-block{no-soft-wrap}` for horizontal scroll.
+- Multi-language samples: `::::code-tabs` + `:::code-tab{label="…"}` (already framed panels).
+- **Remote / wiki imports:** auto-wrapping imported fences is an open question — see `ARCHITECTURE.md` and `docs/adr-remote-content-fetching.md` §11.8. Do not assume the converter wraps them yet.
+
+Examples: `content/en/index.md`, `content/en/apis/authentication.md`, `content/en/get-started/quick-start.md`, `content/en/use-content-and-data.md`.
 
 ### Highlight (progressive CTA / featured blurb)
 
@@ -94,14 +115,14 @@ Discover our curated selection of production-ready APIs…
 
 ### Navigation cards (destination tiles)
 
-**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component.
+**Agents:** Follow **`AGENTS.md` → Navigation card authoring playbook** when a prompt asks for internal vs external navigation cards or to convert `###` / “Learn more” blocks into cards. Both styles use the same `NavigationCard` component. When a section only needs plain destination links (no card title/description), use **`:::link-row`** instead — see below.
 
 | Style | Destination | MDC shape | Copy from |
 |-------|-------------|-----------|-----------|
 | **Internal** | `/get-started/…`, `/explorer`, … | `url` + `title` + `description` only (**no** `supporting-text`) | `content/en/get-started.md`, `build-for-communities.md` |
 | **External** | `https://…` off-platform | Same + **`supporting-text`** = writer’s link label (external icon on that link) | `about-wikimedia.md`; external cards on `open-data.md` / `tools-and-bots.md` |
 
-Use **`:::navigation-card-grid`** for equal-height rows with **`--spacing-100` (16px)** above and below the grid (optional **`columns="2"`** for two-up rows, e.g. platform-home Join). Whole-card click via stretched link. For **internal** paths omit supporting-text (no in-card “Learn more”) unless the design deliberately shows a destination label (**approved exception:** platform-home persona / join cards keep writer supporting-text — see `AGENTS.md` → Internal navigation cards). When converting existing external “Read more on …” / “Visit …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404**. **Do not** convert `wikimedia-enterprise.md` body sections to cards — that page stays prose under a `::highlight` intro CTA. Brand title marks use allowlisted **`title-logo="gerrit|github|gitlab|wikimediaEnterprise"`** (see `AGENTS.md` playbook) — not free-form SVG in Markdown. Platform home structure (`content/en/index.md`) uses `:::landing-hero` / landing bands / `:::landing-api-demo` — see `ARCHITECTURE.md` → Platform landing / home. Nested MDC containers need **more colons on the outer wrapper** (e.g. `:::::landing-band` → `::::landing-api-demo` → `:::code-block`); same-level `:::` openers close the previous block and can leave orphan `:::` text in the page. Single code samples use **`:::code-block`** (same bordered chrome as `::::code-tabs`, without tabs; use a highlight allowlisted language such as `bash` for curl). Community app cards may use `media`, `hide-external-icon`, and `chips="award:…"` — they follow the Codex **Portrait card** design (12px / `--spacing-75` around the image; not shipped in Codex yet — [T310632](https://phabricator.wikimedia.org/T310632)). On the platform home, links do **not** show a visited colour (product decision).
+Use **`:::navigation-card-grid`** for equal-height rows with **`--spacing-100` (16px)** above and below the grid (optional **`columns="2"`** for two-up rows, e.g. platform-home Join). Whole-card click via stretched link. For **internal** paths omit supporting-text (no in-card “Learn more”) unless the design deliberately shows a destination label (**approved exception:** platform-home persona / join cards keep writer supporting-text — see `AGENTS.md` → Internal navigation cards). When converting existing external “Read more on …” / “Visit …” links, **keep the technical writer’s label text**. Ensure the target Markdown file exists under `content/<locale>/` for internal destinations — a missing file yields a **404**. **Do not** convert `wikimedia-enterprise.md` body sections to cards — that page stays prose under a `::highlight` intro CTA. Brand title marks use allowlisted **`title-logo="gerrit|github|gitlab|wikimediaEnterprise"`** (see `AGENTS.md` playbook) — not free-form SVG in Markdown. Platform home structure (`content/en/index.md`) uses `:::landing-hero` / landing bands / `:::landing-api-demo` — see `ARCHITECTURE.md` → Platform landing / home. Nested MDC containers need **more colons on the outer wrapper** (e.g. `:::::landing-band` → `::::landing-api-demo` → `:::code-block`); same-level `:::` openers close the previous block and can leave orphan `:::` text in the page. **Every** fenced code sample on hand-authored pages uses **`:::code-block`** (same bordered chrome as `::::code-tabs`, without tabs; soft-wrap by default; `:::code-block{no-soft-wrap}` for horizontal scroll; use a highlight allowlisted language such as `bash` / `sh` / `shell` for curl and URL templates (not `text`)). Do not leave bare fences; leave inline `` `code` `` as normal Markdown. Community app cards may use `media`, `hide-external-icon`, and `chips="award:…"` — they follow the Codex **Portrait card** design (12px / `--spacing-75` around the image; not shipped in Codex yet — [T310632](https://phabricator.wikimedia.org/T310632)). On the platform home, links do **not** show a visited colour (product decision).
 
 **API / product titles on cards:** Use **current** ecosystem names (e.g. **Lift Wing API**, **MediaWiki REST API**). Do not replace them with generic umbrellas (e.g. “Machine Learning API”) until product decides modules are surfaced and accessibility-oriented renames ship.
 
@@ -125,6 +146,29 @@ Wikibase powers [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page).
 ::
 :::
 ```
+
+### Link row (link-only destinations)
+
+Do **not** use supporting-text-only navigation cards for a list of links under a heading. Use **`:::link-row`**:
+
+- Keep the section heading + description as normal Markdown (`##` or `###` as appropriate).
+- Put **each** destination link in its own paragraph inside the row (**24px** / `--spacing-150` between links; wraps with `--spacing-50` row gap).
+- Keep the technical writer’s link labels.
+- Links use normal Markdown → `ProseA` (external icon for off-platform URLs).
+
+Examples: `content/en/contribute/by-language.md` (`###` project + link row), `content/en/get-help.md`, MediaWiki section of `content/en/contribute/by-topic.md` (`## MediaWiki` + link row; **topic overview cards** on that page stay as `:::navigation-card-grid`).
+
+```md
+:::link-row
+[Get the source code](https://github.com/scribe-org)
+
+[Contribute (Android)](https://github.com/scribe-org/Scribe-Android/blob/main/CONTRIBUTING.md)
+
+[Contribute (iOS)](https://github.com/scribe-org/Scribe-iOS/blob/main/CONTRIBUTING.md)
+:::
+```
+
+See `ARCHITECTURE.md` → Link row and `AGENTS.md` → Navigation card authoring playbook → Link-only rows.
 
 **2. (Optional) add previous / next links.** On content pages, a footer nav renders
 when you set `prev` / `next` in frontmatter:

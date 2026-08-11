@@ -24,7 +24,7 @@ No new dependencies are required.
 | Header anchors | Custom component | `ProseH2.vue`…`ProseH6.vue` override default prose headings; plain text + hover `CdxIcon` link |
 | External link icons | Custom component | `ProseA.vue` overrides default prose anchor; appends `CdxIcon` for `https?://` links |
 | Callouts | Custom component | `Callout.vue` wraps `CdxMessage`; `type` prop + optional `#title` named slot (bold first paragraph via CSS) |
-| Code block | Custom component | `CodeBlock.vue` — bordered single sample (`:::code-block`); same panel chrome as code tabs without tabs |
+| Code block | Custom component | `CodeBlock.vue` — bordered single sample (`:::code-block`); soft-wrap by default; `no-soft-wrap` for horizontal scroll; same panel chrome as code tabs without tabs |
 | Code tabs | Custom components | `CodeTabs.vue` + `CodeTab.vue` wrap **`CdxTabs` (`framed`)** + `CdxTab`; module border `--border-color-muted`; code `pre` padding `--spacing-75` |
 | File inclusion | Custom component | `Include.vue` resolves relative paths against current locale + route, queries content collection |
 | Expandable sections | Built-in | Native `<details>` / `<summary>`; no configuration needed |
@@ -90,12 +90,22 @@ upgrading. Responses from the old endpoint will return `410 Gone` after the depr
 
 ## Code block
 
-**Custom component** — `CodeBlock.vue` is a single bordered code panel with the same chrome as framed code tabs (muted border, exploratory **4px** radius, `--spacing-75` padding on `pre`) but **without** a tab header. Wrap any normal fence. Also used on the platform home API band.
+**Custom component** — `CodeBlock.vue` is a single bordered code panel with the same chrome as framed code tabs (muted border, exploratory **4px** radius, `--spacing-75` padding on `pre`) but **without** a tab header. Wrap every fenced sample in `:::code-block` (inline `` `code` `` stays unchanged). Soft-wrap is the default; pass `no-soft-wrap` for horizontal scroll. Also used on the platform home API band.
 
 :::code-block
 ```bash
 curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" \
   -H "accept: application/json"
+```
+:::
+
+### Horizontal scroll opt-out
+
+Same panel chrome with `:::code-block{no-soft-wrap}` — long lines scroll instead of wrapping:
+
+:::code-block{no-soft-wrap}
+```bash
+curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/2026/07/09" -H "accept: application/json"
 ```
 :::
 
@@ -204,8 +214,10 @@ Click navigates with `navigateTo` for internal paths, or opens external URLs in 
 ## Syntax Highlighting
 
 **Built-in** — Shiki is bundled with `@nuxt/content`; fenced code blocks with a language tag are
-highlighted automatically with no extra configuration.
+highlighted automatically with no extra configuration. Authored samples still wrap the fence in
+`:::code-block` so the bordered panel chrome matches the rest of the platform.
 
+:::code-block
 ```javascript
 async function paginatedFetch( endpoint, params = {} ) {
 	const url = new URL( endpoint );
@@ -226,7 +238,9 @@ async function paginatedFetch( endpoint, params = {} ) {
 	return results;
 }
 ```
+:::
 
+:::code-block
 ```python
 from typing import Iterator
 import requests
@@ -242,14 +256,18 @@ def paginated_fetch(endpoint: str, **params) -> Iterator[dict]:
         url = data.get("next")
         params = {}
 ```
+:::
 
+:::code-block
 ```bash
 curl -s \
   -H "Authorization: Bearer $TOKEN" \
   -H "User-Agent: MyApp/1.0 (me@example.org)" \
   "https://api.wikimedia.org/core/v1/wikipedia/en/page/Earth/bare"
 ```
+:::
 
+:::code-block
 ```json
 {
   "id": 9228,
@@ -262,6 +280,7 @@ curl -s \
   "content_model": "wikitext"
 }
 ```
+:::
 
 ---
 
@@ -271,6 +290,7 @@ curl -s \
 `<pre>` when `:line-numbers` appears in the code fence meta. CSS counters in `main.css` render the
 numbers. (`@shikijs/transformers` has no built-in equivalent for this.)
 
+:::code-block
 ```javascript :line-numbers
 function buildAuthHeaders( token ) {
 	if ( !token ) {
@@ -283,6 +303,7 @@ function buildAuthHeaders( token ) {
 	};
 }
 ```
+:::
 
 ---
 
@@ -291,6 +312,7 @@ function buildAuthHeaders( token ) {
 **Configured** — `transformerMetaHighlight()` from `@shikijs/transformers` (already a transitive dep)
 added to `nuxt.config.ts`. Lines 3–5 below are highlighted with `{3-5}` in the fence meta.
 
+:::code-block
 ```javascript {3-5}
 async function authenticate( clientId, clientSecret ) {
 	const tokenEndpoint = 'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
@@ -303,6 +325,7 @@ async function authenticate( clientId, clientSecret ) {
 	return response.json();
 }
 ```
+:::
 
 ---
 
@@ -311,6 +334,7 @@ async function authenticate( clientId, clientSecret ) {
 **Configured** — `transformerNotationDiff()` from `@shikijs/transformers` added to `nuxt.config.ts`.
 Lines annotated with `// [!code --]` render red; `// [!code ++]` render green.
 
+:::code-block
 ```javascript
 async function fetchWithRetry( url, retries = 3 ) {
 	const response = await fetch( url ); // [!code --]
@@ -331,6 +355,7 @@ async function fetchWithRetry( url, retries = 3 ) {
 	return response.json();
 }
 ```
+:::
 
 ---
 

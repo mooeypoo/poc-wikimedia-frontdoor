@@ -216,6 +216,8 @@
   "nav-use-content-and-data": "Use content and data",
   "nav-utility-label": "Navigation utilitaire",
   "nav-wiki-translate": "Imported wiki page",
+  "on-this-page-label": "Sur cette page",
+  "on-this-page-nav-aria": "Sur cette page",
   "oauth-callback-completing-label": "Finalisation de la connexion…",
   "oauth-callback-error-label": "Échec de la connexion. Veuillez réessayer.",
   "search-all-languages-cta": "Rechercher dans toutes les langues",

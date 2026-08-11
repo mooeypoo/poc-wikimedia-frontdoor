@@ -10,49 +10,44 @@ Because the Wikimedia technical ecosystem is complex and distributed, you can fi
 
 Find technical information for Wikimedia projects.
 
-:::navigation-card-grid
-::navigation-card{url="https://global-search.toolforge.org/" supporting-text="Search across wikis"}
-::
-::navigation-card{url="https://doc.wikimedia.org/" supporting-text="Browse Wikimedia open source docs"}
-::
+:::link-row
+[Search across wikis](https://global-search.toolforge.org/)
+
+[Browse Wikimedia open source docs](https://doc.wikimedia.org/)
 :::
 
 ## Search codebases
 
 Search all Wikimedia codebases using the code search tool.
 
-:::navigation-card-grid
-::navigation-card{url="https://codesearch.wmcloud.org/search" supporting-text="Visit code search"}
-::
+:::link-row
+[Visit code search](https://codesearch.wmcloud.org/search)
 :::
 
 ## Communication channels
 
 Get in contact with developers and MediaWiki users to get support and share knowledge.
 
-:::navigation-card-grid
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/Communication" supporting-text="Read more on mediawiki.org"}
-::
+:::link-row
+[Read more on mediawiki.org](https://www.mediawiki.org/wiki/Special:MyLanguage/Communication)
 :::
 
 ## Check system status
 
 Verify the overall health and performance of the wiki environment, and find out about major outages.
 
-:::navigation-card-grid
-::navigation-card{url="https://www.wikimediastatus.net/" supporting-text="Visit wikimediastatus.net"}
-::
-::navigation-card{url="https://versions.toolforge.org/" supporting-text="See MediaWiki versions used by Wikimedia wikis"}
-::
+:::link-row
+[Visit wikimediastatus.net](https://www.wikimediastatus.net/)
+
+[See MediaWiki versions used by Wikimedia wikis](https://versions.toolforge.org/)
 :::
 
 ## Bugs and feature requests
 
 Report bugs and request new features in Wikimedia software.
 
-:::navigation-card-grid
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/How_to_report_a_bug" supporting-text="Learn how to report a bug"}
-::
-::navigation-card{url="https://phabricator.wikimedia.org" supporting-text="Visit Wikimedia's task tracker"}
-::
+:::link-row
+[Learn how to report a bug](https://www.mediawiki.org/wiki/Special:MyLanguage/How_to_report_a_bug)
+
+[Visit Wikimedia's task tracker](https://phabricator.wikimedia.org)
 :::

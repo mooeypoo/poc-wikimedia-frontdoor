@@ -226,6 +226,8 @@
   "nav-use-content-and-data": "Use content and data",
   "nav-utility-label": "Utility navigation",
   "nav-wiki-translate": "Imported wiki page",
+  "on-this-page-label": "On this page",
+  "on-this-page-nav-aria": "On this page",
   "oauth-callback-completing-label": "Completing login…",
   "oauth-callback-error-label": "Login failed. Please try logging in again.",
   "search-all-languages-cta": "Search all languages",

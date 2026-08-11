@@ -23,9 +23,10 @@ Find ways to contribute, and connect with others with shared interests.
 
 MediaWiki is the software that powers Wikipedia, its sister projects, and thousands of wikis all over the world.
 
-:::navigation-card-grid
-::navigation-card{url="https://www.mediawiki.org/" supporting-text="Visit mediawiki.org"}
-::
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/How_to_become_a_MediaWiki_hacker" supporting-text="Contribute"}
-::
-::navigation-card{url="https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core" supporting-text="Get the source code"}
+:::link-row
+[Visit mediawiki.org](https://www.mediawiki.org/)
+
+[Contribute](https://www.mediawiki.org/wiki/Special:MyLanguage/How_to_become_a_MediaWiki_hacker)
+
+[Get the source code](https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/core)
+:::

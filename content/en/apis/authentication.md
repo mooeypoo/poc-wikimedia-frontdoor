@@ -30,10 +30,12 @@ To use the authorization code flow, you'll need to choose a redirect URI for you
 
 The first step in the workflow is to exchange user approval for an authorization code. To request authorization, ask your users to click on a link containing the Wikimedia API authentication server URL, your client ID, and response type. This takes the user to a page on meta.wikimedia.org where they can log in with their Wikimedia account and approve the request.
 
+:::code-block
 ```bash
 # URL format for authorization requests
 https://meta.wikimedia.org/w/rest.php/oauth2/authorize?client_id=YOUR_CLIENT_ID&response_type=code
 ```
+:::
 
 ::callout
 For mobile apps, desktop apps, Javascript apps, or other types of apps that publish client secrets in user-accessible code, include a [PKCE code challenge](#using-pkce-in-authorization-requests) in your authorization request.
@@ -45,6 +47,7 @@ If the user approves the request, they are redirected to your app's redirect URI
 
 Now that you have an authorization code, you can use it to get an access token from the authentication server. To request an access token, submit a POST request using your authorization code, client ID, and client secret.
 
+:::code-block
 ```bash
 # Request an access token using an authorization code
 curl -X POST -d 'grant_type=authorization_code' \
@@ -53,6 +56,7 @@ curl -X POST -d 'grant_type=authorization_code' \
 -d 'client_secret=YOUR_CLIENT_SECRET' \
 https://meta.wikimedia.org/w/rest.php/oauth2/access_token
 ```
+:::
 
 The response contains an `access_token` and a `refresh_token`.
 
@@ -60,16 +64,19 @@ The response contains an `access_token` and a `refresh_token`.
 
 To authenticate an API request, include the access token in the Authorization request header using the Bearer authentication scheme.
 
+:::code-block
 ```bash
 # Get the Earth article from English Wikipedia
 curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 https://en.wikipedia.org/w/rest.php/v1/page/Earth/bare
 ```
+:::
 
 ### 5. Refresh token
 
 Access tokens have limited validity and expire after four hours. To get a new access token, submit a POST request using your refresh token, client ID, and client secret. Refresh tokens are valid for 365 days.[^1]
 
+:::code-block
 ```bash
 # Request an access token using a refresh token
 curl -X POST -d 'grant_type=refresh_token' \
@@ -78,6 +85,7 @@ curl -X POST -d 'grant_type=refresh_token' \
 -d 'client_secret=YOUR_CLIENT_SECRET' \
 https://meta.wikimedia.org/w/rest.php/oauth2/access_token
 ```
+:::
 
 ## Personal API tokens
 
@@ -95,11 +103,13 @@ To use the authorization code flow, you must select the "This consumer is for us
 
 To authenticate an API request, include your access token in the Authorization request header using the Bearer authentication scheme.
 
+:::code-block
 ```bash
 # Get the Earth article from English Wikipedia
 curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 https://en.wikipedia.org/w/rest.php/v1/page/Earth/bare
 ```
+:::
 
 ### 3. Implement cookies
 
@@ -117,6 +127,7 @@ To use the client credentials flow, you must select the "Client credentials" opt
 
 To start the authentication process, use your client credentials to request an access token from the authentication server. The Wikimedia API uses meta.wikimedia.org as the authentication server. To request an access token, submit a POST request using your client ID and secret.
 
+:::code-block
 ```bash
 # Request an access token using a client ID and secret
 curl -X POST -d 'grant_type=client_credentials' \
@@ -124,6 +135,7 @@ curl -X POST -d 'grant_type=client_credentials' \
 -d 'client_secret=YOUR_CLIENT_SECRET' \
 https://meta.wikimedia.org/w/rest.php/oauth2/access_token
 ```
+:::
 
 The response contains an `access_token`.
 
@@ -131,11 +143,13 @@ The response contains an `access_token`.
 
 To authenticate an API request, include the access token in the Authorization request header using the Bearer authentication scheme.
 
+:::code-block
 ```bash
 # Get the Earth article from English Wikipedia
 curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 https://en.wikipedia.org/w/rest.php/v1/page/Earth/bare
 ```
+:::
 
 ### 4. Refresh the access token
 
