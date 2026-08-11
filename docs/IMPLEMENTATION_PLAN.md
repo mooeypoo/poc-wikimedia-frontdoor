@@ -256,7 +256,7 @@ Acceptance criteria:
 
 #### G. Scalar integration details
 
-- [ ] Keep `showSidebar: false` in scalar config defaults.
+- [x] Community Explorer uses Scalar native sidebar (`showSidebar: true` via `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` / PR #40); custom module rail is not product UX.
 - [ ] Continue in-place reactive config updates (`Object.assign`) unless Scalar behavior changes.
 - [ ] Add explicit diagnostics events for:
    - [ ] bootstrap start/success/error

@@ -1,7 +1,21 @@
 # ADR: Enterprise API Explorer Integration
 
-**Status:** All phases (A–F) complete; pending browser sign-off on C1/E1/F1–F5 QA checklists. **Superseded in part — see the Update (2026-07-22) note below.**
+**Status:** All phases (A–F) complete; pending browser sign-off on C1/E1/F1–F5 QA checklists. **Superseded in part — see the Update (2026-07-30) and Update (2026-07-22) notes below.**
 **Scope:** API Explorer page — Enterprise mode toggle, configurable Scalar rendering, Enterprise OpenAPI spec integration, plus a custom (non-Scalar) tag-driven Enterprise viewer
+
+---
+
+## Update (2026-07-30): Community Explorer also uses Scalar’s native sidebar
+
+PR [#40](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/40) eliminated
+the custom community **module rail** (`ExplorerModuleRail`) from product UX.
+Community Explorer now enables Scalar’s built-in operation sidebar
+(`EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` → `showSidebar: true`) and collapses the
+shell end column — the same endpoint-menu approach this ADR already chose for
+Enterprise full mode. Sections below that describe a always-on community module
+rail or community `showSidebar: false` are **historical**; see
+`ARCHITECTURE.md` → Scalar native endpoint sidebar and
+`DESIGN_REQUIREMENTS.md` → Scalar native endpoint sidebar.
 
 ---
 
@@ -368,7 +382,7 @@ Additive to Phases A–E; does not change effort for existing modes.
 | Server-parsed spec endpoint (YAML→JSON, tag grouping) | S | `server/api/enterprise-spec-parsed.get.ts`, `server/api/enterprise-spec.get.ts` (export upstream URL) |
 | `useEnterpriseSpecOutline` composable | S | `app/composables/useEnterpriseSpecOutline.ts` |
 | `ExplorerEnterpriseCustom.vue` (tablist sidebar + endpoint panel + Markdown rendering) | M–L | `app/components/explorer/ExplorerEnterpriseCustom.vue` |
-| Page wiring in `[[view]].vue` (mode branch, render swap) | S | `app/pages/explorer/[[view]].vue` |
+| Page wiring in `[...view].vue` (mode branch, render swap) | S | `app/pages/explorer/[...view].vue` |
 | QA: deep-link, hash fragment, RTL, a11y tablist keyboard | S | — |
 
 **Subtotal: ~2.5–3 days**
@@ -474,7 +488,7 @@ OpenAPI 3.0 §4.7.9.2 permits `summary` and `description` at the path-item level
 
 **Hash-based tag deep-linking:**
 
-- The active tag lives in the URL as `#tag=<tag-name>` (URI-encoded).  This is shareable but does not require expanding the optional-dynamic route shape.
+- The active tag lives in the URL as `#tag=<tag-name>` (URI-encoded).  This is shareable but does not require expanding the catch-all route path grammar.
 - On mount, the component reads `route.hash`; if `#tag=<name>` resolves to a known tag, that tag is selected.  Otherwise it falls back to the first tag.
 - Tag selection updates the hash via `router.replace({ hash })` (no extra history entry per click).  Browser back/forward across selections is intentionally not implemented in this phase.
 
@@ -484,7 +498,7 @@ OpenAPI 3.0 §4.7.9.2 permits `summary` and `description` at the path-item level
 - The two-pane structure of the custom viewer is **internal** to the center column — it does not consume the end column.  This keeps the page-level grid identical across the three Enterprise modes.
 - Pane proportions are an internal CSS-grid concern of the component (initial proposal: tag sidebar `minmax(12rem, 14rem)`, endpoint panel `minmax(0, 1fr)`).  Below the explorer's wide breakpoint (`min-width: 960px` — see DESIGN_REQUIREMENTS Reference panel wide rule), the two panes stack with the tag sidebar above.
 
-**Page-level wiring in `[[view]].vue`:**
+**Page-level wiring in `[...view].vue`:**
 
 - Add a third branch: when `explorerMode === 'enterprise-custom'`, the page does NOT instantiate `useEnterpriseExplorer` (which currently only handles full/limited) and does NOT mount `ExplorerScalarReference`.  Instead it mounts `ExplorerEnterpriseCustom` in the reference-panel slot.
 - `useEnterpriseExplorer`'s `Ref<'enterprise-full' | 'enterprise-limited'>` parameter type is unchanged; `enterprise-custom` does not flow through that composable at all.
@@ -533,7 +547,7 @@ Any unknown trailing segment falls through to community — a stale or mistyped 
 
 **Implementation shape:**
 
-- A single Vue Router record serves all three paths via Nuxt's optional-dynamic file-based routing: the page lives at `app/pages/explorer/[[view]].vue` (renamed from `index.vue`).  This maps to `/explorer/:view?` in the router and matches `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-limited` natively — no `definePageMeta({ alias })` needed (which was unreliable in dev mode).  Navigating between paths is a same-route transition: no Scalar full remount, no SSR cycle.
+- A single Vue Router record serves all three paths via Nuxt's file-based routing: the page lives at `app/pages/explorer/[...view].vue` (catch-all; formerly optional-dynamic `[[view]].vue`, itself renamed from `index.vue`).  It matches `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-custom` (and community deep-link tails — see `docs/adr-explorer-deep-linking.md`) — no `definePageMeta({ alias })` needed (which was unreliable in dev mode).  Navigating between paths is a same-route transition: no Scalar full remount, no SSR cycle.
 - The mode is **derived** from `route.path` (single source of truth).  `useExplorerMode()` returns a computed mode that recomputes whenever the route changes.  No setter is exposed — the side-nav uses `NuxtLink` for navigation, so router.push is handled by the framework and the URL stays the source of truth in both directions (visible href, middle-click, right-click → copy link all work).
 - The `explorer-route-navigation.client.ts` plugin's full-reload trigger is scoped to crossing the Explorer boundary.  With `isExplorerRoutePath` updated to match `/explorer` and `/explorer/<segment>`, switching between modes stays client-side; only entering/leaving the Explorer entirely still forces a reload.
 - The page's `definePageMeta({ i18n: false })` is preserved — Enterprise sub-routes are not locale-prefixed (matching the existing Explorer behavior).
@@ -799,7 +813,7 @@ export function useEnterpriseExplorer( mode: Ref<'enterprise-full' | 'enterprise
 
 ---
 
-#### Step B5 — Update Explorer page (`[[view]].vue`) (Engineering, ~3 hours)
+#### Step B5 — Update Explorer page (`[...view].vue`) (Engineering, ~3 hours)
 
 **What:**
 - Derive `explorerMode` from the current route via `useExplorerMode()` (single source of truth — see Step B6.5)
@@ -825,13 +839,13 @@ export function useEnterpriseExplorer( mode: Ref<'enterprise-full' | 'enterprise
 #### Step B6.5 — URL representation for Enterprise modes (Engineering, ~1 hour)
 
 **What:**
-Add sub-route deep-links so each Enterprise mode is directly addressable (see §8.3).  Routes are registered via Nuxt's file-based optional-dynamic routing: the page is named `[[view]].vue`, which maps to `/explorer/:view?` — matching `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-limited` natively.  Side-nav navigation is driven by `NuxtLink` so the URL is the source of truth in both directions (visible `href`, middle-click, copy link).
+Add sub-route deep-links so each Enterprise mode is directly addressable (see §8.3).  Routes are registered via Nuxt's file-based catch-all page `app/pages/explorer/[...view].vue` — matching `/explorer`, `/explorer/enterprise`, and `/explorer/enterprise-custom` (community deep-link grammar in `docs/adr-explorer-deep-linking.md`).  Side-nav navigation is driven by `NuxtLink` so the URL is the source of truth in both directions (visible `href`, middle-click, copy link).
 
 - `app/utils/explorerRoute.ts` — broaden `isExplorerRoutePath` to match `/explorer` and `/explorer/<segment>`; add `explorerModeFromPath( path )` and `pathForExplorerMode( mode )` helpers.  Unknown trailing segments fall through to community.
 - `app/composables/useExplorerMode.ts` — derive `explorerMode` from `route.path` (single source of truth).  No setter is exposed; the side-nav navigates directly.
 - `app/components/explorer/ExplorerSideNav.vue` — items with a `mode` render as `<NuxtLink :to="pathForExplorerMode(mode)">`; items without a mode remain inert placeholders.  Active state is computed from `activeMode === mode` so it updates as soon as the route changes.
 - `app/layouts/default.vue` — drop the `@mode-change` handler (the nav no longer emits).
-- `app/pages/explorer/[[view]].vue` — renamed from `index.vue`; the optional-dynamic filename is the route registration (no `alias` in `definePageMeta` needed).
+- `app/pages/explorer/[...view].vue` — catch-all route registration (no `alias` in `definePageMeta` needed); see `docs/adr-explorer-deep-linking.md`.
 
 **Verify:**
 - [ ] `GET /explorer` lands in community mode (default)
@@ -934,7 +948,7 @@ Independent of Phase D's `enterprise-limited` mode (which stays as path D-a, Sca
 - Add `ENTERPRISE_CUSTOM_SEGMENT = 'enterprise-custom'` to `app/utils/explorerRoute.ts`.
 - Extend `explorerModeFromPath()` to map `/explorer/enterprise-custom` → `'enterprise-custom'` (placed alongside the existing full/limited checks; unknown segments still fall through to community).
 - Extend `pathForExplorerMode()` to return `/explorer/enterprise-custom` for the new mode.
-- No new page file — the existing `app/pages/explorer/[[view]].vue` optional-dynamic route already covers the new sub-route.
+- No new page file — the existing `app/pages/explorer/[...view].vue` catch-all route already covers the new sub-route.
 
 **Verify:**
 - [ ] `pathForExplorerMode( 'enterprise-custom' )` returns `/explorer/enterprise-custom`
@@ -1009,7 +1023,7 @@ Independent of Phase D's `enterprise-limited` mode (which stays as path D-a, Sca
 #### Step F5 — Page wiring + layout polish (Engineering, ~3 hours)
 
 **What:**
-- In `app/pages/explorer/[[view]].vue`:
+- In `app/pages/explorer/[...view].vue`:
   - Add `isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )`.
   - Gate `useEnterpriseExplorer( enterpriseMode )` so it only runs for full/limited (current behaviour for community is already gated; extend the same shape).
   - Replace the `ExplorerScalarReference` slot when `isCustomEnterpriseMode` is true: render `<ExplorerEnterpriseCustom />` in lieu of the Scalar shell.  Reuse the existing `.explorer-page__reference-panel` wrapper (border, sticky behaviour ≥ 960px) so the visual frame matches.
@@ -1073,7 +1087,7 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | Mode enum type (`community` / `enterprise-full` / `enterprise-custom`) | `app/composables/useEnterpriseExplorer.ts` |
 | Mode state | `app/composables/useExplorerMode.ts` (derived from route; no setter — nav uses NuxtLink) |
 | Mode ↔ URL path mapping | `app/utils/explorerRoute.ts` |
-| Sub-route deep-link registration | File-based optional-dynamic route — `app/pages/explorer/[[view]].vue` |
+| Sub-route deep-link registration | File-based catch-all route — `app/pages/explorer/[...view].vue` |
 | Enterprise composable (Scalar-bearing mode) | `app/composables/useEnterpriseExplorer.ts` |
 | Enterprise spec outline composable (custom mode) | `app/composables/useEnterpriseSpecOutline.ts` (Phase F) |
 | Server route (YAML, for Scalar — reads the local asset) | `server/api/enterprise-spec.get.ts` |
@@ -1120,7 +1134,7 @@ Following ARCHITECTURE.md and AGENTS.md conventions:
 | `config/enterpriseExplorer.ts` | New file (Phase B) — `ENTERPRISE_SPEC_URL` (local route path), `ENTERPRISE_FULL_SCALAR_OVERRIDES`.  2026-07-22: `ENTERPRISE_LIMITED_SCALAR_OVERRIDES` removed |
 | `app/components/explorer/ExplorerSideNav.vue` | Phase B: accept `activeMode` prop, filter by `enabled`, render mode-bearing items as `NuxtLink` to their sub-route, compute `isActive` dynamically.  Phase F: no change — new entry uses the existing pattern |
 | `app/components/explorer/ExplorerEnterpriseCustom.vue` | **New file (Phase F)** — tag-driven custom viewer (tablist sidebar + endpoint detail panel with Markdown descriptions) |
-| `app/pages/explorer/[[view]].vue` | Phase B: optional-dynamic route, `explorerMode` derivation, conditional rendering of rail + controls, per-mode Scalar config.  Phase F: add `enterprise-custom` branch that mounts `ExplorerEnterpriseCustom` instead of `ExplorerScalarReference` |
+| `app/pages/explorer/[...view].vue` | Phase B: catch-all route, `explorerMode` derivation, conditional rendering of rail + controls, per-mode Scalar config.  Phase F: add `enterprise-custom` branch that mounts `ExplorerEnterpriseCustom` instead of `ExplorerScalarReference` |
 | `app/composables/useEnterpriseExplorer.ts` | Phase B: returns spec URL + per-mode Scalar overrides.  Phase F: extend `ExplorerMode` union with `'enterprise-custom'`.  2026-07-22: drop `'enterprise-limited'` from the union and the `mode` parameter — only the full overrides remain |
 | `app/composables/useEnterpriseSpecOutline.ts` | **New file (Phase F)** — fetches `/api/enterprise-spec-parsed`, exposes reactive `{tags, operationsByTag, isLoading, hasError, errorMessage}` |
 | `app/composables/useExplorerMode.ts` | Phase B: derives mode from `route.path` (read-only).  Phase F: no change — new mode resolved via `explorerModeFromPath` |

@@ -36,8 +36,8 @@ const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
  */
 const isLandingRoute = computed( () => isLandingRoutePath( route.path ) )
 /**
- * Experiment: on the Explorer route with Scalar's built-in sidebar enabled, the
- * manual endpoints rail is not mounted, so the end column is collapsed and the
+ * Community Explorer (PR #40): Scalar's built-in sidebar is the endpoint menu,
+ * so the custom rail is not mounted, the end column is collapsed, and the
  * reference panel stretches full-width. See config/explorerInternalSidebarExperiment.ts.
  */
 const isExplorerInternalSidebar = computed(
@@ -597,7 +597,7 @@ useHead( {
 	}
 
 	/*
-	 * Experiment: Scalar's built-in sidebar replaces the manual endpoints rail.
+	 * Product (PR #40): Scalar's built-in sidebar replaces the custom module rail.
 	 * Collapse the end column so the reference panel takes the full body width.
 	 * See config/explorerInternalSidebarExperiment.ts.
 	 */

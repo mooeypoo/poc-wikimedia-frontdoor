@@ -18,7 +18,7 @@ import {
  * as `#tag=<name>` so selections are shareable.
  *
  * Routing decisions, the page-level mount, and the surrounding layout grid
- * live in `app/pages/explorer/[[view]].vue`; this component is presentational
+ * live in `app/pages/explorer/[...view].vue`; this component is presentational
  * apart from the small amount of URL-hash plumbing.
  */
 const { $bananaI18n } = useNuxtApp()
