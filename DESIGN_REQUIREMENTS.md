@@ -577,7 +577,7 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 **Copy:**
 - Test server selectable in the address bar (`isTestWikiSelectableInAddressBar` — OpenAPI / address-bar servers include a host other than the production wiki): banana-i18n `explorer-scalar-write-endpoint-warning` — `$1` production wiki display name; `$2` mapped test wiki display name (`Test Wikipedia` / `Test Wikidata` / `Test Wikimedia Commons` via `explorer-scalar-write-test-wiki-name-*`). Both names use `<bdi>` as plain text (no link). Instructs the user to **select** the test server **using the address bar above**. Wikipedia sandbox host is `test.wikimedia.org`.
-- Test server not selectable: banana-i18n `explorer-scalar-write-endpoint-warning-no-test-wiki` — `$1` production wiki display name in `<bdi>`; asks the user to operate with caution.
+- Test server not selectable: banana-i18n `explorer-scalar-write-endpoint-warning-no-test-wiki` — `$1` production wiki display name in `<bdi>`; asks the user to operate with caution. This is the Meta-Wiki case: its REST specs list production only and the fleet has no Test Meta-Wiki, so `config/wikiInstanceTestWikis.ts` maps `metawiki` to **no** test wiki (`WIKI_INSTANCE_IDS_WITHOUT_TEST_WIKI`) rather than falling back to the Wikipedia sandbox.
 - **Hide while on test:** If the address bar’s active server host is not the production wiki (`isActiveAddressBarServerTestWiki`), the warning is not shown. Selecting a production host again restores it.
 
 **Routing:** Front Door does not rewrite write requests to a test host. The user may still send to a test wiki by selecting that server in Scalar’s address bar when the OpenAPI document lists it.
@@ -598,10 +598,10 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 | Control | Pattern |
 |---------|---------|
-| **Project** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**; labels from banana-i18n (`explorer-project-*`) |
-| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons or Wikidata |
+| **Project** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**, **Meta-Wiki**; labels from banana-i18n (`explorer-project-*`) |
+| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons, Wikidata or Meta-Wiki (English-only projects) |
 
-**Resolution:** Project + language map to a single wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()` (BiDi); the page model stores **instance id** only.
+**Resolution:** Project + language map to a single wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`; Meta-Wiki → `metawiki`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()` (BiDi); the page model stores **instance id** only.
 
 **Spacing (Figma-aligned):**
 
@@ -884,6 +884,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
 | *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |

@@ -540,16 +540,18 @@ export const WIKI_INSTANCES = [
   { id: 'fawiki',  baseUrl: 'https://fa.wikipedia.org',      dir: 'rtl', language: 'fa' }, // Wikipedia + Farsi
   { id: 'commonswiki', baseUrl: 'https://commons.wikimedia.org', dir: 'ltr', language: 'en' }, // Wikimedia Commons
   { id: 'wikidata', baseUrl: 'https://www.wikidata.org',      dir: 'ltr', language: 'en' }, // Wikidata
+  { id: 'metawiki', baseUrl: 'https://meta.wikimedia.org',    dir: 'ltr', language: 'en' }, // Meta-Wiki
 ]
 ```
 
-**Picker UI (banana-i18n):** Project — Wikipedia (default), Wikimedia Commons, Wikidata. Language — English (default), Spanish, Hebrew, Farsi; **disabled** when Commons or Wikidata is selected.
+**Picker UI (banana-i18n):** Project — Wikipedia (default), Wikimedia Commons, Wikidata, Meta-Wiki. Language — English (default), Spanish, Hebrew, Farsi; **disabled** when Commons, Wikidata or Meta-Wiki is selected.
 
 This set is chosen deliberately:
 - **enwiki / eswiki**: LTR Wikipedia in two content languages
 - **hewiki / fawiki**: RTL Wikipedia — tests that switching instance `dir` in `config/instances.ts` updates shell direction without breaking BiDi isolation
 - **commonswiki**: Different Wikimedia project (MediaWiki Core REST API on Commons)
 - **wikidata**: Different API surface (Wikibase REST API, not MediaWiki Core) — tests that Scalar handles structurally different specs cleanly
+- **metawiki**: English-only Wikimedia project wiki whose REST specs expose **no sandbox server** — tests the caution write-request warning (`config/wikiInstanceTestWikis.ts` → `WIKI_INSTANCE_IDS_WITHOUT_TEST_WIKI`)
 
 ---
 
@@ -591,10 +593,10 @@ This set is chosen deliberately:
 
 ### Success signals
 
-- All six wiki instances load their spec in Scalar without errors
+- All seven wiki instances load their spec in Scalar without errors
 - Switching project, language, or instance re-renders Scalar cleanly, within ~500ms, no Vue reactivity warnings
 - Switching to `hewiki` or `fawiki` correctly sets `dir="rtl"` on the shell; switching back sets `dir="ltr"`
-- Language combobox is disabled when Wikimedia Commons or Wikidata is selected
+- Language combobox is disabled when Wikimedia Commons, Wikidata or Meta-Wiki is selected
 - Primary **APIs** tab (`nav-api`) stays selected on `/apis` (+ children) and `/explorer` (+ children); start-column section heading on explorer remains **API Explorer**
 - REST API module select defaults to the first healthy module in discovery order (after opt-in filter)
 - Include **Beta APIs and endpoints** is checked by default (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints`); **Internal APIs and endpoints** remains off, so `*-internal` modules (for example Discord Preview API / `discord/v0-internal`) are absent from **API to explore** until that checkbox is checked

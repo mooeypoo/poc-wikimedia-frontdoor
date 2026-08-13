@@ -148,6 +148,7 @@
   "explorer-project-language-fa": "Language option in the API explorer language combobox: Farsi.",
   "explorer-project-language-he": "Language option in the API explorer language combobox: Hebrew.",
   "explorer-project-language-label": "Label for the language combobox in the API explorer project controls fieldset.",
+  "explorer-project-meta": "Project option in the API explorer project combobox: Meta-Wiki (meta.wikimedia.org).",
   "explorer-project-wikidata": "Project option in the API explorer project combobox: Wikidata.",
   "explorer-project-wikipedia": "Project option in the API explorer project combobox: Wikipedia.",
   "explorer-refresh-button": "Button to retry discovery after failure.",

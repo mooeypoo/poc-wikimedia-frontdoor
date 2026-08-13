@@ -100,7 +100,7 @@ Spec URLs are **never hardcoded or constructed from parts**. The flow is always:
 
 `config/instances.js` contains only base URLs, direction, and language metadata. No spec URLs.
 
-**Fleet-wide instance resolution (deep-linking).** `server/api/explorer-bootstrap.get.ts` resolves an instance's `baseUrl` **curated-first** (`config/instances.ts`), then falls back to the **generated fleet registry** (`config/moduleSourceOfTruth.ts`). This lets deep-links (`/explorer/direct/<instance>/…`, and quick links) load any public, open wiki, not just the six curated instances. Curated wins on a match so hand-curated policy (display name, direction) stays authoritative. See `docs/adr-explorer-deep-linking.md`.
+**Fleet-wide instance resolution (deep-linking).** `server/api/explorer-bootstrap.get.ts` resolves an instance's `baseUrl` **curated-first** (`config/instances.ts`), then falls back to the **generated fleet registry** (`config/moduleSourceOfTruth.ts`). This lets deep-links (`/explorer/direct/<instance>/…`, and quick links) load any public, open wiki, not just the seven curated instances. Curated wins on a match so hand-curated policy (display name, direction) stays authoritative. See `docs/adr-explorer-deep-linking.md`.
 
 **Offline, fleet-wide.** The same discovery flow is run offline across the entire public wiki fleet by the standalone `generate-module-source-of-truth` script to produce a committed source of truth under `config/generated/`: the fleet registry, the unique modules and which instances expose each, and each module's full OpenAPI spec. It is reviewed via git diff and independent of the runtime flow above — the explorer still resolves specs live. See `docs/adr-module-source-of-truth.md`.
 

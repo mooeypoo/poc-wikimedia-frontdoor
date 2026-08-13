@@ -1,12 +1,12 @@
 /**
  * Explorer project + language picker — maps UI selections to wiki instance ids.
  *
- * Wikipedia is parameterized by language; Wikimedia Commons and Wikidata are
- * language-independent (language combobox disabled in the shell).
+ * Wikipedia is parameterized by language; Wikimedia Commons, Wikidata and
+ * Meta-Wiki are language-independent (language combobox disabled in the shell).
  */
 
 /** High-level project choices in the explorer project controls. */
-export const EXPLORER_PICKER_PROJECT_IDS = [ 'wikipedia', 'commons', 'wikidata' ] as const
+export const EXPLORER_PICKER_PROJECT_IDS = [ 'wikipedia', 'commons', 'wikidata', 'meta' ] as const
 
 export type ExplorerPickerProjectId = typeof EXPLORER_PICKER_PROJECT_IDS[ number ]
 
@@ -25,7 +25,8 @@ export const DEFAULT_EXPLORER_PICKER_LANGUAGE: ExplorerPickerLanguageCode = 'en'
 export const EXPLORER_PICKER_PROJECT_MESSAGE_KEYS: Record<ExplorerPickerProjectId, string> = {
 	wikipedia: 'explorer-project-wikipedia',
 	commons: 'explorer-project-commons',
-	wikidata: 'explorer-project-wikidata'
+	wikidata: 'explorer-project-wikidata',
+	meta: 'explorer-project-meta'
 }
 
 /** banana-i18n key suffix for each language code (`explorer-project-language-{code}`). */
@@ -47,7 +48,7 @@ const WIKIPEDIA_INSTANCE_ID_BY_LANGUAGE: Record<ExplorerPickerLanguageCode, stri
  * Returns whether the language combobox applies to the selected project.
  *
  * @param projectId - Selected explorer project id.
- * @returns True for Wikipedia; false for Commons and Wikidata.
+ * @returns True for Wikipedia; false for Commons, Wikidata and Meta-Wiki.
  */
 export function isExplorerProjectLanguageApplicable( projectId: ExplorerPickerProjectId ): boolean {
 	return projectId === 'wikipedia'
@@ -57,7 +58,7 @@ export function isExplorerProjectLanguageApplicable( projectId: ExplorerPickerPr
  * Resolves a wiki instance id from project + language picker state.
  *
  * @param projectId - Selected explorer project id.
- * @param languageCode - Selected Wikipedia language code (ignored for Commons / Wikidata).
+ * @param languageCode - Selected Wikipedia language code (ignored for Commons / Wikidata / Meta-Wiki).
  * @returns Wiki instance id consumed by bootstrap and discovery.
  */
 export function resolveExplorerWikiInstanceId(
@@ -72,6 +73,11 @@ export function resolveExplorerWikiInstanceId(
 		// Curated instance id is the fleet dbname `wikidatawiki` (ADR: explorer deep-linking §3);
 		// `projectId` above is the picker's project namespace, which stays `wikidata`.
 		return 'wikidatawiki'
+	}
+
+	if ( projectId === 'meta' ) {
+		// Curated instance id is the fleet dbname `metawiki`; the picker project id is `meta`.
+		return 'metawiki'
 	}
 
 	return WIKIPEDIA_INSTANCE_ID_BY_LANGUAGE[ languageCode ]
@@ -94,6 +100,8 @@ export function parseExplorerWikiInstanceSelection( wikiInstanceId: string ): {
 			return { projectId: 'commons', languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE }
 		case 'wikidatawiki':
 			return { projectId: 'wikidata', languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE }
+		case 'metawiki':
+			return { projectId: 'meta', languageCode: DEFAULT_EXPLORER_PICKER_LANGUAGE }
 		case 'eswiki':
 			return { projectId: 'wikipedia', languageCode: 'es' }
 		case 'hewiki':
@@ -115,7 +123,7 @@ export function parseExplorerWikiInstanceSelection( wikiInstanceId: string ): {
  * instance id (i.e. it round-trips through parse → resolve).
  *
  * Deep-links can load any public wiki in the fleet (ADR: explorer deep-linking §4),
- * but the curated project/language comboboxes only map the six curated instances.
+ * but the curated project/language comboboxes only map the seven curated instances.
  * A non-representable ("transient") instance — e.g. `dewiki`, `frwiktionary` — must
  * be surfaced as an injected transient option rather than silently shown as
  * Wikipedia/English (the `parse` default).

@@ -26,6 +26,16 @@ export const WIKI_INSTANCE_TEST_WIKI_BASE_URLS = {
  */
 export const DEFAULT_WIKIPEDIA_TEST_WIKI_BASE_URL = 'https://test.wikimedia.org'
 
+/**
+ * Curated instances that have no sandbox at all.
+ *
+ * Meta-Wiki's REST specs list only the production server (no `(Sandbox)` entry,
+ * unlike the Wikipedia language wikis) and the fleet has no Test Meta-Wiki, so
+ * write-request warnings use the caution variant rather than naming a test wiki
+ * the user cannot select in the address bar.
+ */
+export const WIKI_INSTANCE_IDS_WITHOUT_TEST_WIKI: readonly string[] = [ 'metawiki' ]
+
 /** banana-i18n keys for test wiki display names used in write-request warning copy. */
 export const TEST_WIKI_DISPLAY_NAME_MESSAGE_KEYS = {
 	commonswiki: 'explorer-scalar-write-test-wiki-name-commons',
@@ -44,6 +54,10 @@ export function getTestWikiBaseUrlForWikiInstance( wikiInstanceId: string ): str
 		return WIKI_INSTANCE_TEST_WIKI_BASE_URLS[
 			wikiInstanceId as keyof typeof WIKI_INSTANCE_TEST_WIKI_BASE_URLS
 		]
+	}
+
+	if ( WIKI_INSTANCE_IDS_WITHOUT_TEST_WIKI.includes( wikiInstanceId ) ) {
+		return null
 	}
 
 	// Remaining curated instances are Wikipedia language wikis → Test Wikipedia.
