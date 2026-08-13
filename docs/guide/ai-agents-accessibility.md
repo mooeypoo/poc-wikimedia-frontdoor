@@ -8,7 +8,7 @@ This document describes how the portal should be structured to be discoverable a
 
 AI agents cannot reliably use single-page applications (SPAs). They cannot execute JavaScript, maintain session state, or infer structure from visual layout. A documentation site built entirely as an SPA is, from an agent's perspective, an opaque shell with no accessible content. This is a growing concern as developer workflows increasingly involve AI assistants that consult API documentation autonomously.
 
-The goal is not to rebuild the documentation site for machines, but to add a lightweight, well-structured discovery layer alongside it that agents can use. Human-facing content and machine-facing content can – and should – coexist and derive from the same underlying data. Much of that underlying data already exists in this codebase as the module source of truth (see [source-of-truth-scripts.md](source-of-truth-scripts.md)). This document points back to it repeatedly, because the discovery layer should be generated from it rather than from a separately maintained dataset.
+The goal is not to rebuild the documentation site for machines, but to add a lightweight, well-structured discovery layer alongside it that agents can use. Human-facing content and machine-facing content can – and should – coexist and derive from the same underlying data. Much of that underlying data already exists in this codebase as the module source of truth (see [generation-and-maintenance-scripts.md](generation-and-maintenance-scripts.md)). This document points back to it repeatedly, because the discovery layer should be generated from it rather than from a separately maintained dataset.
 
 ## How AI agents navigate documentation
 
@@ -181,7 +181,7 @@ The discovery layer is only useful if it is kept current.
 
 ### Single source of truth
 
-The manifest, instance index, sitemap, and references in llms.txt should all derive from one dataset – and in this codebase that dataset already exists. The module source of truth (`config/generated/`, accessed through [moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts)) is generated from Wikimedia's discovery endpoints and already carries the module registry (names, titles, spec URLs, and the instance ids that expose each) and the fleet registry (each instance's domain, language, and direction). See [source-of-truth-scripts.md](source-of-truth-scripts.md) for how it is generated and regenerated.
+The manifest, instance index, sitemap, and references in llms.txt should all derive from one dataset – and in this codebase that dataset already exists. The module source of truth (`config/generated/`, accessed through [moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts)) is generated from Wikimedia's discovery endpoints and already carries the module registry (names, titles, spec URLs, and the instance ids that expose each) and the fleet registry (each instance's domain, language, and direction). See [generation-and-maintenance-scripts.md](generation-and-maintenance-scripts.md) for how it is generated and regenerated.
 
 The discovery layer should be generated *from* this source, not from a separately maintained one, so that adding a module or instance updates the discovery resources automatically and they cannot drift from what the Explorer uses. In a Nuxt-based SSG build this is best implemented as a build-time step that reads the module source of truth and emits the manifest, instance index, and sitemap together as outputs of the same step.
 

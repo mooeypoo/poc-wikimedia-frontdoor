@@ -26,7 +26,7 @@ Start here for the shared values, then read the topic guides as needed:
 - [explorer-deep-linking.md](explorer-deep-linking.md) – how Explorer state is
   encoded in URLs: verbose vs. quick links, hash ownership, instance resolution,
   fleet-wide loading, fallback behavior, and the relationship to endpoint search.
-- [source-of-truth-scripts.md](source-of-truth-scripts.md) – the standalone
+- [generation-and-maintenance-scripts.md](generation-and-maintenance-scripts.md) – the standalone
   scripts that feed the portal from Wikimedia: the source-of-truth generators
   (language catalog, wiki fleet, REST API modules), the content importer and its
   HTML-to-Markdown converter, and supporting tools (dark-mode tokens). What each
