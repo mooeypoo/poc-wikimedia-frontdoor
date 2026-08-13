@@ -77,7 +77,7 @@ interface ResolvedBootstrapWikiInstance {
  *
  * Deep-links (`/explorer/direct/<instance>/…`, and quick links resolving to a
  * module's representative instance) can name any public, open wiki — not just
- * the six curated instances in `config/instances.ts`. Falling back to the
+ * the seven curated instances in `config/instances.ts`. Falling back to the
  * source-of-truth fleet registry lets those instances load. Curated wins on a
  * match so hand-curated policy (display name, direction) stays authoritative.
  * See docs/adr-explorer-deep-linking.md §4.

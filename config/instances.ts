@@ -54,6 +54,13 @@ export const WIKI_INSTANCES: WikiInstanceConfig[] = [
 		baseUrl: 'https://www.wikidata.org',
 		dir: 'ltr',
 		language: 'en'
+	},
+	{
+		id: 'metawiki',
+		displayName: 'Meta-Wiki',
+		baseUrl: 'https://meta.wikimedia.org',
+		dir: 'ltr',
+		language: 'en'
 	}
 ]
 
