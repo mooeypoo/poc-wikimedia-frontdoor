@@ -28,6 +28,7 @@ A third partial exception exists: the API explorer's internal UI strings (button
 | Language picker labels | banana-i18n for UI chrome; autonyms from catalog data | Language names shown as options use native autonyms from the catalog, not banana keys |
 | Content page routing (`/fr/`, `/ar/`) | Nuxt i18n | URL prefix only |
 | Markdown content translation | Per-locale content directories | `content/[locale]/` |
+| Message-driven prose pages | banana message format, **build time only** | English authored in `content-i18n/`, extracted to `i18n/content/`, expanded into `content/[locale]/` by `npm run generate-content-i18n`. Never loaded at runtime — see [adr-translatable-prose-content.md](../adr-translatable-prose-content.md) |
 | API explorer internal strings | Scalar (third-party) | Accepted exception; not our interface surface |
 
 ## The canonical language catalog

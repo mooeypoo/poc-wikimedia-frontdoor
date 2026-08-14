@@ -335,6 +335,79 @@ dropped with a warning. That allowlist is the security boundary – imported HTM
 cannot inject an arbitrary partial. When you extend the converter, keep new
 component mappings on the same conservative footing.
 
+## Translatable prose content
+
+[generate-content-i18n.mjs](../../scripts/generate-content-i18n.mjs) is the
+third producer of files under `content/`, alongside hand authoring and the
+remote importer. It exists for short pages that change often and are worth
+translating fully, where maintaining one Markdown file per locale by hand means
+either editing every locale on each English edit or letting the translations
+rot.
+
+English is authored once in [content-i18n/](../../content-i18n/), with the
+translatable segments marked inline:
+
+```md
+# :message[Access open data]{#title qqq="Page H1 and page title."}
+
+::navigation-card{url="/explorer" title=":message{#card-liftwing-title}"}
+::
+```
+
+A marker carrying `[...]` **defines** a key and its English source; one without
+**references** a key defined elsewhere. Either form may sit inside an MDC
+attribute value; a reference is the compact option, carrying no quote, pipe, or
+bracket at all. The split doubles as the mechanism for repeated strings,
+including across pages via definitions-only files under `content-i18n/_shared/`.
+
+A `:::messages` block is an optional non-rendering region for lifting
+definitions off a component line that has grown unreadable. It is an
+authoring-ergonomics choice, not a correctness one — both forms produce
+identical output and identical files for translators.
+
+```
+extract:   content-i18n/**            →  i18n/content/{en,qqq}.json
+generate:  i18n/content/<locale>.json →  content/<locale>/<path>.md
+```
+
+It shares the shape of every other generator here — deliberate command,
+committed output, wipe-and-recreate by a frontmatter marker
+(`i18nGenerated: true`), deterministic and byte-identical on an unchanged
+re-run — with one difference worth knowing: it makes **no network calls**, so
+the reproducibility argument that keeps the other scripts out of the build does
+not apply to it. It is still a standalone command today; promoting it to a
+`prebuild` hook is a deliberate open decision, not an oversight.
+
+```bash
+npm run generate-content-i18n                  # extract + generate
+npm run generate-content-i18n -- --extract-only
+npm run generate-content-i18n -- --generate-only
+```
+
+Two boundaries the script enforces rather than trusts. It refuses to overwrite
+any file it does not own, so a base file whose path collides with a
+hand-authored or imported page is an error rather than a silent deletion. And
+because a translated string is arbitrary text, substitution is
+**context-aware**: a value landing in an MDC attribute gets its quotes escaped,
+one landing in a table cell gets its pipes escaped, and the stored message keeps
+neither — escaping belongs to the file syntax, never to the message value.
+
+banana-i18n owns the message format and the call contract; this script only
+transports `p1`…`pN` as positional arguments. Anything a parameter needs done to
+it — `{{BIDI:$1}}` for directional isolation, `{{FORMATNUM:$1}}` for digits,
+`{{PLURAL:}}` for agreement — belongs in the message, where a translator can see
+it. Parameter values are passed through verbatim.
+
+The extracted messages live in `i18n/content/`, deliberately separate from the
+interface messages in `i18n/`, and [app/plugins/banana-i18n.ts](../../app/plugins/banana-i18n.ts)
+must never import them: they are build-time inputs, and loading them would ship
+page prose to every visitor for no runtime purpose.
+
+For the decisions, the marker syntax in full, and the known gaps — no
+fuzzy/stale-translation mechanism, no TranslateWiki group yet, and renaming a
+base file orphaning its translations — see
+[adr-translatable-prose-content.md](../adr-translatable-prose-content.md).
+
 ## Dark-mode tokens
 
 [generate-dark-tokens.mjs](../../scripts/generate-dark-tokens.mjs) exists because
