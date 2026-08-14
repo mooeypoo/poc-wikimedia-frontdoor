@@ -213,7 +213,7 @@ const { scalarConfiguration: communityScalarConfiguration } = useScalarConfig(
 const enterpriseScalarConfiguration = computed( () => ( {
 	...SCALAR_DEFAULT_CONFIGURATION,
 	...enterpriseScalarOverrides.value,
-	spec: { url: enterpriseSpecUrl.value },
+	url: enterpriseSpecUrl.value,
 	onLoaded: onScalarLoaded
 } ) )
 
