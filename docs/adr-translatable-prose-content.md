@@ -301,9 +301,13 @@ The marker is **standalone** — not a variant of `remoteImport`. The two genera
 
 ## 9. Locale selection: a content-specific translation threshold
 
-**Decision:** A dedicated `CONTENT_I18N_MIN_TRANSLATED_PERCENT` in `config/contentI18n.ts`, independent of the remote-import threshold. English is always emitted. Every other locale is emitted only if its share of the page's keys present in `i18n/content/<locale>.json` meets the threshold. Below it, no file is written and Nuxt content fallback serves English.
+**Decision:** A dedicated translation threshold, independent of the remote-import threshold. English is always emitted. Every other locale is emitted only if its share of the page's keys present in `i18n/content/<locale>.json` meets the threshold. Below it, no file is written and Nuxt content fallback serves English.
 
 Set to `0`, every locale with a message file gets a page.
+
+**Which locales exist is not a decision at all — it is a directory listing.** The generator writes exactly two files into `i18n/content/`, `en.json` and `qqq.json`; every other `<locale>.json` there is translator-owned and only ever read. The set of locales it generates pages for *is* the set of those files. There is no locale list to keep in sync, and adding a translation is the whole act of adding a locale.
+
+This is why the language catalog (`config/languages.ts`) is not an input to generation. Frontdoor's catalog governs routing, direction, and the picker; it says nothing about which pages have been translated, and conflating the two would mean either generating empty pages for hundreds of catalog languages or maintaining a second list beside the files themselves. The one place catalog knowledge is genuinely useful is resolving a fallback *chain* for a locale already found on disk, which frontdoor supplies to the generator rather than the generator going looking for it (§10.1).
 
 **Rationale:** banana's per-message fallback means a 20%-translated page renders 80% English. For `he` and `fa` that is also a directionally mixed page. Emitting nothing is better: the fallback chain then serves a clean, coherent English page, which is the documented graceful behavior. The threshold is per-page, not per-locale-overall, because coverage is uneven across pages.
 
@@ -359,7 +363,15 @@ tests, with fixtures, over the edge cases we found by hand.
 The containment rule is that **nothing under `packages/banana-content/` may
 import anything outside it** — not `config/`, not `content-i18n/`, not frontdoor
 fixtures. If that holds, extraction into its own repository is `git mv` and
-nothing else. Two format adapters ship in the first version, `markdown` and a
+nothing else.
+
+The sharpest test of that rule is languages, because it is the one place the
+library could plausibly have reached into `config/languages.ts`. It does not, and
+cannot: the library takes **no locale list** and derives its output locales from
+the catalogue files on disk (§9). Language policy stays entirely on the frontdoor
+side of the boundary. Where a fallback chain is genuinely needed, frontdoor
+supplies a resolver through config — the library asks "what chain for this
+locale", never "what languages exist". Two format adapters ship in the first version, `markdown` and a
 trivial `plainText`, because an abstraction with one implementation is a guess
 rather than a boundary — `plainText` exists to fail loudly if the core retains a
 hidden assumption about Markdown.

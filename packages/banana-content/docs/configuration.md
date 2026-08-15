@@ -116,13 +116,25 @@ Overrides take the same tokens:
 
 ### `locales`
 
+> **The library never enumerates languages.** There is no locale list, and there
+> is no way to configure one. The set of output locales is exactly the set of
+> catalogue files present in `messages.dir`. Add `fr.json` and the next run
+> produces French output; delete it and the French output is removed. Language
+> policy — which languages a project supports, what its picker offers — belongs
+> to the host project and is none of this library's business.
+
 | Option | Type | Default | Description |
 | :---- | :---- | :---- | :---- |
-| `locales.list` | `"auto" \| string[]` | `"auto"` | `"auto"` uses every `<code>.json` in `messages.dir`. |
-| `locales.fallback` | `object \| function` | `[locale, sourceLocale]` | Per-locale chain walked when a key is missing. A map, or a function/module returning the chain. |
+| `locales.fallback` | `object \| function` | `[locale, sourceLocale]` | Per-locale chain walked when a key is missing from that locale's catalogue. A map, or a function/module returning a chain. |
 | `locales.minTranslatedPercent` | `number` | `0` | Below this share of a file's keys, that locale is skipped for that file and nothing is written. |
 
-The source locale is always emitted and never subject to the threshold.
+The source locale is always emitted and never subject to the threshold. Its
+catalogue and the documentation catalogue are the only two files the library
+writes into `messages.dir`; every other one is read.
+
+`locales.fallback` does not breach the no-language-list rule: the library never
+asks "what languages exist", only "for this locale I found on disk, what chain
+should I walk". The consumer answers, or takes the two-step default.
 
 **On the threshold.** banana falls back per message, so a 20%-translated file
 renders 80% source language — and for a right-to-left locale, mixed direction as
@@ -216,7 +228,6 @@ than a silent deletion.
     "path": "%locale%/%path%"
   },
   "locales": {
-    "list": "auto",
     "fallback": "./config/contentLocaleFallbacks.mjs",
     "minTranslatedPercent": 0
   },

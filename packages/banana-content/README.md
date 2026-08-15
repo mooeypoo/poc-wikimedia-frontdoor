@@ -42,9 +42,13 @@ understanding what it is.
   asks a format adapter only two questions: *where does this file's metadata
   live*, and *at this position, which characters are dangerous?* Everything else
   is format-blind — which is why it works on files it has never heard of.
-- **It does not translate, and it never writes a translation.** It writes the
-  source-language catalogue and the documentation catalogue. Translated files
-  belong to translators and are only ever read.
+- **It does not translate, and it never writes a translation.** It writes exactly
+  two files into the catalogue directory — the source language and the
+  documentation catalogue. Every other file there belongs to translators and is
+  only ever read.
+- **It does not know what languages exist.** There is no locale list and no way
+  to configure one. The set of output locales *is* the set of catalogue files on
+  disk. Language policy belongs to the host project.
 
 ## Install
 

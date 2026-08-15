@@ -33,7 +33,7 @@
     "banana-content": "./src/node/cli.js"
   },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {
     "yaml": "^2.5.0"

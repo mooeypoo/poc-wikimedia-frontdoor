@@ -101,16 +101,9 @@
     },
     "locales": {
       "type": "object",
+      "description": "The library never enumerates languages and takes no locale list. Output locales are exactly the catalogue files present in messages.dir. These options only describe what to do with the locales found there.",
       "additionalProperties": false,
       "properties": {
-        "list": {
-          "description": "Locales to generate. \"auto\" uses every <code>.json found in messages.dir.",
-          "default": "auto",
-          "anyOf": [
-            { "const": "auto" },
-            { "type": "array", "items": { "type": "string" } }
-          ]
-        },
         "fallback": {
           "description": "Chain walked when a key is missing from a locale. A map of locale to ordered chain, or a module specifier for a function returning one. Defaults to [locale, sourceLocale].",
           "anyOf": [
