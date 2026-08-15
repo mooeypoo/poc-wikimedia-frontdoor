@@ -1,0 +1,47 @@
+{
+  "name": "@wikimedia/banana-content",
+  "version": "0.0.0",
+  "description": "Generate per-locale content files from a single source file, using banana-i18n messages.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "i18n",
+    "l10n",
+    "banana-i18n",
+    "translation",
+    "content",
+    "static-site"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "files": [
+    "src",
+    "docs",
+    "banana-content.schema.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./formats/markdown": "./src/formats/markdown.js",
+    "./formats/plain-text": "./src/formats/plainText.js",
+    "./banana-content.schema.json": "./banana-content.schema.json"
+  },
+  "bin": {
+    "banana-content": "./src/node/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "yaml": "^2.5.0"
+  },
+  "peerDependencies": {
+    "banana-i18n": "^2.4.0"
+  },
+  "devDependencies": {
+    "banana-i18n": "^2.4.0"
+  }
+}

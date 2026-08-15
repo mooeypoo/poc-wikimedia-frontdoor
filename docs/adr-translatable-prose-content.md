@@ -332,6 +332,55 @@ We are not doing that yet, for two reasons. Committed output works with `nuxt de
 
 ---
 
+### 10.1 Packaged as `@wikimedia/banana-content`, kept in-tree
+
+**Decision:** The mechanism lives in a workspace package at
+`packages/banana-content/`, published nowhere and consumed only by this project.
+Frontdoor drives it through a `banana-content.config.json` at the repository
+root. This ADR remains the authoritative design record; the package carries
+*reference* documentation only.
+
+**Context:** Nothing in §§3–7 or §11 is specific to frontdoor, to Nuxt, or even
+to Markdown. The generator never renders and never parses the host format — it
+substitutes text, and asks a format adapter only two questions: where a file's
+metadata lives, and which characters are dangerous at a given position.
+Everything else is format-blind. That made a library boundary available, so the
+question was whether taking it is worth anything.
+
+**Rationale:** Extracting a library from a single consumer is the standard way
+to buy a guessed abstraction and pay for it forever. Two things make it
+defensible here, and one rule contains the risk.
+
+The mechanism is genuinely general, and the extraction is mostly mechanical
+because the script is already layered (tokenise → resolve → catalogue → render →
+validate). And a package boundary buys something the script never had: real
+tests, with fixtures, over the edge cases we found by hand.
+
+The containment rule is that **nothing under `packages/banana-content/` may
+import anything outside it** — not `config/`, not `content-i18n/`, not frontdoor
+fixtures. If that holds, extraction into its own repository is `git mv` and
+nothing else. Two format adapters ship in the first version, `markdown` and a
+trivial `plainText`, because an abstraction with one implementation is a guess
+rather than a boundary — `plainText` exists to fail loudly if the core retains a
+hidden assumption about Markdown.
+
+**Consequences:**
+- `config/contentI18n.ts` and `scripts/generate-content-i18n.mjs` are replaced by
+  a config file and a dependency. The gate on that swap is a **byte-identical
+  diff** of the committed pages and message catalogues: the generated output must
+  not change at all.
+- This ADR stays here rather than moving into the package. Frontdoor is the
+  primary requirement; the packaging is preparation in case a second consumer
+  appears. If one does, the mechanism sections travel with the package and this
+  ADR keeps the adoption decisions (§§1, 2, 9, 10, 12).
+- The package documents *what and how*; this ADR documents *why*. Duplicating
+  rationale into the package would guarantee the two drift.
+- Publishing under the `@wikimedia` npm scope is an org-permissions question with
+  its own lead time, and is not on the critical path — the package is
+  `private: true` and consumed through the workspace until then.
+
+---
+
 ## 11. Validation
 
 **Decision:** The command fails loudly on structural errors and warns on drift.
