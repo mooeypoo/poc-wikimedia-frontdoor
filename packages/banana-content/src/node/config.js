@@ -178,7 +178,11 @@ export async function resolveConfig( raw, configDir ) {
 		format,
 		source: {
 			...merged.source,
-			dir: resolve( configDir, merged.source.dir )
+			dir: resolve( configDir, merged.source.dir ),
+			// Kept alongside the absolute path because it is what appears in
+			// generated files and catalogues: an absolute path there would differ
+			// per machine and destroy reproducibility.
+			relativeDir: merged.source.dir.replace( /^\.\//, '' ).replace( /\/$/, '' )
 		},
 		messages: {
 			...merged.messages,

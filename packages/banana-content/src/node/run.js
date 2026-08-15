@@ -19,13 +19,27 @@ import { findOwned, findCollisions, wipe, writeManifest } from './ownership.js'
 /**
  * Note stamped into generated catalogues.
  *
- * @param {string} sourceDir - Source directory, as the config named it.
+ * Takes the config-relative source directory, never the absolute one: an
+ * absolute path here would differ per machine and break reproducibility.
+ *
+ * @param {string} sourceDir - Source directory as the config named it.
  * @returns {string}
  */
 function catalogNote( sourceDir ) {
 	return 'GENERATED FILE - DO NOT EDIT BY HAND. Extracted from ' +
-		`${ sourceDir } by @wikimedia/banana-content; edit the source text there and ` +
+		`${ sourceDir }/ by @wikimedia/banana-content; edit the source text there and ` +
 		're-run the generator.'
+}
+
+/**
+ * Provenance path recorded in a generated file, relative to the project.
+ *
+ * @param {string} sourceDir - Config-relative source directory.
+ * @param {string} relativePath - Path relative to that directory.
+ * @returns {string}
+ */
+function provenancePath( sourceDir, relativePath ) {
+	return sourceDir ? `${ sourceDir }/${ relativePath }` : relativePath
 }
 
 /**
@@ -76,7 +90,7 @@ export async function run( config, options = {} ) {
 			documentationLocale: config.messages.documentationLocale,
 			messages: catalog.messages,
 			documentation: catalog.documentation,
-			note: catalogNote( config.source.dir ),
+			note: catalogNote( config.source.relativeDir ),
 			indent: config.messages.indent
 		} ) )
 	}
@@ -147,7 +161,7 @@ export async function run( config, options = {} ) {
 				{
 					...source.metadata,
 					[ config.ownership.marker ]: true,
-					sourceFile: source.path
+					sourceFile: provenancePath( config.source.relativeDir, source.path )
 				} :
 				source.metadata
 			const content = config.format.envelope ?

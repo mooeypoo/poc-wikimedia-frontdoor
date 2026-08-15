@@ -1,6 +1,6 @@
 {
   "@metadata": {
-    "note": "GENERATED FILE - DO NOT EDIT BY HAND. Extracted from content-i18n/ by scripts/generate-content-i18n.mjs; edit the English source there and re-run `npm run generate-content-i18n`."
+    "note": "GENERATED FILE - DO NOT EDIT BY HAND. Extracted from content-i18n/ by @wikimedia/banana-content; edit the source text there and re-run the generator."
   },
   "content-experiments-open-data-before-you-start-intro": "Two-paragraph introduction under the Before you start heading. The second paragraph contains an inline link to the User-Agent policy on Meta-Wiki; keep the link and place it where the target language requires.",
   "content-experiments-open-data-card-all-tutorials-description": "Navigation card description for the tutorial-index card.",

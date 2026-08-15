@@ -1,6 +1,6 @@
 {
   "@metadata": {
-    "note": "GENERATED FILE - DO NOT EDIT BY HAND. Extracted from content-i18n/ by scripts/generate-content-i18n.mjs; edit the English source there and re-run `npm run generate-content-i18n`."
+    "note": "GENERATED FILE - DO NOT EDIT BY HAND. Extracted from content-i18n/ by @wikimedia/banana-content; edit the source text there and re-run the generator."
   },
   "content-experiments-open-data-before-you-start-intro": "All of the data linked from this page is publicly available and openly licensed.\n\nYou do not need an account or an API key to read it, though Wikimedia asks that every client identify itself with a descriptive [User-Agent header](https://meta.wikimedia.org/wiki/Special:MyLanguage/User-Agent_policy).",
   "content-experiments-open-data-card-all-tutorials-description": "Browse featured tutorials.",

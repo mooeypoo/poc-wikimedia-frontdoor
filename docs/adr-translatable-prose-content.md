@@ -1,6 +1,6 @@
 # ADR: Translatable Prose Content
 
-**Status:** Decided and implemented as an experiment. `scripts/generate-content-i18n.mjs` implements §§2–11; `content-i18n/experiments/open-data.md` is the first and only source, and the `he` / `es` message files are illustrative fixtures rather than reviewed translations (§12).
+**Status:** Decided and implemented as an experiment. The mechanism (§§2–11) lives in `packages/banana-content/`; frontdoor drives it through `banana-content.config.json` and `npm run generate-content-i18n` (§10.1). `content-i18n/experiments/open-data.md` is the first and only source. The `he` and `es` catalogues are hand-written illustrative fixtures, and the remaining locales are pseudo-localized stubs — none of them are reviewed translations (§12).
 **Scope:** Short prose content pages whose English source is authored once and whose translations arrive as banana-i18n messages, expanded into per-locale Markdown by a standalone command
 
 **Related:**
@@ -377,10 +377,16 @@ rather than a boundary — `plainText` exists to fail loudly if the core retains
 hidden assumption about Markdown.
 
 **Consequences:**
-- `config/contentI18n.ts` and `scripts/generate-content-i18n.mjs` are replaced by
-  a config file and a dependency. The gate on that swap is a **byte-identical
-  diff** of the committed pages and message catalogues: the generated output must
-  not change at all.
+- `config/contentI18n.ts` and `scripts/generate-content-i18n.mjs` are **deleted**,
+  replaced by `banana-content.config.json` and `config/contentLocaleFallbacks.mjs`.
+  The gate on that swap was a byte-identical diff of the committed output, and it
+  held: all three generated pages were unchanged. The only difference was the
+  `@metadata` note in the two catalogues, which had to change because it named
+  the script being deleted.
+- Locale fallback moves from an import inside the generator to a resolver
+  frontdoor supplies through config. That is what keeps the language catalog on
+  frontdoor's side of the boundary while still honouring it — a Catalan reader
+  gets Spanish before English, exactly as before.
 - This ADR stays here rather than moving into the package. Frontdoor is the
   primary requirement; the packaging is preparation in case a second consumer
   appears. If one does, the mechanism sections travel with the package and this
@@ -449,6 +455,23 @@ The demo deliberately **extends** its source. The original page is an H1, a one-
 - Sample `he` and `es` translations are illustrative test fixtures, not reviewed translations, and must be labeled as such wherever they land. `es` is deliberately left incomplete so §9's threshold is exercised rather than merely implemented.
 - The page is in no menu and `sidebar: false`, since `/experiments/…` resolves no path-based section navigation.
 
+### 12.1 Stub catalogues for the demo
+
+**Decision:** `scripts/generate-content-stub-translations.mjs` writes **pseudo-localized** stub catalogues for a handful of catalog languages, so the demo shows the pipeline producing many locales without waiting on translation work. Stubs carry `@metadata.stub: true`, and the script refuses to overwrite any catalogue lacking that marker.
+
+**Rationale:** Because the generator derives its locales from the catalogue files that exist (§9), a stub catalogue is the entire cost of bringing a locale into the demo — no list to edit, no config change.
+
+Pseudo-localization rather than copied English is the load-bearing choice. Copied English would render a page that *looks* translated and is not, which is precisely the confusion worth avoiding in a demo someone may screenshot. Accented text bracketed in `⟦ ⟧` is unmistakable at a glance, proves each string travelled through the catalogue rather than being baked into the page, and makes an unmarked string obvious. It also exercises the escaping model harder than a real translation would: the stub for a table cell keeps its escaped pipe, and the URL half of a Markdown link is left alone while its text is transformed.
+
+Stub locales must be left-to-right, and the script **enforces that from the catalog** rather than from a hardcoded list: pseudo-localized text is Latin script, so stubbing a right-to-left locale would produce a page whose content fights its own direction. Direction is read through `config/languages.ts`, the same accessor the interface uses, so the check stays correct if an override ever changes a language's direction. Real RTL coverage comes from the hand-written Hebrew fixture.
+
+Every locale decision in this script resolves through that accessor — validity and direction both. A demo that decided which languages exist differently from the UI would be demonstrating something the portal does not actually do.
+
+**Consequences:**
+- The marker is a safety boundary, not a label. Without it the script could silently destroy the `he` and `es` fixtures — the same "never overwrite what you do not own" rule the generator itself follows (§8).
+- `npm run generate-content-i18n-stubs -- --remove` deletes every stub and leaves real catalogues alone.
+- Stub catalogues and the pages generated from them are committed. They are demo scaffolding, and should be removed for that locale the moment a real translation arrives.
+
 ---
 
 ## 13. Known gaps and open questions
@@ -459,7 +482,7 @@ The demo deliberately **extends** its source. The original page is an H1, a one-
 - **Runtime locales versus content locales.** `app/plugins/banana-i18n.ts` statically imports five interface locales. Prose content has no such limit — any locale with a `i18n/content/<locale>.json` gets a page. So a locale can have translated *content* and English *chrome*. Correct per the fallback design, but it is a state the interface has not been reviewed in.
 - **Translated headings produce translated anchors** (github-slugger), so deep links differ per locale. Pre-existing for imported content; unchanged here.
 - **Params are build-time constants.** There is no mechanism to source a param value from config, so a value that changes still requires a base-file edit and a re-run. Add only if a real case appears.
-- **The generator bypasses the `config/languages.ts` accessor.** It imports `config/languages.generated.ts` directly for fallback chains, because the accessor resolves `./languages.generated` without a file extension and Node's ESM resolver cannot load that. The override layer (`LANGUAGE_OVERRIDES`) is empty today, so the two are equivalent — but a populated override would be silently ignored here. The fix is to add the extension to that import once `allowImportingTsExtensions` is set, at which point the script should switch to the accessor.
+- ~~**The generator bypasses the `config/languages.ts` accessor.**~~ **Resolved.** `config/languages.ts` now imports its generated half with an explicit `.ts` extension, making it importable from plain `.mjs` tooling, and both `config/contentLocaleFallbacks.mjs` and the stub script read the accessor rather than the generated catalog. `LANGUAGE_OVERRIDES` therefore governs generated content exactly as it governs the interface — one language policy, not two. `allowImportingTsExtensions` is set in `nuxt.config.ts` to match; three first-party modules already used that import style and were already failing typecheck without it, so enabling it removed four pre-existing errors rather than accommodating a new one. **Unverified:** `nuxt prepare` cannot run in the current sandbox (`EACCES` on `~/.nuxtrc`), so that the flag propagates from `nuxt.config.ts` into the generated `.nuxt/tsconfig.app.json` has not been confirmed on a working checkout — only that the flag resolves the errors once present.
 
 ---
 

@@ -66,6 +66,22 @@ export default defineNuxtConfig( {
 		}
 	},
 	devtools: { enabled: true },
+
+	// Several first-party modules import sibling config with an explicit `.ts`
+	// extension (config/explorerOptIn.ts, config/explorerModuleDescriptions.ts,
+	// config/languages.generated.ts). That style is required so the same modules
+	// can also be imported by plain `.mjs` tooling — Node's ESM resolver cannot
+	// resolve an extensionless relative specifier — and it lets the prose-content
+	// generator read config/languages.ts itself rather than reaching past its
+	// override layer into the generated catalog. Vite resolves these unchanged;
+	// TypeScript needs this flag to accept them.
+	typescript: {
+		tsConfig: {
+			compilerOptions: {
+				allowImportingTsExtensions: true
+			}
+		}
+	},
 	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
 	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
 	compatibilityDate: '2024-05-07',

@@ -82,7 +82,12 @@ test( 'an end-to-end run extracts catalogues and generates the source locale', a
 	assert.equal( qqq[ 'content-about-title' ], 'Page H1.' )
 
 	const page = await readFile( join( root, 'out/en/about.md' ), 'utf-8' )
-	assert.match( page, /^---\ni18nGenerated: true\nsourceFile: about\.md\n---\n\n# Access open data\n$/ )
+	// sourceFile carries the config-relative source directory, so that a reader
+	// of a generated file knows exactly where to go and edit it.
+	assert.match(
+		page,
+		/^---\ni18nGenerated: true\nsourceFile: src-content\/about\.md\n---\n\n# Access open data\n$/
+	)
 	await rm( root, { recursive: true, force: true } )
 } )
 

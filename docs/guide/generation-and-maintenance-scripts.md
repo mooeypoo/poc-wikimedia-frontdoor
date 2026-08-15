@@ -337,12 +337,20 @@ component mappings on the same conservative footing.
 
 ## Translatable prose content
 
-[generate-content-i18n.mjs](../../scripts/generate-content-i18n.mjs) is the
-third producer of files under `content/`, alongside hand authoring and the
+The third producer of files under `content/`, alongside hand authoring and the
 remote importer. It exists for short pages that change often and are worth
 translating fully, where maintaining one Markdown file per locale by hand means
 either editing every locale on each English edit or letting the translations
 rot.
+
+Unlike the other entries here it is not a script in [scripts/](../../scripts/).
+The mechanism lives in [packages/banana-content/](../../packages/banana-content/),
+a self-contained workspace package that nothing outside it depends on and that
+depends on nothing in frontdoor. Frontdoor drives it through
+[banana-content.config.json](../../banana-content.config.json). See
+[adr-translatable-prose-content.md §10.1](../adr-translatable-prose-content.md)
+for why it is packaged this way, and the package's own docs for the marker
+syntax and configuration reference.
 
 English is authored once in [content-i18n/](../../content-i18n/), with the
 translatable segments marked inline:
@@ -382,6 +390,8 @@ not apply to it. It is still a standalone command today; promoting it to a
 npm run generate-content-i18n                  # extract + generate
 npm run generate-content-i18n -- --extract-only
 npm run generate-content-i18n -- --generate-only
+npm run generate-content-i18n -- --check       # validate; write nothing
+npm run test:banana-content                    # the package's own test suite
 ```
 
 Two boundaries the script enforces rather than trusts. It refuses to overwrite
@@ -402,6 +412,33 @@ The extracted messages live in `i18n/content/`, deliberately separate from the
 interface messages in `i18n/`, and [app/plugins/banana-i18n.ts](../../app/plugins/banana-i18n.ts)
 must never import them: they are build-time inputs, and loading them would ship
 page prose to every visitor for no runtime purpose.
+
+### Stub catalogues for the demo
+
+[generate-content-stub-translations.mjs](../../scripts/generate-content-stub-translations.mjs)
+writes **pseudo-localized** stub catalogues for a handful of catalog languages,
+so the experiment demonstrates many locales without waiting on translation work.
+Because the generator derives its locales from the catalogue files that exist, a
+stub file is the entire cost of adding a locale to the demo.
+
+The output is bracketed, accented text (`⟦Àççéšš öþéñ ðàťà⟧`) rather than copied
+English, so nobody can mistake it for a translation, and every string visibly
+proves it travelled through the catalogue. Parameters, banana magic words, and
+the URL half of a Markdown link are left untouched.
+
+Stubs carry `@metadata.stub: true`, and the script **refuses to overwrite any
+catalogue lacking that marker** — the same "never overwrite what you do not own"
+rule the generator itself follows, here protecting the hand-written `he` and
+`es` fixtures.
+
+```bash
+npm run generate-content-i18n-stubs             # write stubs
+npm run generate-content-i18n-stubs -- --remove # delete them; real ones untouched
+```
+
+Delete a locale's stub the moment a real translation for it arrives.
+
+### Further reading
 
 For the decisions, the marker syntax in full, and the known gaps — no
 fuzzy/stale-translation mechanism, no TranslateWiki group yet, and renaming a
