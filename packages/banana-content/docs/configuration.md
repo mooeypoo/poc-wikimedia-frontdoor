@@ -201,6 +201,23 @@ Set `ownership.marker` to `false` for formats with no envelope; the manifest
 carries it alone. Setting **both** to `false` disables wipe-and-recreate, which
 means renamed or removed source files leave orphans behind. Don't.
 
+The wipe also prunes directories it empties, so a locale that loses its last
+translation leaves no trace. A directory still holding anything — hand-authored
+files living beside generated ones — is left exactly as it was.
+
+> **Known limitation: the marker scan is O(output tree).** Finding marker-bearing
+> files means reading and parsing the envelope of *every* file under
+> `output.dir`, whatever this tool actually generated. At tens or low hundreds of
+> output files that is unmeasurable; on a large content tree it is wasted work
+> proportional to the wrong thing.
+>
+> The manifest half of the union is already O(generated files) and would suffice
+> on its own. The scan exists purely as the redundant half. If this becomes a
+> problem, the shape of the fix is to narrow it rather than drop it — scan only
+> the directories the output templates could possibly reach, or make the second
+> half opt-in above some tree size. Not addressed yet; the union is cheap enough
+> at current scale and the redundancy is worth more than the microseconds.
+
 The generator refuses to overwrite any file it cannot prove it owns, so a source
 file whose output path collides with a hand-authored file is a hard error rather
 than a silent deletion.

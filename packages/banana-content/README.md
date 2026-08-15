@@ -116,6 +116,19 @@ The real constraint is not "is it Markdown" but: **any line-oriented text format
 whose files can carry the marker text literally.** JSON does not qualify, because
 the block forms occupy whole lines and JSON has nowhere to put them.
 
+## Known limitations
+
+- **JSON source files are out of scope.** The block forms occupy whole lines and
+  JSON has nowhere to put a bare line. See [docs/formats.md](docs/formats.md).
+- **Ownership discovery scans the whole output tree.** Finding marker-bearing
+  files parses every file under `output.dir`, not just the ones this tool wrote.
+  Negligible at current scale, wrong-order at large scale — see
+  [docs/configuration.md](docs/configuration.md#ownership).
+- **No fuzzy or stale-translation detection.** Changing the source text under a
+  stable key leaves every translation of it silently stale.
+- **Renaming a source file renames every key it owns**, orphaning that file's
+  translations. Orphans are reported, never deleted.
+
 ## Documentation
 
 - [docs/syntax.md](docs/syntax.md) — the marker syntax, keys, parameters, escaping
