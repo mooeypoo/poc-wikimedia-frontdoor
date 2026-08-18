@@ -25,9 +25,7 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 		onLoaded: ( slug: string ) => {
 			options.onLoaded?.( slug )
 		},
-		spec: {
-			url: openApiSpecUrl.value ?? ''
-		}
+		url: openApiSpecUrl.value ?? ''
 	} )
 
 	watch( openApiSpecUrl, ( nextOpenApiSpecUrl ) => {
@@ -41,9 +39,7 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 			onLoaded: ( slug: string ) => {
 				options.onLoaded?.( slug )
 			},
-			spec: {
-				url: nextOpenApiSpecUrl
-			}
+			url: nextOpenApiSpecUrl
 		} )
 
 		logEvent( 'scalar.config_updated', {

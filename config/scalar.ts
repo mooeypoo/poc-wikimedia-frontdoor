@@ -12,7 +12,6 @@ export const SCALAR_DOCUMENT_SLUG = 'front-door-api-explorer'
  */
 export const SCALAR_DEFAULT_CONFIGURATION = {
 	slug: SCALAR_DOCUMENT_SLUG,
-	hideDownloadButton: false,
 	hideTestRequestButton: false,
 	showDeveloperTools: 'never',
 	layout: 'modern' as const,

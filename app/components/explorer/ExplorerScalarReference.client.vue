@@ -28,9 +28,9 @@ const apiReferenceRef = ref<{
 } | null>( null )
 
 const activeSpecUrl = computed( () => {
-	const spec = props.configuration.spec
-	if ( spec && typeof spec === 'object' && 'url' in spec && typeof spec.url === 'string' ) {
-		return spec.url
+	const url = props.configuration.url
+	if ( typeof url === 'string' ) {
+		return url
 	}
 
 	return ''
