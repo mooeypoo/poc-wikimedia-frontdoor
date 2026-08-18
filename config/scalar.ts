@@ -24,6 +24,9 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	// See config/explorerInternalSidebarExperiment.ts.
 	showSidebar: EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR,
 	searchHotKey: 'k',
+	// Do not load Inter / JetBrains Mono from fonts.scalar.com. Explorer chrome
+	// remaps --scalar-font / --scalar-font-code to Codex stacks in main.css.
+	withDefaultFonts: false,
 	// Disable Scalar's "Ask AI" Agent feature everywhere. Without this the
 	// agent surfaces (the sidebar "Ask AI" button, the per-operation "Ask AI
 	// Agent" button, and the chat drawer) auto-enable on localhost — and would

@@ -111,7 +111,7 @@ The explorer route (`/explorer/**`) and the account route (`/account`, `/*/accou
 │   │   ├── wikiInstances.generated.ts  # Public wiki fleet registry
 │   │   ├── modules.generated.ts        # Unique REST modules → instance-id lists
 │   │   └── module-specs/               # Per-module full OpenAPI specs (JSON)
-│   └── scalar.js               # Scalar component defaults
+│   └── scalar.ts               # Scalar defaults (showSidebar, withDefaultFonts: false, agent off, …)
 │
 ├── content/                    # Nuxt Content Markdown source
 │   ├── en/                     # English content (index, use-content-and-data, …)
@@ -684,6 +684,19 @@ The `@scalar/nuxt` module supports only a single spec configured at build time. 
 
 The Vue component is mounted in `app/pages/explorer/[...view].vue` inside a **`<ClientOnly>`** wrapper (required by `AGENTS.md`). The implementation uses `ExplorerScalarReference.client.vue`, which imports `@scalar/api-reference` and is only ever rendered on the client-only `/explorer` route (`ssr: false`). The catch-all path selects **enterprise mode** (`/explorer/enterprise`, `/explorer/enterprise-custom`) or community deep-link tails — see **Explorer modes and start-column routing** and **Deep-linking** below.
 
+### Scalar typography (no CDN fonts)
+
+**Decision:** Do **not** load Scalar’s default Inter / JetBrains Mono from `fonts.scalar.com`. Set **`withDefaultFonts: false`** in `SCALAR_DEFAULT_CONFIGURATION` (`config/scalar.ts`). Under `.explorer-page .scalar-app` in `app/assets/css/main.css`, remap Scalar’s family tokens to Codex stacks:
+
+| Scalar token | Codex mapping |
+|---|---|
+| `--scalar-font` | `var(--font-family-sans-stack)` |
+| `--scalar-font-code` | `var(--font-family-monospace-stack)` |
+
+Use **Codex tokens**, not raw font-family lists. Scalar size/weight tokens (`--scalar-font-size-*`, `--scalar-heading-*`, etc.) stay on Scalar defaults in this phase. Upstream token list: [Scalar `variables.css`](https://github.com/scalar/scalar/blob/main/packages/themes/src/base/variables.css). Same security rationale as self-hosted Montserrat — avoid third-party font requests.
+
+**Source:** `config/scalar.ts`, `app/assets/css/main.css` (`.explorer-page .scalar-app`), `DESIGN_REQUIREMENTS.md` → Scalar theming.
+
 ### Project and language picker
 
 Community explorer bootstrap is keyed by a **wiki instance id** (`enwiki`, `eswiki`, …). The shell exposes two comboboxes (project + language) that resolve to that id — the page does not store project and language as separate bootstrap parameters.
@@ -1089,7 +1102,7 @@ All project-level configuration lives in `config/`. Files are documented with a 
 | `config/explorerModuleDescriptions.ts` | Banana fallback keys when OpenAPI `info.description` is absent; **`EXPLORER_MODULE_DESCRIPTION_OPENAPI_SUFFIX_STRIP_PATTERNS`** removes configured trailing boilerplate after bootstrap normalization (for example Site API `site/v1`) |
 | `config/explorerSurfaces.ts` | Shared exploratory surface tokens (Codex `--background-color-neutral-subtle`, 4px radius) — mirrored as `--fd-explorer-controls-surface-*` in `page-grid.css`; radius also used by account list-element cards, Reset credentials panel, NavigationCard, Highlight, CodeBlock, CodeTabs, and Test Request dialog |
 | `config/headerChrome.ts` | Header utility collapse threshold (gap estimates: search→preferences **16px**, other options **8px**); interface-language `CdxLookup` `visibleItemLimit` (**7**) and menu item render cap (**50**). Lookup **`clearable`** is a Codex prop on the component, not a config constant. |
-| `config/scalar.js` | Scalar component defaults (theme, layout, enabled features) |
+| `config/scalar.ts` | Scalar component defaults (`showSidebar`, `hideDarkModeToggle`, **`withDefaultFonts: false`** — no Inter / JetBrains Mono from `fonts.scalar.com`; families remapped to Codex stacks in `main.css`, `agent.disabled`, document slug, …) |
 | `config/brandTypography.ts` | Brand wordmark family stack + self-hosted Montserrat WOFF2 paths (`BRAND_WORDMARK_FONT_FILES` under `public/fonts/montserrat/`); `buildBrandWordmarkFontCss()` injects `@font-face` + `--font-family-brand-wordmark` from `nuxt.config.ts` `app.head` (same paths as font preloads) — **not** Google Fonts |
 | `config/landingSurfaces.ts` | Platform home: light/dark **`LANDING_BAND_GRADIENTS`** (`apis` / `join` dark `#233566` → `#101418`; `apps` uses Codex base), **`LANDING_CONTENT_MAX_INLINE_SIZE`** (`62.5rem` / 1000px), **`LANDING_HERO_GLOBE_COLOR`**, **`LANDING_AWARD_CHIP`** (light purple100 fill / purple600 text; dark inverted → `--fd-landing-award-chip-*-light` / `*-dark`), **`LANDING_ASSETS`** (incl. `heroDither` / `heroDitherDark`, app screenshots), `LANDING_API_ARTICLE_PREVIEWS` |
 | `config/navigationCardIcons.ts` | Allowlisted Codex icon names for `::navigation-card` `leading-icon` / related MDC props (`userGroup`, `labFlask`, `userTalk`, `code`, …) |
@@ -1585,6 +1598,7 @@ Shell chrome and layout work on the `design-chrome` branch is documented in **`D
 | Explorer page + modes | `app/pages/explorer/[...view].vue`, `app/composables/useExplorerMode.ts`, `app/composables/useEnterpriseExplorer.ts`, `config/enterpriseExplorer.ts` |
 | Explorer project controls | `app/components/explorer/ExplorerProjectControls.vue`, `app/components/explorer/ExplorerModuleSelectOptionContent.vue` (label-only audience warning chips; Codex exception #14), `app/composables/useExplorerProjectLanguagePicker.ts`, `app/composables/useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `config/instances.ts`, `config/explorerModuleDescriptions.ts`, `config/explorerSurfaces.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `tests/explorerModuleRailHeading.test.mjs`, `app/assets/css/main.css` (explorer picker menu stacking only), `app/assets/css/page-grid.css` (`--fd-explorer-controls-surface-*`), `i18n/*` (`explorer-module-beta-chip-label`, `explorer-module-internal-chip-label`) |
 | Explorer Scalar sidebar + module select metadata | `config/explorerInternalSidebarExperiment.ts`, `config/scalar.ts` (`showSidebar`), `app/layouts/default.vue` (`frontdoor-shell--explorer-internal-sidebar`), `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerEndpointLabels.ts`, `app/utils/explorerModuleDescription.ts`, `config/explorerSurfaces.ts`, `app/pages/explorer/[...view].vue`, `tests/explorerModuleDescription.test.mjs` (legacy rail: `ExplorerModuleRail.vue` + placement/scroll-cap composables — not mounted when flag is true) |
+| Scalar typography (no CDN fonts) | `config/scalar.ts` (`withDefaultFonts: false`), `app/assets/css/main.css` (`.explorer-page .scalar-app` → `--scalar-font` / `--scalar-font-code` → Codex stacks) — see **Scalar typography** |
 | Explorer bootstrap + opt-in | `server/api/explorer-bootstrap.get.ts` (OpenAPI fetch, `moduleDescription` via `normalizeOpenApiModuleDescription`), `app/composables/useExplorerBootstrap.ts`, `app/composables/useExplorerOptInFilteredModules.ts`, `app/composables/useExplorerOptInCheckboxGroup.ts`, `app/utils/explorerModuleOptInFilter.ts`, `config/explorerOptIn.ts` (`isExplorerBetaOptInModule`, `isExplorerInternalOptInModule`), `tests/explorerModuleOptInFilter.test.mjs` |
 | Write-request production warning (Test Request modal) | `app/components/explorer/scalar/ScalarClientWriteEndpointWarning.vue`, `app/composables/useScalarClientWriteEndpointWarnings.ts`, `app/utils/isTestWikiSelectableInAddressBar.ts`, `app/utils/collectScalarDocumentServerUrls.ts`, `app/utils/resolveScalarClientModalAddressBarWarningPlacement.ts`, `app/utils/createScalarWriteEndpointWarningElement.ts`, `app/utils/findOpenScalarClientModal.ts`, `app/utils/getInterfaceMessageTemplate.ts`, `app/scalar/explorerMapConfigPlugins.client.ts` (hooks only — no warning view slots), `config/wikiInstanceTestWikis.ts`, `config/scalarWriteHttpMethods.ts`, `config/scalarClientWriteWarnings.ts`, `app/assets/css/explorer-codex-overrides.css`, `i18n/*` (`explorer-scalar-write-endpoint-warning`, `explorer-scalar-write-endpoint-warning-no-test-wiki`, `explorer-scalar-write-test-wiki-name-*`) |
 | Test Request modal sticky section titles | `app/assets/css/explorer-codex-overrides.css` (`.explorer-page .scalar-client .request-response-header { z-index: 1 }`) — see **Scalar Test Request modal sticky headers** |

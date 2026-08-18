@@ -50,6 +50,12 @@ These two surfaces have different rules and must not be conflated.
 - Reactive configuration updated via `Object.assign()` on a `reactive()` config object
 - Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
 
+### Scalar typography (Codex families, no CDN fonts)
+
+**Decision:** Set **`withDefaultFonts: false`** so Scalar does not load Inter / JetBrains Mono from `fonts.scalar.com` (avoids third-party font-request security and privacy exposure). Remap **`--scalar-font`** → Codex **`--font-family-sans-stack`** and **`--scalar-font-code`** → **`--font-family-monospace-stack`** under `.explorer-page .scalar-app`. Size/weight Scalar tokens unchanged in this phase.
+
+**Source of truth:** `ARCHITECTURE.md` → Scalar typography; `DESIGN_REQUIREMENTS.md` → Scalar theming; `config/scalar.ts`, `app/assets/css/main.css`.
+
 ### API to explore audience chips
 
 **Decision:** Show beta and internal as **label-only** warning **`CdxInfoChip`**s beside the module name in the **API to explore** Select (menu + closed handle). Keep **version** as Codex MenuItem `supportingText` only (strip trailing `-beta` / `-internal` from the version string). Do not show Codex status icons on these chips.

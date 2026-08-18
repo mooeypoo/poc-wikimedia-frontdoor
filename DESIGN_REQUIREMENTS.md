@@ -505,7 +505,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Headings:** Emphasized colour; `h1` uses `--font-size-xx-large`; `h2`–`h6` retain block spacing below titles.
 
-**Monospace:** Scalar code areas (and HTTP method chrome inside Scalar) use `--font-family-monospace-stack` as provided by the reference UI.
+**Monospace:** Scalar code areas (and HTTP method chrome inside Scalar) use Codex **`--font-family-monospace-stack`** via `--scalar-font-code` on `.explorer-page .scalar-app` (not JetBrains Mono from `fonts.scalar.com`).
 
 ### Subtle / secondary text
 
@@ -515,9 +515,11 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Decision:** Map Scalar CSS variables to Codex tokens inside `.explorer-page .scalar-app` (backgrounds, accents, links, semantic colours for method badges). Links inside Scalar match portal progressive / visited colours.
 
+**Decision (fonts):** **`withDefaultFonts: false`** in `config/scalar.ts` — do not load Inter / JetBrains Mono from `fonts.scalar.com`. Remap **`--scalar-font`** → **`--font-family-sans-stack`** and **`--scalar-font-code`** → **`--font-family-monospace-stack`** (Codex tokens). Scalar size/weight tokens unchanged in this phase.
+
 **Decision:** Scalar spec panel sits in a bordered shell (`--border-color-subtle`, `--border-radius-base`) with **inline padding** `--spacing-150` on the shell; inner Scalar layout padding is not globally overridden in the current phase.
 
-**Source:** `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (project-controls checkbox checkmark fix, Test Request write-warning mount layout, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
+**Source:** `config/scalar.ts` (`withDefaultFonts`), `app/assets/css/main.css` (Scalar tokens scoped to `.scalar-app`; explorer Select/Combobox menu stacking only), `app/assets/css/explorer-codex-overrides.css` (project-controls checkbox checkmark fix, Test Request write-warning mount layout, link tokens, introduction **`pre`** width caps — see **Scalar shell containment**).
 
 ---
 
@@ -926,6 +928,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Start nav scrollbar fix | `shell-start-nav-scroll.css` — single scrollport; transparent track; border on scrollport panel |
 | *(uncommitted)* | Scroll-end symmetry (32px) | `::after` spacer on start scrollport (tablet+ panel, mobile `.fd-page-grid__start`) + overlay panel; footer keeps `padding-block-end` |
 | *(uncommitted)* | Start nav scroll + drawer clip | `flex-shrink: 1` on `.frontdoor-shell__side-panel--start`; mobile `overflow-inline: hidden` (not blanket `overflow: hidden`) in `shell-start-nav-reveal.css` |
+| *(uncommitted)* | Scalar fonts → Codex (no CDN) | `withDefaultFonts: false`; `--scalar-font` / `--scalar-font-code` → Codex sans / mono stacks in `main.css`; see Scalar theming |
 | *(uncommitted)* | Self-hosted Montserrat (no Google Fonts) | Brand wordmarks only — WOFF2 700/800 under `public/fonts/montserrat/`; `config/brandTypography.ts` + `nuxt.config.ts` `app.head` (`buildBrandWordmarkFontCss` + preloads); see Brand logo |
 | *(uncommitted)* | Shell chrome polish | Symmetric header inset; mark + Montserrat banana wordmark (header/footer); language select always shows active locale; header `CdxSelect` RTL chevron **open issue** documented |
 | *(uncommitted)* | Nav collapse + drawer reveal | `useShellNavigationCollapse`, `shell-start-nav-reveal.css`, collapsed border fix |
@@ -1006,4 +1009,4 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Scalar focus | `app/composables/useExplorerScalarFocus.ts`, `app/utils/scalarOperationNavigation.ts` |
 | End-panel nav align + scroll | `app/composables/useEndPanelNavAlign.ts`, `app/assets/css/shell-end-panel-nav.css` (explorer module rail only) |
 | On-this-page TOC | `useOnThisPageNav.ts`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `config/onThisPageNav.ts`, `default.vue` (`.frontdoor-shell__on-this-page-end` CSS sticky) |
-| Scalar + Codex visuals | `app/assets/css/main.css` (Scalar tokens; explorer picker menu z-index only), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark, link tokens, introduction `pre` width caps) |
+| Scalar + Codex visuals | `app/assets/css/main.css` (Scalar colour + **font** tokens; explorer picker menu z-index only), `config/scalar.ts` (`withDefaultFonts: false`), `app/assets/css/explorer-codex-overrides.css` (checkbox checkmark, link tokens, introduction `pre` width caps) |
