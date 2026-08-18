@@ -28,7 +28,16 @@ These two surfaces have different rules and must not be conflated.
 | Session state | Pinia |
 | Search | @nuxt/content FTS5 via `useSearchCollection` |
 | Styling | Codex design tokens + CSS variables; experimental `codex.style-bidi.css` for direction (`[dir]` selectors) |
+| Brand wordmark font | Self-hosted Montserrat WOFF2 700/800 (`public/fonts/montserrat/`) via `config/brandTypography.ts` — **not** Google Fonts; wordmarks only |
 | Build | `nuxt build` (SSR); explorer route configured `ssr: false` |
+
+---
+
+## Brand wordmark typography
+
+**Decision:** Header and footer brand wordmarks use **Montserrat** for [Wikimedia branding compliance](https://foundation.wikimedia.org/wiki/Legal:Visual_identity_guidelines), self-hosted as static WOFF2 **Bold (700)** and **ExtraBold (800)** under `public/fonts/montserrat/` (SIL OFL). Do **not** load from `fonts.googleapis.com` / `fonts.gstatic.com` — third-party font requests introduce avoidable security and privacy exposure. Paths, `@font-face`, and `--font-family-brand-wordmark` are single-sourced from `config/brandTypography.ts` (`buildBrandWordmarkFontCss()` + preloads in `nuxt.config.ts` `app.head`). General UI copy stays on Codex `--font-family-sans-stack`.
+
+**Source of truth:** `ARCHITECTURE.md` → Codex exceptions #6 / #9; `DESIGN_REQUIREMENTS.md` → Brand logo; `AGENTS.md` config rule + RTL checklist (header brand).
 
 ---
 

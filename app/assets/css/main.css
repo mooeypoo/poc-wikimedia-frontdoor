@@ -24,8 +24,7 @@
 :root {
 	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
 	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
-	/* Figma brand wordmark — Montserrat loaded via nuxt.config.ts (config/brandTypography.ts). */
-	--font-family-brand-wordmark: 'Montserrat', sans-serif;
+	/* --font-family-brand-wordmark is set from config/brandTypography.ts via nuxt.config app.head.style. */
 }
 
 html,
