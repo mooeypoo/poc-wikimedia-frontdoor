@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path'
 
 import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfigPluginsResolvePlugin'
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
-import { BRAND_WORDMARK_FONT_STYLESHEET_URL } from './config/brandTypography'
+import { BRAND_WORDMARK_FONT_FILES, buildBrandWordmarkFontCss } from './config/brandTypography'
 import { SUPPORTED_LANGUAGES } from './config/languages'
 import {
 	COLOR_MODES,
@@ -51,10 +51,30 @@ export default defineNuxtConfig( {
 
 	app: {
 		head: {
+			// Self-hosted Montserrat (config/brandTypography.ts) — no Google Fonts.
+			// crossorigin is required for font preloads to match @font-face CORS mode.
 			link: [
-				{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-				{ rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
-				{ rel: 'stylesheet', href: BRAND_WORDMARK_FONT_STYLESHEET_URL }
+				{
+					rel: 'preload',
+					as: 'font',
+					type: 'font/woff2',
+					href: BRAND_WORDMARK_FONT_FILES.bold,
+					crossorigin: 'anonymous'
+				},
+				{
+					rel: 'preload',
+					as: 'font',
+					type: 'font/woff2',
+					href: BRAND_WORDMARK_FONT_FILES.extraBold,
+					crossorigin: 'anonymous'
+				}
+			],
+			style: [
+				{
+					// Single-sourced @font-face + --font-family-brand-wordmark (config/brandTypography.ts).
+					innerHTML: buildBrandWordmarkFontCss(),
+					tagPriority: 'critical'
+				}
 			],
 			// Sole initial setter of the theme class: runs before first paint and is
 			// then maintained at runtime by useColorMode via classList. Deliberately

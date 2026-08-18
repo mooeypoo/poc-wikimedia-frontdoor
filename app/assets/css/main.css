@@ -24,8 +24,7 @@
 :root {
 	--font-family-monospace-stack: var( --font-family-monospace ), var( --font-family-monospace--fallback );
 	--font-family-sans-stack: var( --font-family-system-sans ), var( --font-family-sans--fallback );
-	/* Figma brand wordmark — Montserrat loaded via nuxt.config.ts (config/brandTypography.ts). */
-	--font-family-brand-wordmark: 'Montserrat', sans-serif;
+	/* --font-family-brand-wordmark is set from config/brandTypography.ts via nuxt.config app.head.style. */
 }
 
 html,
@@ -296,6 +295,12 @@ pre code {
 	--scalar-color-red: var( --color-error );
 	--scalar-color-orange: var( --color-warning );
 	--scalar-border-color: var( --border-color-subtle );
+	/*
+	 * Font families: withDefaultFonts: false in config/scalar.ts (no fonts.scalar.com).
+	 * Remap Scalar's two family tokens to Codex stacks — not raw Inter / JetBrains Mono.
+	 * Size/weight Scalar tokens are unchanged in this phase.
+	 */
+	--scalar-font: var( --font-family-sans-stack );
 	--scalar-font-code: var( --font-family-monospace-stack );
 	/*
 	 * Sidebar tokens must be re-declared here, not just inherited. Scalar
