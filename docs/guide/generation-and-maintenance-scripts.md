@@ -335,6 +335,34 @@ dropped with a warning. That allowlist is the security boundary – imported HTM
 cannot inject an arbitrary partial. When you extend the converter, keep new
 component mappings on the same conservative footing.
 
+## Translatable prose content
+
+The third producer of files under `content/`, alongside hand authoring and the
+remote importer: short pages whose source language is authored once with
+translatable segments marked inline, and whose per-locale files are generated
+from banana message catalogues.
+
+It follows the same philosophy as everything else here — a deliberate command,
+committed output, wipe-and-recreate by an ownership marker, deterministic and
+byte-identical on an unchanged re-run — with one difference worth knowing: it
+makes **no network calls**, so the reproducibility argument that keeps the other
+scripts out of the build does not apply to it. It is still a standalone command;
+promoting it to a `prebuild` hook is a deliberate open decision.
+
+It is also not a script in [scripts/](../../scripts/). The mechanism lives in
+[packages/banana-content/](../../packages/banana-content/), a self-contained
+workspace package, driven by
+[banana-content.config.json](../../banana-content.config.json).
+
+```bash
+npm run generate-content-i18n                  # extract + generate
+npm run generate-content-i18n -- --check       # validate; write nothing
+npm run generate-content-i18n-stubs            # pseudo-localized demo stubs
+```
+
+See [translatable-content.md](translatable-content.md) for the model, what to use
+directly versus treat as reference, and what gates a production rollout.
+
 ## Dark-mode tokens
 
 [generate-dark-tokens.mjs](../../scripts/generate-dark-tokens.mjs) exists because

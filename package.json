@@ -2,11 +2,17 @@
   "name": "frontdoor",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "nuxt build",
     "build:netlify": "NITRO_PRESET=netlify nuxt build",
     "dev": "nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
+    "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
+    "generate-content-i18n-stubs": "node scripts/generate-content-stub-translations.mjs",
+    "test:banana-content": "npm test --workspace @wikimedia/banana-content",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
     "generate-module-source-of-truth": "node scripts/generate-module-source-of-truth.mjs",
     "generate": "nuxt generate",

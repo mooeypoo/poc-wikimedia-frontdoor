@@ -1,0 +1,20 @@
+{
+  "@metadata": {
+    "note": "ILLUSTRATIVE TEST FIXTURE, NOT A REVIEWED TRANSLATION. Hand-written to exercise scripts/generate-content-i18n.mjs end to end. Deliberately INCOMPLETE (the Before you start section and the table are untranslated) so that the coverage threshold and per-message English fallback are exercised rather than merely implemented. Replace wholesale once these messages reach real translators."
+  },
+  "content-experiments-open-data-card-dumps-description": "Accede a descargas gratuitas de contenido y datos wiki que puedes usar en investigación, lectura sin conexión, edición con bots y otros proyectos.",
+  "content-experiments-open-data-card-dumps-title": "Descargar contenido de forma masiva",
+  "content-experiments-open-data-card-intro-description": "Accede a datos públicos y con licencia abierta sobre los proyectos de Wikimedia, incluidas descargas masivas, flujos de cambios recientes y estadísticas de páginas.",
+  "content-experiments-open-data-card-intro-title": "Introducción a los datos abiertos de Wikimedia",
+  "content-experiments-open-data-card-liftwing-description": "Obtén predicciones de los modelos de aprendizaje automático de Wikimedia",
+  "content-experiments-open-data-card-liftwing-title": "Lift Wing API",
+  "content-experiments-open-data-card-wikidata-description": "Wikidata es una base de conocimiento libre y abierta que pueden leer y editar tanto personas como máquinas. Aprende a acceder a los datos de Wikidata y sigue las buenas prácticas para reutilizarlos.",
+  "content-experiments-open-data-card-wikidata-title": "Explorar datos estructurados con Wikidata",
+  "content-experiments-open-data-heading-commercial": "Acceso comercial y de alto volumen",
+  "content-experiments-open-data-heading-explore-apis": "Explorar las API",
+  "content-experiments-open-data-heading-tutorials": "Aprender con tutoriales",
+  "content-experiments-open-data-intro": "Explora datos públicos que puedes usar en investigación y aprendizaje automático.",
+  "content-experiments-open-data-title": "Acceder a datos abiertos",
+  "content-shared-read-more-on": "Más información en {{BIDI:$1}}",
+  "content-shared-read-the-tutorial": "Leer el tutorial"
+}

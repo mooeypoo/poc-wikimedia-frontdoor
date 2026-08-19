@@ -1,0 +1,30 @@
+{
+  "$schema": "./packages/banana-content/banana-content.schema.json",
+  "format": "markdown",
+  "source": {
+    "dir": "content-i18n",
+    "include": [ "**/*.md" ],
+    "definitionsOnly": [ "_shared/**" ]
+  },
+  "messages": {
+    "dir": "i18n/content",
+    "sourceLocale": "en",
+    "documentationLocale": "qqq"
+  },
+  "output": {
+    "dir": "content",
+    "path": "%locale%/%path%"
+  },
+  "locales": {
+    "fallback": "./config/contentLocaleFallbacks.mjs",
+    "minTranslatedPercent": 0
+  },
+  "keys": {
+    "prefix": "content-",
+    "pattern": "^content-[a-z0-9-]+$"
+  },
+  "marker": {
+    "name": "message",
+    "definitionsBlock": "messages"
+  }
+}

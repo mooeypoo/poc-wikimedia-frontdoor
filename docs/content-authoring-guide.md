@@ -7,6 +7,14 @@ This covers **hand-authored** content committed under `content/`. For content
 *imported* from wikis or remote URLs, see
 [`content-import-guide.md`](./content-import-guide.md).
 
+There is a third pathway, currently an experiment: short pages whose English is
+authored **once** under `content-i18n/` with translatable segments marked
+inline, and whose per-locale Markdown is generated for you. Its output carries
+`i18nGenerated: true` in the frontmatter — **never hand-edit a file carrying
+that marker**, or the next run will discard your edit; edit the base file under
+`content-i18n/` instead. See **[Part 5](#part-5--translatable-prose-pages-experiment)**
+below.
+
 ---
 
 ## Mental model (read this first)
@@ -348,6 +356,291 @@ sidebar: false
 
 ---
 
+## Part 5 — Translatable prose pages (experiment)
+
+Everything above describes a page you write **once per locale**. This part
+describes the alternative: write the English **once**, mark the translatable
+bits, and let a command generate every locale for you.
+
+**Use it for** short pages that change often and are worth translating fully.
+**Don't use it for** long-form pages, or anything where a translator needs the
+whole page as context — those stay hand-authored per locale.
+
+### How it fits together
+
+```
+content-i18n/<path>.md          you write this (English, once)
+        │
+        │  npm run generate-content-i18n
+        ▼
+i18n/content/en.json + qqq.json  extracted for translators
+i18n/content/<locale>.json       translations come back here
+        │
+        ▼
+content/<locale>/<path>.md       generated — DO NOT EDIT
+```
+
+- The base file mirrors the content tree **without** the locale folder:
+  `content-i18n/experiments/open-data.md` → `/experiments/open-data`,
+  `/he/experiments/open-data`, …
+- Generated pages carry `i18nGenerated: true`. **Never hand-edit a file with
+  that marker** — the next run deletes and rewrites it. Edit the base file.
+- Nothing happens until you run the command. Editing a base file alone changes
+  nothing on the site.
+
+### The two marks
+
+**A definition** carries the English text and gives it a key. It **renders in
+place** — the text appears exactly where you wrote it:
+
+```md
+# :message[Access open data]{#title qqq="Page H1 and page title."}
+```
+
+**A reference** carries only a key. It resolves to text defined elsewhere:
+
+```md
+:message{#title}
+```
+
+`qqq` is the note translators read. Write it for someone who cannot see the
+page: what the string is, where it appears, and anything they must not
+translate. It is required in practice — a missing `qqq` is reported every run.
+
+### Where do I put the definition?
+
+**A definition renders in place.** So write it where the text belongs — in the
+heading, in the paragraph, in the list item, in the table cell:
+
+```md
+## :message[Before you start]{#heading-before-you-start qqq="H2 above general guidance."}
+
+- :message[Check the license of each dataset before you redistribute it.]{#practice-license qqq="Bulleted best-practice item."}
+
+| :message[Data source]{#table-header-source qqq="Table column header."} | :message[Format]{#table-header-format qqq="Table column header."} |
+```
+
+That includes **inside a component attribute**. This works, and it is the
+simplest thing when a component has only a little copy:
+
+```md
+::navigation-card{url="/explorer" title=":message[Lift Wing API]{#card-liftwing-title qqq='Card title. Proper name; not translated.'}"}
+::
+```
+
+Note the **single quotes** around `qqq` — the attribute already uses double
+quotes, so the inner one alternates. See the escaping table below.
+
+### `:::messages` — when the line gets too long
+
+Everything above still works when a component has three attributes of copy. It
+just becomes unreadable:
+
+```md
+<!-- don't: one line, two English sentences, two translator notes, url buried -->
+::navigation-card{url="https://meta.wikimedia.org/…/Research:Data" title=":message[Introduction to Wikimedia open data]{#card-intro-title qqq='Navigation card title. Destination is Research:Data on Meta-Wiki.'}" description=":message[Access publicly-available, open-licensed data about Wikimedia projects.]{#card-intro-description qqq='Navigation card description for the Research:Data card.'}" supporting-text=":message{#content-shared-read-more-on p1='Meta-Wiki'}"}
+::
+```
+
+When that happens, lift the definitions into a **`:::messages` block** and leave
+short references behind. The block renders nothing — it exists purely to get the
+prose off the component line:
+
+```md
+:::messages
+:message[Introduction to Wikimedia open data]{#card-intro-title qqq="Navigation card title. Destination is Research:Data on Meta-Wiki."}
+:message[Access publicly-available, open-licensed data about Wikimedia projects.]{#card-intro-description qqq="Navigation card description for the Research:Data card."}
+:::
+
+:::navigation-card-grid
+::navigation-card{url="https://meta.wikimedia.org/…/Research:Data" title=":message{#card-intro-title}" description=":message{#card-intro-description}"}
+::
+:::
+```
+
+Now the card line shows *structure* and the block above shows *content*. Inside
+the block the `qqq` can go back to double quotes, because there is no attribute
+wrapped around it.
+
+**It's a judgement call, not a rule.** Both forms produce identical output and
+identical files for translators — they only ever see `en.json` and `qqq.json`.
+Pick whichever leaves a line you can still read. Rules of thumb:
+
+- One short attribute → define in place.
+- Two or more attributes of real prose → use a block.
+- A long `qqq` → use a block; translator notes crowd a component line fast.
+
+Put each block **immediately before the component it serves**, not all at the
+top of the file. The generator doesn't care; you will, when you come back to
+edit it.
+
+The same applies to any component whose copy lives in attributes —
+`::section-heading{title=…}`, `::api-catalog-wikimedia-section{title=… chip=…}`,
+and so on.
+
+> **One thing to avoid:** defining the text in the body *and* referencing it from
+> the attribute. That renders it **twice** — once as a stray paragraph above the
+> component, once inside it. Either define it in the attribute, or put the
+> definition in a `:::messages` block. Never in ordinary body text.
+
+### Repeating a string
+
+A reference *is* the repeat mechanism. Define once, reference as often as you
+like:
+
+```md
+:::messages
+:message[Access free downloads of wiki content and data.]{#card-dumps-description qqq="Card description for the data-dumps card. Reused by the Bulk downloads card."}
+:::
+
+::navigation-card{url="…" description=":message{#card-dumps-description}"}
+::
+::navigation-card{url="…" description=":message{#card-dumps-description}"}
+::
+```
+
+For a string repeated across **several pages**, define it in
+`content-i18n/_shared/common.md` and reference it by its full key. Keys there
+must start with `content-` (that is how the generator knows it is a cross-file
+reference). A key may be defined **exactly once** anywhere — a second definition
+is an error.
+
+### Variables in a message
+
+When the same sentence differs only by a name or a number, parameterize it
+instead of writing near-duplicate strings. Put `$1` in the text and supply the
+value on each **reference**:
+
+```md
+:::messages
+:message[Read more on {{BIDI:$1}}]{#content-shared-read-more-on qqq="Card supporting text. $1 is the destination site, e.g. Meta-Wiki."}
+:::
+
+supporting-text=":message{#content-shared-read-more-on p1='Meta-Wiki'}"
+supporting-text=":message{#content-shared-read-more-on p1='Wikidata'}"
+```
+
+`{{BIDI:$1}}` keeps a Latin-script name from scrambling the sentence in Hebrew,
+Arabic, or Persian. **Wrap any name, title, or label you drop into a message
+this way** — it does nothing visible in English and prevents a real bug in RTL
+languages.
+
+Values go on the reference, never on a definition inside `:::messages` (that
+definition never renders, so it has nothing to substitute into).
+
+### Multi-paragraph text
+
+Use the block form when one translatable unit spans paragraphs:
+
+```md
+::message{#before-you-start-intro qqq="Two-paragraph intro. The second paragraph links to the User-Agent policy; keep the link."}
+All of the data linked from this page is publicly available and openly licensed.
+
+You do not need an account or an API key to read it.
+::
+```
+
+Don't wrap a bulleted list in one of these — mark each item separately, so
+translators get list items as list items.
+
+### Escaping — the three you will hit
+
+| Situation | Write |
+|---|---|
+| A literal `\|` inside a table cell | `:message[XML \| SQL]{#…}` |
+| Any marker nested inside an attribute | Alternate the quote style: `title=":message[Text]{#key qqq='Note.'}"` |
+| A `"` inside a `qqq` that already uses `"` | `qqq="Refers to the \"EventStreams\" service."` |
+
+There are only ever **two** quoting levels, because the English text sits inside
+`[ ]` rather than quotes. So apostrophes and quotes in the *text itself* need no
+escaping at all — `:message[A project's "best" tools]{#…}` is fine as written,
+even inside an attribute. Only `qqq` is quote-delimited, and alternating covers
+it; backslash-escape only when one note needs both quote styles.
+
+Markdown links need no escaping either: `:message[See the [dumps guide](/dumps) page]{#…}`
+works as written. (Markdown inside an *attribute* renders as plain text, though —
+the run warns you if you do that.)
+
+### Running it
+
+```bash
+npm run generate-content-i18n
+```
+
+Then review the git diff and commit — base file, message files, and generated
+pages together.
+
+Everything is reported in one pass. Structural problems — an undefined key, a
+key defined twice, a table broken by an unescaped pipe — are **errors**, and
+nothing at all is written. Softer ones — a missing `qqq`, a translation for a
+key you have since renamed — are **warnings**, and the run continues. It also
+refuses to overwrite any page it doesn't own, so it can never eat a
+hand-authored file.
+
+Locales appear as their translations arrive (a locale below the configured
+completeness threshold is skipped, and the run tells you so). A locale with no
+message file simply falls back to English, exactly like a missing hand-authored
+file.
+
+### Making the page appear
+
+Generating the files is only half of it. A generated page is an ordinary content
+page, so it needs the same wiring as any other — with one wrinkle worth knowing
+before it confuses you.
+
+**Frontmatter goes in the base file, once.** Whatever you put there is copied to
+every locale, so set `sidebar`, `prev`/`next` and the rest in
+`content-i18n/<path>.md` and never in the generated copies:
+
+```md
+---
+sidebar: false
+---
+
+# :message[Access open data]{#title qqq="Page H1."}
+```
+
+**Menus are configured, not authored** — exactly as in Parts 3 and 4. Add the page
+to the top menu in `config/mainNavigation.ts`, or to a section menu in
+`config/sectionNavigation.js`, by its URL. Nothing about that changes for a
+message-driven page.
+
+**But the menu label is an interface string, not page content.** This is the part
+that catches people:
+
+| String | Lives in | Because |
+|---|---|---|
+| Everything on the page | `i18n/content/` (generated from your base file) | It is page content |
+| The menu label pointing at it | `i18n/en.json` (hand-edited) | Menu chrome is interface, and menus are shared across pages |
+
+So a new page in a section menu means adding a `messageKey` entry to
+`config/sectionNavigation.js` **and** that key to `i18n/en.json` by hand. Do not
+put nav labels in `i18n/content/` — nothing reads that at runtime, and the label
+will render as a raw key.
+
+### Adding a page, start to finish
+
+1. Create `content-i18n/<path>.md`. The path mirrors the content tree **without**
+   the locale folder, so `content-i18n/get-help/faq.md` → `/get-help/faq`.
+2. Write the English, marking translatable segments. Give every definition a
+   `qqq`.
+3. Run `npm run generate-content-i18n`. Fix anything it reports.
+4. Check the generated `content/en/<path>.md` reads as you intended.
+5. Wire up menus if the page needs to be reachable — nav entry plus its label in
+   `i18n/en.json`.
+6. Commit the base file, `i18n/content/en.json` and `qqq.json`, the generated
+   pages, and `.banana-content-manifest.json` together.
+
+Translations arrive later, as `i18n/content/<locale>.json`. Re-run the command and
+that locale's page appears; you do not touch a list anywhere.
+
+For the design behind all of this, see
+[`adr-translatable-prose-content.md`](./adr-translatable-prose-content.md), and
+[`guide/translatable-content.md`](./guide/translatable-content.md) for how the
+system is meant to grow up.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
@@ -358,6 +651,10 @@ sidebar: false
 | `sidebar: "foo"` shows nothing | `foo` isn't a key in `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID`. Use one of the listed ids. |
 | Page shows English on a translated locale | No file at `content/<locale>/<slug>.md` — that's the fallback working as designed. Add the translated file. |
 | Old URL 404s after a rename | Add the mapping to `LEGACY_PATH_REDIRECTS` in `config/contentRedirects.ts`. |
+| My edit to a page under `content/` vanished | That page is generated — it has `i18nGenerated: true`. Edit the base file named in its `sourceFile` frontmatter, then re-run `npm run generate-content-i18n` (Part 5). |
+| I edited `content-i18n/` but the site is unchanged | Nothing regenerates on its own. Run `npm run generate-content-i18n` and commit the result. |
+| A card title also appears as a stray paragraph above the grid | The definition was written in ordinary body text and referenced from the attribute, so it renders in both places. Move the definition into the attribute itself, or into a `:::messages` block (Part 5). |
+| `reference to undefined key "content-…"` | Typo in the key, or it lives in `content-i18n/_shared/` and needs its full `content-…` name, not the short local one. |
 
 ---
 
@@ -365,6 +662,8 @@ sidebar: false
 
 - [`content-import-guide.md`](./content-import-guide.md) — imported/remote content
   and shared partials.
+- [`adr-translatable-prose-content.md`](./adr-translatable-prose-content.md) — the
+  design behind Part 5 (marker syntax, message ownership, known gaps).
 - [`adr-language-catalog.md`](./adr-language-catalog.md) — the locale catalog and
   fallback design.
 - Config touchpoints: [`config/mainNavigation.ts`](../config/mainNavigation.ts),

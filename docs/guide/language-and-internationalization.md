@@ -28,6 +28,7 @@ A third partial exception exists: the API explorer's internal UI strings (button
 | Language picker labels | banana-i18n for UI chrome; autonyms from catalog data | Language names shown as options use native autonyms from the catalog, not banana keys |
 | Content page routing (`/fr/`, `/ar/`) | Nuxt i18n | URL prefix only |
 | Markdown content translation | Per-locale content directories | `content/[locale]/` |
+| Message-driven prose pages | banana message format, **build time only** | English authored in `content-i18n/`, extracted to `i18n/content/`, expanded into `content/[locale]/` by `npm run generate-content-i18n`. Never loaded at runtime — see [adr-translatable-prose-content.md](../adr-translatable-prose-content.md) |
 | API explorer internal strings | Scalar (third-party) | Accepted exception; not our interface surface |
 
 ## The canonical language catalog
@@ -126,6 +127,21 @@ A page that exists in English but has not been translated into a given language 
 Content translation works best when kept simple. Some content will be translated by the community through on-wiki translation tools and imported automatically; some will be authored directly in the content directory. Both pathways land content in the same per-locale directory structure, so the application treats them identically. The distinction between imported and hand-authored content is a workflow concern, not an architectural one – the application does not need to know where a file came from.
 
 The language catalog's fallback chains are the source of truth for how content fallback resolves. Content-fetching logic should read from the catalog rather than implementing its own fallback rules.
+
+### Message-driven prose pages
+
+A third pathway exists for short pages that change often and are worth translating in full. Those are the pages where per-locale hand authoring decays fastest: editing one English sentence means editing every locale copy, or letting the translations go stale. Their source language is authored once with translatable segments marked inline, extracted into a banana message catalogue, and expanded back into one file per locale. See [translatable-content.md](translatable-content.md).
+
+Architecturally the important thing is what this does **not** change. It adds no runtime behaviour: the generated files are ordinary per-locale Markdown, indistinguishable to the application from hand-authored or imported content, and they fall back through the catalog chains like everything else. The application still does not need to know where a file came from.
+
+It does add a second use of the banana *message format*, and the boundary around that is structural rather than conventional:
+
+- Prose messages live in `i18n/content/`, separate from the interface strings in `i18n/`.
+- `app/plugins/banana-i18n.ts` does not import `i18n/content/*`, and must not. Those messages are build-time inputs; no prose message is resolvable at runtime. Loading them would ship page prose to every visitor for no runtime purpose, and would degrade the interface/content boundary from an import boundary into a naming convention.
+
+This is why the rule in this document still holds without exception: **banana-i18n remains the only system producing user-visible interface strings.** Prose messages never render as chrome, and interface strings never live in the prose namespace.
+
+One consequence worth internalising before touching that subsystem: it derives its output locales from the catalogue files that exist on disk, not from the language catalog. The catalog governs routing, direction, the picker, and fallback; it says nothing about which pages have been translated. Conflating the two would mean either generating empty pages for several hundred catalog languages, or maintaining a second language list beside the translation files themselves. The one place catalog knowledge is genuinely needed — resolving a fallback chain for a locale already found on disk — is supplied to the generator through configuration, so `LANGUAGE_OVERRIDES` governs generated content exactly as it governs the interface.
 
 ## Directionality and RTL layout
 

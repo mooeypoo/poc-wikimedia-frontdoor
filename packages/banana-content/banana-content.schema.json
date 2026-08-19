@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wikimedia.github.io/banana-content/banana-content.schema.json",
+  "title": "banana-content configuration",
+  "description": "Configuration for @wikimedia/banana-content. Options that accept a function may instead be given a module specifier — a path to a module whose default export is that function, resolved relative to this config file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [ "source", "messages", "output" ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL to this schema, for editor autocomplete and validation."
+    },
+    "format": {
+      "description": "Format adapter: a built-in name, or a module specifier for a custom adapter.",
+      "default": "markdown",
+      "anyOf": [
+        { "enum": [ "markdown", "plainText" ] },
+        { "type": "string", "description": "Module specifier for a custom adapter." }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "description": "Where the source-language files are authored.",
+      "additionalProperties": false,
+      "required": [ "dir" ],
+      "properties": {
+        "dir": {
+          "type": "string",
+          "description": "Root of the source files, relative to this config file."
+        },
+        "include": {
+          "type": "array",
+          "description": "Globs relative to source.dir. Any line-oriented text format works; the extension does not have to be .md.",
+          "items": { "type": "string" },
+          "default": [ "**/*" ]
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Globs to skip entirely.",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "definitionsOnly": {
+          "type": "array",
+          "description": "Globs for files that contribute message definitions but emit no output. Their definitions must use fully-qualified keys, since a path-derived namespace would be meaningless.",
+          "items": { "type": "string" },
+          "default": [ "**/_*", "_*/**" ]
+        }
+      }
+    },
+    "messages": {
+      "type": "object",
+      "description": "Where message catalogues are written and read.",
+      "additionalProperties": false,
+      "required": [ "dir" ],
+      "properties": {
+        "dir": {
+          "type": "string",
+          "description": "Catalogue directory. The source and documentation catalogues here are GENERATED; every other <locale>.json is translator-owned and only ever read."
+        },
+        "sourceLocale": {
+          "type": "string",
+          "description": "The language source files are authored in. Always emitted, never subject to the translation threshold.",
+          "default": "en"
+        },
+        "documentationLocale": {
+          "type": "string",
+          "description": "Filename for the translator documentation catalogue (the qqq convention).",
+          "default": "qqq"
+        },
+        "indent": {
+          "description": "JSON indentation for generated catalogues.",
+          "default": 2,
+          "anyOf": [ { "type": "integer", "minimum": 0 }, { "type": "string" } ]
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Where per-locale files are written.",
+      "additionalProperties": false,
+      "required": [ "dir" ],
+      "properties": {
+        "dir": {
+          "type": "string",
+          "description": "Root the generated files are written under."
+        },
+        "path": {
+          "type": "string",
+          "description": "Output path template, or a module specifier for a function receiving (source, locale). Tokens: %locale%, %path% (source-relative path with extension), %dir%, %name% (basename without extension), %ext% (with dot).",
+          "default": "%locale%/%path%"
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Per-file path template overrides, keyed by path relative to source.dir. Same tokens as output.path.",
+          "additionalProperties": { "type": "string" },
+          "default": {}
+        }
+      }
+    },
+    "locales": {
+      "type": "object",
+      "description": "The library never enumerates languages and takes no locale list. Output locales are exactly the catalogue files present in messages.dir. These options only describe what to do with the locales found there.",
+      "additionalProperties": false,
+      "properties": {
+        "fallback": {
+          "description": "Chain walked when a key is missing from a locale. A map of locale to ordered chain, or a module specifier for a function returning one. Defaults to [locale, sourceLocale].",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": { "type": "array", "items": { "type": "string" } }
+            },
+            { "type": "string", "description": "Module specifier." }
+          ]
+        },
+        "minTranslatedPercent": {
+          "type": "number",
+          "description": "Minimum share of a file's keys that must be translated before that locale is emitted for it. Below the threshold nothing is written, so host content fallback serves a clean single-language file instead of a mixed one. 0 emits everything.",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        }
+      }
+    },
+    "keys": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "description": "Reserved key namespace. Also the test for whether a written key is a fully-qualified cross-file reference rather than a page-local one.",
+          "default": "content-"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regular expression (as a string, compiled with no flags) that every namespaced key must match. Change this to match if you change the prefix.",
+          "default": "^content-[a-z0-9-]+$"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Module specifier for a function overriding how a local key becomes a full key. Defaults to deriving it from the source file's path."
+        }
+      }
+    },
+    "marker": {
+      "type": "object",
+      "description": "Marker names. Change only to resolve a collision with the host format: renaming after adoption is a breaking change to every source file in the project.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Directive name used by inline and block markers: :message[...] and ::message{...}.",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "default": "message"
+        },
+        "definitionsBlock": {
+          "type": "string",
+          "description": "Fence name for the definitions-only block: :::messages. Configured separately from marker.name rather than derived, because deriving it would require pluralisation.",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "default": "messages"
+        }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "description": "How generated files are identified for wipe-and-recreate. Files are the UNION of the manifest and the in-file marker, so that a deleted manifest or a stripped marker each degrade safely.",
+      "additionalProperties": false,
+      "properties": {
+        "manifest": {
+          "description": "Path to the generated-file manifest, or false to rely on the in-file marker alone.",
+          "default": ".banana-content-manifest.json",
+          "anyOf": [ { "type": "string" }, { "const": false } ]
+        },
+        "marker": {
+          "description": "Metadata field stamped into generated files. Requires a format with an envelope; set to false otherwise.",
+          "default": "i18nGenerated",
+          "anyOf": [ { "type": "string" }, { "const": false } ]
+        }
+      }
+    }
+  }
+}

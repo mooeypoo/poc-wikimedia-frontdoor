@@ -1,4 +1,9 @@
-import { GENERATED_LANGUAGES } from './languages.generated'
+// Explicit .ts extension: Node's ESM resolver cannot resolve an extensionless
+// relative import, and this module must be importable from plain .mjs tooling
+// (the prose-content generator's fallback resolver and stub-translation script)
+// so that those honour LANGUAGE_OVERRIDES rather than reading the generated
+// catalog directly. Vite resolves it unchanged.
+import { GENERATED_LANGUAGES } from './languages.generated.ts'
 
 /**
  * Supported interface/content locales and fallback policy.

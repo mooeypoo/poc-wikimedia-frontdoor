@@ -19,6 +19,12 @@ Start here for the shared values, then read the topic guides as needed:
   the two i18n systems (banana-i18n for interface strings, Nuxt i18n for content
   routing), the canonical language catalog and fallback chains, language
   flattening, RTL layout, and BiDi isolation rules.
+- [translatable-content.md](translatable-content.md) – the third content pathway:
+  short pages whose source language is authored once with translatable segments
+  marked inline, generated into one file per locale from banana message
+  catalogues. Choosing between the three pathways, where the library boundary
+  sits, what is production-shaped versus scaffolding, and the three things that
+  gate a production rollout.
 - [dynamic-spa-surfaces.md](dynamic-spa-surfaces.md) – what makes a surface a
   client-side SPA, how SPAs coexist with the SSG site, the principles common to
   all of them (locale exemption, deep linking, navigation boundaries), and the
