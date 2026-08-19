@@ -35,7 +35,7 @@
   "content-experiments-open-data-table-streams-best-for": "Table cell. What streams are best suited to.",
   "content-experiments-open-data-table-streams-format": "Table cell. Format name; do not translate.",
   "content-experiments-open-data-table-streams-source": "Table cell. Short name of the real-time change feed. Refers to the \"EventStreams\" service; the service name itself is not translated.",
-  "content-experiments-open-data-title": "Page H1 and page title. Short imperative phrase.",
+  "content-experiments-open-data-title": "Page heading and page title. Short imperative phrase.",
   "content-shared-read-more-on": "Supporting text on a navigation card pointing off-platform. $1 is the name of the destination site, for example Meta-Wiki or Wikidata. Keep the BIDI wrapper: the site name is usually Latin script and needs directional isolation inside a right-to-left sentence.",
   "content-shared-read-the-tutorial": "Supporting text on a navigation card whose destination is a step-by-step tutorial."
 }

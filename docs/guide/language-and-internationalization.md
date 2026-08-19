@@ -128,6 +128,21 @@ Content translation works best when kept simple. Some content will be translated
 
 The language catalog's fallback chains are the source of truth for how content fallback resolves. Content-fetching logic should read from the catalog rather than implementing its own fallback rules.
 
+### Message-driven prose pages
+
+A third pathway exists for short pages that change often and are worth translating in full. Those are the pages where per-locale hand authoring decays fastest: editing one English sentence means editing every locale copy, or letting the translations go stale. Their source language is authored once with translatable segments marked inline, extracted into a banana message catalogue, and expanded back into one file per locale. See [translatable-content.md](translatable-content.md).
+
+Architecturally the important thing is what this does **not** change. It adds no runtime behaviour: the generated files are ordinary per-locale Markdown, indistinguishable to the application from hand-authored or imported content, and they fall back through the catalog chains like everything else. The application still does not need to know where a file came from.
+
+It does add a second use of the banana *message format*, and the boundary around that is structural rather than conventional:
+
+- Prose messages live in `i18n/content/`, separate from the interface strings in `i18n/`.
+- `app/plugins/banana-i18n.ts` does not import `i18n/content/*`, and must not. Those messages are build-time inputs; no prose message is resolvable at runtime. Loading them would ship page prose to every visitor for no runtime purpose, and would degrade the interface/content boundary from an import boundary into a naming convention.
+
+This is why the rule in this document still holds without exception: **banana-i18n remains the only system producing user-visible interface strings.** Prose messages never render as chrome, and interface strings never live in the prose namespace.
+
+One consequence worth internalising before touching that subsystem: it derives its output locales from the catalogue files that exist on disk, not from the language catalog. The catalog governs routing, direction, the picker, and fallback; it says nothing about which pages have been translated. Conflating the two would mean either generating empty pages for several hundred catalog languages, or maintaining a second language list beside the translation files themselves. The one place catalog knowledge is genuinely needed — resolving a fallback chain for a locale already found on disk — is supplied to the generator through configuration, so `LANGUAGE_OVERRIDES` governs generated content exactly as it governs the interface.
+
 ## Directionality and RTL layout
 
 The portal serves languages written right-to-left, including Arabic, Hebrew, Persian, and Urdu. RTL support is a first-class requirement, not a post-implementation concern. Any assumption in the codebase that layout is always left-to-right is a bug.

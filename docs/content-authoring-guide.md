@@ -582,8 +582,62 @@ completeness threshold is skipped, and the run tells you so). A locale with no
 message file simply falls back to English, exactly like a missing hand-authored
 file.
 
+### Making the page appear
+
+Generating the files is only half of it. A generated page is an ordinary content
+page, so it needs the same wiring as any other — with one wrinkle worth knowing
+before it confuses you.
+
+**Frontmatter goes in the base file, once.** Whatever you put there is copied to
+every locale, so set `sidebar`, `prev`/`next` and the rest in
+`content-i18n/<path>.md` and never in the generated copies:
+
+```md
+---
+sidebar: false
+---
+
+# :message[Access open data]{#title qqq="Page H1."}
+```
+
+**Menus are configured, not authored** — exactly as in Parts 3 and 4. Add the page
+to the top menu in `config/mainNavigation.ts`, or to a section menu in
+`config/sectionNavigation.js`, by its URL. Nothing about that changes for a
+message-driven page.
+
+**But the menu label is an interface string, not page content.** This is the part
+that catches people:
+
+| String | Lives in | Because |
+|---|---|---|
+| Everything on the page | `i18n/content/` (generated from your base file) | It is page content |
+| The menu label pointing at it | `i18n/en.json` (hand-edited) | Menu chrome is interface, and menus are shared across pages |
+
+So a new page in a section menu means adding a `messageKey` entry to
+`config/sectionNavigation.js` **and** that key to `i18n/en.json` by hand. Do not
+put nav labels in `i18n/content/` — nothing reads that at runtime, and the label
+will render as a raw key.
+
+### Adding a page, start to finish
+
+1. Create `content-i18n/<path>.md`. The path mirrors the content tree **without**
+   the locale folder, so `content-i18n/get-help/faq.md` → `/get-help/faq`.
+2. Write the English, marking translatable segments. Give every definition a
+   `qqq`.
+3. Run `npm run generate-content-i18n`. Fix anything it reports.
+4. Check the generated `content/en/<path>.md` reads as you intended.
+5. Wire up menus if the page needs to be reachable — nav entry plus its label in
+   `i18n/en.json`.
+6. Commit the base file, `i18n/content/en.json` and `qqq.json`, the generated
+   pages, and `.banana-content-manifest.json` together.
+
+Translations arrive later, as `i18n/content/<locale>.json`. Re-run the command and
+that locale's page appears; you do not touch a list anywhere.
+
 For the design behind all of this, see
-[`adr-translatable-prose-content.md`](./adr-translatable-prose-content.md).
+[`adr-translatable-prose-content.md`](./adr-translatable-prose-content.md), and
+[`guide/translatable-content.md`](./guide/translatable-content.md) for how the
+system is meant to grow up.
 
 ---
 

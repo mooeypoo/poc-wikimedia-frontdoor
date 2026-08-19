@@ -338,112 +338,30 @@ component mappings on the same conservative footing.
 ## Translatable prose content
 
 The third producer of files under `content/`, alongside hand authoring and the
-remote importer. It exists for short pages that change often and are worth
-translating fully, where maintaining one Markdown file per locale by hand means
-either editing every locale on each English edit or letting the translations
-rot.
+remote importer: short pages whose source language is authored once with
+translatable segments marked inline, and whose per-locale files are generated
+from banana message catalogues.
 
-Unlike the other entries here it is not a script in [scripts/](../../scripts/).
-The mechanism lives in [packages/banana-content/](../../packages/banana-content/),
-a self-contained workspace package that nothing outside it depends on and that
-depends on nothing in frontdoor. Frontdoor drives it through
-[banana-content.config.json](../../banana-content.config.json). See
-[adr-translatable-prose-content.md §10.1](../adr-translatable-prose-content.md)
-for why it is packaged this way, and the package's own docs for the marker
-syntax and configuration reference.
+It follows the same philosophy as everything else here — a deliberate command,
+committed output, wipe-and-recreate by an ownership marker, deterministic and
+byte-identical on an unchanged re-run — with one difference worth knowing: it
+makes **no network calls**, so the reproducibility argument that keeps the other
+scripts out of the build does not apply to it. It is still a standalone command;
+promoting it to a `prebuild` hook is a deliberate open decision.
 
-English is authored once in [content-i18n/](../../content-i18n/), with the
-translatable segments marked inline:
-
-```md
-# :message[Access open data]{#title qqq="Page H1 and page title."}
-
-::navigation-card{url="/explorer" title=":message{#card-liftwing-title}"}
-::
-```
-
-A marker carrying `[...]` **defines** a key and its English source; one without
-**references** a key defined elsewhere. Either form may sit inside an MDC
-attribute value; a reference is the compact option, carrying no quote, pipe, or
-bracket at all. The split doubles as the mechanism for repeated strings,
-including across pages via definitions-only files under `content-i18n/_shared/`.
-
-A `:::messages` block is an optional non-rendering region for lifting
-definitions off a component line that has grown unreadable. It is an
-authoring-ergonomics choice, not a correctness one — both forms produce
-identical output and identical files for translators.
-
-```
-extract:   content-i18n/**            →  i18n/content/{en,qqq}.json
-generate:  i18n/content/<locale>.json →  content/<locale>/<path>.md
-```
-
-It shares the shape of every other generator here — deliberate command,
-committed output, wipe-and-recreate by a frontmatter marker
-(`i18nGenerated: true`), deterministic and byte-identical on an unchanged
-re-run — with one difference worth knowing: it makes **no network calls**, so
-the reproducibility argument that keeps the other scripts out of the build does
-not apply to it. It is still a standalone command today; promoting it to a
-`prebuild` hook is a deliberate open decision, not an oversight.
+It is also not a script in [scripts/](../../scripts/). The mechanism lives in
+[packages/banana-content/](../../packages/banana-content/), a self-contained
+workspace package, driven by
+[banana-content.config.json](../../banana-content.config.json).
 
 ```bash
 npm run generate-content-i18n                  # extract + generate
-npm run generate-content-i18n -- --extract-only
-npm run generate-content-i18n -- --generate-only
 npm run generate-content-i18n -- --check       # validate; write nothing
-npm run test:banana-content                    # the package's own test suite
+npm run generate-content-i18n-stubs            # pseudo-localized demo stubs
 ```
 
-Two boundaries the script enforces rather than trusts. It refuses to overwrite
-any file it does not own, so a base file whose path collides with a
-hand-authored or imported page is an error rather than a silent deletion. And
-because a translated string is arbitrary text, substitution is
-**context-aware**: a value landing in an MDC attribute gets its quotes escaped,
-one landing in a table cell gets its pipes escaped, and the stored message keeps
-neither — escaping belongs to the file syntax, never to the message value.
-
-banana-i18n owns the message format and the call contract; this script only
-transports `p1`…`pN` as positional arguments. Anything a parameter needs done to
-it — `{{BIDI:$1}}` for directional isolation, `{{FORMATNUM:$1}}` for digits,
-`{{PLURAL:}}` for agreement — belongs in the message, where a translator can see
-it. Parameter values are passed through verbatim.
-
-The extracted messages live in `i18n/content/`, deliberately separate from the
-interface messages in `i18n/`, and [app/plugins/banana-i18n.ts](../../app/plugins/banana-i18n.ts)
-must never import them: they are build-time inputs, and loading them would ship
-page prose to every visitor for no runtime purpose.
-
-### Stub catalogues for the demo
-
-[generate-content-stub-translations.mjs](../../scripts/generate-content-stub-translations.mjs)
-writes **pseudo-localized** stub catalogues for a handful of catalog languages,
-so the experiment demonstrates many locales without waiting on translation work.
-Because the generator derives its locales from the catalogue files that exist, a
-stub file is the entire cost of adding a locale to the demo.
-
-The output is bracketed, accented text (`⟦Àççéšš öþéñ ðàťà⟧`) rather than copied
-English, so nobody can mistake it for a translation, and every string visibly
-proves it travelled through the catalogue. Parameters, banana magic words, and
-the URL half of a Markdown link are left untouched.
-
-Stubs carry `@metadata.stub: true`, and the script **refuses to overwrite any
-catalogue lacking that marker** — the same "never overwrite what you do not own"
-rule the generator itself follows, here protecting the hand-written `he` and
-`es` fixtures.
-
-```bash
-npm run generate-content-i18n-stubs             # write stubs
-npm run generate-content-i18n-stubs -- --remove # delete them; real ones untouched
-```
-
-Delete a locale's stub the moment a real translation for it arrives.
-
-### Further reading
-
-For the decisions, the marker syntax in full, and the known gaps — no
-fuzzy/stale-translation mechanism, no TranslateWiki group yet, and renaming a
-base file orphaning its translations — see
-[adr-translatable-prose-content.md](../adr-translatable-prose-content.md).
+See [translatable-content.md](translatable-content.md) for the model, what to use
+directly versus treat as reference, and what gates a production rollout.
 
 ## Dark-mode tokens
 

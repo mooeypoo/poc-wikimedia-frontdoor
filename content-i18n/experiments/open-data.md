@@ -3,7 +3,7 @@ status: mockup
 sidebar: false
 ---
 
-# :message[Access open data]{#title qqq="Page H1 and page title. Short imperative phrase."}
+# :message[Access open data]{#title qqq="Page heading and page title. Short imperative phrase."}
 
 :message[Explore public data that you can use in research and machine learning.]{#intro qqq="Single-sentence intro paragraph directly under the H1."}
 
