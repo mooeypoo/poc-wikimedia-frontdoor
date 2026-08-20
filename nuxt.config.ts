@@ -7,6 +7,11 @@ import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfi
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_FILES, buildBrandWordmarkFontCss } from './config/brandTypography'
 import { SUPPORTED_LANGUAGES } from './config/languages'
+import { GENERATED_MODULES } from './config/generated/modules.generated.ts'
+import {
+	REFERENCE_EXPERIMENT_LOCALES,
+	referencePathForModule
+} from './config/referenceRoutes.ts'
 import {
 	COLOR_MODES,
 	COLOR_MODE_STORAGE_KEY,
@@ -26,6 +31,28 @@ const colorModeFoucScript = `(function(){try{` +
 	`}catch(e){}})();`
 
 const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
+
+/**
+ * Every `/reference/**` route to prerender: one page per module per publishable
+ * locale, locale-prefixed except for the default (`prefix_except_default`).
+ *
+ * Nitro cannot crawl these — the reference page is a catch-all, so there is no
+ * link graph to discover `/reference/site/v1` from. The cross product is
+ * therefore materialised here, in exactly one place, from the committed module
+ * source of truth. See docs/adr-static-module-documentation.md §7.
+ */
+function buildReferencePrerenderRoutes(): string[] {
+	const routes: string[] = []
+
+	for ( const locale of REFERENCE_EXPERIMENT_LOCALES ) {
+		const localePrefix = locale === 'en' ? '' : `/${ locale }`
+		for ( const wikiModule of GENERATED_MODULES ) {
+			routes.push( `${ localePrefix }${ referencePathForModule( wikiModule.name ) }` )
+		}
+	}
+
+	return routes
+}
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
@@ -179,7 +206,18 @@ export default defineNuxtConfig( {
 		'~/assets/css/color-modes.css'
 	],
 
+	// Static reference surface: real HTML on disk for the enumerated routes above,
+	// while every other route keeps today's SSR-on-Netlify behaviour. This does
+	// not reopen docs/adr-multilingual-search.md §5 — that prohibition is about
+	// prerendering the whole site at ~575-locale scale, not an explicit subset.
+	nitro: {
+		prerender: {
+			routes: buildReferencePrerenderRoutes()
+		}
+	},
+
 	routeRules: {
+		'/reference/**': { prerender: true },
 		'/explorer': { ssr: false },
 		'/explorer/**': { ssr: false },
 		// OAuth session is memory-only (+ handoff); SSR would paint the logged-out gate

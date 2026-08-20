@@ -63,6 +63,39 @@ export function referenceSlugToModuleName( slug: string ): string {
 }
 
 /**
+ * Locales the reference surface is prerendered for during the experiment.
+ *
+ * Deliberately **not** `SUPPORTED_LANGUAGES` (575 entries): publishing a locale
+ * before its translation overlay has real coverage produces near-duplicate
+ * English pages at scale, which is an active SEO liability rather than neutral
+ * filler. docs/adr-static-module-documentation.md §5 replaces this list with a
+ * coverage gate once per-language specs exist; until then it is the explicit
+ * allowlist, and it doubles as the phase-0a prerender scale-test fixture.
+ *
+ * `en` is the default locale, so `prefix_except_default` gives it unprefixed
+ * paths; every other entry gets a `/<locale>/` prefix. RTL locales (`he`, `fa`,
+ * `ar`) are included on purpose — direction bugs in a prerendered page are
+ * cheapest to find before the page has content worth reading.
+ */
+export const REFERENCE_EXPERIMENT_LOCALES = [
+	'en',
+	'ar',
+	'de',
+	'es',
+	'fa',
+	'fr',
+	'he',
+	'hi',
+	'it',
+	'ja',
+	'nl',
+	'pt',
+	'ru',
+	'uk',
+	'zh'
+]
+
+/**
  * Builds the locale-less reference path for a module.
  *
  * Locale prefixing is `@nuxtjs/i18n`'s job (`prefix_except_default`), so this

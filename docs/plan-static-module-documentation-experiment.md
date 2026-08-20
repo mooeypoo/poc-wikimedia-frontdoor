@@ -1,6 +1,18 @@
 # Plan: Static Module Documentation Experiment
 
-**Status:** Proposed. Nothing implemented.
+**Status:** Phases 0a and 1 complete. Phase 2 is next.
+
+| Phase | State | Outcome |
+|---|---|---|
+| 0a prerender scale test | **Done** | Passed. 150 routes in 64 s; ~113 KB per route; near-constant per-route cost. Full numbers in ADR §7.1. |
+| 0b IA spike | Not run | Scope reduced — the §12 audit already settled adoption. |
+| 0c validate assumption | Not run | Still recommended; ~30 requests. |
+| 1 anchor vocabulary | **Done** | Found and fixed a live collision bug affecting 4 shipped endpoints. |
+| 2 crawler hygiene | **Next** | — |
+| 3 tier 3 machine surfaces | Not started | — |
+| 4 tier 1 pages | Partial | English pages render; index page and locale axis outstanding. |
+| 5 measure | Not started | — |
+| 6 tier 2 | Gated | — |
 **Decisions:** [`adr-static-module-documentation.md`](adr-static-module-documentation.md) — section references below (§n) point there.
 **Rationale for leadership:** [`proposal-static-module-documentation.md`](proposal-static-module-documentation.md)
 
@@ -48,6 +60,32 @@ catalogue page per locale instead.
 
 **Why first:** this produces the per-route cost number that every size estimate in the ADR
 currently infers rather than measures.
+
+### 0a — result: passed
+
+Measured 2026-08-20 at 150 routes (10 modules × 15 locales). Full table in ADR §7.1;
+headlines:
+
+- **64 s** total build, 39.2 s of it prerendering; median 312 ms per route.
+- **~113 KB per route** (109 KB HTML + 3.6 KB payload), gzipping to ~19 KB.
+- Extrapolated: 750 routes ≈ 82 MB and ~3.3 min — **inside** the stop condition. 2,500
+  routes ≈ 295 MB and ~11 min — outside it, so locale count is the dial (§5 already turns it).
+- Per-route cost is near-**constant**: a 65-operation module is only 21% heavier than
+  average, because ~100 KB of every page is shared shell.
+
+Two findings the spike was not looking for, both recorded in ADR §7.1 and §2:
+
+- Enabling prerender makes `@nuxtjs/i18n` emit all **575** registered locales' message
+  bundles (4.6 MB, fixed cost).
+- Four of ten modules declare **no operation summaries**, so the projection needed a
+  description fallback; two modules have no prose at all.
+
+The spike deliberately exceeded its brief: rather than a hollow stub it renders the real
+tier-1 projection, so the measured bytes are representative. That code is kept.
+
+**Sandbox note.** `nuxt build` fails on `EACCES` reading `~/.nuxtrc`; pointing `HOME` at an
+empty scratch directory works around it. Serving `.output` is not possible (`EACCES` on
+`listen`), so verification is by inspecting prerendered HTML in `.output/public/`.
 
 ### 0b. Information-architecture spike (`nuxt-openapi-docs-module`)
 

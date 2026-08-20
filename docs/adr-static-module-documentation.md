@@ -1,6 +1,19 @@
 # ADR: Static Module Documentation
 
-**Status:** Proposed. No implementation yet. Tiers 1 and 3 are the accepted experiment scope; tier 2 is designed here but deliberately gated on tier-1 evidence (§13).
+**Status:** Partially implemented. Tiers 1 and 3 are the accepted experiment scope; tier 2 is designed here but deliberately gated on tier-1 evidence (§13).
+
+| Decision | State |
+|---|---|
+| §4 anchor vocabulary | **Implemented** — `app/utils/explorerOperationAnchor.ts` + uniqueness assertion; fixed a live collision bug |
+| §8 route shape and `general` slug | **Implemented** — `config/referenceRoutes.ts`, `app/pages/reference/[...module].vue` |
+| §7 prerender via `routeRules` | **Implemented and measured** — see §7.1 |
+| §2 prose-inline projection | **Implemented** — `server/api/reference/[...module].get.ts`, incl. the description fallback |
+| §1 instance summarisation | **Implemented** — family histogram, never 840 links |
+| §3 translation overlays | **Not started** — blocked on MediaWiki's per-language spec endpoint |
+| §5 coverage-gated locales | **Placeholder** — `REFERENCE_EXPERIMENT_LOCALES` (15 locales) stands in until overlays exist |
+| §9 search / content collection | **Not started** |
+| §10 machine surfaces + crawler hygiene | **Not started** |
+| §12 library spike (0b) | **Audit done** (all five criteria fail); IA spike not run |
 **Scope:** Statically rendered, search-engine- and AI-indexable reference documentation for Wikimedia REST API modules, generated from the committed OpenAPI specs, one page per module per publishable locale, with per-operation anchors. Plus machine-readable surfaces (raw specs, `llms.txt`). The runtime API Explorer is unchanged and remains the interactive surface.
 
 **Related:**
@@ -70,6 +83,21 @@ Schema structure is 83% of spec bytes and is the least useful material for index
 **This corrects an earlier estimate.** An initial guess of ~40 KB indexable text per module page (implying ~2 MB of content DB per locale and a ~15-locale ceiling) counted schema text as indexable. The measured figure is ~6 KB of prose per module, so the content DB is roughly 7× smaller and the locale ceiling far higher than first projected.
 
 **Named trade-off:** anything deferred out of the HTML is invisible to crawlers. This is an explicit "robots and search get the prose; humans can expand the schema" decision, not an oversight.
+
+**Measured caveat — the prose is not all there.** Across the committed specs, **71% of operations declare a `summary` but 79% declare a `description`**, and the gap is uneven:
+
+| Module | Ops | With `summary` | With `description` |
+|---|---|---|---|
+| `readinglists/v0` | 18 | **0** | **0** |
+| `specs/v0` | 3 | **0** | **0** |
+| `growthexperiments/v0` | 10 | **0** | 10 |
+| `wikifunctions/v0` | 4 | **0** | 4 |
+| `-` (root) | 48 | 31 | 31 |
+| `wikibase/v1` | 65 | 65 | 65 |
+
+A summary-only tier-1 projection would therefore render four of ten modules as a **bare list of paths with no indexable prose at all**. So tier 1 falls back to the first sentence of `description` when `summary` is absent, which recovers `growthexperiments/v0` and `wikifunctions/v0` and lifts prose coverage from 71% to 79%.
+
+`readinglists/v0` and `specs/v0` have neither, and no projection can invent prose. Those 21 operations are a **spec-content gap to raise upstream**, not a rendering problem — and they are a genuine limit on what tier 1 alone can achieve, since a page of bare paths has little to rank for.
 
 **Consequence:** OpenAPI `tags` cannot be used to subdivide oversized modules — 8 of 10 modules are untagged, including both large ones (`wikibase/v1` 65 ops, root `-` 48 ops). If a page proves too heavy even prose-only, grouping must be invented (first path segment is the obvious candidate). Not done now.
 
@@ -180,7 +208,32 @@ Everything else keeps today's SSR-on-Netlify behaviour. The generator also emits
 
 **Rationale:** Nuxt hybrid rendering gives genuine on-disk HTML per route without a build-mode change. `docs/adr-multilingual-search.md` §5's prohibition targets prerendering *the whole site* at ~400-locale scale; it does not apply to an explicitly enumerated subset, and this ADR does not reopen it. Emitting the route list from the generator keeps the cross product materialised in exactly one place.
 
-**Consequence:** prerendered Nuxt routes emit both HTML and `_payload.json`, roughly doubling output. At prose-only page weight this is tens of MB — acceptable as CDN assets (not function-bundle bytes).
+### 7.1 Measured (phase 0a), not estimated
+
+Built 2026-08-20 on this repo: **150 routes** (10 committed modules × 15 locales), `nuxt build` with `routeRules: { '/reference/**': { prerender: true } }`.
+
+| Metric | Measured |
+|---|---|
+| Total build, clean | **64 s** |
+| Prerender phase | **39.2 s** |
+| Per-route render | median **312 ms**, min 5 ms, max 15.2 s (first route pays cold start) |
+| Peak build RSS | **4.83 GB** |
+| Reference HTML | 15.99 MB total — avg **109 KB**, max 132 KB (`wikibase/v1`, 65 ops) |
+| Reference payloads | 0.53 MB total — avg **3.6 KB** |
+| gzip ratio | **0.18** → ≈19 KB per page over the wire |
+| Total `.output/public` | 31 MB |
+
+**Three corrections to figures this ADR previously estimated:**
+
+1. **`_payload.json` does not "roughly double" output.** It is **3%** of HTML (3.6 KB against 109 KB), because the payload carries the tier-1 projection while the HTML carries the rendered shell.
+2. **Per-route cost is ~113 KB, not the ~70 KB assumed.** Extrapolation was low by ~60%.
+3. **Page weight is dominated by the shared shell, not by spec content.** A 65-operation module is 132 KB against a 109 KB average — only 21% more — so roughly 100 KB of every page is inlined CSS and app shell. Per-route cost is therefore near-**constant**, which makes extrapolation reliable but sets a high floor. *If output size ever needs reducing, the lever is shell weight, not spec projection.*
+
+**Extrapolated to 50 modules × 50 locales (2,500 routes):** ≈273 MB HTML + ≈9 MB payloads + ≈12 MB fixed ≈ **295 MB**, and ≈11 min of prerender. That exceeds the plan's stop condition ("more than a few minutes or ~100 MB → revisit §6"), while **750 routes lands at ≈82 MB and ≈3.3 min, comfortably inside it.** So the route set is safe at experiment scale and the locale count is the dial — which is precisely what §5's coverage gate turns.
+
+**Side effect worth knowing: enabling any prerendering makes `@nuxtjs/i18n` prerender its message endpoint for every registered locale** — 575 files, 4.6 MB, as `/_i18n/<hash>/<locale>`. It is a fixed one-time cost that does not scale with modules, but it is why the build reported "Prerendered 876 routes" for 151 requested (150 HTML + 150 payloads + 575 i18n + 1 content DB). Nothing else escaped scope: **0 content pages were prerendered**, so the reference route did not capture the content catch-all.
+
+**Consequence:** output lands on the CDN as static assets, not in the function bundle, so §9's budget is unaffected by any of the above.
 
 ---
 
@@ -302,19 +355,26 @@ Detailed, phased steps live in
 [`plan-static-module-documentation-experiment.md`](plan-static-module-documentation-experiment.md).
 Summary of ordering, riskiest-first:
 
-1. **Spike A — prerender scale test.** Stub `/reference/[...module]` + `routeRules` + explicit route list. Measure build wall-clock and per-route output. No new dependency. Definitive go/no-go on §7.
-2. **Spike B — IA reference.** `nuxt-openapi-docs-module` against the committed specs, evaluated on §12's six criteria. Throwaway.
-3. **Anchor vocabulary.** Single emitter + round-trip test + injectivity assertion (§4). Do this before any URL is published.
-4. **Tier 3.** Raw specs at stable URLs, `llms.txt`, `llms-full.txt` (§10).
-5. **Crawler hygiene.** `robots.txt`, `noindex`, canonicals, sitemap, `hreflang` (§10). Shippable independently.
-6. **Tier 1.** Generator + page + index page, English first, then coverage-gated locales (§5, §6).
+1. ~~**Spike A — prerender scale test.**~~ **Done** — §7.1. Went further than a stub: the page renders the real tier-1 projection, so the measured bytes are representative rather than notional.
+2. **Spike B — IA reference.** `nuxt-openapi-docs-module` against the committed specs. Scope now reduced to information architecture only, since the §12 audit already answered the adoption question. Throwaway.
+3. ~~**Anchor vocabulary.**~~ **Done** — §4. Single emitter, round-trip test, uniqueness assertion, legacy-tolerant resolver, and a fix for the live collision bug it uncovered.
+4. **Crawler hygiene.** `robots.txt`, `noindex`, canonicals, sitemap, `hreflang` (§10). Shippable independently, and removes a liability that exists today.
+5. **Tier 3.** Raw specs at stable URLs, `llms.txt`, `llms-full.txt` (§10).
+6. **Tier 1 completion.** Cross-module index page, then overlays and coverage-gated locales once the per-language spec endpoint exists (§3, §5, §6).
 7. **Tier 2.** Gated on §13.
+
+*(Crawler hygiene moved ahead of tier 3: it is independent of everything else and the 6,374 empty-shell URLs it addresses are already crawlable.)*
 
 ---
 
 ## Open questions / risks
 
 - **Spec-identical-across-instances (§1).** Inherited from source-of-truth §8, still unvalidated, and load-bearing for the entire design. Accepted deliberately; ~30-request validation recommended.
+- **Runtime routing is unverified.** The sandbox denies `listen` on every port (`EACCES`), so `.output/server` could not be served and no route was exercised over HTTP. Verified statically instead: `/reference/**` is present in the built route manifest, all 150 pages prerendered with correct content, and **zero** content pages were prerendered — so the reference catch-all demonstrably did not capture content routes at prerender time. Still unconfirmed at runtime: that `app/pages/[...slug].vue` continues to serve content paths, and that an unknown module returns 404 rather than a blank page. **Confirm both before publishing any URL.**
+- **Prose coverage caps tier 1 (§2).** 21 operations across `readinglists/v0` and `specs/v0` have neither `summary` nor `description`. The description fallback cannot help them. This is upstream spec work, and until it happens those two modules' pages carry no indexable prose — which is a real limit on the tier-1-first strategy, not a rendering defect.
+- **`_i18n` prerender cost (§7.1).** Enabling prerender makes `@nuxtjs/i18n` emit its message endpoint for all 575 registered locales (575 files, 4.6 MB). Fixed cost, does not scale with modules, but it will grow if the locale catalogue does. If it becomes unwanted, it needs an explicit `nitro.prerender.ignore` rule — not attempted.
+- **Peak build memory (§7.1).** 4.83 GB RSS at 150 routes. Most of it is the Vite/Nitro build rather than prerendering, but it is close enough to common CI limits to be worth watching as the route count grows.
+- **Spec reads are filesystem-based.** `server/api/reference/[...module].get.ts` reads spec JSON from `config/generated/module-specs/` with `node:fs`. That is correct during prerender (project directory present) but would fail in a runtime-rendered deployment where those files are not bundled. Acceptable while the routes are prerendered; needs server assets or a build-time projection before any runtime rendering is relied on.
 - **Oversized module pages (§2).** `wikibase/v1` (65 ops) and root `-` (48 ops) have no `tags` to split on. If prose-only weight is still too high, grouping by first path segment is the fallback — undesigned.
 - **Overlay pointer rot (§3).** Needs a stale-pointer diagnostic. Unbuilt.
 - **Per-language spec endpoint does not exist yet.** §3's generator cannot run until MediaWiki ships it. Tier 1 English-only is unblocked; the locale axis is not. Confirm the parameter shape before building the fetcher.
