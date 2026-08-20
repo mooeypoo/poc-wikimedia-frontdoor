@@ -12,6 +12,7 @@ import {
 	REFERENCE_EXPERIMENT_LOCALES,
 	referencePathForModule
 } from './config/referenceRoutes.ts'
+import { NOINDEX_ROUTE_PATTERNS, resolveSiteOrigin } from './config/seo.ts'
 import {
 	COLOR_MODES,
 	COLOR_MODE_STORAGE_KEY,
@@ -49,6 +50,47 @@ function buildReferencePrerenderRoutes(): string[] {
 		for ( const wikiModule of GENERATED_MODULES ) {
 			routes.push( `${ localePrefix }${ referencePathForModule( wikiModule.name ) }` )
 		}
+	}
+
+	return routes
+}
+
+/**
+ * Route rules marking the Explorer's shareable deep-link families `noindex`.
+ *
+ * `X-Robots-Tag` rather than a `<meta>` tag because those routes are `ssr: false`
+ * (Absolute Rule 4), so nothing a page composable writes reaches the HTML a
+ * crawler receives. The header is the only directive that survives.
+ *
+ * See config/seo.ts for why these are noindexed rather than disallowed.
+ */
+function buildNoindexRouteRules(): Record<string, { headers: Record<string, string> }> {
+	return Object.fromEntries(
+		NOINDEX_ROUTE_PATTERNS.map( ( pattern ) => [
+			pattern,
+			{ headers: { 'X-Robots-Tag': 'noindex' } }
+		] )
+	)
+}
+
+/**
+ * Prerender targets for the crawler-facing documents.
+ *
+ * `sitemap.xml` is included **only** when a site origin is resolvable: the
+ * sitemap schema requires absolute URLs, so without one there is nothing valid to
+ * emit and guessing a host would publish wrong addresses. `robots.txt` is always
+ * emitted — it stays valid without the origin, simply omitting its `Sitemap:` line.
+ */
+function buildCrawlerDocumentPrerenderRoutes(): string[] {
+	const routes = [ '/robots.txt' ]
+
+	if ( resolveSiteOrigin() ) {
+		routes.push( '/sitemap.xml' )
+	} else {
+		console.warn(
+			'[frontdoor] NUXT_PUBLIC_SITE_URL is unset — skipping sitemap.xml. ' +
+			'Set it (or rely on Netlify\'s URL) to publish a sitemap.'
+		)
 	}
 
 	return routes
@@ -212,12 +254,18 @@ export default defineNuxtConfig( {
 	// prerendering the whole site at ~575-locale scale, not an explicit subset.
 	nitro: {
 		prerender: {
-			routes: buildReferencePrerenderRoutes()
+			routes: [
+				...buildReferencePrerenderRoutes(),
+				...buildCrawlerDocumentPrerenderRoutes()
+			]
 		}
 	},
 
 	routeRules: {
 		'/reference/**': { prerender: true },
+		// Keep the Explorer's shareable deep-link families out of the index
+		// (config/seo.ts explains why noindex, not Disallow).
+		...buildNoindexRouteRules(),
 		'/explorer': { ssr: false },
 		'/explorer/**': { ssr: false },
 		// OAuth session is memory-only (+ handoff); SSR would paint the logged-out gate

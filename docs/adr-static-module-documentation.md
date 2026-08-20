@@ -12,7 +12,8 @@
 | §3 translation overlays | **Not started** — blocked on MediaWiki's per-language spec endpoint |
 | §5 coverage-gated locales | **Placeholder** — `REFERENCE_EXPERIMENT_LOCALES` (15 locales) stands in until overlays exist |
 | §9 search / content collection | **Not started** |
-| §10 machine surfaces + crawler hygiene | **Not started** |
+| §10 crawler hygiene | **Implemented** — `robots.txt`, `sitemap.xml` with `hreflang`, `noindex` on deep-link families; the original `Disallow`/canonical prescription was corrected |
+| §10 machine surfaces (`llms.txt`, raw specs) | **Not started** |
 | §12 library spike (0b) | **Audit done** (all five criteria fail); IA spike not run |
 **Scope:** Statically rendered, search-engine- and AI-indexable reference documentation for Wikimedia REST API modules, generated from the committed OpenAPI specs, one page per module per publishable locale, with per-operation anchors. Plus machine-readable surfaces (raw specs, `llms.txt`). The runtime API Explorer is unchanged and remains the interactive surface.
 
@@ -287,9 +288,25 @@ The mapping lives in `config/` per Absolute Rule 6, as a bidirectional pair of p
 
 **Rationale:** Pages reachable only via a sitemap are treated as orphans and rank poorly, so the cross-module index page (§6) is the internal-linking hub, not decoration. `hreflang` requires each locale variant to be a distinct crawlable URL with real translated content — which §3 and §7 are what make possible.
 
-**Decision — remove an existing liability.** `Disallow` `/explorer/direct/` and `/explorer/q/`, add `noindex` to Explorer routes, and emit `rel=canonical` from an Explorer view to the corresponding static page.
+**Decision — remove an existing liability, with `noindex` and *not* `Disallow`.**
 
-**Rationale:** The deep-link grammar made **6,374 `/explorer/direct/<instance>/<module>` URLs legal today** (~32,000 at 50 modules), plus `/q/` variants — every one serving an identical empty client-only shell. Sharing those links is the feature's purpose, so crawlers will find them. That is a large thin-content and near-duplicate surface, and once the static docs exist, two URL families describe the same operation. This is cheap now and much harder after those addresses are indexed. **It is worth doing independently of the rest of this ADR.**
+**The problem.** The deep-link grammar made **6,374 `/explorer/direct/<instance>/<module>` URLs legal today** (~32,000 at 50 modules), plus `/q/` variants — every one serving an identical empty client-only shell, since the Explorer is `ssr: false`. Sharing those links is the feature's whole purpose, so crawlers will find them. That is a large thin-content surface pointing at the domain, and it exists whether or not the rest of this ADR ships.
+
+**Correction to this ADR's first revision.** It prescribed `Disallow` *and* `noindex` *and* `rel=canonical`. That combination is self-defeating, and the reasoning is worth recording because the instinct is so natural:
+
+- **`Disallow` and `noindex` conflict.** `Disallow` prevents *crawling*, not *indexing*. A disallowed URL is never fetched, so its `noindex` header is never read — and anything already indexed stays indexed indefinitely. Specifying both means the `noindex` does nothing.
+- **`Disallow` alone does not prevent indexing.** A disallowed URL can still be indexed from external links, appearing as a bare URL with no description and no way for us to correct it. These URLs exist *specifically to be shared externally*, so external inbound links are the expected case rather than an edge case. This is precisely the situation where `Disallow` is the wrong tool.
+- **`rel=canonical` cannot be delivered here anyway.** The routes are `ssr: false`, so nothing a page composable writes reaches the HTML a crawler receives. It would need an HTTP `Link` header computed per URL. And it is moot: the Explorer is an interactive tool, not a duplicate of a reference page, so there is no duplication for a canonical to resolve.
+
+**What is implemented instead:** `X-Robots-Tag: noindex` via `routeRules` on `/explorer/direct/**`, `/explorer/q/**` and their locale-prefixed variants (`config/seo.ts` `NOINDEX_ROUTE_PATTERNS`). It costs crawl budget — the crawler must fetch to see the header — but it is the **only** directive that actually keeps these URLs out of the index, and Google reduces crawl frequency for consistently-`noindex` URLs over time, so the cost decays.
+
+**Invariant to protect:** those patterns must never also appear in `ROBOTS_DISALLOWED_PATHS`. A test asserts this, because adding them there would silently restore the broken behaviour.
+
+**`robots.txt` scope is deliberately narrow:** `Disallow: /api/` only. Server endpoints carry no indexable content and are never linked externally, so `Disallow` is correct for *them*. Build assets (`/_nuxt/`) are **not** blocked — crawlers need CSS and JS to assess a page.
+
+**Decision — the sitemap is exact, not crawled.** `/sitemap.xml` is generated from the committed module source of truth (`GENERATED_MODULES` × `REFERENCE_EXPERIMENT_LOCALES`), so it enumerates precisely what exists with no crawling. Each entry carries the **full `hreflang` alternate set including a self-reference** — a set that omits the page it appears on is ignored entirely — plus `x-default` pointing at the default-locale URL. Verified: 150 entries, 16 alternates each, well-formed XML.
+
+**Decision — no guessed site origin.** `resolveSiteOrigin()` reads `NUXT_PUBLIC_SITE_URL`, then Netlify's `URL`, and returns empty otherwise. With no origin, **the sitemap is skipped and `robots.txt` omits its `Sitemap:` line**; both artifacts stay valid. Emitting a sitemap full of guessed absolute URLs would be worse than emitting none, because crawlers act on those addresses.
 
 ---
 

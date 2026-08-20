@@ -8,7 +8,7 @@
 | 0b IA spike | Not run | Scope reduced — the §12 audit already settled adoption. |
 | 0c validate assumption | Not run | Still recommended; ~30 requests. |
 | 1 anchor vocabulary | **Done** | Found and fixed a live collision bug affecting 4 shipped endpoints. |
-| 2 crawler hygiene | **Next** | — |
+| 2 crawler hygiene | **Done** | `noindex` (not `Disallow` — see ADR §10), exact 150-entry sitemap with `hreflang`, origin-safe fallback. |
 | 3 tier 3 machine surfaces | Not started | — |
 | 4 tier 1 pages | Partial | English pages render; index page and locale axis outstanding. |
 | 5 measure | Not started | — |
@@ -172,6 +172,38 @@ static pages; module pages in the sitemap; `hreflang` alternates.
 
 **Why now:** 6,374 empty-shell URLs are already valid, rising to ~32,000 (§10). Cost of
 acting now is near zero; cost after indexing is high.
+
+### 2 — result: done, and the original plan was wrong
+
+Built and verified. The substantive change is that **`Disallow` turned out to be the wrong
+tool**, and the plan (following ADR §10's first revision) had prescribed it alongside
+`noindex` — a self-defeating combination, since a disallowed URL is never fetched and so its
+`noindex` is never read. `Disallow` also cannot keep an externally-linked URL out of the
+index, and these URLs exist to be shared externally. ADR §10 now records the full reasoning;
+`config/seo.ts` carries it at the point of use, and a test asserts the two directive sets
+never overlap.
+
+Delivered: `config/seo.ts` (policy), `app/utils/seoDocuments.ts` (pure builders),
+`server/routes/robots.txt.get.ts`, `server/routes/sitemap.xml.get.ts`, `routeRules` noindex
+headers, 13 tests.
+
+Verified against a real build:
+
+- `robots.txt` prerendered, `Disallow: /api/`, `Sitemap:` line present when an origin is set.
+- `sitemap.xml` well-formed (parsed), **150 entries, 16 alternates each** (15 locales +
+  `x-default`), self-referential alternates present.
+- All four `noindex` patterns — bare and locale-prefixed — present in the built route manifest.
+- With no site origin configured: warning logged, sitemap **skipped**, `robots.txt` still
+  valid without its `Sitemap:` line.
+
+**Not verified:** that a live request to `/explorer/direct/…` actually carries the header. The
+sandbox denies `listen`, so this was confirmed from the build manifest instead. Worth one
+`curl` before relying on it.
+
+**Deferred as planned:** prose content pages in the sitemap (needs a build-time content-collection
+query; belongs with the tier-1 index page). **Dropped:** `rel=canonical` from Explorer views —
+undeliverable on an `ssr: false` route and unnecessary, since an interactive tool is not a
+duplicate of a reference page (ADR §10).
 
 ---
 
