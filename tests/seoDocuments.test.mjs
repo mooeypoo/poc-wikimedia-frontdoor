@@ -7,6 +7,7 @@ import {
 	escapeXml
 } from '../app/utils/seoDocuments.ts'
 import {
+	DEVELOPMENT_SITE_ORIGIN,
 	NOINDEX_ROUTE_PATTERNS,
 	ROBOTS_DISALLOWED_PATHS,
 	resolveSiteOrigin
@@ -57,19 +58,49 @@ test( 'noindex patterns cover both bare and locale-prefixed explorer deep links'
 	assert.ok( NOINDEX_ROUTE_PATTERNS.includes( '/*/explorer/q/**' ) )
 } )
 
-test( 'resolveSiteOrigin prefers explicit config over the platform value', () => {
+test( 'resolveSiteOrigin prefers explicit config over any platform value', () => {
 	assert.equal(
-		resolveSiteOrigin( { NUXT_PUBLIC_SITE_URL: 'https://a.example', URL: 'https://b.example' } ),
+		resolveSiteOrigin( {
+			NUXT_PUBLIC_SITE_URL: 'https://a.example',
+			DEPLOY_PRIME_URL: 'https://preview.example',
+			URL: 'https://b.example'
+		} ),
 		'https://a.example'
 	)
-	assert.equal( resolveSiteOrigin( { URL: 'https://b.example' } ), 'https://b.example' )
 } )
 
-test( 'resolveSiteOrigin strips trailing slashes and defaults to empty', () => {
+test( 'resolveSiteOrigin prefers the per-deploy URL over the production URL', () => {
+	// On a Netlify deploy preview, URL is still the production address. Using it
+	// would make the preview's sitemap and llms files point at pages that do not
+	// exist there, so the preview would be untestable.
+	assert.equal(
+		resolveSiteOrigin( {
+			DEPLOY_PRIME_URL: 'https://deploy-preview-1--site.netlify.app',
+			URL: 'https://production.example'
+		} ),
+		'https://deploy-preview-1--site.netlify.app'
+	)
+	assert.equal( resolveSiteOrigin( { URL: 'https://production.example' } ), 'https://production.example' )
+} )
+
+test( 'resolveSiteOrigin strips trailing slashes', () => {
 	assert.equal( resolveSiteOrigin( { NUXT_PUBLIC_SITE_URL: 'https://a.example/' } ), 'https://a.example' )
 	assert.equal( resolveSiteOrigin( { NUXT_PUBLIC_SITE_URL: 'https://a.example///' } ), 'https://a.example' )
-	assert.equal( resolveSiteOrigin( {} ), '' )
-	assert.equal( resolveSiteOrigin( { NUXT_PUBLIC_SITE_URL: '   ' } ), '' )
+} )
+
+test( 'resolveSiteOrigin falls back to the dev server outside production', () => {
+	// Local development publishes nothing, so the crawler documents should be
+	// testable with no configuration.
+	assert.equal( resolveSiteOrigin( {} ), DEVELOPMENT_SITE_ORIGIN )
+	assert.equal( resolveSiteOrigin( { NODE_ENV: 'development' } ), DEVELOPMENT_SITE_ORIGIN )
+	assert.equal( resolveSiteOrigin( { NUXT_PUBLIC_SITE_URL: '   ' } ), DEVELOPMENT_SITE_ORIGIN )
+} )
+
+test( 'a production build with nothing configured gets no origin', () => {
+	// The safety property: a sitemap of guessed absolute URLs is worse than none,
+	// because crawlers act on those addresses.
+	assert.equal( resolveSiteOrigin( { NODE_ENV: 'production' } ), '' )
+	assert.equal( resolveSiteOrigin( { NODE_ENV: 'production', NUXT_PUBLIC_SITE_URL: '' } ), '' )
 } )
 
 test( 'escapeXml escapes every character that breaks a document', () => {

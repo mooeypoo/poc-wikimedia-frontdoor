@@ -324,7 +324,20 @@ The mapping lives in `config/` per Absolute Rule 6, as a bidirectional pair of p
 
 **Decision — the sitemap is exact, not crawled.** `/sitemap.xml` is generated from the committed module source of truth (`GENERATED_MODULES` × `REFERENCE_EXPERIMENT_LOCALES`), so it enumerates precisely what exists with no crawling. Each entry carries the **full `hreflang` alternate set including a self-reference** — a set that omits the page it appears on is ignored entirely — plus `x-default` pointing at the default-locale URL. Verified: 150 entries, 16 alternates each, well-formed XML.
 
-**Decision — no guessed site origin.** `resolveSiteOrigin()` reads `NUXT_PUBLIC_SITE_URL`, then Netlify's `URL`, and returns empty otherwise. With no origin, **the sitemap is skipped and `robots.txt` omits its `Sitemap:` line**; both artifacts stay valid. Emitting a sitemap full of guessed absolute URLs would be worse than emitting none, because crawlers act on those addresses.
+**Decision — no guessed site origin, but a usable default outside production.** `resolveSiteOrigin()` resolves in this order:
+
+| Source | Why here |
+|---|---|
+| `NUXT_PUBLIC_SITE_URL` | Explicit configuration always wins. |
+| `DEPLOY_PRIME_URL` | Netlify's *this deploy* URL. **Preferred over `URL`** because on a deploy preview `URL` is still the **production** address — a preview's sitemap and llms files would then point at pages that do not exist there, making the preview untestable. On production deploys the two are equal, so preferring it is correct in both cases. |
+| `URL` | Netlify's production site URL, as a fallback. |
+| `http://localhost:3000` | **Only outside a production build.** Local development publishes nothing, so defaulting to the dev server keeps all four documents testable with zero configuration. |
+
+**A production build with no origin from any source deliberately gets nothing:** the sitemap and both llms documents are **skipped with a build warning**, and `robots.txt` omits its `Sitemap:` line. All artifacts stay valid. Emitting absolute URLs against a guessed host is worse than emitting none, because crawlers act on those addresses.
+
+Verified across all six combinations, including two real builds: unset production build skips and warns; a simulated deploy preview emits preview-relative URLs throughout sitemap, `robots.txt` and `llms.txt`.
+
+**Consequence:** the specs at `/openapi/<slug>.json` need no origin — they are files, not link documents — so they prerender unconditionally and are always available for testing.
 
 ---
 
@@ -409,7 +422,7 @@ Summary of ordering, riskiest-first:
 - **Prose coverage caps tier 1 (§2).** 21 operations across `readinglists/v0` and `specs/v0` have neither `summary` nor `description`. The description fallback cannot help them. This is upstream spec work, and until it happens those two modules' pages carry no indexable prose — which is a real limit on the tier-1-first strategy, not a rendering defect.
 - **`_i18n` prerender cost (§7.1).** Enabling prerender makes `@nuxtjs/i18n` emit its message endpoint for all 575 registered locales (575 files, 4.6 MB). Fixed cost, does not scale with modules, but it will grow if the locale catalogue does. If it becomes unwanted, it needs an explicit `nitro.prerender.ignore` rule — not attempted.
 - **Peak build memory (§7.1).** 4.83 GB RSS at 150 routes. Most of it is the Vite/Nitro build rather than prerendering, but it is close enough to common CI limits to be worth watching as the route count grows.
-- **`NUXT_PUBLIC_SITE_URL` must be configured before the sitemap and llms surfaces publish.** With no origin they are skipped with a build warning rather than emitted with guessed hosts (§10). This is a deployment prerequisite, not a code gap — but nothing will remind anyone at deploy time beyond that warning.
+- **Site origin — largely self-configuring, but confirm on the first production deploy.** Local dev defaults to `http://localhost:3000` and Netlify supplies `DEPLOY_PRIME_URL` automatically, so previews and local work need no setup (§10). The one case still needing attention is a **production** deploy where neither `NUXT_PUBLIC_SITE_URL` nor Netlify's variables resolve — then the sitemap and llms files are silently absent, announced only by a build warning. Check for them after the first production deploy.
 - **Machine surfaces are English-only (§10).** Once overlays land, decide deliberately whether `llms-full.txt` gains per-locale variants. The default answer is probably no: a single authoritative document serves an assistant better than 15 near-identical ones, and the per-locale value is unproven.
 - **Spec reads are filesystem-based.** `server/api/reference/[...module].get.ts` reads spec JSON from `config/generated/module-specs/` with `node:fs`. That is correct during prerender (project directory present) but would fail in a runtime-rendered deployment where those files are not bundled. Acceptable while the routes are prerendered; needs server assets or a build-time projection before any runtime rendering is relied on.
 - **Oversized module pages (§2).** `wikibase/v1` (65 ops) and root `-` (48 ops) have no `tags` to split on. If prose-only weight is still too high, grouping by first path segment is the fallback — undesigned.

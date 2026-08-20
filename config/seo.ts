@@ -57,16 +57,34 @@ export const ROBOTS_DISALLOWED_PATHS = [
 ]
 
 /**
- * Resolves the absolute site origin used for sitemap URLs and the `Sitemap:`
- * directive, or an empty string when it is not configured.
+ * Origin assumed when none is configured and this is not a production build.
  *
- * There is deliberately **no hardcoded default**. Emitting a sitemap full of
- * guessed absolute URLs is worse than emitting none: it publishes wrong
- * canonical addresses that crawlers then act on. When this returns empty, the
- * sitemap is skipped and `robots.txt` omits its `Sitemap:` line — both stay
- * valid, just less useful.
+ * Local development publishes nothing, so defaulting to the dev server keeps
+ * `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/llms-full.txt` testable with
+ * no configuration at all. Matches the port `nuxt dev` uses by default.
+ */
+export const DEVELOPMENT_SITE_ORIGIN = 'http://localhost:3000'
+
+/**
+ * Resolves the absolute site origin used for sitemap, `robots.txt` and `llms.txt`
+ * URLs — or an empty string when a production build has none configured.
  *
- * Resolution order: explicit config, then Netlify's build-provided `URL`.
+ * **Resolution order**, first non-empty wins:
+ *
+ * 1. `NUXT_PUBLIC_SITE_URL` — explicit configuration, always authoritative.
+ * 2. `DEPLOY_PRIME_URL` — Netlify's *this deploy* URL. Preferred over `URL`
+ *    because on a deploy preview `URL` is still the **production** address,
+ *    which would make a preview's sitemap and llms files point at pages that do
+ *    not exist there. `DEPLOY_PRIME_URL` equals the production URL on production
+ *    deploys, so preferring it is correct in both cases.
+ * 3. `URL` — Netlify's production site URL, as a fallback.
+ * 4. `DEVELOPMENT_SITE_ORIGIN` — but *only* outside a production build.
+ *
+ * A production build with nothing configured deliberately gets **no default**.
+ * Emitting a sitemap full of guessed absolute URLs is worse than emitting none:
+ * it publishes wrong addresses that crawlers then act on. When this returns
+ * empty, those documents are skipped and `robots.txt` omits its `Sitemap:` line —
+ * everything stays valid, just less useful.
  *
  * @param environment - Environment variables to read (defaults to `process.env`).
  * @returns Origin without a trailing slash, or an empty string.
@@ -74,6 +92,16 @@ export const ROBOTS_DISALLOWED_PATHS = [
 export function resolveSiteOrigin(
 	environment: Record<string, string | undefined> = process.env
 ): string {
-	const candidate = environment.NUXT_PUBLIC_SITE_URL || environment.URL || ''
-	return candidate.trim().replace( /\/+$/, '' )
+	const configured = (
+		environment.NUXT_PUBLIC_SITE_URL ||
+		environment.DEPLOY_PRIME_URL ||
+		environment.URL ||
+		''
+	).trim().replace( /\/+$/, '' )
+
+	if ( configured ) {
+		return configured
+	}
+
+	return environment.NODE_ENV === 'production' ? '' : DEVELOPMENT_SITE_ORIGIN
 }
