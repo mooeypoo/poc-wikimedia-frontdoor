@@ -1,336 +1,453 @@
-# Static Module Documentation — Decisions, Findings and Status
+# Static API Reference — Experiment Summary and Decision
 
-**Audience:** Leadership and stakeholders. This began as a proposal; it is now the
-running summary of what we decided, what we measured, what surprised us, and what remains
-genuinely uncertain. It stays deliberately high level — the technical decisions live in
-[`adr-static-module-documentation.md`](adr-static-module-documentation.md) and the execution
-detail in
-[`plan-static-module-documentation-experiment.md`](plan-static-module-documentation-experiment.md).
+**Audience:** Leadership and stakeholders. A complete account of the experiment: what we set
+out to solve, what we built, what it costs, what it would cost as things grow, what lighter
+alternatives exist, and what we recommend deciding.
 
-*(The filename still says "proposal" so that existing links keep working.)*
+**Companion documents:** `adr-static-module-documentation.md` (technical decisions),
+`plan-static-module-documentation-experiment.md` (execution detail). This document is
+self-contained; neither is required reading.
 
-**Status:** Four of seven phases complete. The machine-readable surfaces for AI assistants
-are built, the crawler instructions are in place, and English module pages render. Nothing is
-published to the public site yet.
+*(The filename still says "proposal" so existing links keep working.)*
 
----
-
-## What we set out to do
-
-Wikimedia exposes a REST API made up of discrete **modules** — `site/v1`,
-`readinglists/v0`, `wikibase/v1`, and so on. Today the portal documents them through a
-single interactive explorer. The explorer is good at what it does, but it is **invisible to
-search engines and to AI assistants**, because it renders entirely in the browser.
-
-We are adding a second, complementary surface: **static, per-module documentation pages**
-generated from the OpenAPI specifications we already collect. The explorer is untouched —
-this adds a fast, readable, indexable path *alongside* it.
-
-We are doing it as a staged experiment, cheapest and riskiest questions first, so that a
-negative result costs days rather than months.
+> **This file is canonical.** A formatted web version was published for the current decision
+> round at `https://claude.ai/code/artifact/85b91d22-9df7-428b-9889-1a9b7d53f935`. It is a
+> **point-in-time snapshot and is no longer maintained** — if the two disagree, this file is
+> right. Do not treat the snapshot as a second source to keep in sync; updating it would mean
+> recreating its HTML from scratch, and the maintenance cost is not worth it. Republish a
+> fresh snapshot if and when a later decision round needs one.
 
 ---
 
-## The problem, briefly
+## Context, for readers new to this
 
-The explorer is a client-side application. When an automated visitor requests a page, the
-server returns an essentially empty shell; content appears only after the browser runs
-JavaScript and makes two further requests to the wiki. Three consequences:
+Four terms recur throughout, and the argument does not work without them.
 
-- **Search engines index it unreliably.** Google does run JavaScript, but on a deferred
-  second pass with a limited rendering budget. A heavy client-side app that fetches content
-  from another domain is close to the worst case.
-- **AI assistants very likely cannot see it at all.** The crawlers behind AI coding
-  assistants generally fetch HTML without running JavaScript.
-- **There is nothing to rank.** All 10 modules and 179 operations effectively live behind
-  one address.
+**Module.** Wikimedia's REST API is not one flat API; it is divided into named, versioned
+groups of endpoints called modules — `site/v1`, `readinglists/v0`, `wikibase/v1` and so on.
+There are **10 today and we expect around 50**. Modules are the unit this proposal documents.
 
-A sitemap does not fix any of this. A sitemap lists addresses; it cannot put content into a
-page. Pointing a crawler at a client-only route tells it exactly where to find an empty
-page.
+**Operation.** One callable endpoint within a module (for example, "fetch a page's HTML").
+There are **179 across all modules today**.
 
----
+**OpenAPI specification.** A machine-readable file describing a module's operations —
+parameters, responses, and whatever human-readable descriptions the module's authors wrote.
+We already collect and store one per module; everything proposed here is generated from them,
+so **no documentation is written by hand.**
 
-## The core design decision
+**The API Explorer.** The portal's existing interactive documentation browser. It works well
+for people, and nothing here changes it. Its limitation is that it builds itself in the
+visitor's browser, which is why automated visitors — search engines, AI crawlers — see almost
+nothing.
 
-The intuitive fix — generate static pages for everything — explodes. Documentation could be
-addressed by wiki, module and language, and the wiki dimension is brutal: roughly 840 public
-wikis produce **6,374 wiki-and-module combinations** today.
-
-| Approach | Pages today | At 50 modules × 50 languages |
-|---|---|---|
-| Per wiki, module and language | 6,374 × languages | ~1,600,000 |
-| Per operation and language | 8,950 | ~45,000 |
-| **Per module and language** | 500 | **2,500** |
-
-We **drop the wiki dimension entirely**: document each module once and state on the page
-which wikis expose it. This works because a module's capabilities come from its code, which
-is the same everywhere it is deployed — an assumption we are accepting rather than proving
-(see *What remains uncertain*).
-
-We also settled two things early, precisely because they are cheap now and expensive later:
-the **link-naming scheme** for operations, and the fact that the light and full versions of
-each page **share the same addresses**, so shipping the light version first can never
-invalidate a published link.
+One structural fact matters throughout: a module is deployed to **roughly 840 Wikimedia
+wikis**, and its operations are the same on each. That is why we document a module once rather
+than once per wiki, and it is the assumption that makes the whole thing tractable.
 
 ---
 
-## What we are building: three tiers
+## The decision, in brief
 
-**Tier 1 — the catalogue.** One page per module per language: what the module is, which
-wikis expose it, and its operations with names and one-line summaries. ~64 KB of data across
-50 modules.
+We built a working experiment. It does what we wanted. **We do not recommend shipping all of
+it.**
 
-**Tier 3 — machine-readable surfaces.** The specifications at stable addresses plus a
-consolidated text index for AI assistants. Nearly free, since the specifications are already
-collected — and a *better* answer for AI than HTML, because they get the whole corpus in one
-request instead of crawling hundreds of pages. **Built** (see *What exists today*).
+The honest finding is that the three problems we set out to solve have **very different
+costs**, and the cheapest piece solves the most valuable problem:
 
-**Tier 2 — full prose, later.** The same pages, deepened with each operation's description,
-parameters and responses (~295 KB across 50 modules). Decided on evidence from tiers 1
-and 3 rather than assumption.
-
-### Translation
-
-Per-language specifications are expected from MediaWiki soon. We will **not** store a full
-translated specification per module per language — at 50 modules and 50 languages that is
-~150 MB of almost entirely duplicated structure. Instead we store English once plus a small
-**translation overlay** per language holding only the translated strings: ~24 MB, a six-fold
-saving.
-
-The overlay also buys something a full translated file cannot express. Because translations
-will arrive incomplete, an overlay lets each string fall back to English *independently*, and
-gives us a per-module coverage figure we can show readers and use to decide which languages
-are ready to publish. This mirrors an approach already used for translatable prose on the
-portal, so it is an established pattern here rather than an invention.
-
----
-
-## What measuring changed
-
-We measured rather than estimated, and it repeatedly changed the plan.
-
-**The text is far cheaper than expected.** Only **17%** of a specification's bytes are
-human-readable text; the other 83% is machine-readable structure. Across all 10 modules, 98
-KB of prose inside 590 KB of data.
-
-**That reversed our own sizing conclusion.** An early estimate put a page at ~40 KB of
-indexable text, implying a ceiling of roughly 15 languages. Measured properly it is ~6 KB per
-module — the earlier figure had counted machine structure as readable text. Storage is about
-seven times smaller than projected and the language ceiling far higher. **The expensive part
-was never the text; it was rendering structure into every page.**
-
-**Specifications do not group themselves.** OpenAPI has a field for subdividing large APIs.
-**Eight of ten Wikimedia modules do not use it**, including both large ones. Any grouping of
-a 65-operation module would be ours to invent.
-
-**Real page weight is dominated by the page frame, not the content.** Having now built and
-measured actual pages: a 65-operation module renders at 132 KB against a 109 KB average —
-only 21% more. Roughly 100 KB of every page is shared site frame. Cost per page is therefore
-nearly **constant**, which makes forecasting reliable but sets a high floor. If output size
-ever needs reducing, the lever is the site frame, not the API content.
-
-**The full build is affordable at experiment scale, and language count is the dial.** 150
-pages build in 64 seconds. Scaled to 750 pages that is ~3 minutes and ~82 MB — comfortable.
-Scaled to 2,500 it is ~11 minutes and ~295 MB, which exceeds the limit we set ourselves in
-advance. That is not a blocker; it means the number of *languages* is the thing we tune, which
-is exactly what the translation-coverage gate already does.
-
----
-
-## What surprised us
-
-Six things we did not go looking for. Three of them changed decisions, and two were cases of
-the obvious approach being quietly wrong rather than obviously wrong — which is the kind we
-care most about catching.
-
-### We found a real bug in software already in production
-
-While settling how to name links to individual operations, we tested three naming schemes
-against live data. One module, `readinglists/v0`, exposes **both `/lists` and `/lists/`** as
-genuinely different endpoints — and the scheme already shipped in the explorer collapsed them
-into the same link. Four endpoints were affected.
-
-The practical effect: **a shared link to one endpoint silently opened a different one.** The
-code even carried a comment calling such collisions "astronomically unlikely" while they were
-already happening.
-
-This is fixed, and the fix leaves every link that already worked byte-for-byte unchanged.
-Links shared before the fix still resolve. The generator now *fails* rather than publish two
-links that claim the same address.
-
-The transferable lesson, which we have written into the engineering docs: **the existing test
-proved the links were reversible, not that they were unique.** Every one of the 179 operations
-passed while four pairs collided, because each bad link still resolved to *an* endpoint — just
-the wrong one. Those are different properties and both need checking.
-
-### The off-the-shelf library fails every requirement
-
-We evaluated `nuxt-openapi-docs-module`, a Nuxt library built for exactly this job, by
-installing it and auditing its source against five of the portal's non-negotiable
-requirements. **All five fail**: it ships its own interface text in its own 19-language
-catalogues, contains no bidirectional-text isolation anywhere (which our right-to-left
-languages require for every API-sourced string), takes over routing in a way that cannot
-express a module name like `site/v1`, carries a flat language list with no fallback chains,
-and brings its own visual styling plus a second syntax highlighter.
-
-We had already hit this pattern once — the equivalent Scalar module was rejected for the same
-class of reason. We are writing the renderer ourselves and keeping the library only for a
-short throwaway exercise to settle what a good page layout looks like.
-
-### Tier 1 is empty for four of ten modules
-
-The most consequential surprise, and it qualifies the "ship the light version first"
-strategy.
-
-Tier 1 shows each operation's one-line summary. But summaries are **missing unevenly**:
-
-| Module | Operations | Has summaries | Has descriptions |
+| Piece | Serves | Cost at 50 modules | Recommendation |
 |---|---|---|---|
-| `readinglists/v0` | 18 | none | **none** |
-| `specs/v0` | 3 | none | **none** |
-| `growthexperiments/v0` | 10 | none | yes |
-| `wikifunctions/v0` | 4 | none | yes |
-| `wikibase/v1` | 65 | yes | yes |
+| Machine-readable files for AI | AI assistants, tooling | **~40 KB, no page count** | **Ship** |
+| Reference pages, English | Search ranking, no-JS fallback | **50 pages, 6 MB, 13 s** | **Ship** |
+| Reference pages × all languages | Speculative | 2,500 pages, 276 MB, 11 min | **Do not ship yet** |
+| Full operation detail on pages | Long-tail search | Doubles page content | **Decide on evidence** |
 
-A summary-only page would render four of ten modules as a **bare list of paths with nothing
-to index or rank**. We now fall back to the first sentence of the longer description where a
-summary is missing, which recovers two of those modules and lifts prose coverage from 71% to
-79%.
+The language dimension is **98% of the projected cost and carries the weakest evidence
+behind it.** Dropping it for now turns this from a significant ongoing commitment into a
+small one, while keeping almost all of the benefit.
 
-The remaining two — 21 operations — have **no prose at all in the specification**. No amount
-of rendering can invent it. That is upstream work for the teams that own those modules, and
-it is a real limit on what tier 1 alone can achieve for them.
-
-### The obvious way to hide 6,374 empty pages would not have worked
-
-The explorer's shareable-link feature made **6,374 addresses valid today** — heading for
-~32,000 as modules grow — each serving the same empty shell. Getting them out of search
-results is straightforward-sounding: tell crawlers not to look.
-
-That would have failed, quietly. The standard "do not crawl" instruction prevents *crawling*,
-not *indexing*: a blocked address can still be listed in search results if anything links to
-it, appearing as a bare URL with no description we can correct. And these links exist
-**specifically to be shared** — that is the feature's entire purpose — so inbound links from
-elsewhere are the expected case, not an edge case.
-
-Worse, the two instructions conflict. A blocked address is never fetched, so the separate
-"do not index this" instruction is never read. Following the intuitive path would have left us
-believing the problem was handled while the pages accumulated in search results.
-
-We used the opposite approach: allow the crawl, and mark the pages "do not index" so the
-instruction is actually seen. It costs a little crawler traffic, and it is the only thing that
-works. A test now guards against a future change reintroducing the conflict.
-
-### We nearly published subtly wrong specification files
-
-When exposing the raw specification files for machines to consume, the first implementation
-handed them through the web framework, which quietly reformatted them — stripping the
-deliberate, consistent ordering that makes changes to those files reviewable, and shrinking
-each by about a quarter.
-
-Nothing would have failed. The files were still valid; they simply were not the files we
-publish and review. Caught by comparing published bytes against source bytes, which is now
-part of the verification.
-
-### The portal's own documentation had quietly drifted
-
-Incidental, but worth reporting because it is the same class of problem. Fixing an unrelated
-loading error revealed a test that had **not run at all** for some time, and behind it a
-guide that told authors to use a navigation menu id that no longer exists — anyone following
-it would silently get no sidebar. We corrected the guide and the test. We also found a
-duplicated translation key in the English interface file, which we have flagged rather than
-touched.
+If you read nothing else: **ship the machine-readable files and the English pages, do not
+multiply by language, and revisit in a quarter with real data.**
 
 ---
 
-## What we have built so far
+## What this decision actually costs
 
-| Phase | Status |
+**Important framing: this is not a decision about whether to fund building something. It is
+already built.** The experiment produced working, tested code for every piece described here.
+The decision is how much of it to *publish*.
+
+| | State | Remaining work |
+|---|---|---|
+| Machine-readable files | Built, tested, verified | **None** |
+| English reference pages | Built, tested, measured | **One index page** (~a day) so the pages link to each other; crawlers treat page sets with no internal links as orphans |
+| Crawler instructions and sitemap | Built, tested | None |
+| Language multiplication | Infrastructure built; translations do not exist | Blocked on MediaWiki delivering per-language specifications |
+| Full operation detail | Designed, not built | Moderate — and deliberately gated on data |
+
+Two cheap checks are recommended before publishing anything: validate the
+same-on-every-wiki assumption (roughly 30 requests, described below) and answer the
+documentation-overlap question in the next section.
+
+**So the marginal cost of the recommendation is roughly one day of work plus those checks.**
+That is a materially different question from the one we started with, and it should change
+how much deliberation it warrants.
+
+---
+
+## The one question we need answered by someone outside this work
+
+**Is this portal intended to become the canonical home for Wikimedia REST API reference?**
+
+The REST API is already documented on mediawiki.org and elsewhere in the movement. Two
+outcomes follow from the answer, and they point in opposite directions:
+
+- **If yes, with the older pages eventually redirected here** — publish. The pages
+  consolidate documentation that is currently scattered, and consolidation is exactly what
+  search engines reward.
+- **If no, and both sets of pages persist indefinitely** — we would be adding Wikimedia pages
+  that compete with other Wikimedia pages for the same queries, splitting ranking signals
+  between our own properties. We could collectively rank *worse* than any one of them does
+  today. In that case the machine-readable files (option A) are still clearly worth shipping,
+  but the pages are questionable.
+
+**We cannot answer this from the code, and it is the single most consequential input to the
+decision.** It belongs to whoever owns developer-documentation strategy across the movement,
+not to this experiment.
+
+---
+
+## What we set out to solve
+
+Three distinct needs got bundled together at the start. Separating them is what made the
+cost picture clear, so they are separated here.
+
+**1. AI coverage.** Assistants should know the Wikimedia REST API exists and how to call it.
+A growing share of developers ask an assistant before they open a browser.
+
+**2. Search visibility.** A developer searching for how to call a Wikimedia endpoint should
+be shown our documentation.
+
+**3. A lightweight path.** Someone on a slow or constrained connection, or with JavaScript
+unavailable, should still be able to read the reference.
+
+All three fail today for the same reason: the interactive API Explorer renders entirely in
+the browser. An automated visitor receives an essentially empty page; content appears only
+after JavaScript runs and two further requests to a wiki resolve. Search engines index that
+unreliably, AI crawlers very likely not at all, and all 10 modules with their 179 operations
+effectively share one address — so there is nothing for a search engine to rank.
+
+A sitemap does not fix this. A sitemap lists addresses; it cannot put content into a page.
+
+---
+
+## Which piece actually serves which need
+
+This is the core of the analysis. The pieces are not equally valuable, and they are very far
+from equally expensive.
+
+| | AI coverage | Search visibility | Lightweight path | Cost |
+|---|---|---|---|---|
+| **Machine-readable files** (`llms.txt`, full text corpus, raw specs) | **Fully** | Barely — one address does not rank | **Well** — 34 KB of plain text for the whole API | Negligible |
+| **Reference pages, English** | Adds little | **Yes** — this is the only piece that creates rankable addresses | **Yes** — a real page, ~19 KB compressed | Small |
+| **Same pages × N languages** | Nothing | Unproven | Nothing extra | **Large, multiplies** |
+| **Full operation detail** | Modest | Long-tail queries | Marginal | Moderate |
+
+Two conclusions fall out of that table.
+
+**The AI need — arguably the most valuable of the three — is met by the cheapest piece.** A
+single 34 KB text file containing every module and all 179 operations serves an assistant
+*better* than hundreds of HTML pages: one request, no JavaScript, no crawl budget, no markup
+to parse. This needed none of the page infrastructure.
+
+**Search visibility genuinely requires pages, and nothing lighter substitutes.** Search
+engines rank addresses. A text file, however complete, is one address. If we want to appear
+for "Wikibase REST API," that content needs its own page. This is the one place where the
+sceptical instinct ("surely something lighter would do") does not hold — but in English only
+it is just 50 pages.
+
+---
+
+## What it costs as things grow
+
+We measured a real build of 150 pages and extrapolated. Per-page cost is near-constant, which
+makes these projections reliable.
+
+| Scenario | Pages | Build output | Prerender time | Translation files |
+|---|---|---|---|---|
+| English, today (10 modules) | 10 | 1 MB | 3 s | — |
+| English, 50 modules | 50 | 6 MB | 13 s | — |
+| English, **200** modules | 200 | 22 MB | 52 s | — |
+| 15 languages, 50 modules | 750 | 83 MB | 3 min | 750 |
+| 50 languages, 50 modules | 2,500 | 276 MB | 11 min | 2,500 |
+| **All 575 catalogue languages**, 50 modules | 28,750 | **3.1 GB** | **125 min** | 28,750 |
+
+**More modules is a non-problem.** Growing from 10 to 50 costs 13 seconds of build time. Even
+200 modules — four times what we expect — is 22 MB and under a minute. This dimension can be
+ignored.
+
+**More languages is the entire cost.** Every number that looks alarming above comes from the
+language multiplier, and the last row is what happens if someone wires this to the full
+language catalogue without thinking. That row is the real risk in this design: not that it
+fails, but that it is one careless configuration change away from a two-hour build.
+
+**A cost that is not bytes.** Translated specifications arrive as one file per module per
+language — 2,500 files at moderate scale. Our review process for generated data is reading
+the git diff. **That process does not survive 2,500 files.** The maintenance burden of the
+language dimension is arguably worse than its size.
+
+---
+
+## Lighter alternatives, honestly compared
+
+Four options, from cheapest to what we actually built.
+
+### A. Machine-readable files only
+
+Ship the corpus, the index, and the raw specifications. No pages at all; links point into the
+existing Explorer.
+
+- **AI coverage: fully met.**
+- **Search: not met.** One address will not rank for module or endpoint queries.
+- **Lightweight path: met crudely.** Plain text is very light but is not a readable page for
+  a human.
+- **Cost: effectively zero.** No page count, no language multiplier, no prerender step.
+
+**This is the floor, and it is a genuinely defensible answer** if search visibility is judged
+not worth pursuing.
+
+### B. Machine-readable files plus one overview page
+
+Add a single page listing every module and operation.
+
+- **Search: partially met.** One strong page can rank for broad terms ("Wikimedia REST API")
+  but not for a specific module or endpoint.
+- **Lightweight path: met.**
+- **Cost: 1 page per language. Trivial.**
+- **Weakness:** a single page carrying all 179 operations is heavy, and gets heavier as
+  modules grow — the one place where module growth *would* start to hurt.
+
+### C. Machine-readable files plus English reference pages — **recommended**
+
+What we built, minus the language multiplier.
+
+- **All three needs met.**
+- **Cost: 50 pages, 6 MB, 13 seconds** at the expected module count.
+- **Weakness:** English only. Discussed below.
+
+### D. Everything, all languages
+
+What the experiment currently produces.
+
+- **Cost: 2,500 pages, 276 MB, 11 minutes, 2,500 translation files** at moderate scale.
+- **Weakness:** the benefit over option C is unproven, and it is the option that carries the
+  3.1 GB failure mode.
+
+---
+
+## Why we would drop the language dimension, for now
+
+This is the recommendation most likely to be contested, so here is the reasoning in full.
+
+**Developers searching for API documentation search in English.** Even developers who do not
+work in English generally search for technical documentation using English terms — endpoint
+names, HTTP methods and parameter names are English regardless. Translated reference pages
+help someone *read* the material; they do very little to help someone *find* it. Search
+visibility is the need the pages exist to serve.
+
+**Translated pages help with reading — but the Explorer already covers reading well** for
+anyone with a working browser, and the translated specifications do not exist yet regardless.
+
+**The evidence base is empty.** We have no data suggesting demand for translated API
+reference. We have measured, concrete costs. Committing to a 50× multiplier against an
+unmeasured benefit is the wrong order of operations.
+
+**Near-duplicate pages carry a real penalty.** Publishing a language variant whose content is
+mostly untranslated English produces near-duplicate pages at scale, which is actively harmful
+for search rather than neutral. We built a translation-coverage gate for exactly this reason —
+but the simpler answer is to not publish those variants yet.
+
+**Nothing is lost by waiting.** The infrastructure works and is tested. Turning languages on
+later is a configuration change plus the translation files, not a redesign. Turning it on now
+and discovering it was unnecessary means unwinding published, indexed addresses — which is
+much harder.
+
+---
+
+## The uncertainties that matter more than cost
+
+Cost we have measured. These we have not, and they matter more.
+
+**Does anyone actually search for this?** We assume developers search for Wikimedia REST API
+endpoints often enough to justify ranking for them. We have not validated it. Search-console
+data after a small launch answers it directly, which is the main argument for shipping the
+cheap version and measuring rather than debating.
+
+**Can AI crawlers really not run JavaScript?** This is the strongest argument for the whole
+effort and we cannot verify it from our own infrastructure. Crawler logs after launch are the
+direct test. If it turns out they *can*, the AI argument weakens substantially — though the
+search and lightweight-path arguments survive intact.
+
+**Will the specifications ever carry enough prose?** 21 operations across two modules
+(`readinglists/v0`, `specs/v0`) declare **no description at all**. Their pages are lists of
+paths with nothing to index or rank. That is upstream work for the teams owning those modules,
+and no amount of rendering substitutes for it. It also caps how good the lightweight reading
+experience can be.
+
+**Are the specifications the same on every wiki?** Dropping the per-wiki dimension — which is
+what made this feasible at all — assumes a module behaves identically everywhere it is
+deployed. Still unvalidated. Roughly 30 requests would settle it, and we recommend doing that
+before publishing.
+
+---
+
+## If we do nothing
+
+Worth stating, since "do nothing" is always an option and is sometimes right.
+
+The Explorer keeps working exactly as it does today for anyone with a working browser. What
+persists is: the API reference stays effectively invisible to search engines and almost
+certainly absent from AI assistants; there remains no readable path for constrained
+connections or JavaScript-disabled clients; and **the 6,374 empty shareable addresses stay
+crawlable.**
+
+That last item is the one thing we would argue against leaving alone. It is a pre-existing
+liability created by the Explorer's shareable-link feature, it grows to roughly 32,000 as
+modules are added, and the fix is already built and independent of every other decision here.
+**Shipping only the crawler instructions, and nothing else, is a coherent choice.**
+
+## How reversible is each piece?
+
+Relevant because it determines how much a wrong decision costs.
+
+| Piece | If we later want it gone |
 |---|---|
-| Link-naming scheme, with uniqueness enforced | **Done** — including the production bug fix |
-| Build-and-scale measurement | **Done** — 150 real pages built and inspected |
-| Crawler instructions and sitemap | **Done** — liability removed, 150-entry sitemap |
-| Machine-readable surfaces for AI | **Done** — index, full corpus, raw specifications |
-| Catalogue pages, all languages | English rendering works; index page and languages outstanding |
-| Measure indexing and traffic | Not started |
-| Full prose | Gated on evidence |
+| Machine-readable files | **Trivial.** Delete three files. Nothing links to them structurally. |
+| Crawler instructions | **Trivial**, and there is no plausible reason to reverse them. |
+| English reference pages | **Moderate.** Once published and indexed, removal needs redirects to avoid dead links from search results and anywhere people have linked. |
+| Language multiplication | **Worst.** Every published language variant is an address that needs a redirect, multiplied by module count. This asymmetry is a substantial part of why we recommend holding it. |
+| Full operation detail | **Trivial** — it adds content to existing pages rather than new addresses. |
 
-**What exists today.** Module pages render with real content: module identity, a summarised
-deployment list (never 840 links — grouped by project family, with the interesting narrow
-cases named), and one addressable heading per operation. Right-to-left languages render
-correctly and all interface text goes through the portal's translation system.
+The pattern is that **the cheap pieces are also the easily reversible ones**, and the expensive
+piece is the hardest to unwind. That argues for the staged approach independently of the cost
+numbers.
 
-Alongside them, three surfaces built for machines rather than people:
+## What the experiment paid for regardless of this decision
 
-- A **34 KB text file containing every module and all 179 operations**, so an AI assistant can
-  read the entire API reference in a single request — no JavaScript, no crawling hundreds of
-  pages. This is the most direct answer to the invisibility problem we started with.
-- A short **index file** listing every module with its operation and wiki counts.
-- Each module's **raw specification** at a stable address, byte-for-byte identical to the file
-  we review internally, for tooling that wants the complete detail our pages deliberately
-  omit.
+Worth recording, because these are permanent gains even if nothing ships.
 
-Every one of the 179 links in the AI corpus was verified to land on a real heading on a real
-page — which also confirms that pages, corpus and index all agree on how an operation is
-named.
+**We found and fixed a bug in production.** Settling how to name links to individual
+operations meant testing naming schemes against live data. One module exposes both `/lists`
+and `/lists/` as genuinely different endpoints, and the scheme already shipped in the Explorer
+collapsed them — so **a shared link to one endpoint silently opened a different one.** Four
+endpoints were affected. The code carried a comment calling such collisions "astronomically
+unlikely" while they were already happening.
 
-**One thing we need before publishing.** The sitemap and the AI files are lists of absolute
-web addresses, so they need the site's public URL configured in the deployment environment.
-Until it is set they are deliberately **skipped** rather than published with a guessed
-address, because a sitemap of wrong addresses is worse than none — crawlers act on them. The
-build warns when it is missing.
+The transferable lesson is now in the engineering documentation: **the existing test proved the
+links were reversible, not that they were unique.** All 179 operations passed while four pairs
+collided, because each bad link still resolved to *an* endpoint — just the wrong one.
 
----
+**We learned the specifications are thinner than assumed.** 71% of operations have a one-line
+summary; two modules have no prose whatsoever. This is actionable upstream regardless of what
+we publish.
 
-## What we are deliberately giving up
+**We corrected drift in our own documentation.** A test that had silently stopped running for
+some time, and an authoring guide telling contributors to use a navigation setting that no
+longer exists.
 
-**Operation-level search ranking.** Putting a module's operations on one page means they
-compete for a single search result rather than ranking independently. That is the direct cost
-of reducing 45,000 pages to 2,500, and we think it is clearly the right trade — but it raises
-the importance of the sitemap and of clean page structure. Our own on-site search does not
-have this limitation; it indexes per section.
-
-**Certainty that every module behaves identically everywhere.** See below.
+**We now have measured numbers** where we previously had estimates — and three of those
+estimates were wrong, one by a factor of seven.
 
 ---
 
-## What remains uncertain
+## Recommendation
 
-Stated plainly, because these are the things that could still change the conclusion.
+**Ship option C, without the language multiplier:**
 
-**Whether a module really is identical on every wiki.** This assumption is what lets us drop
-the 840-wiki dimension, and it is still unvalidated. If it is false for some module, that
-module's page would be subtly wrong for the wikis where it differs. Validating it is cheap —
-roughly 30 requests — and we recommend doing it.
+1. **Machine-readable files** — the corpus, index, and raw specifications. Cost is negligible,
+   it closes the AI gap completely, and it is the piece we would defend even if everything else
+   were dropped.
+2. **English reference pages** — 50 pages at expected scale. This is the only way to get
+   rankable addresses and a real no-JavaScript reading path.
+3. **Crawler instructions and sitemap** — already built, and they remove a pre-existing
+   liability (the Explorer's shareable links made 6,374 empty addresses valid) that is worth
+   fixing whatever else is decided.
+4. **Hold the language dimension.** Keep the infrastructure, publish English only.
+5. **Hold full operation detail.** Decide it on measured indexing data.
 
-**Whether AI crawlers really cannot run JavaScript.** This is the strongest argument for the
-whole effort and we cannot verify it from inside our own infrastructure. Crawler logs after
-launch are the direct test.
+Before publishing, two cheap checks: validate the same-on-every-wiki assumption (~30 requests),
+and answer the question about Wikimedia's existing API documentation.
 
-**Whether static pages actually get indexed.** The entire point. If they do not, that finding
-matters more than anything the later phases would have told us — which is why the cheap phases
-come first.
+## How to decide
 
-**How much prose the specifications will ever have.** 21 operations have none today. If that
-does not improve upstream, those modules stay thin regardless of what we build.
+The choice is not really between the four options. It is between **three positions**, and each
+has a clear tell.
 
-**Whether the explorer's 6,374 empty addresses were already indexed.** The instructions to
-keep them out of search results are now in place, and they work going forward. If any were
-already listed before we acted, they will drop out as crawlers revisit — but we cannot see
-how many there were, and search-console data after launch is the only way to find out.
+**Position 1 — "search visibility is not worth pursuing."** Ship option A only. Defensible if
+you believe developers reach Wikimedia API documentation through movement channels rather than
+search, or if the duplicate-content concern against our own existing docs is judged serious.
+Cost: effectively nothing. **Choose this if the answer to the Wikimedia-own-documentation
+question is "both will persist."**
+
+**Position 2 — "worth a measured attempt."** Ship option C, English only, and set a review in
+one quarter. Cost is small and bounded, and the measurement answers the questions that argument
+cannot. **This is our recommendation.**
+
+**Position 3 — "commit fully."** Ship option D. We would not, on present evidence: the
+incremental benefit is unmeasured and the cost multiplier is 50×.
+
+**What to look at in a quarter**, if position 2 is chosen:
+
+- Are the pages indexed, and do they appear for module-name searches?
+- Is there measurable referral traffic from search?
+- Do crawler logs show AI crawlers fetching the text corpus? (This also settles the
+  JavaScript question.)
+- Do the search terms people arrive on suggest demand for operation-level detail — and for any
+  language other than English?
+
+Those four answers determine whether to add full operation detail, whether to add languages,
+or whether to stop. **If the pages do not get indexed at all, that is the most valuable
+finding available and it costs a quarter of waiting rather than a quarter of building.**
+
+## Who needs to weigh in
+
+Not every question here belongs to the same people, and one of them blocks the others.
+
+| Question | Belongs to | Blocking? |
+|---|---|---|
+| Is this portal the canonical home for REST API reference? | Developer-documentation strategy across the movement | **Yes** — it decides between option A and option C |
+| Publish the English pages, or machine-readable files only? | Portal roadmap owners | Yes, but follows from the above |
+| Ship the crawler instructions? | Portal roadmap owners | No — recommended regardless, and independently shippable |
+| Add languages later? | Portal roadmap owners, on measured data | No — explicitly deferred |
+| Fill in the missing operation descriptions | The teams owning `readinglists/v0` and `specs/v0` | No, but it caps the value of anything we publish for those two modules |
+| Confirm specifications are identical across wikis | This team, ~30 requests | Recommended before publishing |
+
+**Suggested sequence:** answer the canonical-home question first, because it is the one that
+can change the recommendation rather than merely refine it. Everything else is either
+independently shippable or explicitly deferred.
 
 ---
 
-## What success looks like
+## Appendix: measured facts
 
-Within a reasonable window after the first pages and machine surfaces ship:
+From real builds against the 10 currently committed modules, not estimates.
 
-- Module pages are indexed and appear for module-name searches.
-- Referral traffic arrives at module pages from search.
-- AI assistants asked about Wikimedia REST modules cite or reflect our documentation.
-- On-site search returns useful module-level results.
+| | |
+|---|---|
+| Modules / operations today | 10 / 179 |
+| Expected modules | ~50 |
+| Human-readable text in a specification | **17%** of bytes (98 KB of 590 KB) |
+| Operations with a one-line summary | 71% |
+| Operations with any prose at all | 79% (21 have none) |
+| Modules using the standard grouping field | 2 of 10 |
+| Page weight | ~109 KB, of which ~100 KB is shared site frame |
+| Compressed page weight | ~19 KB |
+| Build, 150 pages | 64 s total, 39 s of it page generation |
+| Full text corpus | 34 KB for every module and operation |
+| Wiki-and-module combinations avoided | 6,374 (~32,000 at 50 modules) |
 
-If the pages index well and draw traffic, the fuller version is clearly justified — it is the
-same pages with more content, at a now well-understood cost. If they do not index at all, we
-will have learned the most important thing for a fraction of the effort.
+**Two facts that shaped the design.** Human-readable text is only 17% of a specification, so
+rendering the machine-readable structure was the expensive part, not the prose — that is why
+pages carry prose and defer structure. And page weight is dominated by the shared site frame
+rather than API content: a 65-operation module is only 21% heavier than average. Cost per page
+is therefore near-constant, which is what makes the projections above trustworthy, but it also
+means the floor is high and the lever for reducing size is the site frame, not the content.
