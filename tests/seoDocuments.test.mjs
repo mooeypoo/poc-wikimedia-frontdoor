@@ -169,6 +169,51 @@ test( 'buildSitemapXml omits x-default when the default locale is absent', () =>
 	assert.doesNotMatch( xml, /x-default/ )
 } )
 
+test( 'buildSitemapXml emits a bare entry when there are no alternates', () => {
+	// With a single publishable locale there is nothing for hreflang to
+	// disambiguate, so the annotations should be absent entirely rather than
+	// present-but-self-referential.
+	const xml = buildSitemapXml(
+		[ { location: 'https://x.example/reference/site/v1', alternates: [] } ],
+		'en'
+	)
+
+	assert.match( xml, /<loc>https:\/\/x\.example\/reference\/site\/v1<\/loc>/ )
+	assert.doesNotMatch( xml, /xhtml:link/ )
+	assert.doesNotMatch( xml, /x-default/ )
+	// The namespace declaration is harmless when unused and keeps the document
+	// valid if a later entry does carry alternates.
+	assert.match( xml, /xmlns:xhtml=/ )
+} )
+
+test( 'sitemap annotation volume grows with the square of locale count', () => {
+	// Guards the reasoning in ADR §10: entries grow with locales AND alternates
+	// per entry grow with locales, so this is the fastest-growing artefact in the
+	// build and the reason single-locale output drops the annotations.
+	const linkCount = ( modules, locales ) => {
+		const entries = []
+		for ( let m = 0; m < modules; m++ ) {
+			const alternates = locales > 1
+				? Array.from( { length: locales }, ( _, l ) => ( {
+					hreflang: `l${ l }`,
+					href: `https://x.example/l${ l }/m${ m }`
+				} ) )
+				: []
+			for ( let l = 0; l < locales; l++ ) {
+				entries.push( { location: `https://x.example/l${ l }/m${ m }`, alternates } )
+			}
+		}
+		const xml = buildSitemapXml( entries, 'l0' )
+		return ( xml.match( /xhtml:link/g ) ?? [] ).length
+	}
+
+	assert.equal( linkCount( 10, 1 ), 0 )
+	// 10 modules x 4 locales x (4 alternates + 1 x-default) = 200
+	assert.equal( linkCount( 10, 4 ), 200 )
+	// Doubling locales roughly quadruples the annotations, not doubles them.
+	assert.equal( linkCount( 10, 8 ), 720 )
+} )
+
 test( 'buildSitemapXml escapes ampersands in URLs', () => {
 	const xml = buildSitemapXml(
 		[ {

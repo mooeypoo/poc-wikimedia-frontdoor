@@ -322,7 +322,27 @@ The mapping lives in `config/` per Absolute Rule 6, as a bidirectional pair of p
 
 **`robots.txt` scope is deliberately narrow:** `Disallow: /api/` only. Server endpoints carry no indexable content and are never linked externally, so `Disallow` is correct for *them*. Build assets (`/_nuxt/`) are **not** blocked — crawlers need CSS and JS to assess a page.
 
-**Decision — the sitemap is exact, not crawled.** `/sitemap.xml` is generated from the committed module source of truth (`GENERATED_MODULES` × `REFERENCE_EXPERIMENT_LOCALES`), so it enumerates precisely what exists with no crawling. Each entry carries the **full `hreflang` alternate set including a self-reference** — a set that omits the page it appears on is ignored entirely — plus `x-default` pointing at the default-locale URL. Verified: 150 entries, 16 alternates each, well-formed XML.
+**Decision — the sitemap is exact, not crawled.** `/sitemap.xml` is generated from the committed module source of truth (`GENERATED_MODULES` × `REFERENCE_EXPERIMENT_LOCALES`), so it enumerates precisely what exists with no crawling.
+
+### 10.1 `hreflang` reciprocity, and why it scales badly
+
+**The repetition is required, not redundancy.** Each entry carries the **full alternate set including a self-reference**, and the same set repeats on every locale's entry. The natural-looking compaction — one entry whose `<loc>` is the English URL, with the other locales appearing only as alternates — **does not work**: annotations must be *reciprocal*, so a locale that is mentioned but never declares anything itself has no return annotation, and search engines discard non-reciprocal annotation sets entirely. The compact version would likely yield no `hreflang` benefit at all rather than a smaller version of it. `x-default` points at the default-locale URL.
+
+**Consequence — annotation volume is roughly modules × locales².** Entries grow with locale count *and* alternates per entry grow with locale count:
+
+| Modules | Locales | Entries | Alternates each | Link elements | Sitemap |
+|---|---|---|---|---|---|
+| 10 | 15 | 150 | 16 | 2,400 | 241 KB *(measured)* |
+| 50 | **1** | 50 | **0** | **0** | **~1 KB** |
+| 50 | 15 | 750 | 16 | 12,000 | ~1.7 MB |
+| 50 | 50 | 2,500 | 51 | 127,500 | ~17 MB |
+| 50 | 575 | 28,750 | 576 | 16,560,000 | **~2 GB — 40× over the limit** |
+
+The sitemap protocol caps one file at **50,000 URLs and 50 MB uncompressed**. The full-catalogue row is not merely large, it is *illegal* without splitting into a sitemap index. **This is the fastest-growing artefact in the build** — quadratic where page count is linear — and therefore an independent argument for §5's coverage gate keeping the publishable locale set small.
+
+**Decision — no annotations when there is one publishable locale.** `hreflang` exists to disambiguate between language versions; with a single locale there is nothing to disambiguate, so the entries are emitted bare. Verified by real build: English-only produces 10 entries, **zero** `xhtml:link` elements, and drops the file from 241 KB to **0.8 KB**. The `xmlns:xhtml` declaration is retained — harmless when unused, and it keeps the document valid the moment a second locale is added.
+
+**If locales do ship, move the annotations into each page's `<head>`.** The pages currently emit **no** `hreflang` links at all (verified), so the sitemap carries the entire i18n signal alone. The total annotation count is identical either way, but in a `<head>` it is *distributed* — 16 lines per page — instead of concentrated in one file with a hard 50 MB cap, and `@nuxtjs/i18n` generates them natively for less code than the sitemap path. Use one mechanism or the other, never both. Not built, because it is pointless unless locales are published.
 
 **Decision — no guessed site origin, but a usable default outside production.** `resolveSiteOrigin()` resolves in this order:
 

@@ -195,6 +195,34 @@ language — 2,500 files at moderate scale. Our review process for generated dat
 the git diff. **That process does not survive 2,500 files.** The maintenance burden of the
 language dimension is arguably worse than its size.
 
+### One cost grows faster than linearly
+
+Everything above grows in proportion to the number of languages. One thing grows with the
+*square* of it, and it is the strongest single argument for keeping the language set small.
+
+Search engines require every language version of a page to declare **every** other version,
+*including itself*, and to do so **reciprocally** — if the French page declares the English
+one but not vice versa, the declarations are discarded rather than partially honoured. There
+is no compact way to express this. So the file that tells search engines about our pages grows
+with pages **and** with declarations per page:
+
+| Languages | Pages listed | Declarations | Resulting file |
+|---|---|---|---|
+| **1** | 50 | **none needed** | **~1 KB** |
+| 15 | 750 | 12,000 | ~1.7 MB |
+| 50 | 2,500 | 127,500 | ~17 MB |
+| All 575 | 28,750 | 16,560,000 | **~2 GB** |
+
+The last row is not merely large. The format has a hard limit of 50 MB per file, so it is
+**40× over what is legal** and would have to be split across many files just to be accepted.
+
+Two practical consequences. First, this is now handled: with a single language the
+declarations are omitted entirely, and we verified that the file drops from 241 KB to **0.8
+KB**. Second, if languages are ever published, these declarations should move out of that file
+and onto the pages themselves — same total volume, but spread across pages instead of
+concentrated in one file with a size ceiling. That is straightforward, and deliberately not
+built until the language question is decided.
+
 ---
 
 ## Lighter alternatives, honestly compared
@@ -265,6 +293,11 @@ unmeasured benefit is the wrong order of operations.
 mostly untranslated English produces near-duplicate pages at scale, which is actively harmful
 for search rather than neutral. We built a translation-coverage gate for exactly this reason —
 but the simpler answer is to not publish those variants yet.
+
+**One cost grows quadratically, not linearly.** The search-engine declarations that link
+language versions together grow with the square of the language count — detailed above. At the
+full language catalogue that file alone would be roughly 2 GB and 40× over the format's legal
+size limit. Page count is the linear cost; this is the one that bites disproportionately.
 
 **Nothing is lost by waiting.** The infrastructure works and is tested. Turning languages on
 later is a configuration change plus the translation files, not a redesign. Turning it on now

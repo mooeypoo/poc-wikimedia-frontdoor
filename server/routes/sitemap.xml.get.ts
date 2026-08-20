@@ -62,13 +62,27 @@ export default defineEventHandler( ( event ) => {
 		return `${ siteOrigin }${ localePrefix }${ referencePathForModule( moduleName ) }`
 	}
 
+	// `hreflang` exists to disambiguate between language versions, so with a
+	// single publishable locale there is nothing to declare and the annotations
+	// are pure bloat. This matters more than it looks: the annotation volume is
+	// roughly modules × locales² (every locale gets an entry, and every entry
+	// lists every locale), so it is the fastest-growing thing in the build. See
+	// docs/adr-static-module-documentation.md §10.
+	const isMultilingual = REFERENCE_EXPERIMENT_LOCALES.length > 1
+
 	const entries: SitemapEntry[] = []
 
 	for ( const wikiModule of GENERATED_MODULES ) {
-		const alternates = REFERENCE_EXPERIMENT_LOCALES.map( ( localeCode ) => ( {
-			hreflang: hreflangFor( localeCode ),
-			href: urlFor( localeCode, wikiModule.name )
-		} ) )
+		// Reciprocity is a hard requirement: every version must declare every
+		// version *including itself*, or search engines ignore the annotations
+		// altogether. That is why the same alternate set repeats on each entry
+		// rather than appearing once against the default-locale URL.
+		const alternates = isMultilingual
+			? REFERENCE_EXPERIMENT_LOCALES.map( ( localeCode ) => ( {
+				hreflang: hreflangFor( localeCode ),
+				href: urlFor( localeCode, wikiModule.name )
+			} ) )
+			: []
 
 		for ( const localeCode of REFERENCE_EXPERIMENT_LOCALES ) {
 			entries.push( {
