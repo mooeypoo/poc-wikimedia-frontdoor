@@ -232,6 +232,7 @@
   "reference-availability-examples": "Introduces two or three example wiki names that follow on the same line. Ends with a colon.",
   "reference-availability-heading": "Section heading introducing which Wikimedia wikis expose this API module.",
   "reference-eyebrow": "Short category label shown above the module title on a static API reference page. Not a sentence.",
+  "reference-openapi-link": "Link text pointing to the module's raw, machine-readable OpenAPI specification file. \"OpenAPI\" is a proper name and is not translated.",
   "reference-operations-empty": "Shown when an API module declares no operations in its OpenAPI specification.",
   "reference-operations-heading": "Section heading for the list of API operations (endpoints) in this module.",
   "search-all-languages-cta": "Button label to expand the search view across all supported languages.",

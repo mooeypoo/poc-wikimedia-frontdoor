@@ -235,6 +235,7 @@
   "reference-availability-examples": "For example:",
   "reference-availability-heading": "Where this module is available",
   "reference-eyebrow": "API reference",
+  "reference-openapi-link": "View the OpenAPI specification",
   "reference-operations-empty": "This module declares no operations.",
   "reference-operations-heading": "Operations",
   "search-all-languages-cta": "Search all languages",

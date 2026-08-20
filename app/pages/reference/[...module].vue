@@ -13,6 +13,7 @@
  * than schema structure.
  */
 import { CdxInfoChip } from '@wikimedia/codex'
+import { moduleNameToReferenceSlug } from '../../../config/referenceRoutes'
 
 const route = useRoute()
 
@@ -39,6 +40,16 @@ if ( !referencePage.value ) {
 }
 
 const { $bananaI18n } = useNuxtApp()
+
+/**
+ * Verbatim OpenAPI spec URL for this module.
+ *
+ * Locale-independent — the spec is one document, not a per-locale surface.
+ */
+const specUrl = computed( () => {
+	const moduleName = referencePage.value?.moduleName
+	return moduleName ? `/openapi/${ moduleNameToReferenceSlug( moduleName ) }.json` : ''
+} )
 
 useHead( {
 	title: () => referencePage.value?.title ?? ''
@@ -68,6 +79,9 @@ useHead( {
 				class="fd-reference__description"
 			>
 				<bdi>{{ referencePage.description }}</bdi>
+			</p>
+			<p class="fd-reference__machine">
+				<a :href="specUrl">{{ $bananaI18n( 'reference-openapi-link' ) }}</a>
 			</p>
 		</header>
 
@@ -164,6 +178,11 @@ useHead( {
 .fd-reference__description {
 	margin-block: 0;
 	color: var( --color-subtle );
+}
+
+.fd-reference__machine {
+	margin-block: var( --spacing-50 ) 0;
+	font-size: var( --font-size-small );
 }
 
 .fd-reference__section {

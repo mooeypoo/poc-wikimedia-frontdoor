@@ -9,8 +9,9 @@ detail in
 
 *(The filename still says "proposal" so that existing links keep working.)*
 
-**Status:** Foundations built and measured. Two of seven phases complete. No user-facing
-pages published yet.
+**Status:** Four of seven phases complete. The machine-readable surfaces for AI assistants
+are built, the crawler instructions are in place, and English module pages render. Nothing is
+published to the public site yet.
 
 ---
 
@@ -83,7 +84,7 @@ wikis expose it, and its operations with names and one-line summaries. ~64 KB of
 **Tier 3 — machine-readable surfaces.** The specifications at stable addresses plus a
 consolidated text index for AI assistants. Nearly free, since the specifications are already
 collected — and a *better* answer for AI than HTML, because they get the whole corpus in one
-request instead of crawling hundreds of pages.
+request instead of crawling hundreds of pages. **Built** (see *What exists today*).
 
 **Tier 2 — full prose, later.** The same pages, deepened with each operation's description,
 parameters and responses (~295 KB across 50 modules). Decided on evidence from tiers 1
@@ -139,7 +140,9 @@ is exactly what the translation-coverage gate already does.
 
 ## What surprised us
 
-Four things we did not go looking for. Two of them changed decisions.
+Six things we did not go looking for. Three of them changed decisions, and two were cases of
+the obvious approach being quietly wrong rather than obviously wrong — which is the kind we
+care most about catching.
 
 ### We found a real bug in software already in production
 
@@ -199,6 +202,37 @@ The remaining two — 21 operations — have **no prose at all in the specificat
 of rendering can invent it. That is upstream work for the teams that own those modules, and
 it is a real limit on what tier 1 alone can achieve for them.
 
+### The obvious way to hide 6,374 empty pages would not have worked
+
+The explorer's shareable-link feature made **6,374 addresses valid today** — heading for
+~32,000 as modules grow — each serving the same empty shell. Getting them out of search
+results is straightforward-sounding: tell crawlers not to look.
+
+That would have failed, quietly. The standard "do not crawl" instruction prevents *crawling*,
+not *indexing*: a blocked address can still be listed in search results if anything links to
+it, appearing as a bare URL with no description we can correct. And these links exist
+**specifically to be shared** — that is the feature's entire purpose — so inbound links from
+elsewhere are the expected case, not an edge case.
+
+Worse, the two instructions conflict. A blocked address is never fetched, so the separate
+"do not index this" instruction is never read. Following the intuitive path would have left us
+believing the problem was handled while the pages accumulated in search results.
+
+We used the opposite approach: allow the crawl, and mark the pages "do not index" so the
+instruction is actually seen. It costs a little crawler traffic, and it is the only thing that
+works. A test now guards against a future change reintroducing the conflict.
+
+### We nearly published subtly wrong specification files
+
+When exposing the raw specification files for machines to consume, the first implementation
+handed them through the web framework, which quietly reformatted them — stripping the
+deliberate, consistent ordering that makes changes to those files reviewable, and shrinking
+each by about a quarter.
+
+Nothing would have failed. The files were still valid; they simply were not the files we
+publish and review. Caught by comparing published bytes against source bytes, which is now
+part of the verification.
+
 ### The portal's own documentation had quietly drifted
 
 Incidental, but worth reporting because it is the same class of problem. Fixing an unrelated
@@ -216,16 +250,36 @@ touched.
 |---|---|
 | Link-naming scheme, with uniqueness enforced | **Done** — including the production bug fix |
 | Build-and-scale measurement | **Done** — 150 real pages built and inspected |
-| Crawler and canonical hygiene | Next |
-| Tier 3 — machine-readable surfaces | Not started |
-| Tier 1 — catalogue pages, all languages | Foundations in place; English rendering works |
+| Crawler instructions and sitemap | **Done** — liability removed, 150-entry sitemap |
+| Machine-readable surfaces for AI | **Done** — index, full corpus, raw specifications |
+| Catalogue pages, all languages | English rendering works; index page and languages outstanding |
 | Measure indexing and traffic | Not started |
-| Tier 2 — full prose | Gated on evidence |
+| Full prose | Gated on evidence |
 
-Pages render today with real content: module identity, a summarised deployment list (never
-840 links — grouped by project family, with the interesting narrow cases named), and one
-addressable heading per operation. Right-to-left languages render correctly, and all
-interface text goes through the portal's translation system.
+**What exists today.** Module pages render with real content: module identity, a summarised
+deployment list (never 840 links — grouped by project family, with the interesting narrow
+cases named), and one addressable heading per operation. Right-to-left languages render
+correctly and all interface text goes through the portal's translation system.
+
+Alongside them, three surfaces built for machines rather than people:
+
+- A **34 KB text file containing every module and all 179 operations**, so an AI assistant can
+  read the entire API reference in a single request — no JavaScript, no crawling hundreds of
+  pages. This is the most direct answer to the invisibility problem we started with.
+- A short **index file** listing every module with its operation and wiki counts.
+- Each module's **raw specification** at a stable address, byte-for-byte identical to the file
+  we review internally, for tooling that wants the complete detail our pages deliberately
+  omit.
+
+Every one of the 179 links in the AI corpus was verified to land on a real heading on a real
+page — which also confirms that pages, corpus and index all agree on how an operation is
+named.
+
+**One thing we need before publishing.** The sitemap and the AI files are lists of absolute
+web addresses, so they need the site's public URL configured in the deployment environment.
+Until it is set they are deliberately **skipped** rather than published with a guessed
+address, because a sitemap of wrong addresses is worse than none — crawlers act on them. The
+build warns when it is missing.
 
 ---
 
@@ -261,12 +315,10 @@ come first.
 **How much prose the specifications will ever have.** 21 operations have none today. If that
 does not improve upstream, those modules stay thin regardless of what we build.
 
-**A liability that exists regardless of this work.** The explorer's shareable-link feature
-made **6,374 addresses valid today** — heading for ~32,000 as modules grow — every one
-serving the same empty shell. Sharing those links is the feature's purpose, so crawlers will
-find them, and that is a large low-quality surface pointing at our domain. The crawler and
-canonical hygiene phase removes it, is independently shippable, and is cheap now and much
-harder once those addresses are indexed.
+**Whether the explorer's 6,374 empty addresses were already indexed.** The instructions to
+keep them out of search results are now in place, and they work going forward. If any were
+already listed before we acted, they will drop out as crawlers revisit — but we cannot see
+how many there were, and search-console data after launch is the only way to find out.
 
 ---
 

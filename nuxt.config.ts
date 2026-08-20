@@ -10,6 +10,7 @@ import { SUPPORTED_LANGUAGES } from './config/languages'
 import { GENERATED_MODULES } from './config/generated/modules.generated.ts'
 import {
 	REFERENCE_EXPERIMENT_LOCALES,
+	moduleNameToReferenceSlug,
 	referencePathForModule
 } from './config/referenceRoutes.ts'
 import { NOINDEX_ROUTE_PATTERNS, resolveSiteOrigin } from './config/seo.ts'
@@ -82,14 +83,24 @@ function buildNoindexRouteRules(): Record<string, { headers: Record<string, stri
  * emitted — it stays valid without the origin, simply omitting its `Sitemap:` line.
  */
 function buildCrawlerDocumentPrerenderRoutes(): string[] {
-	const routes = [ '/robots.txt' ]
+	// Verbatim specs need no site origin — they are files, not link documents.
+	const routes = [
+		'/robots.txt',
+		...GENERATED_MODULES.map(
+			( wikiModule ) => `/openapi/${ moduleNameToReferenceSlug( wikiModule.name ) }.json`
+		)
+	]
 
+	// The sitemap and the llms surfaces are sets of absolute links. Without an
+	// origin there is nothing valid to emit, and guessing a host would publish
+	// wrong addresses that crawlers and assistants then act on. robots.txt stays
+	// valid regardless, simply omitting its `Sitemap:` line.
 	if ( resolveSiteOrigin() ) {
-		routes.push( '/sitemap.xml' )
+		routes.push( '/sitemap.xml', '/llms.txt', '/llms-full.txt' )
 	} else {
 		console.warn(
-			'[frontdoor] NUXT_PUBLIC_SITE_URL is unset — skipping sitemap.xml. ' +
-			'Set it (or rely on Netlify\'s URL) to publish a sitemap.'
+			'[frontdoor] NUXT_PUBLIC_SITE_URL is unset — skipping sitemap.xml, llms.txt ' +
+			'and llms-full.txt. Set it (or rely on Netlify\'s URL) to publish them.'
 		)
 	}
 

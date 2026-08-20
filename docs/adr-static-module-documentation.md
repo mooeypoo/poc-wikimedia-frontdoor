@@ -13,7 +13,7 @@
 | §5 coverage-gated locales | **Placeholder** — `REFERENCE_EXPERIMENT_LOCALES` (15 locales) stands in until overlays exist |
 | §9 search / content collection | **Not started** |
 | §10 crawler hygiene | **Implemented** — `robots.txt`, `sitemap.xml` with `hreflang`, `noindex` on deep-link families; the original `Disallow`/canonical prescription was corrected |
-| §10 machine surfaces (`llms.txt`, raw specs) | **Not started** |
+| §10 machine surfaces (`llms.txt`, raw specs) | **Implemented** — `/openapi/<slug>.json` (byte-identical), `/llms.txt`, `/llms-full.txt`; per-page markdown deferred |
 | §12 library spike (0b) | **Audit done** (all five criteria fail); IA spike not run |
 **Scope:** Statically rendered, search-engine- and AI-indexable reference documentation for Wikimedia REST API modules, generated from the committed OpenAPI specs, one page per module per publishable locale, with per-operation anchors. Plus machine-readable surfaces (raw specs, `llms.txt`). The runtime API Explorer is unchanged and remains the interactive surface.
 
@@ -280,7 +280,25 @@ The mapping lives in `config/` per Absolute Rule 6, as a bidirectional pair of p
 
 ## 10. Machine surfaces and crawler hygiene (tier 3)
 
-**Decision — machine surfaces.** Serve the already-committed specs at stable URLs, plus an `llms.txt` index and a consolidated `llms-full.txt` prose dump, and expose each page's raw markdown alongside its HTML.
+**Decision — machine surfaces.** Serve the already-committed specs at stable URLs, plus an `llms.txt` index and a consolidated `llms-full.txt` prose dump.
+
+**Implemented:**
+
+| Surface | URL | Notes |
+|---|---|---|
+| Verbatim spec | `/openapi/<slug>.json` | Byte-identical to the committed file (verified for all 10) |
+| Index | `/llms.txt` | 2.6 KB — modules, operation counts, wiki counts, spec links |
+| Full corpus | `/llms-full.txt` | 34 KB — every module and all 179 operations with resolvable anchors |
+
+**A separate `/openapi/` prefix, not `/reference/<module>/openapi.json`.** The reference page is a catch-all, so `/reference/site/v1/openapi.json` is indistinguishable from a module named `site/v1/openapi.json` — the filename would be swallowed into the module tail. A distinct top-level prefix removes the ambiguity outright rather than depending on route-precedence subtleties between Nitro routes and Vue pages.
+
+**Specs are streamed as raw text, not parsed and re-serialised.** The first implementation returned a parsed object and let Nitro re-encode it. That minified the JSON — 10,616 bytes became 7,823 — and silently discarded the recursive key ordering and pretty-printing that `generate-module-source-of-truth` applies deliberately, since stable ordering is what makes a regen diff reviewable (source-of-truth ADR §8). "Verbatim" has to mean byte-identical or it means nothing.
+
+**Deferred: per-page raw markdown.** `llms-full.txt` already serves the AI consumer better — one request for the whole corpus instead of one per page — so per-page markdown waits until §9 generates markdown anyway, at which point it is nearly free.
+
+**English-only, deliberately.** Overlays do not exist yet, and an assistant offered 15 near-identical English corpora is worse served than one given a single authoritative document.
+
+**Verified end to end:** all 179 `Link:` targets in `llms-full.txt` were resolved against the prerendered HTML — every page exists and every anchor id is present. That exercises the §4 anchor vocabulary across three independent surfaces at once.
 
 **Rationale:** For AI consumers a single content-bearing text artifact is *better* than hundreds of HTML pages — one fetch, no crawl budget, no HTML parsing. This is where the earlier "AI sitemap" instinct is correct: an XML sitemap cannot carry content, but `llms.txt` can. At §2's measured sizes the whole prose corpus is ~295 KB, comfortably one file. Anchors in it use §4's vocabulary, so an AI citing an operation emits a working link.
 
@@ -375,9 +393,9 @@ Summary of ordering, riskiest-first:
 1. ~~**Spike A — prerender scale test.**~~ **Done** — §7.1. Went further than a stub: the page renders the real tier-1 projection, so the measured bytes are representative rather than notional.
 2. **Spike B — IA reference.** `nuxt-openapi-docs-module` against the committed specs. Scope now reduced to information architecture only, since the §12 audit already answered the adoption question. Throwaway.
 3. ~~**Anchor vocabulary.**~~ **Done** — §4. Single emitter, round-trip test, uniqueness assertion, legacy-tolerant resolver, and a fix for the live collision bug it uncovered.
-4. **Crawler hygiene.** `robots.txt`, `noindex`, canonicals, sitemap, `hreflang` (§10). Shippable independently, and removes a liability that exists today.
-5. **Tier 3.** Raw specs at stable URLs, `llms.txt`, `llms-full.txt` (§10).
-6. **Tier 1 completion.** Cross-module index page, then overlays and coverage-gated locales once the per-language spec endpoint exists (§3, §5, §6).
+4. ~~**Crawler hygiene.**~~ **Done** — §10. `robots.txt`, `noindex` on the deep-link families, and an exact 150-entry sitemap with `hreflang`. The original `Disallow`-plus-`noindex`-plus-canonical prescription was self-defeating and is corrected in §10; `rel=canonical` was dropped rather than faked.
+5. ~~**Tier 3.**~~ **Done** — §10. Byte-identical specs at `/openapi/<slug>.json`, `/llms.txt`, `/llms-full.txt`. Per-page raw markdown deferred to step 6, where it is nearly free.
+6. **Tier 1 completion.** Cross-module index page (the internal-linking hub — §10 notes that sitemap-only pages rank as orphans), then overlays and coverage-gated locales once the per-language spec endpoint exists (§3, §5, §6). **The index page is the last piece with no external blocker.**
 7. **Tier 2.** Gated on §13.
 
 *(Crawler hygiene moved ahead of tier 3: it is independent of everything else and the 6,374 empty-shell URLs it addresses are already crawlable.)*
@@ -391,6 +409,8 @@ Summary of ordering, riskiest-first:
 - **Prose coverage caps tier 1 (§2).** 21 operations across `readinglists/v0` and `specs/v0` have neither `summary` nor `description`. The description fallback cannot help them. This is upstream spec work, and until it happens those two modules' pages carry no indexable prose — which is a real limit on the tier-1-first strategy, not a rendering defect.
 - **`_i18n` prerender cost (§7.1).** Enabling prerender makes `@nuxtjs/i18n` emit its message endpoint for all 575 registered locales (575 files, 4.6 MB). Fixed cost, does not scale with modules, but it will grow if the locale catalogue does. If it becomes unwanted, it needs an explicit `nitro.prerender.ignore` rule — not attempted.
 - **Peak build memory (§7.1).** 4.83 GB RSS at 150 routes. Most of it is the Vite/Nitro build rather than prerendering, but it is close enough to common CI limits to be worth watching as the route count grows.
+- **`NUXT_PUBLIC_SITE_URL` must be configured before the sitemap and llms surfaces publish.** With no origin they are skipped with a build warning rather than emitted with guessed hosts (§10). This is a deployment prerequisite, not a code gap — but nothing will remind anyone at deploy time beyond that warning.
+- **Machine surfaces are English-only (§10).** Once overlays land, decide deliberately whether `llms-full.txt` gains per-locale variants. The default answer is probably no: a single authoritative document serves an assistant better than 15 near-identical ones, and the per-locale value is unproven.
 - **Spec reads are filesystem-based.** `server/api/reference/[...module].get.ts` reads spec JSON from `config/generated/module-specs/` with `node:fs`. That is correct during prerender (project directory present) but would fail in a runtime-rendered deployment where those files are not bundled. Acceptable while the routes are prerendered; needs server assets or a build-time projection before any runtime rendering is relied on.
 - **Oversized module pages (§2).** `wikibase/v1` (65 ops) and root `-` (48 ops) have no `tags` to split on. If prose-only weight is still too high, grouping by first path segment is the fallback — undesigned.
 - **Overlay pointer rot (§3).** Needs a stale-pointer diagnostic. Unbuilt.

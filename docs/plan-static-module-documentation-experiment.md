@@ -9,7 +9,7 @@
 | 0c validate assumption | Not run | Still recommended; ~30 requests. |
 | 1 anchor vocabulary | **Done** | Found and fixed a live collision bug affecting 4 shipped endpoints. |
 | 2 crawler hygiene | **Done** | `noindex` (not `Disallow` — see ADR §10), exact 150-entry sitemap with `hreflang`, origin-safe fallback. |
-| 3 tier 3 machine surfaces | Not started | — |
+| 3 tier 3 machine surfaces | **Done** | Byte-identical specs at `/openapi/<slug>.json`, 2.6 KB `llms.txt`, 34 KB `llms-full.txt`; all 179 corpus links verified against real anchors. |
 | 4 tier 1 pages | Partial | English pages render; index page and locale axis outstanding. |
 | 5 measure | Not started | — |
 | 6 tier 2 | Gated | — |
@@ -227,6 +227,35 @@ specs already exist and are committed — this is mostly serving and projection.
   if not, the §2 measurement was wrong somewhere.
 
 **Stop condition:** none. This phase stands alone even if tiers 1 and 2 never ship.
+
+### 3 — result: done
+
+Delivered: `server/utils/referenceProjection.ts` (the tier-1 projection, extracted so the
+page, the index and the corpus share one implementation), `server/utils/llmsEntries.ts`,
+`app/utils/llmsDocuments.ts` (pure builders), and three routes — `/openapi/<slug>.json`,
+`/llms.txt`, `/llms-full.txt`. Plus a link from each reference page to its spec, and 9 tests.
+
+Verified against a real build:
+
+- **All 10 specs byte-identical** to their committed source (`cmp` per file).
+- `llms.txt` 2.6 KB — 10 modules, 179 operations, correct per-module wiki counts.
+- `llms-full.txt` 34 KB — 10 module sections, all 179 operations.
+- **All 179 `Link:` targets resolved** against the prerendered HTML: every page exists and
+  every anchor id is present. This exercises the shared anchor vocabulary across pages,
+  corpus and index simultaneously.
+
+Two things worth recording:
+
+- The projection was **extracted rather than duplicated**. Writing the corpus against its own
+  copy of the operation-projection logic would have let a page and a machine surface describe
+  the same operation differently — a worse failure than either being absent.
+- Serving specs as a **parsed object silently minified them** (10,616 → 7,823 bytes),
+  discarding the deliberate key ordering that makes regen diffs reviewable. Fixed by streaming
+  raw text. "Verbatim" has to mean byte-identical.
+
+**Deferred:** per-page raw markdown. `llms-full.txt` serves the AI consumer better already
+(one request, whole corpus), and per-page markdown becomes nearly free once phase 6 generates
+markdown anyway.
 
 ---
 
