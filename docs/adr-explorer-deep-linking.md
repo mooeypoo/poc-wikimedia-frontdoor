@@ -119,9 +119,39 @@ If none of those expose the module, it falls back to the module's **first (sorte
 
 ## 8. Operation anchor format
 
-**Decision:** The operation anchor is a stable, URL-safe slug derived from the operation's **HTTP method and path** — `operationId` is not always present, method+path always is. Working format: `{method}_{path}` with `/` and `{}`/other unsafe characters normalized (e.g. `GET /v1/page/{title}` → `#get_v1_page__title_`). At runtime the anchor is translated to Scalar's internal nav id (`{document}/tag/{tag}/{METHOD}{path}`) by the existing `app/utils/scalarOperationNavigation.ts`, which resolves the tag from the loaded spec/sidebar — so the anchor itself carries no Scalar-specific detail.
+**Decision:** The operation anchor is a stable, URL-safe slug derived from the operation's **HTTP method and path** — `operationId` is not always present, method+path always is. At runtime the anchor is translated to Scalar's internal nav id (`{document}/tag/{tag}/{METHOD}{path}`) by the existing `app/utils/scalarOperationNavigation.ts`, which resolves the tag from the loaded spec/sidebar — so the anchor itself carries no Scalar-specific detail.
 
-**Rationale:** Because we own the hash (§2), the anchor need only be **reversible to (method, path)** and stable across regenerations; it does not need to match Scalar's slugging. The same normalization is used to compute `deepLink` for search records (§10), guaranteeing PR 1 and PR 2 agree byte-for-byte. The exact character-normalization table is finalized in implementation and covered by a round-trip test.
+**Rationale:** Because we own the hash (§2), the anchor need only be **reversible to (method, path)** and stable across regenerations; it does not need to match Scalar's slugging. The same normalization computes `deepLink` for search records (§10), guaranteeing PR 1 and PR 2 agree byte-for-byte.
+
+### 8.1 Format — corrected, and a collision bug this ADR caused
+
+**This section previously documented a format that was never implemented, and the format that *was* implemented silently broke four real endpoints.** Both are recorded here because the failure mode is easy to reintroduce.
+
+**What this ADR used to say.** `{method}_{path}` with unsafe characters normalized, illustrated as `GET /v1/page/{title}` → `#get_v1_page__title_`. Note the doubled and trailing underscores: that illustration implies **no trimming** of separators.
+
+**What shipped.** `buildOperationAnchor` collapsed non-alphanumeric runs to `_` and then trimmed leading *and trailing* underscores (`.replace( /^_+|_+$/g, '' )`), yielding `get_v1_page_title`. Reasonable-looking, and it made the anchors prettier than the ADR's illustration.
+
+**Why that was wrong.** OpenAPI treats `/lists` and `/lists/` as **distinct paths**, and `readinglists/v0` really exposes both — likewise `/lists/{id}/entries` and `/lists/{id}/entries/`. Trimming the trailing separator merged each pair. Measured over the committed specs: **4 colliding anchors out of 179 operations.** A deep link to `POST /lists/` silently focused `POST /lists`. The function's own comment called this "astronomically unlikely" while it was already happening.
+
+**The format now in force.** Collapse non-alphanumeric runs to `_`, trim leading and trailing separators, **except keep one trailing underscore when the path ends in `/`**:
+
+```
+GET /v1/page/{title}       →  get_v1_page_title       (unchanged)
+GET /lists                 →  get_lists               (unchanged)
+GET /lists/                →  get_lists_              (new — was ambiguous)
+GET /lists/{id}/entries    →  get_lists_id_entries    (unchanged)
+GET /lists/{id}/entries/   →  get_lists_id_entries_   (new — was ambiguous)
+```
+
+**Why keyed on `/` specifically.** Simply not trimming — the ADR's original illustration — also changes every path ending in `}`, which is most of them, churning nearly every existing anchor. But a trailing `}` *closes a parameter inside* the final segment, while a trailing `/` *adds an empty segment*; only the latter is a structural difference between two distinct paths. Keying on it fixes all four collisions while leaving **every currently-working anchor byte-identical**. A test over all 179 committed operations asserts anchors differ from the legacy format *if and only if* the path ends in `/`.
+
+**Backward compatibility.** `findOperationByAnchor` resolves the current format first, then falls back to `buildLegacyOperationAnchor`, so links shared before the change still land. Current-format-first is deliberate: for the four affected paths a legacy anchor is ambiguous, and an unambiguous link must never be resolved by an ambiguous rule. `buildLegacyOperationAnchor` is **read-only** — never emit it.
+
+**The format is not injective by construction.** `{id}` and a literal `id` segment both collapse to `_id_`, so `/lists/{id}/x` and `/lists/id/x` would collide. Neither exists today; both are plausible. Anything generating durable URLs must therefore call `findDuplicateOperationAnchors` and **fail** rather than emit a duplicate — hoping for uniqueness is exactly what produced the original bug.
+
+**Lesson worth keeping.** The prose illustration and the implementation drifted, and the drift was invisible because no test ran the real function over real specs. A round-trip test alone would not have caught it — round-tripping succeeded for all 179 operations even while four pairs collided. Uniqueness and round-tripping are different properties and both need asserting.
+
+*Discovered while designing the static reference surface; see `docs/adr-static-module-documentation.md` §4.*
 
 ---
 
@@ -222,7 +252,7 @@ Apply the documentation corrections above (excluding the PR-2 `package.json` row
 
 ## Open questions / risks
 
-- **Operation-anchor normalization table.** The exact character mapping (`/`, `{`, `}`, casing) is finalized in Step 1/Step 4 and pinned by a round-trip test. Independent of Scalar's slugging (§2/§8), so no external dependency.
+- **Operation-anchor normalization table — settled, after a bug.** The mapping is fixed and documented in §8.1: runs of non-alphanumerics collapse to `_`, leading/trailing separators trim, a trailing `/` survives as one underscore. It is pinned by a round-trip test **and** a uniqueness assertion over every committed spec — the round-trip alone passed while four anchors collided, so both properties are asserted. Residual known ambiguity: `{id}` versus a literal `id` segment; generators must fail on duplicates rather than assume uniqueness.
 - **Fleet-resolution trust.** A non-curated instance loaded via deep-link relies on live discovery answering for that wiki; the source-of-truth run showed 840/841 wikis answer discovery. A wiki that fails discovery falls through to §9's fallback.
 - **Transient switcher option lifetime.** Whether the injected option persists for the session or only until the user picks a curated instance is an implementation detail; default is session-scoped and replaced on the next explicit selection.
 - **Scroll-spy deferral.** If product later wants the hash to track free scrolling (not just clicks), that is a follow-up; it must be built independently of Scalar's buggy scroll/hash coupling.

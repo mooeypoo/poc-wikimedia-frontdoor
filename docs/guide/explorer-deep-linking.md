@@ -27,6 +27,29 @@ One important early decision: the Explorer does not use Scalar's native hash rou
 
 This means the URL hash on the Explorer route is **not** claimed by Scalar and is free for the application to own. The operation anchor lives in the hash; everything else lives in the path. The two concerns do not conflict.
 
+### The operation anchor, and the trailing slash that matters
+
+The anchor is a slug of the operation's HTTP method and path: runs of non-alphanumeric characters collapse to a single underscore, and the brackets around the result are trimmed. `GET /v1/page/{title}` becomes `get_v1_page_title`.
+
+There is **one exception, and it is not cosmetic**: a path ending in `/` keeps a single trailing underscore.
+
+```
+GET /lists                 →  get_lists
+GET /lists/                →  get_lists_
+GET /lists/{id}/entries/   →  get_lists_id_entries_
+```
+
+That looks like an untidy edge case begging to be cleaned up. Do not clean it up. OpenAPI treats `/lists` and `/lists/` as **different paths**, and `readinglists/v0` genuinely exposes both — as it does both `/lists/{id}/entries` and `/lists/{id}/entries/`. An earlier version of the slugger trimmed the trailing separator, which merged each pair into one anchor: four collisions across the committed specs, so a deep link to `POST /lists/` silently focused `POST /lists` instead.
+
+Note what is *not* preserved: a trailing `}`. A closing brace ends a parameter inside the final path segment, whereas a trailing slash adds an empty segment. Only the second distinguishes two real paths — and keying on it is what let the fix land without changing any anchor that already worked.
+
+Two practical consequences if you touch this code:
+
+- **The slug is not unique by construction.** `{id}` and a literal `id` segment both collapse to `_id_`, so `/lists/{id}/x` and `/lists/id/x` would collide. Nothing exposes that pair today. Anything that *generates* durable URLs must call `findDuplicateOperationAnchors` and fail on a duplicate rather than assume uniqueness — assuming uniqueness is precisely what shipped the original bug.
+- **Round-tripping is not uniqueness.** Every one of the 179 committed operations round-tripped correctly *while four pairs were colliding*, because each collided anchor still resolved to *an* operation — just the wrong one. Both properties need their own assertion.
+
+Links shared before the fix still resolve: the resolver tries the current format first, then the legacy one. The legacy builder is read-only and must never be emitted.
+
 ## Two kinds of links: verbose and quick
 
 A key design tension is between **shareability** and **authoring convenience**. A fully explicit link is stable and unambiguous – it names the instance directly, so the recipient gets exactly the right wiki. But when writing documentation, creating a link from search results, or linking from a navigation menu, an author often does not want to (or cannot) specify an instance – they just want to link to "the attribution module" and let the system pick a sensible default.

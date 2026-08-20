@@ -96,27 +96,45 @@ config/generated/module-spec-i18n/<module>/<locale>.generated.json
 
 ---
 
-## 4. One anchor vocabulary: the §8 underscore format, generator-emitted
+## 4. One anchor vocabulary — and a live collision bug fixed on the way
 
-**Decision:** The operation anchor is `docs/adr-explorer-deep-linking.md` §8's format, unchanged: lowercase method, `_`, path, with every run of non-alphanumeric characters collapsed to `_` and **no trimming of leading or trailing separators**.
+**Correction to this ADR's first revision.** It said "adopt §8's format unchanged," on the basis of a collision test run against the format as *described in prose* by `docs/adr-explorer-deep-linking.md` §8. The **shipped** implementation (`app/utils/explorerOperationAnchor.ts`) was not that format: it additionally trimmed leading and trailing separators (`.replace( /^_+|_+$/g, '' )`). Running the real function over the committed specs produced **4 collisions**, in production data, today:
 
 ```
-GET /v1/page/{title}   →   get_v1_page__title_
-GET /lists             →   get_lists
-GET /lists/            →   get_lists_
+readinglists/v0   get_lists              ← GET  /lists   and  GET  /lists/
+readinglists/v0   post_lists             ← POST /lists   and  POST /lists/
+readinglists/v0   get_lists_id_entries   ← GET  /lists/{id}/entries   and  …/entries/
+readinglists/v0   post_lists_id_entries  ← POST /lists/{id}/entries   and  …/entries/
 ```
+
+The code comment asserted such collisions were "astronomically unlikely." They were already happening: an Explorer deep link to `POST /lists/` silently focused `POST /lists`. **So this was a live bug in shipped deep-linking, not a hypothetical for the new docs surface.**
+
+**Decision — preserve a trailing slash, and only a trailing slash.** Lowercase method, `_`, path with non-alphanumeric runs collapsed to `_`, leading and trailing separators trimmed — **except that a path ending in `/` keeps one trailing underscore**:
+
+```
+GET /v1/page/{title}          →   get_v1_page_title            (unchanged)
+GET /lists                    →   get_lists                    (unchanged)
+GET /lists/                   →   get_lists_                   (new — was ambiguous)
+GET /lists/{id}/entries       →   get_lists_id_entries         (unchanged)
+GET /lists/{id}/entries/      →   get_lists_id_entries_        (new — was ambiguous)
+```
+
+**Rationale for that specific rule.** The naive fix — stop trimming entirely — also changes every path ending in `}`, which is most of them, churning nearly all existing anchors. But a trailing `}` *closes a parameter inside the final segment*, whereas a trailing `/` *adds an empty segment*; only the latter is a structural difference between two distinct OpenAPI paths. Keying on it fixes all four collisions while leaving **every currently-working anchor byte-identical**. Verified by test over all 179 committed operations: anchors differ from the legacy format if and only if the path ends in `/`.
+
+**Decision — resolution is legacy-tolerant.** `findOperationByAnchor` tries the current format first, then the legacy format, so links shared before this change still resolve. Current-format-first matters: for the four affected paths a legacy anchor is ambiguous, and an unambiguous link must never be resolved by an ambiguous rule. Only the 4 previously-broken anchors change meaning, and they had no correct meaning to preserve.
 
 It is produced by **one function in the generator** and consumed by five surfaces: heading `id`s in generated markdown, tier-1 catalogue links, the tier-2 endpoint search index `deepLink`, the Explorer deep-link hash, and `llms.txt` output.
 
-**Rationale — verified against the corpus, not assumed.** We tested three candidate formats against all 179 operations:
+**Rationale — verified against the corpus, not assumed.** Candidate formats tested against all 179 committed operations:
 
 | Format | Example | Within-module collisions |
 |---|---|---|
-| **§8 underscore** | `get_v1_page__title_` | **0** |
+| **trailing-slash-preserving (adopted)** | `get_v1_page_title` / `get_lists_` | **0** |
+| shipped format (trimmed) | `get_v1_page_title` | **4 — the live bug** |
 | hyphen slug | `get-v1-page-title` | 4 |
 | brace-marked | `get-v1-page-by-title` | 4 |
 
-`readinglists/v0` exposes **both `/lists` and `/lists/`**, and both `/lists/{id}/entries` and `/lists/{id}/entries/`, as distinct paths. Any format that trims or collapses trailing separators merges them. **The §8 format's trailing underscore is load-bearing** — it reads like sloppiness to be tidied, and tidying it breaks four real links. Do not "clean up" this format.
+**The trailing underscore is load-bearing.** It reads like sloppiness to be tidied; tidying it is precisely what broke four real endpoints. Do not "clean up" this format.
 
 Path character census across all operations: `{` and `}` ×194 each, `_` ×133, `-` ×6, `.` ×1, uppercase ×5. The literal underscores are why collapsing runs is delicate; the uppercase is why lowercasing is lossy in principle.
 

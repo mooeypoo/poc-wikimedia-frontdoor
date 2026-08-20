@@ -20,10 +20,15 @@ test( 'get-started resolves at its new path (and localized)', () => {
 	assert.equal( getMainNavigationIdFromPath( '/fr/get-started' ), 'get-started' )
 } )
 
+// `/use-content-and-data` was asserted here as a primary-nav id. It is no longer
+// one — the item was dropped from MAIN_NAVIGATION_ITEMS when the menus stopped
+// being hard-coded in the sidebar, so the path now resolves to null (the page
+// still exists as content; it just owns no primary tab). The assertion went
+// unnoticed because this file could not load at all: contentRoute.ts imported
+// `config/mainNavigation` without the `.ts` extension that .mjs tooling needs.
 test( 'other sections still resolve by path', () => {
 	assert.equal( getMainNavigationIdFromPath( '/community' ), 'community' )
 	assert.equal( getMainNavigationIdFromPath( '/community/anything' ), 'community' )
-	assert.equal( getMainNavigationIdFromPath( '/use-content-and-data' ), 'use-content-and-data' )
 	assert.equal( getMainNavigationIdFromPath( '/fr/community' ), 'community' )
 } )
 

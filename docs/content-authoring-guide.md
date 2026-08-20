@@ -243,8 +243,8 @@ order.**
 
 ```ts
 export const MAIN_NAVIGATION_ITEMS = [
-  { id: 'get-started',          messageKey: 'nav-get-started',          path: '/get-started' },
-  { id: 'use-content-and-data', messageKey: 'nav-use-content-and-data', path: '/use-content-and-data' },
+  { id: 'get-started', messageKey: 'nav-get-started', path: '/get-started' },
+  { id: 'apis',        messageKey: 'nav-api',         path: '/apis' },
   // …
 ]
 ```
@@ -301,8 +301,8 @@ sidebar: false            # hide the sidebar; content spans full width
 > want the space back — that's what the front page does.
 
 **Available menu ids** (keys of `SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID` in
-[`config/sectionNavigation.js`](../config/sectionNavigation.js)): `get-started`,
-`use-content-and-data`, `community`, `contribute`, `get-help`.
+[`config/sectionNavigation.js`](../config/sectionNavigation.js)): `apis`,
+`get-started`, `community`, `contribute`, `get-help`.
 
 Example — a standalone page that should show the Get Started menu:
 
