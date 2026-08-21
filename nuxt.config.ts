@@ -7,6 +7,13 @@ import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfi
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_FILES, buildBrandWordmarkFontCss } from './config/brandTypography'
 import { SUPPORTED_LANGUAGES } from './config/languages'
+import { GENERATED_MODULES } from './config/generated/modules.generated.ts'
+import {
+	REFERENCE_EXPERIMENT_LOCALES,
+	moduleNameToReferenceSlug,
+	referencePathForModule
+} from './config/referenceRoutes.ts'
+import { NOINDEX_ROUTE_PATTERNS, resolveSiteOrigin } from './config/seo.ts'
 import {
 	COLOR_MODES,
 	COLOR_MODE_STORAGE_KEY,
@@ -26,6 +33,85 @@ const colorModeFoucScript = `(function(){try{` +
 	`}catch(e){}})();`
 
 const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
+
+/**
+ * Every `/reference/**` route to prerender: one page per module per publishable
+ * locale, locale-prefixed except for the default (`prefix_except_default`).
+ *
+ * Nitro cannot crawl these — the reference page is a catch-all, so there is no
+ * link graph to discover `/reference/site/v1` from. The cross product is
+ * therefore materialised here, in exactly one place, from the committed module
+ * source of truth. See docs/adr-static-module-documentation.md §7.
+ */
+function buildReferencePrerenderRoutes(): string[] {
+	const routes: string[] = []
+
+	for ( const locale of REFERENCE_EXPERIMENT_LOCALES ) {
+		const localePrefix = locale === 'en' ? '' : `/${ locale }`
+
+		// The index page is the internal-linking hub — module pages reachable only
+		// from a sitemap are treated as orphans (ADR §10) — so it is prerendered
+		// alongside them, not left to SSR.
+		routes.push( `${ localePrefix }/reference` )
+
+		for ( const wikiModule of GENERATED_MODULES ) {
+			routes.push( `${ localePrefix }${ referencePathForModule( wikiModule.name ) }` )
+		}
+	}
+
+	return routes
+}
+
+/**
+ * Route rules marking the Explorer's shareable deep-link families `noindex`.
+ *
+ * `X-Robots-Tag` rather than a `<meta>` tag because those routes are `ssr: false`
+ * (Absolute Rule 4), so nothing a page composable writes reaches the HTML a
+ * crawler receives. The header is the only directive that survives.
+ *
+ * See config/seo.ts for why these are noindexed rather than disallowed.
+ */
+function buildNoindexRouteRules(): Record<string, { headers: Record<string, string> }> {
+	return Object.fromEntries(
+		NOINDEX_ROUTE_PATTERNS.map( ( pattern ) => [
+			pattern,
+			{ headers: { 'X-Robots-Tag': 'noindex' } }
+		] )
+	)
+}
+
+/**
+ * Prerender targets for the crawler-facing documents.
+ *
+ * `sitemap.xml` is included **only** when a site origin is resolvable: the
+ * sitemap schema requires absolute URLs, so without one there is nothing valid to
+ * emit and guessing a host would publish wrong addresses. `robots.txt` is always
+ * emitted — it stays valid without the origin, simply omitting its `Sitemap:` line.
+ */
+function buildCrawlerDocumentPrerenderRoutes(): string[] {
+	// Verbatim specs need no site origin — they are files, not link documents.
+	const routes = [
+		'/robots.txt',
+		...GENERATED_MODULES.map(
+			( wikiModule ) => `/openapi/${ moduleNameToReferenceSlug( wikiModule.name ) }.json`
+		)
+	]
+
+	// The sitemap and the llms surfaces are sets of absolute links. Without an
+	// origin there is nothing valid to emit, and guessing a host would publish
+	// wrong addresses that crawlers and assistants then act on. robots.txt stays
+	// valid regardless, simply omitting its `Sitemap:` line.
+	if ( resolveSiteOrigin() ) {
+		routes.push( '/sitemap.xml', '/llms.txt', '/llms-full.txt' )
+	} else {
+		console.warn(
+			'[frontdoor] NUXT_PUBLIC_SITE_URL is unset — skipping sitemap.xml, llms.txt ' +
+			'and llms-full.txt. Set it (or rely on Netlify\'s URL) to publish them.'
+		)
+	}
+
+	return routes
+}
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
@@ -179,7 +265,24 @@ export default defineNuxtConfig( {
 		'~/assets/css/color-modes.css'
 	],
 
+	// Static reference surface: real HTML on disk for the enumerated routes above,
+	// while every other route keeps today's SSR-on-Netlify behaviour. This does
+	// not reopen docs/adr-multilingual-search.md §5 — that prohibition is about
+	// prerendering the whole site at ~575-locale scale, not an explicit subset.
+	nitro: {
+		prerender: {
+			routes: [
+				...buildReferencePrerenderRoutes(),
+				...buildCrawlerDocumentPrerenderRoutes()
+			]
+		}
+	},
+
 	routeRules: {
+		'/reference/**': { prerender: true },
+		// Keep the Explorer's shareable deep-link families out of the index
+		// (config/seo.ts explains why noindex, not Disallow).
+		...buildNoindexRouteRules(),
 		'/explorer': { ssr: false },
 		'/explorer/**': { ssr: false },
 		// OAuth session is memory-only (+ handoff); SSR would paint the logged-out gate

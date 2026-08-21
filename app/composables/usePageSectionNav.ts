@@ -124,10 +124,19 @@ export function usePageSectionNav() {
 		return $bananaI18n( navigationSource.value.ariaLabelMessageKey )
 	} )
 
-	const navigationSections = computed<ResolvedSectionNavSection[]>( () => {
+	const currentContentPath = computed( () => stripContentLocalePrefix( route.path ) )
+	const currentContentLocale = computed( () => contentLocaleFromPath( route.path ) )
+
+	// The static reference surface appends data-driven sections (the module list,
+	// and the viewed module's operations) after its configured ones. They are
+	// generated from committed specs rather than hand-listed, so they cannot live
+	// in `config/sectionNavigation.js` without rotting on every regeneration.
+	const referenceSections = useReferenceSectionNav( currentContentPath, currentContentLocale )
+
+	const configuredSections = computed<ResolvedSectionNavSection[]>( () => {
 		const source = navigationSource.value
-		const contentPath = stripContentLocalePrefix( route.path )
-		const contentLocale = contentLocaleFromPath( route.path )
+		const contentPath = currentContentPath.value
+		const contentLocale = currentContentLocale.value
 
 		return source.sections.map( ( section ) => ( {
 			id: section.id,
@@ -147,6 +156,11 @@ export function usePageSectionNav() {
 				} ) )
 		} ) )
 	} )
+
+	const navigationSections = computed<ResolvedSectionNavSection[]>( () => [
+		...configuredSections.value,
+		...referenceSections.value
+	] )
 
 	return {
 		navigationLabel,

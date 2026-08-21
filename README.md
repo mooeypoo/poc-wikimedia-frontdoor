@@ -26,6 +26,21 @@ Copy `.env.example` to `.env` and fill in:
 
 - `NUXT_OAUTH_COOKIE_SECRET` — 32-byte secret used to encrypt the transient Wikimedia OAuth PKCE handshake cookie. Generate with `openssl rand -base64 32`. On Netlify, set this as a site environment variable — never commit it.
 - `NUXT_PUBLIC_OAUTH_CLIENT_ID` — `client_id` from the approved Wikimedia OAuth 2.0 consumer registration (see [docs/adr-wikimedia-oauth-authentication.md](/home/moriel/code/wikimedia/frontdoor/docs/adr-wikimedia-oauth-authentication.md)).
+- `NUXT_PUBLIC_SITE_URL` — *optional.* Absolute public origin (no trailing slash) used for the absolute URLs in `/sitemap.xml`, `/llms.txt` and `/llms-full.txt`, and for the `Sitemap:` line in `/robots.txt`. **Leave it unset locally** — outside a production build the origin falls back to `http://localhost:3000`, so those documents work with no setup. On Netlify it is also unnecessary: `DEPLOY_PRIME_URL` is picked up automatically and preferred over `URL`, so a deploy preview describes itself rather than production. A production build with no origin from any source deliberately **skips** the sitemap and llms files (with a build warning) rather than publish guessed addresses. See [config/seo.ts](/home/moriel/code/wikimedia/frontdoor/config/seo.ts).
+
+## Static API reference
+
+Per-module reference pages are generated from the committed OpenAPI specs and **prerendered inside `nuxt build`** via `routeRules` — a subset of routes emitted as real HTML while the rest of the site stays server-rendered. Alongside them are machine-readable surfaces for AI assistants and tooling:
+
+| Path | What it is |
+|---|---|
+| `/reference/<module>` | Reference page per module, per locale (the root module is `/reference/general`) |
+| `/openapi/<module>.json` | That module's committed spec, byte-identical |
+| `/llms.txt` | Index of modules with operation and wiki counts |
+| `/llms-full.txt` | Every module and operation as plain text, with anchor links |
+| `/sitemap.xml` | All reference pages with `hreflang` alternates |
+
+Locales are an explicit allowlist (`REFERENCE_EXPERIMENT_LOCALES` in [config/referenceRoutes.ts](/home/moriel/code/wikimedia/frontdoor/config/referenceRoutes.ts)), **not** the full 575-locale catalogue. See [docs/adr-static-module-documentation.md](/home/moriel/code/wikimedia/frontdoor/docs/adr-static-module-documentation.md) for the decisions and [docs/plan-static-module-documentation-experiment.md](/home/moriel/code/wikimedia/frontdoor/docs/plan-static-module-documentation-experiment.md) for progress.
 
 ## Development Server
 

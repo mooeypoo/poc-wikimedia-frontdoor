@@ -1,6 +1,6 @@
-import { MAIN_NAVIGATION_ITEMS } from '../../config/mainNavigation'
-import { REMOTE_CONTENT_SOURCES } from '../../config/remoteContentSources'
-import { isExplorerRoutePath } from './explorerRoute'
+import { MAIN_NAVIGATION_ITEMS } from '../../config/mainNavigation.ts'
+import { REMOTE_CONTENT_SOURCES } from '../../config/remoteContentSources.ts'
+import { isExplorerRoutePath } from './explorerRoute.ts'
 
 /**
  * Main-navigation id that owns the API Explorer (the **APIs** tab), from

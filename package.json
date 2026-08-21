@@ -6,8 +6,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "nuxt build",
-    "build:netlify": "NITRO_PRESET=netlify nuxt build",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 nuxt build",
+    "build:netlify": "NODE_OPTIONS=--max-old-space-size=8192 NITRO_PRESET=netlify nuxt build",
     "dev": "nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
     "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
@@ -15,8 +15,8 @@
     "test:banana-content": "npm test --workspace @wikimedia/banana-content",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
     "generate-module-source-of-truth": "node scripts/generate-module-source-of-truth.mjs",
-    "generate": "nuxt generate",
-    "generate:static": "nuxt generate",
+    "generate": "NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
+    "generate:static": "NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
     "preview": "nuxt preview",
     "test:content-fallback": "node scripts/test-content-fallback.mjs"
   },
@@ -30,15 +30,16 @@
     "@wikimedia/codex-design-tokens": "^2.5.1",
     "banana-i18n": "^2.4.0",
     "better-sqlite3": "^12.10.0",
+    "markdown-it": "^14.1.0",
     "nuxt": "^4.4.6",
     "pinia": "^3.0.4",
     "sqlite3": "^6.0.1",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7",
-    "yaml": "^2.5.0",
-    "markdown-it": "^14.1.0"
+    "yaml": "^2.5.0"
   },
   "devDependencies": {
+    "nuxt-openapi-docs-module": "^5.3.2",
     "oxc-parser": "^0.131.0",
     "rolldown": "^1.0.2"
   }
