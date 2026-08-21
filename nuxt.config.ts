@@ -48,6 +48,12 @@ function buildReferencePrerenderRoutes(): string[] {
 
 	for ( const locale of REFERENCE_EXPERIMENT_LOCALES ) {
 		const localePrefix = locale === 'en' ? '' : `/${ locale }`
+
+		// The index page is the internal-linking hub — module pages reachable only
+		// from a sitemap are treated as orphans (ADR §10) — so it is prerendered
+		// alongside them, not left to SSR.
+		routes.push( `${ localePrefix }/reference` )
+
 		for ( const wikiModule of GENERATED_MODULES ) {
 			routes.push( `${ localePrefix }${ referencePathForModule( wikiModule.name ) }` )
 		}

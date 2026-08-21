@@ -6,8 +6,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "nuxt build",
-    "build:netlify": "NITRO_PRESET=netlify nuxt build",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 nuxt build",
+    "build:netlify": "NODE_OPTIONS=--max-old-space-size=8192 NITRO_PRESET=netlify nuxt build",
     "dev": "nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
     "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
@@ -15,8 +15,8 @@
     "test:banana-content": "npm test --workspace @wikimedia/banana-content",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
     "generate-module-source-of-truth": "node scripts/generate-module-source-of-truth.mjs",
-    "generate": "nuxt generate",
-    "generate:static": "nuxt generate",
+    "generate": "NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
+    "generate:static": "NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
     "preview": "nuxt preview",
     "test:content-fallback": "node scripts/test-content-fallback.mjs"
   },

@@ -14,7 +14,7 @@
 | 5 measure | Not started | — |
 | 6 tier 2 | Gated | — |
 **Decisions:** [`adr-static-module-documentation.md`](adr-static-module-documentation.md) — section references below (§n) point there.
-**Rationale for leadership:** [`proposal-static-module-documentation.md`](proposal-static-module-documentation.md)
+**Rationale and decision summary:** [`guide/static-api-reference-experiment.md`](guide/static-api-reference-experiment.md)
 
 This plan is ordered **riskiest-question-first**, not easiest-first. Phases 0–2 are cheap
 and can invalidate the design; phases 3–5 are the experiment proper; phase 6 is gated on

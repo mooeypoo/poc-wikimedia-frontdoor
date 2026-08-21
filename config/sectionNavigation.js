@@ -184,5 +184,21 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				]
 			}
 		]
+	},
+	// Static API reference. Only the fixed part lives here — the module list and
+	// each module's operations are data, not policy, so `useReferenceSectionNav`
+	// appends them at runtime from the same payload the page already fetched. See
+	// docs/adr-static-module-documentation.md §13a.
+	reference: {
+		ariaLabelMessageKey: 'section-nav-reference-label',
+		sections: [
+			{
+				id: 'reference-overview',
+				titleMessageKey: 'nav-reference',
+				items: [
+					{ id: 'reference-index', messageKey: 'section-nav-reference-index', href: '/reference' }
+				]
+			}
+		]
 	}
 }

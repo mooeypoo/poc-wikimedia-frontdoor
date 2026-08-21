@@ -40,6 +40,15 @@ export const MAIN_NAVIGATION_ITEMS: readonly MainNavigationItem[] = [
 		id: 'get-help',
 		messageKey: 'nav-get-help',
 		path: '/get-help'
+	},
+	// Static API reference (docs/adr-static-module-documentation.md). Placed in the
+	// primary nav for now purely so the experiment is browsable — this is a
+	// deliberate hand-written entry, not generated, so it is trivial to move
+	// under APIs, demote to a section link, or remove once its home is decided.
+	{
+		id: 'reference',
+		messageKey: 'nav-reference',
+		path: '/reference'
 	}
 ]
 

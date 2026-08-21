@@ -4,18 +4,19 @@
 out to solve, what we built, what it costs, what it would cost as things grow, what lighter
 alternatives exist, and what we recommend deciding.
 
-**Companion documents:** `adr-static-module-documentation.md` (technical decisions),
-`plan-static-module-documentation-experiment.md` (execution detail). This document is
-self-contained; neither is required reading.
+**Why this sits in the developer guide.** Unlike its neighbours here, this is not guidance on
+how to build something. It is the record of an experiment we built, measured, and then
+recommended **not** shipping in full — kept because the measurements, the failure modes, and
+the reasoning about scale are reusable, and because parts of the design may still be adopted
+piecemeal. Read it as a case study rather than a specification.
 
-*(The filename still says "proposal" so existing links keep working.)*
+Closely related: [ai-agents-accessibility.md](ai-agents-accessibility.md) covers the static
+discovery layer for AI agents from the guidance side; the machine-readable surfaces described
+here are one concrete implementation of that idea.
 
-> **This file is canonical.** A formatted web version was published for the current decision
-> round at `https://claude.ai/code/artifact/85b91d22-9df7-428b-9889-1a9b7d53f935`. It is a
-> **point-in-time snapshot and is no longer maintained** — if the two disagree, this file is
-> right. Do not treat the snapshot as a second source to keep in sync; updating it would mean
-> recreating its HTML from scratch, and the maintenance cost is not worth it. Republish a
-> fresh snapshot if and when a later decision round needs one.
+**Companion documents:** [`../adr-static-module-documentation.md`](../adr-static-module-documentation.md)
+(technical decisions), [`../plan-static-module-documentation-experiment.md`](../plan-static-module-documentation-experiment.md)
+(execution detail). This document is self-contained; neither is required reading.
 
 ---
 

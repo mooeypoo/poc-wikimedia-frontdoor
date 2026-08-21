@@ -42,5 +42,22 @@ Start here for the shared values, then read the topic guides as needed:
   discovery layer (robots.txt, llms.txt, a module manifest, an instance index,
   sitemap) derived from the same module/instance metadata as everything else.
 
+## Case studies
+
+Records of work that was built and measured rather than guidance on how to build.
+Kept because the measurements and failure modes are reusable, and because parts
+of a design we declined as a whole may still be worth adopting piecemeal.
+
+- [static-api-reference-experiment.md](static-api-reference-experiment.md) – a
+  static, indexable API reference generated from the committed OpenAPI specs,
+  built and measured, then recommended **not** to ship in full. Separates three
+  needs that had been bundled together (AI coverage, search visibility, a
+  lightweight no-JavaScript path) and finds the cheapest piece serves the most
+  valuable need. Contains the measured cost of prerendering at scale, why the
+  language dimension grows quadratically rather than linearly, the constraint
+  that actually bites first (build memory, not disk), and four alternatives
+  compared honestly. The machine-readable surfaces it describes are a concrete
+  implementation of [ai-agents-accessibility.md](ai-agents-accessibility.md).
+
 When a document leans on a decision recorded in an ADR, it links out to the
 relevant file in [../](..) rather than restating it.

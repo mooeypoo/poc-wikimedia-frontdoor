@@ -12,9 +12,11 @@
 | §3 translation overlays | **Not started** — blocked on MediaWiki's per-language spec endpoint |
 | §5 coverage-gated locales | **Placeholder** — `REFERENCE_EXPERIMENT_LOCALES` (15 locales) stands in until overlays exist |
 | §9 search / content collection | **Not started** |
+| §13a navigation, index page, sidebar | **Implemented** — hand-written nav entry, `/reference` index, static-plus-dynamic sidebar |
 | §10 crawler hygiene | **Implemented** — `robots.txt`, `sitemap.xml` with `hreflang`, `noindex` on deep-link families; the original `Disallow`/canonical prescription was corrected |
 | §10 machine surfaces (`llms.txt`, raw specs) | **Implemented** — `/openapi/<slug>.json` (byte-identical), `/llms.txt`, `/llms-full.txt`; per-page markdown deferred |
 | §12 library spike (0b) | **Audit done** (all five criteria fail); IA spike not run |
+
 **Scope:** Statically rendered, search-engine- and AI-indexable reference documentation for Wikimedia REST API modules, generated from the committed OpenAPI specs, one page per module per publishable locale, with per-operation anchors. Plus machine-readable surfaces (raw specs, `llms.txt`). The runtime API Explorer is unchanged and remains the interactive surface.
 
 **Related:**
@@ -394,6 +396,25 @@ Two incidental quality signals, recorded because they bear on maintenance risk r
 
 ---
 
+## 13a. Navigation and sidebar for the reference surface
+
+**Decision — the primary-nav entry is hand-written, not generated.** `MAIN_NAVIGATION_ITEMS` gains a literal `reference` entry pointing at `/reference`. Deliberately a plain config entry so it is trivial to move under APIs, demote to a section link, or delete once its home is decided. It exists primarily so the experiment is browsable for evaluation.
+
+**Decision — the index page is required, not optional.** `/reference` lists every module. Without it the module pages are reachable only from the sitemap, and pages with no inbound internal links are treated as orphans and rank poorly (§10). It also gives the sidebar somewhere to return to. `app/pages/reference/index.vue` takes routing precedence over the `[...module]` catch-all, which would otherwise match `/reference` with an empty slug.
+
+**Decision — the sidebar splits static policy from dynamic data.** The fixed part (the link back to the index) is a normal `config/sectionNavigation.js` entry, edited like every other menu. The module list and the viewed module's operations are **data** — generated from committed specs, changing whenever the fleet does — so `useReferenceSectionNav` appends them at runtime. Hand-listing 10 modules and 179 operations in config would rot on the next regeneration.
+
+Operation labels are external strings reaching `CdxMenuItem` through an attribute, where `<bdi>` is unavailable, so they use `isolateLabel` (FSI/PDI) per Absolute Rule 2. Sidebar anchors are the §4 anchor vocabulary, so they match the page's heading ids exactly — verified: 18 headings, 18 sidebar entries, zero mismatches.
+
+**Two implementation traps, recorded because both failed silently:**
+
+1. **`useNuxtData` inside a `computed` exhausted the build heap.** Composables must be called from setup scope; calling one inside a computed re-enters Nuxt's state registration on every re-evaluation. It presented as an out-of-memory abort, not as an error pointing anywhere near the cause.
+2. **During server rendering the layout renders *before* the page component.** The first implementation read the payload cache on the assumption the page had already fetched it. It had not — the cache was always empty, and both dynamic sections vanished from the prerendered HTML with no error at all. The fix is for the sidebar to call `useAsyncData` itself **using the same keys the pages use**: Nuxt awaits it before rendering, and the page's later call is a cache hit rather than a second request. **A layout-level composable can never depend on page-fetched data during SSR.**
+
+**Consequence — a route-shape lesson repeated.** The module index endpoint sits at `/api/reference-index`, not `/api/reference`, because the latter is ambiguous against the `[...module]` catch-all beside it (which matches an empty tail). Same class of ambiguity as `/reference/<module>/openapi.json` in §10, avoided the same way: a distinct path rather than reliance on route-precedence subtleties.
+
+---
+
 ## 13. Tier 2 is gated on tier-1 evidence
 
 **Decision:** Tiers 1 and 3 ship first. Tier 2 is designed here (§2, §6, §9) but built only after tier-1 indexing and traffic data justify it.
@@ -441,7 +462,7 @@ Summary of ordering, riskiest-first:
 - **Runtime routing is unverified.** The sandbox denies `listen` on every port (`EACCES`), so `.output/server` could not be served and no route was exercised over HTTP. Verified statically instead: `/reference/**` is present in the built route manifest, all 150 pages prerendered with correct content, and **zero** content pages were prerendered — so the reference catch-all demonstrably did not capture content routes at prerender time. Still unconfirmed at runtime: that `app/pages/[...slug].vue` continues to serve content paths, and that an unknown module returns 404 rather than a blank page. **Confirm both before publishing any URL.**
 - **Prose coverage caps tier 1 (§2).** 21 operations across `readinglists/v0` and `specs/v0` have neither `summary` nor `description`. The description fallback cannot help them. This is upstream spec work, and until it happens those two modules' pages carry no indexable prose — which is a real limit on the tier-1-first strategy, not a rendering defect.
 - **`_i18n` prerender cost (§7.1).** Enabling prerender makes `@nuxtjs/i18n` emit its message endpoint for all 575 registered locales (575 files, 4.6 MB). Fixed cost, does not scale with modules, but it will grow if the locale catalogue does. If it becomes unwanted, it needs an explicit `nitro.prerender.ignore` rule — not attempted.
-- **Peak build memory (§7.1).** 4.83 GB RSS at 150 routes. Most of it is the Vite/Nitro build rather than prerendering, but it is close enough to common CI limits to be worth watching as the route count grows.
+- **Peak build memory — now the binding constraint, and it bit.** At 150 routes the build peaked at 4.83 GB RSS and succeeded on Node's default heap. At **180 routes it aborted**: `FATAL ERROR: Ineffective mark-compacts near heap limit`, having died on the *first* route with zero completed. The build scripts now set `NODE_OPTIONS=--max-old-space-size=8192`; the build then succeeds at **6.05 GB peak RSS**. **Memory, not disk or wall-clock, is what will stop this design first** — the §7.1 output projections describe a limit that arrives much later than this one. Two measured points (150 → under 4 GB heap; 180 → over it) are not enough to extrapolate; **measure before increasing the locale count**, and check the memory available in the Netlify build container, which is finite and not ours to raise.
 - **Site origin — largely self-configuring, but confirm on the first production deploy.** Local dev defaults to `http://localhost:3000` and Netlify supplies `DEPLOY_PRIME_URL` automatically, so previews and local work need no setup (§10). The one case still needing attention is a **production** deploy where neither `NUXT_PUBLIC_SITE_URL` nor Netlify's variables resolve — then the sitemap and llms files are silently absent, announced only by a build warning. Check for them after the first production deploy.
 - **Machine surfaces are English-only (§10).** Once overlays land, decide deliberately whether `llms-full.txt` gains per-locale variants. The default answer is probably no: a single authoritative document serves an assistant better than 15 near-identical ones, and the per-locale value is unproven.
 - **Spec reads are filesystem-based.** `server/api/reference/[...module].get.ts` reads spec JSON from `config/generated/module-specs/` with `node:fs`. That is correct during prerender (project directory present) but would fail in a runtime-rendered deployment where those files are not bundled. Acceptable while the routes are prerendered; needs server assets or a build-time projection before any runtime rendering is relied on.
