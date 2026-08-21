@@ -49,15 +49,18 @@ Kept because the measurements and failure modes are reusable, and because parts
 of a design we declined as a whole may still be worth adopting piecemeal.
 
 - [static-api-reference-experiment.md](static-api-reference-experiment.md) – a
-  static, indexable API reference generated from the committed OpenAPI specs,
-  built and measured, then recommended **not** to ship in full. Separates three
-  needs that had been bundled together (AI coverage, search visibility, a
-  lightweight no-JavaScript path) and finds the cheapest piece serves the most
-  valuable need. Contains the measured cost of prerendering at scale, why the
-  language dimension grows quadratically rather than linearly, the constraint
-  that actually bites first (build memory, not disk), and four alternatives
-  compared honestly. The machine-readable surfaces it describes are a concrete
-  implementation of [ai-agents-accessibility.md](ai-agents-accessibility.md).
+  static, indexable API reference generated from the committed OpenAPI specs:
+  built, measured, and recommended for release **English-only and permanently
+  so**, with language coverage left to the Explorer. Separates three needs that
+  had been bundled together (search visibility, AI coverage, a no-JavaScript
+  fallback), then matches each against what translation actually contributes –
+  the conclusion being that it contributes almost nothing to two of them and is
+  counterproductive for the AI corpus. Contains the measured cost of
+  prerendering at scale, why per-language search-engine annotations grow
+  quadratically rather than linearly, the constraint that bites first (build
+  memory, not disk), and four alternatives compared honestly. The
+  machine-readable surfaces it describes are a concrete implementation of
+  [ai-agents-accessibility.md](ai-agents-accessibility.md).
 
 When a document leans on a decision recorded in an ADR, it links out to the
 relevant file in [../](..) rather than restating it.

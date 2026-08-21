@@ -1,14 +1,19 @@
 # Static API Reference — Experiment Summary and Decision
 
 **Audience:** Leadership and stakeholders. A complete account of the experiment: what we set
-out to solve, what we built, what it costs, what it would cost as things grow, what lighter
-alternatives exist, and what we recommend deciding.
+out to solve, what we prototyped, what it would cost to build for production, what it would cost
+as things grow, what lighter alternatives exist, and what we recommend deciding.
 
-**Why this sits in the developer guide.** Unlike its neighbours here, this is not guidance on
-how to build something. It is the record of an experiment we built, measured, and then
-recommended **not** shipping in full — kept because the measurements, the failure modes, and
-the reasoning about scale are reusable, and because parts of the design may still be adopted
-piecemeal. Read it as a case study rather than a specification.
+**Why this sits in the developer guide.** Unlike its neighbours here, this is not guidance on how
+to build something. It is the record of an experiment: we prototyped every piece described here,
+measured it, and use those measurements to recommend building **most** of it properly and
+**rejecting** one part outright.
+
+**A prototype is not a product.** The code written during the experiment exists to answer
+questions — it is not a maintainable surface, and the recommendation is not "promote this branch."
+Effort estimates throughout assume building a production version, informed by what the prototype
+established. What the experiment durably produced is the *measurements*, the *failure modes*, and
+the *design decisions* — not the implementation.
 
 Closely related: [ai-agents-accessibility.md](ai-agents-accessibility.md) covers the static
 discovery layer for AI agents from the guidance side; the machine-readable surfaces described
@@ -47,73 +52,208 @@ than once per wiki, and it is the assumption that makes the whole thing tractabl
 
 ---
 
-## The decision, in brief
+## The recommendation
 
-We built a working experiment. It does what we wanted. **We do not recommend shipping all of
-it.**
+**Build a permanently English-only static reference surface, and serve every other language
+through the interactive Explorer.**
 
-The honest finding is that the three problems we set out to solve have **very different
-costs**, and the cheapest piece solves the most valuable problem:
-
-| Piece | Serves | Cost at 50 modules | Recommendation |
+| Piece | Decision | Effort to build properly | Running cost at 50 modules |
 |---|---|---|---|
-| Machine-readable files for AI | AI assistants, tooling | **~40 KB, no page count** | **Ship** |
-| Reference pages, English | Search ranking, no-JS fallback | **50 pages, 6 MB, 13 s** | **Ship** |
-| Reference pages × all languages | Speculative | 2,500 pages, 276 MB, 11 min | **Do not ship yet** |
-| Full operation detail on pages | Long-tail search | Doubles page content | **Decide on evidence** |
+| Machine-readable files for AI and tooling | **Build** | **S** | ~40 KB, no page count |
+| Crawler instructions and sitemap | **Build** | **S** | Negligible; fixes an existing liability |
+| Reference pages, **English only** | **Build** | **M** | 50 pages, 6 MB, 13 s |
+| Full operation detail on pages | **Build when the page design holds** | **M** | +4% page weight — see below |
+| Reference pages × other languages | **Do not build** | — | 2,500 pages, 276 MB, and it does not build |
 
-The language dimension is **98% of the projected cost and carries the weakest evidence
-behind it.** Dropping it for now turns this from a significant ongoing commitment into a
-small one, while keeping almost all of the benefit.
+*Sizes are for building a production version: **S = days, M = weeks**. Everything here was
+prototyped during the experiment, which is where the measurements come from — but a prototype is
+not a maintainable surface, so the estimates assume building it again properly rather than
+promoting this code. See [What this would cost to build properly](#what-this-would-cost-to-build-properly).*
 
-If you read nothing else: **ship the machine-readable files and the English pages, do not
-multiply by language, and revisit in a quarter with real data.**
+**The static surface is English-only by design, not by deferral.** That is the substantive
+conclusion of this document, and the reasoning is short enough to state here:
+
+- The static surface exists for exactly **three jobs**: search visibility, AI coverage, and a
+  readable fallback for people who cannot run the Explorer. **Translation improves none of the
+  first two, and is actively counterproductive for AI** — fifty translations of the same API
+  reference add no information to a corpus while diluting it.
+- **Language coverage for readers is the Explorer's job**, and the Explorer already does it.
+  The static pages are not the portal's translation story; they are its machine-readable and
+  no-JavaScript story.
+- Translating the static surface is **not affordable at scale**: it multiplies pages fifty-fold,
+  grows the search-engine annotation file quadratically to roughly 2 GB — forty times over the
+  format's legal limit — and **exceeds the build memory ceiling that already aborted one build.**
+  A configuration that does not build is not a roadmap item.
+
+Being canonical for REST API documentation does not change this. Canonical status is an
+obligation to document the API well in every language the portal supports — which the Explorer
+and the translatable-content pathway deliver. It is not an obligation for every surface to be
+translated, and the static surface is the one where translation costs the most and returns the
+least.
+
+The rest of this document explains how we reached that, including the alternatives we
+considered and rejected and the measurements that changed our minds along the way.
 
 ---
 
-## What this decision actually costs
+## What is actually on a reference page
 
-**Important framing: this is not a decision about whether to fund building something. It is
-already built.** The experiment produced working, tested code for every piece described here.
-The decision is how much of it to *publish*.
+Two levels of detail come up repeatedly below, and the difference between them decides what a
+reader can actually *do*. Concretely:
 
-| | State | Remaining work |
+### The catalogue level — what the prototype produces
+
+Per module: its name and description, which wikis expose it (summarised by project family, never
+840 links), a link to the raw specification, and then one entry per operation:
+
+```
+GET  /v1/page/{title}
+     Fetch a page's content and metadata.
+
+POST /v1/page
+     Create a new page.
+```
+
+**What a reader gets:** a scannable answer to *"what endpoints exist, and roughly what does each
+one do?"* Every operation is addressable, so a link can point at one.
+
+**What a reader cannot do:** make a call. There are no parameters, no indication of what comes
+back, and no status codes. To actually use an endpoint they must go to the Explorer or read the
+raw specification themselves.
+
+### What "full operation detail" would add
+
+The same entries, deepened with each operation's full description, its parameters, and its
+documented responses:
+
+```
+GET  /v1/page/{title}
+     Fetch a page's content and metadata. Returns the current
+     revision unless a revision id is supplied.
+
+     Parameters
+       title      path,  required   Page title, percent-encoded
+       redirect   query             Whether to follow redirects
+
+     Responses
+       200  Page content and metadata
+       404  Page not found
+```
+
+**What this changes:** the page becomes usable on its own. A reader can construct a request
+without leaving it. Across the specs there are **2.2 parameters and 2.0 documented responses per
+operation** on average, so this is a real body of content, not a garnish.
+
+**What still would not be there:** the full request and response *schemas* — the nested field
+structures. Those are 83% of a specification's bytes and the least useful material for search or
+for a first read, so they stay in the raw specification and the Explorer. That is a deliberate
+line, not an omission.
+
+### So the three levels are
+
+| Level | Answers | Where it would live | State |
+|---|---|---|---|
+| Catalogue | What endpoints exist? | Reference pages | Prototyped and measured |
+| Full detail | How do I call one? | The same pages, deepened | Designed, not prototyped |
+| Complete schemas | What exactly comes back? | Raw specification and the Explorer | Specifications already committed; the Explorer is in production |
+
+### The cost is smaller than it looks
+
+The intuition is that full detail roughly doubles a page. **Measurement says otherwise.**
+Catalogue prose is ~1.3 KB per module page; full detail takes it to ~5.9 KB. That is 4.6× the
+*prose* — but page weight is dominated by the shared site frame, so on a 109 KB page it is an
+increase of about **4%**.
+
+Which means the reason to think carefully about it is **not** cost:
+
+- **It is what makes the no-JavaScript job actually work.** At the catalogue level, a reader who
+  cannot run the Explorer learns that an endpoint exists and then has nowhere to go but a raw JSON
+  file. Full detail is the difference between a signpost and a usable page. Of the three jobs, this
+  is the one it most clearly completes.
+- **It is where long-tail search lives.** "How do I get page HTML from the Wikipedia API" matches
+  parameter and description prose, not endpoint names.
+- **It needs design work, and page length is the real risk.** `wikibase/v1` has **65 operations**.
+  Sixty-five operations each carrying a description, two parameters and two responses is a very
+  long page, and making that navigable is genuine interface work rather than a data change.
+
+So the honest position is: **worth doing, cheap in bytes, gated on design effort and on whether
+search data shows anyone looking for it** — not gated on budget.
+
+---
+
+## What this would cost to build properly
+
+**Important framing about what "built" means here.** Everything described in this document was
+built during the experiment, and that is where the measurements come from — they are observed,
+not projected. But the experiment is a **prototype**, written to answer questions rather than to
+be maintained. A production version would be built again, properly: designed interfaces,
+accessibility review, tests written for maintenance rather than for proving a point, and data
+generated at build time rather than served by a route that only works during a build.
+
+So the useful question is not "how much is left?" but **"how much effort is each piece if we
+build it for real?"** Rough sizes, with the convention that **S = days, M = weeks, L = a month or
+more**:
+
+| Piece | Effort to build properly | What drives the size |
 |---|---|---|
-| Machine-readable files | Built, tested, verified | **None** |
-| English reference pages | Built, tested, measured | **One index page** (~a day) so the pages link to each other; crawlers treat page sets with no internal links as orphans |
-| Crawler instructions and sitemap | Built, tested | None |
-| Language multiplication | Infrastructure built; translations do not exist | Blocked on MediaWiki delivering per-language specifications |
-| Full operation detail | Designed, not built | Moderate — and deliberately gated on data |
+| Machine-readable files | **S** | A pure transformation over data we already commit. No interface, no design, no localisation. The projection logic is the substance and it is shared with everything else. |
+| Crawler instructions and sitemap | **S** | Small, well-understood artefacts. Most of the cost is deciding policy once, which this document has already done. |
+| English reference pages | **M** | The data plumbing is small; the **interface** is the bulk — page design, the module index, navigation for long modules, accessibility, and the design review any public page needs. |
+| Full operation detail | **M** | Parameter and response presentation, and making a 65-operation page navigable. Interface work, not data work. |
+| Language multiplication | **Not costed** | Rejected — and it does not build at scale, so a size would be misleading. |
 
-Two cheap checks are recommended before publishing anything: validate the
-same-on-every-wiki assumption (roughly 30 requests, described below) and answer the
-documentation-overlap question in the next section.
+**What the experiment removes from those estimates** is the discovery risk, which is usually the
+expensive part: the sizes above are for building something whose shape, cost and failure modes are
+already known. The design decisions are made, the constraints are measured, and the traps are
+documented. That is what the prototype bought.
 
-**So the marginal cost of the recommendation is roughly one day of work plus those checks.**
-That is a materially different question from the one we started with, and it should change
-how much deliberation it warrants.
+Two cheap checks are recommended before publishing anything: validate the same-on-every-wiki
+assumption (roughly 30 requests, described below), and — because these pages replace existing
+documentation rather than supplementing it — identify any endpoint where the hand-written material
+being migrated says more than the specification does.
+
+**The recommendation therefore costs roughly S + S + M**, plus those checks: the machine-readable
+files and the crawler artefacts are small and well-defined, and the pages are a genuine but
+bounded interface project.
 
 ---
 
-## The one question we need answered by someone outside this work
+## The settled premise: this portal is the canonical home
 
-**Is this portal intended to become the canonical home for Wikimedia REST API reference?**
+**Decided, and not in question here:** the Front Door portal is *the* place for direct REST API
+documentation. The material currently on mediawiki.org and scattered elsewhere in the movement
+is to be migrated here. Migration will take a while, but the destination is agreed.
 
-The REST API is already documented on mediawiki.org and elsewhere in the movement. Two
-outcomes follow from the answer, and they point in opposite directions:
+This settles what would otherwise be the largest open question. Adding pages here does **not**
+split ranking signals between competing Wikimedia properties, because the other pages are not a
+permanent parallel — they are a migration backlog. Consolidating scattered documentation into
+one canonical location is precisely what search engines reward.
 
-- **If yes, with the older pages eventually redirected here** — publish. The pages
-  consolidate documentation that is currently scattered, and consolidation is exactly what
-  search engines reward.
-- **If no, and both sets of pages persist indefinitely** — we would be adding Wikimedia pages
-  that compete with other Wikimedia pages for the same queries, splitting ranking signals
-  between our own properties. We could collectively rank *worse* than any one of them does
-  today. In that case the machine-readable files (option A) are still clearly worth shipping,
-  but the pages are questionable.
+It has two consequences worth being explicit about.
 
-**We cannot answer this from the code, and it is the single most consequential input to the
-decision.** It belongs to whoever owns developer-documentation strategy across the movement,
-not to this experiment.
+**It strengthens the case for pages.** The duplicate-content risk was the main argument for
+shipping only the machine-readable files and no pages at all. With that gone, the option of
+having no addressable pages for the canonical API documentation is hard to defend.
+
+**It raises the bar on prose quality.** A supplement may be thin; canonical documentation may
+not. Twenty-one operations across two modules have **no description at all** in their
+specifications, so a generated page for those is a bare list of paths. If the hand-written
+material being migrated says more about those endpoints than the specification does, replacing
+it with a generated page would **lose** information. That is a migration blocker for those two
+modules, not merely a quality note — and it is upstream specification work, since no amount of
+rendering invents prose.
+
+**What it does not oblige is a translated static surface.** Canonical status means the API is
+documented well in the languages the portal supports; the Explorer and the translatable-content
+pathway are how the portal does that. It does not follow that every surface must be translated,
+and the static surface is the one where translation costs the most and returns the least. This is
+argued in full under *Why the static surface is English-only*.
+
+### The check that this makes matter
+
+**Where does hand-written endpoint documentation say more than the specification does?** Each
+such case is either upstream specification work or content that must be authored here rather than
+generated. Worth doing per module before the corresponding pages replace anything.
 
 ---
 
@@ -151,7 +291,7 @@ from equally expensive.
 | **Machine-readable files** (`llms.txt`, full text corpus, raw specs) | **Fully** | Barely — one address does not rank | **Well** — 34 KB of plain text for the whole API | Negligible |
 | **Reference pages, English** | Adds little | **Yes** — this is the only piece that creates rankable addresses | **Yes** — a real page, ~19 KB compressed | Small |
 | **Same pages × N languages** | Nothing | Unproven | Nothing extra | **Large, multiplies** |
-| **Full operation detail** | Modest | Long-tail queries | Marginal | Moderate |
+| **Full operation detail** | Modest — raw specs already carry it | **Long-tail queries** | **Completes it** — the only level a reader can act on | +4% page weight, plus design work |
 
 Two conclusions fall out of that table.
 
@@ -169,6 +309,61 @@ it is just 50 pages.
 ---
 
 ## What it costs as things grow
+
+### First, how the page count is even tractable
+
+This design is affordable only because of **three structural decisions**, each of which removed a
+multiplier. It is worth seeing them together, because each was a reasonable-sounding option at the
+start and each could be reintroduced by a reasonable-sounding request later.
+
+Pages required at 50 modules (~895 operations, ~31,900 wiki-and-module combinations):
+
+| How documentation is addressed | 1 language | 15 | 50 | All 575 |
+|---|---|---|---|---|
+| Per **wiki**, per module, per language | 32,000 | 478,000 | **1,600,000** | **18,300,000** |
+| Per module, per **operation**, per language | 895 | 13,400 | 44,750 | 515,000 |
+| **Per module, per language** *(chosen)* | **50** | 750 | 2,500 | 28,750 |
+
+**What we gave up to get to the bottom row.**
+
+- **Documenting per wiki.** A module is deployed to roughly 840 wikis, so addressing documentation
+  per wiki produces ~31,900 wiki-and-module combinations before language is even considered.
+  Dropped by documenting each module **once** and listing which wikis expose it — which rests on
+  the assumption that a module behaves identically everywhere, still unvalidated (see
+  *uncertainties*). This single decision is a **637×** reduction.
+- **A page per operation.** Each of ~895 operations could have had its own address. Dropped in
+  favour of one page per module with an addressable anchor per operation — so operations are still
+  linkable, just not separately indexable. An **18×** reduction, and the one real cost is that a
+  module's operations compete for a single search result.
+
+Together those took the worst case from **18.3 million pages to 28,750**, and choosing English
+takes it to **50**. That is roughly a **366,000-fold** difference between the most granular
+addressing and the recommendation.
+
+### Why this matters beyond arithmetic
+
+**Each multiplier can come back through a plausible request**, and none of them announce
+themselves as scale decisions:
+
+- *"Can we show which endpoints are available on Commons specifically?"* → reintroduces the wiki
+  dimension. 637×.
+- *"Each endpoint should have its own URL so it ranks on its own."* → reintroduces per-operation
+  pages. 18×.
+- *"Let's translate the reference."* → up to 575×.
+
+**On the language number specifically.** This document uses 50 languages as its working figure,
+but the portal formally supports far more — the generated catalogue currently holds **575**. It is
+genuinely unlikely that most of them would ever have translated API specifications, and there is a
+natural brake: only languages with real translation coverage would be worth publishing, and
+translation coverage is the thing we would gate on.
+
+But **the natural brake is on translations, not on configuration.** The number of published
+languages is a list in a config file. Nothing about the build objects to that list growing, and
+the failure mode is not a warning — it is a two-hour build producing 3.1 GB, an illegal sitemap,
+and, before either of those, an out-of-memory abort. The 575-language column is not a forecast. It
+is there to show that the distance between "reasonable" and "impossible" is one edit.
+
+### Then, the measured costs
 
 We measured a real build of 150 pages and extrapolated. Per-page cost is near-constant, which
 makes these projections reliable.
@@ -263,47 +458,74 @@ What we built, minus the language multiplier.
 - **Cost: 50 pages, 6 MB, 13 seconds** at the expected module count.
 - **Weakness:** English only. Discussed below.
 
-### D. Everything, all languages
+### D. Everything, all languages — rejected
 
-What the experiment currently produces.
+What the experiment as built currently produces, and what the recommendation removes.
 
 - **Cost: 2,500 pages, 276 MB, 11 minutes, 2,500 translation files** at moderate scale.
-- **Weakness:** the benefit over option C is unproven, and it is the option that carries the
-  3.1 GB failure mode.
+- **Why rejected:** it serves none of the surface's three jobs meaningfully better than option C
+  — nothing for search discovery, actively worse for the AI corpus, and it only helps the
+  narrowest case. Against that it pushes the search-engine annotation file forty times past its
+  legal size limit and **exceeds the build-memory ceiling that already aborted one build**. As
+  specified, it does not build.
 
 ---
 
-## Why we would drop the language dimension, for now
+## Why the static surface is English-only
 
-This is the recommendation most likely to be contested, so here is the reasoning in full.
+This is the conclusion most likely to be challenged, so here is the full reasoning. It rests on
+matching each of the surface's three jobs against what translation actually contributes.
 
-**Developers searching for API documentation search in English.** Even developers who do not
-work in English generally search for technical documentation using English terms — endpoint
-names, HTTP methods and parameter names are English regardless. Translated reference pages
-help someone *read* the material; they do very little to help someone *find* it. Search
-visibility is the need the pages exist to serve.
+### Job by job, what translation adds
 
-**Translated pages help with reading — but the Explorer already covers reading well** for
-anyone with a working browser, and the translated specifications do not exist yet regardless.
+**Search visibility: almost nothing.** Developers search for technical documentation using
+English terms — endpoint names, HTTP methods and parameter names are English regardless of the
+reader's language. Translated pages help someone *read*; they do very little to help someone
+*find*. And publishing a variant whose content is mostly untranslated English creates
+near-duplicate pages at scale, which is actively harmful for search rather than neutral filler.
 
-**The evidence base is empty.** We have no data suggesting demand for translated API
-reference. We have measured, concrete costs. Committing to a 50× multiplier against an
-unmeasured benefit is the wrong order of operations.
+**AI coverage: worse than nothing.** The machine-readable corpus is one file containing every
+module and operation. Fifty translations of it add **no information** — they are the same facts
+restated — while diluting the corpus and creating ambiguity about which copy is authoritative.
+Assistants also translate at inference time. English-only is the better artefact here, not a
+compromised one.
 
-**Near-duplicate pages carry a real penalty.** Publishing a language variant whose content is
-mostly untranslated English produces near-duplicate pages at scale, which is actively harmful
-for search rather than neutral. We built a translation-coverage gate for exactly this reason —
-but the simpler answer is to not publish those variants yet.
+**Fallback for constrained clients: some, and this is the only real case.** A reader on a slow
+connection who cannot run the Explorer *and* who reads a language other than English is served
+by a translated static page and by nothing else. This is a genuine gap, and it is the narrowest
+of the three.
 
-**One cost grows quadratically, not linearly.** The search-engine declarations that link
-language versions together grow with the square of the language count — detailed above. At the
-full language catalogue that file alone would be roughly 2 GB and 40× over the format's legal
-size limit. Page count is the linear cost; this is the one that bites disproportionately.
+### Why we still do not translate for that third case
 
-**Nothing is lost by waiting.** The infrastructure works and is tested. Turning languages on
-later is a configuration change plus the translation files, not a redesign. Turning it on now
-and discovering it was unnecessary means unwinding published, indexed addresses — which is
-much harder.
+**The Explorer is the portal's translation story, and it already works.** Language coverage for
+people reading documentation is delivered by the interactive surface and the translatable-content
+pathway. The static surface exists to be machine-readable and to work without JavaScript — not
+to be the portal's localisation layer. Duplicating localisation into it means paying the largest
+possible cost for the smallest of its three jobs.
+
+**It is not affordable, and that is measured rather than assumed.** Translating the static
+surface multiplies pages fifty-fold, grows the search-engine annotation file quadratically to
+roughly 2 GB — forty times over the format's legal file-size limit — and **exceeds the build
+memory ceiling that already aborted one build at 180 pages**. This is not a cost to schedule; it
+is a configuration that does not currently build.
+
+**If that narrow gap ever needs closing, the full matrix is the wrong instrument.** Cheaper
+options exist and should be considered first: translating a single overview page rather than
+every module page, translating summaries only, or simply letting a non-English reader fall back
+to the English static page, which is what happens today. **A fifty-fold page multiplication is a
+very expensive answer to a narrow need**, and the narrowness is the point.
+
+### What canonical status does and does not oblige
+
+Being the canonical home for REST API documentation is an obligation to **document the API well
+in the languages the portal supports** — met by the Explorer and the translatable-content
+pathway. It is not an obligation for **every surface** to be translated. Search engines and AI
+crawlers do not read in Hebrew; they read what we publish. The static surface serves them, plus
+the fallback case, and English serves all three adequately.
+
+The honest residue: a non-English reader on a poor connection is less well served than an
+English one. We are accepting that, knowingly, because closing it via the static surface costs
+fifty times more than the surface itself and does not build.
 
 ---
 
@@ -346,7 +568,8 @@ crawlable.**
 
 That last item is the one thing we would argue against leaving alone. It is a pre-existing
 liability created by the Explorer's shareable-link feature, it grows to roughly 32,000 as
-modules are added, and the fix is already built and independent of every other decision here.
+modules are added, and the fix is small (S), well understood from the experiment, and
+independent of every other decision here.
 **Shipping only the crawler instructions, and nothing else, is a coherent choice.**
 
 ## How reversible is each piece?
@@ -357,17 +580,22 @@ Relevant because it determines how much a wrong decision costs.
 |---|---|
 | Machine-readable files | **Trivial.** Delete three files. Nothing links to them structurally. |
 | Crawler instructions | **Trivial**, and there is no plausible reason to reverse them. |
-| English reference pages | **Moderate.** Once published and indexed, removal needs redirects to avoid dead links from search results and anywhere people have linked. |
-| Language multiplication | **Worst.** Every published language variant is an address that needs a redirect, multiplied by module count. This asymmetry is a substantial part of why we recommend holding it. |
+| English reference pages | **Effectively a commitment.** Removal needs redirects for every indexed address — and as the canonical home for this documentation, there is nowhere sensible to redirect *to*. Treat this as a decision to live with rather than a reversible trial. |
+| Language multiplication | **Hardest.** Every published variant is an address needing a redirect, multiplied by module count. Also the least reversible in practice: withdrawing a translation readers already have is worse than never having shipped it. |
 | Full operation detail | **Trivial** — it adds content to existing pages rather than new addresses. |
 
-The pattern is that **the cheap pieces are also the easily reversible ones**, and the expensive
-piece is the hardest to unwind. That argues for the staged approach independently of the cost
-numbers.
+Two patterns worth noting. **The cheap pieces are also the easily reversible ones**, which
+argues for the staged approach independently of cost. And because this portal is the canonical
+home, "publish and see" is not quite the right frame for the pages: there is no fallback
+destination for the canonical documentation of an API, so publishing them is a commitment rather
+than a trial. That asymmetry is a further reason not to publish the language variants — the least
+reversible piece is also the least valuable.
 
 ## What the experiment paid for regardless of this decision
 
-Worth recording, because these are permanent gains even if nothing ships.
+These are the durable output — they survive whether or not anything is built for production, and
+they are what makes the effort estimates above estimates rather than guesses. **This, rather than
+the code, is what a prototype is for.**
 
 **We found and fixed a bug in production.** Settling how to name links to individual
 operations meant testing naming schemes against live data. One module exposes both `/lists`
@@ -393,41 +621,55 @@ estimates were wrong, one by a factor of seven.
 
 ---
 
-## Recommendation
+## What to ship, in order
 
-**Ship option C, without the language multiplier:**
+**Option C, permanently English:**
 
-1. **Machine-readable files** — the corpus, index, and raw specifications. Cost is negligible,
-   it closes the AI gap completely, and it is the piece we would defend even if everything else
-   were dropped.
-2. **English reference pages** — 50 pages at expected scale. This is the only way to get
-   rankable addresses and a real no-JavaScript reading path.
-3. **Crawler instructions and sitemap** — already built, and they remove a pre-existing
-   liability (the Explorer's shareable links made 6,374 empty addresses valid) that is worth
-   fixing whatever else is decided.
-4. **Hold the language dimension.** Keep the infrastructure, publish English only.
-5. **Hold full operation detail.** Decide it on measured indexing data.
+1. **Machine-readable files** (S) — the corpus, index, and raw specifications. Small, no
+   interface work, closes the AI gap completely, and the piece we would defend even if
+   everything else were dropped.
+2. **English reference pages** (M) — 50 pages at expected scale. The only way to get rankable
+   addresses and a real no-JavaScript reading path. The data work is small; the interface and
+   design work is the bulk of the M.
+3. **Crawler instructions and sitemap** (S) — they remove a pre-existing liability (the
+   Explorer's shareable links made 6,374 empty addresses valid) that is worth fixing whatever
+   else is decided.
+4. **Do not translate the static surface.** English only, permanently, with language coverage
+   for readers delivered by the Explorer. Not a deferral — translating it serves none of the
+   surface's three jobs well, and does not build at scale.
+5. **Add full operation detail once the page design holds 65 operations.** It is the level at
+   which a no-JavaScript reader can actually construct a call, and it costs ~4% of page weight —
+   so the gate is interface work and search evidence, not cost.
 
 Before publishing, two cheap checks: validate the same-on-every-wiki assumption (~30 requests),
-and answer the question about Wikimedia's existing API documentation.
+and identify endpoints where the documentation being migrated says more than the specification
+does, since a generated page must not lose information.
 
 ## How to decide
 
 The choice is not really between the four options. It is between **three positions**, and each
 has a clear tell.
 
-**Position 1 — "search visibility is not worth pursuing."** Ship option A only. Defensible if
-you believe developers reach Wikimedia API documentation through movement channels rather than
-search, or if the duplicate-content concern against our own existing docs is judged serious.
-Cost: effectively nothing. **Choose this if the answer to the Wikimedia-own-documentation
-question is "both will persist."**
+**Position 1 — "search visibility is not worth pursuing."** Build option A only (S). **The
+canonical-home decision largely removed the support for this.** Its strongest argument was the
+risk of competing with Wikimedia's own existing documentation, which is now a migration backlog
+rather than a permanent rival. What remains is only the belief that developers never reach API
+documentation through search — a much weaker claim, and one that publishing cheaply would test
+directly. Hard to defend now: it means the canonical home for REST API documentation has no
+addressable pages.
 
-**Position 2 — "worth a measured attempt."** Ship option C, English only, and set a review in
-one quarter. Cost is small and bounded, and the measurement answers the questions that argument
-cannot. **This is our recommendation.**
+**Position 2 — "English static surface, Explorer for languages."** Build option C, permanently
+English. Cost is bounded and known — roughly S + S + M — it gets canonical pages existing in the shortest time, and
+it assigns each need to the surface that serves it best: machines and no-JavaScript readers to
+the static pages, translated reading to the Explorer. **This is our recommendation.**
 
-**Position 3 — "commit fully."** Ship option D. We would not, on present evidence: the
-incremental benefit is unmeasured and the cost multiplier is 50×.
+**Position 3 — "translate the static surface too."** Ship option D. We would not. It serves
+none of the three jobs meaningfully better — translation adds nothing to search discovery,
+actively dilutes the AI corpus, and only helps the narrowest case — while multiplying pages
+fifty-fold, pushing the search-engine annotation file forty times past its legal size limit,
+and **exceeding a build-memory ceiling that has already aborted a build.** This is not a matter
+of sequencing: as specified it does not build, and the payoff for making it build is the
+smallest of the three.
 
 **What to look at in a quarter**, if position 2 is chosen:
 
@@ -438,9 +680,10 @@ incremental benefit is unmeasured and the cost multiplier is 50×.
 - Do the search terms people arrive on suggest demand for operation-level detail — and for any
   language other than English?
 
-Those four answers determine whether to add full operation detail, whether to add languages,
-or whether to stop. **If the pages do not get indexed at all, that is the most valuable
-finding available and it costs a quarter of waiting rather than a quarter of building.**
+Those answers determine how far to take full operation detail, and whether to stop. They do not
+reopen the language question — that one is settled on grounds search data cannot change. **If the
+pages do not get indexed at all, that is the most valuable finding available, and it costs a
+quarter of waiting rather than a quarter of building.**
 
 ## Who needs to weigh in
 
@@ -448,16 +691,19 @@ Not every question here belongs to the same people, and one of them blocks the o
 
 | Question | Belongs to | Blocking? |
 |---|---|---|
-| Is this portal the canonical home for REST API reference? | Developer-documentation strategy across the movement | **Yes** — it decides between option A and option C |
-| Publish the English pages, or machine-readable files only? | Portal roadmap owners | Yes, but follows from the above |
+| ~~Is this portal the canonical home for REST API reference?~~ | — | **Settled: yes.** No longer open |
+| Publish the English pages now? | Portal roadmap owners | Yes — the main remaining decision |
 | Ship the crawler instructions? | Portal roadmap owners | No — recommended regardless, and independently shippable |
-| Add languages later? | Portal roadmap owners, on measured data | No — explicitly deferred |
-| Fill in the missing operation descriptions | The teams owning `readinglists/v0` and `specs/v0` | No, but it caps the value of anything we publish for those two modules |
+| Is the Explorer's language coverage adequate for readers of the migrated docs? | Whoever owns the migration | No for the static surface, but it is where the translation obligation actually lands |
+| Where does existing hand-written endpoint documentation exceed the specifications? | The migration effort | **Yes, per module** — generated pages must not lose information for those endpoints |
+| Fill in the missing operation descriptions | The teams owning `readinglists/v0` and `specs/v0` | Yes for those two modules, as canonical documentation |
+| Watch the build-memory ceiling as modules grow | This team | No now, but it is the constraint that fails first |
 | Confirm specifications are identical across wikis | This team, ~30 requests | Recommended before publishing |
 
-**Suggested sequence:** answer the canonical-home question first, because it is the one that
-can change the recommendation rather than merely refine it. Everything else is either
-independently shippable or explicitly deferred.
+**Suggested sequence:** publish English now — it is the shortest path to canonical pages
+existing, and nothing here blocks it. The migration questions (prose parity per module, whether
+the Explorer's language coverage suffices for the readers being moved) can proceed alongside,
+module by module, and neither gates the first publish.
 
 ---
 

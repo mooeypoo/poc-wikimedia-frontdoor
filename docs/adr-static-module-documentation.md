@@ -55,13 +55,17 @@ A sitemap does not solve any of this. A sitemap is a URL list; it cannot inject 
 
 **Decision:** Documentation is addressed by **module × locale**. There are no per-instance pages. Each module page states which instances expose it, derived from `GENERATED_MODULES[].instances`.
 
-**Rationale — the cross product:**
+**Rationale — the cross product.** Pages required at 50 modules (~895 operations, ~31,900 (instance, module) pairs), across locale counts:
 
-| Addressing | Today | @ 50 modules × 50 locales |
-|---|---|---|
-| instance × module × locale | 6,374 × locales | ~1.6M — infeasible |
-| module × operation × locale | 8,950 | ~45,000 — untenable |
-| **module × locale** | 500 | **2,500** — unremarkable |
+| Addressing | L=1 | L=15 | L=50 | L=575 (full catalogue) |
+|---|---|---|---|---|
+| instance × module × locale | 32,000 | 478,000 | ~1.6M | **~18.3M** |
+| module × operation × locale | 895 | 13,400 | 44,750 | ~515,000 |
+| **module × locale** *(chosen)* | **50** | 750 | **2,500** | 28,750 |
+
+**Two multipliers removed, and their sizes.** Dropping the instance dimension is a **637×** reduction (31,900 pairs → 50 modules); dropping per-operation pages is a further **18×** (895 operations → 50 modules). Worst case to chosen addressing is therefore ~366,000×, before the locale count is even chosen. Both are worth naming as sizes rather than as decisions, because each is reintroduced by a plausible request — "show which endpoints exist on Commons specifically" restores the first, "give every endpoint its own indexable URL" restores the second.
+
+**The residual multiplier is the locale list, and it is a config value.** `REFERENCE_EXPERIMENT_LOCALES` is an array; nothing in the build objects to it growing, and the failure mode at the top of that column is not a warning but an out-of-memory abort (§7.1), a 3.1 GB output, and a sitemap 40× over its legal size (§10.1). The L=575 column is not a forecast — it is the distance between "reasonable" and "does not build", which is one edit.
 
 **Consequence — an accepted risk.** This rests on `docs/adr-module-source-of-truth.md` §8: a module's spec is identical on every instance sharing its versioned name. That is recorded there as *not yet validated*. Static per-module docs lean on it harder than the Explorer does — the Explorer always shows the live spec for the instance you picked, so divergence is invisible; a static page asserts the module's shape everywhere it appears. **We proceed on the assumption deliberately.** Validation is cheap (~30 requests: sample 2–3 instances per module and diff) and is recommended, not required, before shipping.
 
