@@ -13,6 +13,8 @@
     "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
     "generate-content-i18n-stubs": "node scripts/generate-content-stub-translations.mjs",
     "test:banana-content": "npm test --workspace @wikimedia/banana-content",
+    "generate-scalar-localization": "node scripts/generate-scalar-localization.mjs",
+    "seed-scalar-localization": "node scripts/seed-scalar-localization.mjs",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
     "generate-module-source-of-truth": "node scripts/generate-module-source-of-truth.mjs",
     "generate": "nuxt generate",

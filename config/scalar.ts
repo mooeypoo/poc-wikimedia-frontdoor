@@ -35,6 +35,13 @@ export const SCALAR_DEFAULT_CONFIGURATION = {
 	// is Scalar's supported, schema-validated opt-out (see
 	// @scalar/types SourceConfiguration.agent); re-verify on Scalar upgrades.
 	agent: { disabled: true },
+	// Same localhost trap as `agent` above: Scalar's showMCPButton returns true
+	// for any local URL even with no MCP config, so the button appears on the
+	// dev server and would appear anywhere an MCP config were ever set.
+	// `mcp.disabled` is the schema-validated opt-out; re-verify on upgrades.
+	// Also why `mcp.*` interface strings are not sent to translators
+	// (config/scalarLocalization.ts).
+	mcp: { disabled: true },
 	metaData: {
 		title: 'Front Door API Explorer'
 	}

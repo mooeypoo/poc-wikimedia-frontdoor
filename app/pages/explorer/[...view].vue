@@ -25,6 +25,7 @@ import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorerOptIn'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
+import { buildScalarLocalization } from '../../scalar/scalarLocalization'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../../config/explorerInternalSidebarExperiment'
 import { SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED } from '../../../config/scalarClientWriteWarnings'
 
@@ -34,7 +35,7 @@ definePageMeta( {
 } )
 
 const route = useRoute()
-const { $bananaI18n } = useNuxtApp()
+const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
 /** Whether this page is still the active route (disables teleports on exit). */
 const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
@@ -210,9 +211,14 @@ const { scalarConfiguration: communityScalarConfiguration } = useScalarConfig(
 	{ onLoaded: onScalarLoaded }
 )
 
+// Enterprise mode builds its config here rather than through useScalarConfig,
+// so it must apply localization itself — reading $interfaceLocale inside the
+// computed is what keeps the enterprise explorer switching language with the
+// rest of the shell.
 const enterpriseScalarConfiguration = computed( () => ( {
 	...SCALAR_DEFAULT_CONFIGURATION,
 	...enterpriseScalarOverrides.value,
+	localization: buildScalarLocalization( $interfaceLocale.value ),
 	url: enterpriseSpecUrl.value,
 	onLoaded: onScalarLoaded
 } ) )

@@ -63,6 +63,7 @@ generalizes to any future fleet-wide collection.
 | Language catalog | [generate-language-catalog.mjs](../../scripts/generate-language-catalog.mjs) | [config/languages.generated.ts](../../config/languages.generated.ts) | [config/languages.ts](../../config/languages.ts) | [adr-language-catalog.md](../adr-language-catalog.md) |
 | Wiki fleet (instances) | [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs) | [config/generated/wikiInstances.generated.ts](../../config/generated/wikiInstances.generated.ts) | [config/moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts) | [adr-module-source-of-truth.md](../adr-module-source-of-truth.md) |
 | REST API modules + specs | [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs) | [config/generated/modules.generated.ts](../../config/generated/modules.generated.ts) and [config/generated/module-specs/](../../config/generated/module-specs/) | [config/moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts) | [adr-module-source-of-truth.md](../adr-module-source-of-truth.md) |
+| Scalar interface strings | [generate-scalar-localization.mjs](../../scripts/generate-scalar-localization.mjs) | [config/generated/scalarLocalization.generated.ts](../../config/generated/scalarLocalization.generated.ts) and [i18n/explorer-scalar/](../../i18n/explorer-scalar/) | [app/scalar/scalarLocalization.ts](../../app/scalar/scalarLocalization.ts) | [adr-scalar-interface-localization.md](../adr-scalar-interface-localization.md) |
 
 Two scripts, three datasets: the instances and the modules come out of the same
 sweep, because you cannot know which modules exist without first enumerating the
@@ -362,6 +363,42 @@ npm run generate-content-i18n-stubs            # pseudo-localized demo stubs
 
 See [translatable-content.md](translatable-content.md) for the model, what to use
 directly versus treat as reference, and what gates a production rollout.
+
+## Scalar interface strings
+
+The only generator here whose upstream is a **dependency** rather than a
+Wikimedia API. Scalar owns the set of interface strings its API reference can
+render; we own their translations. The generator reads Scalar's built-in English
+table at the installed version, derives a banana message key for each entry, and
+writes the key map plus the English and `qqq` catalogues.
+
+```bash
+npm run generate-scalar-localization             # write map + en.json + qqq.json
+npm run generate-scalar-localization -- --check  # exit 1 on drift; write nothing
+npm run seed-scalar-localization -- --list              # locales Scalar can seed
+npm run seed-scalar-localization -- ar de es fr pt ru zh-cn
+```
+
+`--check` is the part that earns its keep. Because the key set belongs to
+upstream, a Scalar upgrade that *renames* a string is silent: our translation
+simply stops applying, with no error anywhere. Running the check in review turns
+that into a diff. Treat a Scalar version bump as a change that requires looking
+at it.
+
+The seeding script is separate and one-directional. Scalar ships MIT-licensed
+community translations for seven locales, and **all seven are seeded** — not
+just the portal's existing interface locales. That is deliberate: any locale we
+left out is one Scalar would supply directly, bypassing banana and, for Arabic,
+bypassing BiDi isolation too. Seeded catalogues are marked `@metadata.seeded`
+and the script refuses to overwrite anything lacking that marker — the same
+"never rewrite translator work" rule the prose generator follows. It also
+refuses any code absent from the language catalog, resolved through
+`config/languages.ts` rather than a list of its own. `he` and `fa` have no
+upstream translation and must be authored by hand.
+
+Both write into `i18n/explorer-scalar/`, kept apart from `i18n/*.json` so a
+hundred-odd explorer-only strings do not ship in every page's bundle. See
+[adr-scalar-interface-localization.md](../adr-scalar-interface-localization.md).
 
 ## Dark-mode tokens
 
