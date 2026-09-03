@@ -4,7 +4,7 @@ status: mockup
 
 # Attribution
 
-Articles on Wikipedia and content on other Wikimedia projects are licensed under a variety of free licenses, including [Creative Commons licenses](https://web.archive.org/web/20250618143131/https://creativecommons.org/about/cclicenses/) and others. Properly attributing Wikimedia content is essential to the continued health of the free knowledge ecosystem.
+Articles on Wikipedia and content on other Wikimedia projects are licensed under a variety of free licenses, including [Creative Commons licenses](https://creativecommons.org/cc-licenses/) and others. Properly attributing Wikimedia content is essential to the continued health of the free knowledge ecosystem.
 
 ::highlight
 The Wikimedia attribution framework provides guideline for fairly crediting Wikimedia content wherever it is surfaced. [**Read the attribution framework →**](https://wikimedia-attribution.toolforge.org/)
@@ -26,4 +26,4 @@ If you make any changes to the content, it’s important to indicate this in the
 
 ## Wikipedia and Wikimedia logos
 
-To learn about using Wikipedia and other Wikimedia logos, read the [trademark policy](https://web.archive.org/web/20250618143131/https://foundation.wikimedia.org/wiki/Trademark_policy).
+To learn about using Wikipedia and other Wikimedia logos, read the [trademark policy](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Wikimedia_Foundation_Trademark_Policy).
