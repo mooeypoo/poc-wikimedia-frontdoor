@@ -41,10 +41,22 @@ API surface. Define a local interface instead (see composable section below).
 
 ### Scope: content pages only (for now)
 
+> **No longer current.** API endpoints are searchable as of the endpoint-search
+> work; see `docs/adr-explorer-deep-linking.md` §10. This guide still describes
+> the **content** side of the panel accurately — endpoint search is a second,
+> independent index that runs alongside everything below, and does not change any
+> of it. The paragraph is kept for the record.
+
 Searching the currently-loaded OpenAPI/Scalar spec was intentionally deferred.
 Scalar does not expose programmatic navigation to individual operations, so
 deep-linking search results into the explorer is not yet feasible. Revisit in a
 separate PR once Scalar exposes hash anchors or a navigation API.
+
+What actually unblocked it: Scalar's operation hash *is* addressable, and its
+navigation-id builders are importable, so endpoint links are computed offline
+from the committed specs rather than from a spec loaded at runtime. The
+"currently-loaded spec" framing above was the wrong shape — search has to work
+from every page, not only while the explorer is mounted.
 
 ### Static-first build (`nuxt generate`): deferred
 

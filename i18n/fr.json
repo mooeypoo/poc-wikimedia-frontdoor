@@ -223,6 +223,8 @@
   "search-all-languages-cta": "Rechercher dans toutes les langues",
   "search-no-locale-results": "Aucun résultat en {{bidi:$1}} pour {{bidi:$2}}.",
   "search-no-results-any-language": "Aucun résultat trouvé pour {{bidi:$1}} dans aucune langue.",
+  "search-results-endpoint-deprecated": "Obsolète",
+  "search-results-endpoints-heading": "Points de terminaison de l'API",
   "search-results-locale-heading": "Résultats en {{bidi:$1}}",
   "section-nav-about-label": "About sections",
   "section-nav-about-title": "About",

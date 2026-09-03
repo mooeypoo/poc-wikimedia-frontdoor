@@ -120,13 +120,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "Wikipedia",
+			"url": "https://en.wikipedia.org"
 		},
-		"description": "Experimental editing suggestions and editor feedback regarding such suggestions",
+		"description": "Experimental editing suggestions and editor feedback regarding such suggestions\n\nCaution: The REST Sandbox executes calls against the production database by default. To avoid unintended edits to live content, select the sandbox server (test.wikimedia.org) from the server dropdown before making POST, PUT, PATCH, or DELETE requests.",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Growth experiments API",
 		"version": "0.1.0"
 	},
@@ -135,7 +138,7 @@
 		"/mentees": {
 			"get": {
 				"description": "Returns info about the mentees being mentored by a given user.",
-				"operationId": "getMentees",
+				"operationId": "getGetMentees",
 				"parameters": [
 					{
 						"description": "limit parameter",
@@ -241,13 +244,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get mentees"
 			}
 		},
 		"/mentees/prefixsearch/{prefix}": {
 			"get": {
 				"description": "Returns info about the mentees being mentored by a given user, filtered by mentee name prefix.",
-				"operationId": "getMenteesPrefixsearchByPrefix",
+				"operationId": "getGetMenteesBasedOnNamePrefix",
 				"parameters": [
 					{
 						"description": "prefix parameter",
@@ -290,13 +294,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get mentees based on name prefix"
 			}
 		},
 		"/newcomertask/complete": {
 			"post": {
 				"description": "Records completion of editing suggestions by the current user.",
-				"operationId": "postNewcomertaskComplete",
+				"operationId": "postCompleteEditingSuggestions",
 				"parameters": [
 					{
 						"description": "taskTypeId parameter",
@@ -339,13 +344,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Complete editing suggestions"
 			}
 		},
 		"/quickstarttips/{skin}/{editor}/{tasktypeid}/{uselang}": {
 			"get": {
 				"description": "Returns tips, relevant to the given user, that help new users engage with editing content.",
-				"operationId": "getQuickstarttipsBySkinByEditorByTasktypeidByUselang",
+				"operationId": "getGetTips",
 				"parameters": [
 					{
 						"description": "skin parameter",
@@ -416,13 +422,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get tips"
 			}
 		},
 		"/suggestions/addimage/feedback/{title}": {
 			"put": {
 				"description": "Records feedback, by the current user, on image suggestions for page content.",
-				"operationId": "putSuggestionsAddimageFeedbackByTitle",
+				"operationId": "putProvideFeedbackForPageImageSuggestions",
 				"parameters": [
 					{
 						"description": "title parameter",
@@ -490,7 +497,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -526,13 +533,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Provide feedback for page image suggestions"
 			}
 		},
 		"/suggestions/addlink/{title}": {
 			"get": {
 				"description": "Provides link suggestions for page content.",
-				"operationId": "getSuggestionsAddlinkByTitle",
+				"operationId": "getGetLinkSuggestionsForAPage",
 				"parameters": [
 					{
 						"description": "title parameter",
@@ -568,13 +576,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get link suggestions for a page"
 			}
 		},
 		"/suggestions/info": {
 			"get": {
 				"description": "Shows information useful for monitoring link and image suggestions, broken down by topic.",
-				"operationId": "getSuggestionsInfo",
+				"operationId": "getGetSuggestionInformation",
 				"parameters": [],
 				"responses": {
 					"200": {
@@ -598,13 +607,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get suggestion information"
 			}
 		},
 		"/user-impact/{user}": {
 			"get": {
 				"description": "Returns data about the impact of a user on the wiki.",
-				"operationId": "getUserImpactByUser",
+				"operationId": "getGetUserImpact",
 				"parameters": [
 					{
 						"description": "user parameter",
@@ -657,11 +667,12 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get user impact"
 			},
 			"post": {
 				"description": "Returns data about the impact of a user on the wiki.",
-				"operationId": "postUserImpactByUser",
+				"operationId": "postGetUserImpact",
 				"parameters": [
 					{
 						"description": "user parameter",
@@ -714,13 +725,14 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get user impact"
 			}
 		},
 		"/welcomesurvey/skip": {
 			"post": {
 				"description": "Prevents newcomer editing suggestions for the current user.",
-				"operationId": "postWelcomesurveySkip",
+				"operationId": "postSkipEditingSuggestions",
 				"parameters": [],
 				"requestBody": {
 					"content": {
@@ -763,13 +775,19 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Skip editing suggestions"
 			}
 		}
 	},
 	"servers": [
 		{
+			"description": "(Production)",
 			"url": "https://en.wikipedia.org/w/rest.php/growthexperiments/v0"
+		},
+		{
+			"description": "(Sandbox)",
+			"url": "https://test.wikimedia.org/w/rest.php/growthexperiments/v0"
 		}
 	]
 }

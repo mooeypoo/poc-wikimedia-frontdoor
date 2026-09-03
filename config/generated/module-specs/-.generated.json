@@ -118,15 +118,22 @@
 			}
 		}
 	},
+	"externalDocs": {
+		"description": "API documentation",
+		"url": "https://www.mediawiki.org/wiki/API:REST_API"
+	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
 		"description": "REST endpoints not associated with a module",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "MediaWiki REST API",
 		"version": "0.1.0"
 	},
@@ -264,7 +271,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -341,7 +348,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -418,7 +425,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -495,7 +502,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -571,7 +578,8 @@
 		},
 		"/oauth2/access_token": {
 			"post": {
-				"operationId": "postOauth2AccessToken",
+				"description": "The OAuth 2.0 [token endpoint](https://datatracker.ietf.org/doc/html/rfc6749#section-3.2). Exchanges an authorization code, refresh token or client credentials for an access token.",
+				"operationId": "postGetAnOauth20AccessToken",
 				"parameters": [],
 				"requestBody": {
 					"content": {
@@ -579,23 +587,23 @@
 							"schema": {
 								"properties": {
 									"client_id": {
-										"description": "client_id parameter",
+										"description": "The client ID (consumer key) of the OAuth application.",
 										"type": "string"
 									},
 									"client_secret": {
-										"description": "client_secret parameter",
+										"description": "The client secret of the OAuth application. Required for the client credentials flow.",
 										"type": "string"
 									},
 									"code": {
-										"description": "code parameter",
+										"description": "The authorization code received from the authorization endpoint.",
 										"type": "string"
 									},
 									"code_verifier": {
-										"description": "code_verifier parameter",
+										"description": "PKCE code verifier that was used to generate the code challenge sent in the authorization request.",
 										"type": "string"
 									},
 									"grant_type": {
-										"description": "grant_type parameter",
+										"description": "The OAuth 2.0 grant type for the token request (<code>authorization_code</code>, <code>refresh_token</code> or <code>client_credentials</code>).",
 										"enum": [
 											"client_credentials",
 											"authorization_code",
@@ -604,15 +612,15 @@
 										"type": "string"
 									},
 									"redirect_uri": {
-										"description": "redirect_uri parameter",
+										"description": "The URL to redirect the user to after authorization. Must match the callback URL registered for the client.",
 										"type": "string"
 									},
 									"refresh_token": {
-										"description": "refresh_token parameter",
+										"description": "A refresh token used to obtain a new access token (and new refresh token) without re-authorizing. The submitted request token will be invalidated after a short grace period.",
 										"type": "string"
 									},
 									"scope": {
-										"description": "scope parameter",
+										"description": "Space-separated list of permission scopes to request. Should be a subset of the scopes registered for the client. Omit to request all available scopes.",
 										"type": "string"
 									}
 								},
@@ -648,15 +656,17 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get an OAuth 2.0 access token"
 			}
 		},
 		"/oauth2/authorize": {
 			"get": {
-				"operationId": "getOauth2Authorize",
+				"description": "The OAuth 2.0 [authorization endpoint](https://datatracker.ietf.org/doc/html/rfc6749#section-3.1). Displays the OAuth 2.0 authorization page, where users can grant or deny access to a client. Also processes the authorization decision when the form is submitted.",
+				"operationId": "getAuthorizeAnOauth20Client",
 				"parameters": [
 					{
-						"description": "response_type parameter",
+						"description": "The OAuth 2.0 response type: <code>code</code> for authorization code flow.",
 						"in": "query",
 						"name": "response_type",
 						"required": true,
@@ -668,7 +678,7 @@
 						}
 					},
 					{
-						"description": "client_id parameter",
+						"description": "The client ID (consumer key) of the OAuth application.",
 						"in": "query",
 						"name": "client_id",
 						"required": true,
@@ -677,7 +687,7 @@
 						}
 					},
 					{
-						"description": "redirect_uri parameter",
+						"description": "The URL to redirect the user to after authorization. Must match the callback URL registered for the client.",
 						"in": "query",
 						"name": "redirect_uri",
 						"required": false,
@@ -686,7 +696,7 @@
 						}
 					},
 					{
-						"description": "scope parameter",
+						"description": "Space-separated list of permission scopes to request. Should be a subset of the scopes registered for the client. Omit to request all available scopes.",
 						"in": "query",
 						"name": "scope",
 						"required": false,
@@ -695,7 +705,7 @@
 						}
 					},
 					{
-						"description": "state parameter",
+						"description": "Opaque value used to maintain state between the authorization request and callback, for [CSRF protection](https://datatracker.ietf.org/doc/html/rfc6749#section-10.12).",
 						"in": "query",
 						"name": "state",
 						"required": false,
@@ -704,7 +714,7 @@
 						}
 					},
 					{
-						"description": "code_challenge parameter",
+						"description": "PKCE code challenge derived from the code verifier, used to secure the authorization code flow. Required for non-confidential clients.",
 						"in": "query",
 						"name": "code_challenge",
 						"required": false,
@@ -713,7 +723,7 @@
 						}
 					},
 					{
-						"description": "code_challenge_method parameter",
+						"description": "The method used to derive the code challenge from the code verifier.",
 						"in": "query",
 						"name": "code_challenge_method",
 						"required": false,
@@ -726,7 +736,7 @@
 						}
 					},
 					{
-						"description": "approval_cancel parameter",
+						"description": "Used internally. Clients should not use this field.",
 						"in": "query",
 						"name": "approval_cancel",
 						"required": false,
@@ -735,7 +745,7 @@
 						}
 					},
 					{
-						"description": "approval_pass parameter",
+						"description": "Used internally. Clients should not use this field.",
 						"in": "query",
 						"name": "approval_pass",
 						"required": false,
@@ -744,7 +754,7 @@
 						}
 					},
 					{
-						"description": "display parameter",
+						"description": "How the authorization dialog UI should be rendered. Set to <code>popup</code> for an embeddable dialog.",
 						"in": "query",
 						"name": "display",
 						"required": false,
@@ -760,7 +770,7 @@
 						}
 					},
 					{
-						"description": "ui_locales parameter",
+						"description": "Space-separated list of MediaWiki language codes indicating the user's preferred languages for the authorization UI. (Note that BCP 47 codes which aren't MediaWiki language codes aren't supported.)",
 						"in": "query",
 						"name": "ui_locales",
 						"required": false,
@@ -792,15 +802,17 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Authorize an OAuth 2.0 client"
 			}
 		},
 		"/oauth2/client": {
 			"get": {
-				"operationId": "getOauth2Client",
+				"description": "Returns information about the OAuth 1.0 or 2.0 clients registered by the current user.",
+				"operationId": "getListCurrentUserSOauthClients",
 				"parameters": [
 					{
-						"description": "limit parameter",
+						"description": "Maximum number of clients to return.",
 						"in": "query",
 						"name": "limit",
 						"required": false,
@@ -810,7 +822,7 @@
 						}
 					},
 					{
-						"description": "offset parameter",
+						"description": "Number of clients to skip, for pagination.",
 						"in": "query",
 						"name": "offset",
 						"required": false,
@@ -820,7 +832,7 @@
 						}
 					},
 					{
-						"description": "oauth_version parameter",
+						"description": "Filter results by OAuth protocol version.",
 						"in": "query",
 						"name": "oauth_version",
 						"required": false,
@@ -857,10 +869,12 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "List current user's OAuth clients"
 			},
 			"post": {
-				"operationId": "postOauth2Client",
+				"description": "Registers a new OAuth 2.0 client application. The API equivalent of <em>Special:OAuthConsumerRegistration/propose/oauth2</em>.",
+				"operationId": "postRegisterANewOauth20Client",
 				"parameters": [],
 				"requestBody": {
 					"content": {
@@ -882,40 +896,40 @@
 								"properties": {
 									"callback_is_prefix": {
 										"default": false,
-										"description": "callback_is_prefix parameter",
+										"description": "Whether the callback URL is treated as a prefix, allowing redirects to any URL that starts with it. Only allowed for OAuth 1.0 clients.",
 										"type": "boolean"
 									},
 									"callback_url": {
 										"default": "",
-										"description": "callback_url parameter",
+										"description": "The URL users are redirected to after authorizing the application.",
 										"type": "string"
 									},
 									"description": {
-										"description": "description parameter",
+										"description": "A plaintext description of what the OAuth application does.",
 										"type": "string"
 									},
 									"email": {
-										"description": "email parameter",
+										"description": "Contact email address for the application. Must match the registered email address of the MediaWiki user who is making this request.",
 										"type": "string"
 									},
 									"grant_types": {
-										"description": "grant_types parameter",
+										"description": "The OAuth 2.0 grant types the application may use.",
 										"type": "string"
 									},
 									"is_confidential": {
-										"description": "is_confidential parameter",
+										"description": "Whether the application is a confidential client that can securely store a client secret.",
 										"type": "boolean"
 									},
 									"name": {
-										"description": "name parameter",
+										"description": "The name of the OAuth application.",
 										"type": "string"
 									},
 									"owner_only": {
-										"description": "owner_only parameter",
+										"description": "Whether the application is for the owner's personal use only. Owner-only clients receive an access token with infinite validity during registration, and cannot use the authorization and token endpoints.",
 										"type": "boolean"
 									},
 									"scopes": {
-										"description": "scopes parameter",
+										"description": "The permission scopes the application requests access to.",
 										"enum": [
 											"#default",
 											"mwoauth-authonly",
@@ -961,7 +975,7 @@
 									},
 									"version": {
 										"default": "1.0",
-										"description": "version parameter",
+										"description": "The OAuth protocol version the application uses.",
 										"enum": [
 											"1.0",
 											"2.0"
@@ -970,7 +984,7 @@
 									},
 									"wiki": {
 										"default": "*",
-										"description": "wiki parameter",
+										"description": "The ID of the wiki the application is authorized for (e.g. <code>enwiki</code>). Use <code>*</code> for all wikis.",
 										"type": "string"
 									}
 								},
@@ -990,40 +1004,40 @@
 								"properties": {
 									"callback_is_prefix": {
 										"default": false,
-										"description": "callback_is_prefix parameter",
+										"description": "Whether the callback URL is treated as a prefix, allowing redirects to any URL that starts with it. Only allowed for OAuth 1.0 clients.",
 										"type": "boolean"
 									},
 									"callback_url": {
 										"default": "",
-										"description": "callback_url parameter",
+										"description": "The URL users are redirected to after authorizing the application.",
 										"type": "string"
 									},
 									"description": {
-										"description": "description parameter",
+										"description": "A plaintext description of what the OAuth application does.",
 										"type": "string"
 									},
 									"email": {
-										"description": "email parameter",
+										"description": "Contact email address for the application. Must match the registered email address of the MediaWiki user who is making this request.",
 										"type": "string"
 									},
 									"grant_types": {
-										"description": "grant_types parameter",
+										"description": "The OAuth 2.0 grant types the application may use.",
 										"type": "string"
 									},
 									"is_confidential": {
-										"description": "is_confidential parameter",
+										"description": "Whether the application is a confidential client that can securely store a client secret.",
 										"type": "boolean"
 									},
 									"name": {
-										"description": "name parameter",
+										"description": "The name of the OAuth application.",
 										"type": "string"
 									},
 									"owner_only": {
-										"description": "owner_only parameter",
+										"description": "Whether the application is for the owner's personal use only. Owner-only clients receive an access token with infinite validity during registration, and cannot use the authorization and token endpoints.",
 										"type": "boolean"
 									},
 									"scopes": {
-										"description": "scopes parameter",
+										"description": "The permission scopes the application requests access to.",
 										"enum": [
 											"#default",
 											"mwoauth-authonly",
@@ -1069,7 +1083,7 @@
 									},
 									"version": {
 										"default": "1.0",
-										"description": "version parameter",
+										"description": "The OAuth protocol version the application uses.",
 										"enum": [
 											"1.0",
 											"2.0"
@@ -1078,7 +1092,7 @@
 									},
 									"wiki": {
 										"default": "*",
-										"description": "wiki parameter",
+										"description": "The ID of the wiki the application is authorized for (e.g. <code>enwiki</code>). Use <code>*</code> for all wikis.",
 										"type": "string"
 									}
 								},
@@ -1118,15 +1132,17 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Register a new OAuth 2.0 client"
 			}
 		},
 		"/oauth2/client/{client_key}/reset_secret": {
 			"post": {
-				"operationId": "postOauth2ClientByClient_keyResetSecret",
+				"description": "Resets the client secret for an OAuth 2.0 application.",
+				"operationId": "postResetAnOauth20ClientSecret",
 				"parameters": [
 					{
-						"description": "client_key parameter",
+						"description": "The unique key identifying the OAuth application.",
 						"in": "path",
 						"name": "client_key",
 						"required": true,
@@ -1145,7 +1161,7 @@
 								"properties": {
 									"reason": {
 										"default": "",
-										"description": "reason parameter",
+										"description": "The reason for resetting the client secret.",
 										"type": "string"
 									}
 								},
@@ -1157,7 +1173,7 @@
 								"properties": {
 									"reason": {
 										"default": "",
-										"description": "reason parameter",
+										"description": "The reason for resetting the client secret.",
 										"type": "string"
 									}
 								},
@@ -1189,15 +1205,17 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Reset an OAuth 2.0 client secret"
 			}
 		},
 		"/oauth2/resource/{type}": {
 			"get": {
-				"operationId": "getOauth2ResourceByType",
+				"description": "With <code>type=profile</code>, acts as the OIDC [userinfo endpoint](https://openid.net/specs/openid-connect-core-1_0.html#UserInfo). With <code>type=scope</code>, enumerates the scopes the client has.",
+				"operationId": "getGetOauth20ResourceInformation",
 				"parameters": [
 					{
-						"description": "type parameter",
+						"description": "The type of resource information to return: <code>profile</code> for OIDC-compatible user information, <code>scopes</code> for a list of the client's scopes.",
 						"in": "path",
 						"name": "type",
 						"required": true,
@@ -1233,7 +1251,8 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get OAuth 2.0 resource information"
 			}
 		},
 		"/securepoll/set_translation/{entityid}/{language}": {
@@ -1313,6 +1332,7 @@
 				"parameters": [
 					{
 						"description": "File title. To format the title, replace spaces with underscores, and then URL-encode the result (example: File%3AFennec_Fox.jpg). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: File:Fennec_Fox.jpg).",
+						"example": "File:Fennec_Fox.jpg",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -1610,6 +1630,7 @@
 				"parameters": [
 					{
 						"description": "File title. To format the title, replace spaces with underscores, and then URL-encode the result (example: File%3AFennec_Fox.jpg). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: File:Fennec_Fox.jpg).",
+						"example": "File:Fennec_Fox.jpg",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -1731,6 +1752,15 @@
 					"400": {
 						"content": {
 							"application/json": {
+								"example": {
+									"errorKey": "rest-file-not-thumbnailable",
+									"httpCode": 400,
+									"httpReason": "Bad Request",
+									"message": "The file (File:Fennec_Fox.jpg) does not support public thumbnail generation.",
+									"messageTranslations": {
+										"en": "The file (File:Fennec_Fox.jpg) does not support public thumbnail generation."
+									}
+								},
 								"schema": {
 									"allOf": [
 										{
@@ -1763,12 +1793,14 @@
 										{
 											"properties": {
 												"errorKey": {
+													"description": "HTTP response error key",
 													"enum": [
 														"rest-file-not-thumbnailable"
 													],
 													"type": "string"
 												},
 												"httpCode": {
+													"description": "HTTP response status code",
 													"enum": [
 														400
 													],
@@ -1786,6 +1818,15 @@
 					"403": {
 						"content": {
 							"application/json": {
+								"example": {
+									"errorKey": "rest-permission-denied-title",
+									"httpCode": 403,
+									"httpReason": "Forbidden",
+									"message": "The user does not have rights to read title (File:Fennec_Fox.jpg)",
+									"messageTranslations": {
+										"en": "The user does not have rights to read title (File:Fennec_Fox.jpg)"
+									}
+								},
 								"schema": {
 									"allOf": [
 										{
@@ -1818,12 +1859,14 @@
 										{
 											"properties": {
 												"errorKey": {
+													"description": "HTTP response error key",
 													"enum": [
 														"rest-permission-denied-title"
 													],
 													"type": "string"
 												},
 												"httpCode": {
+													"description": "HTTP response status code",
 													"enum": [
 														403
 													],
@@ -1841,6 +1884,15 @@
 					"404": {
 						"content": {
 							"application/json": {
+								"example": {
+									"errorKey": "rest-nonexistent-title",
+									"httpCode": 404,
+									"httpReason": "Not Found",
+									"message": "The specified page (File:Fennec_Fox.jpg) does not exist",
+									"messageTranslations": {
+										"en": "The specified page (File:Fennec_Fox.jpg) does not exist"
+									}
+								},
 								"schema": {
 									"oneOf": [
 										{
@@ -1875,12 +1927,14 @@
 												{
 													"properties": {
 														"errorKey": {
+															"description": "HTTP response error key",
 															"enum": [
 																"rest-nonexistent-title"
 															],
 															"type": "string"
 														},
 														"httpCode": {
+															"description": "HTTP response status code",
 															"enum": [
 																404
 															],
@@ -1923,12 +1977,14 @@
 												{
 													"properties": {
 														"errorKey": {
+															"description": "HTTP response error key",
 															"enum": [
 																"rest-cannot-load-file"
 															],
 															"type": "string"
 														},
 														"httpCode": {
+															"description": "HTTP response status code",
 															"enum": [
 																404
 															],
@@ -1967,6 +2023,7 @@
 				"parameters": [
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": true,
@@ -1979,33 +2036,37 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"comment": "missing_example",
-								"content_model": "missing_example",
-								"source": "missing_example",
-								"title": "missing_example",
+								"comment": "Testing out the REST API",
+								"content_model": "wikitext",
+								"source": "Hello, world!",
+								"title": "User:<my username>/Sandbox",
 								"token": "missing_example"
 							},
 							"schema": {
 								"properties": {
 									"comment": {
 										"description": "Reason for editing the page. To allow the comment to be filled in by the server, use \"comment: null.\"",
+										"example": "Testing out the REST API",
 										"type": "string"
 									},
 									"content_model": {
 										"description": "Page content format: wikitext (default), css, javascript, json, or text.",
+										"example": "wikitext",
 										"type": "string"
 									},
 									"source": {
 										"description": "Page content in the format specified by the content_model property",
+										"example": "Hello, world!",
 										"type": "string"
 									},
 									"title": {
 										"description": "Page title. Visit individual wikis for policies about page title formats and characters.",
+										"example": "User:<my username>/Sandbox",
 										"type": "string"
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -2213,6 +2274,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -2222,6 +2284,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -2390,6 +2453,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Wikipedia:Sandbox",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -2399,6 +2463,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": true,
@@ -2411,25 +2476,34 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"comment": "missing_example",
-								"content_model": "missing_example",
-								"latest": "missing_example",
-								"source": "missing_example",
+								"comment": "Testing out the REST API",
+								"content_model": "wikitext",
+								"latest": {
+									"id": 1347490218,
+									"timestamp": "2026-04-07T01:20:41Z"
+								},
+								"source": "Hello, world!",
 								"token": "missing_example"
 							},
 							"schema": {
 								"properties": {
 									"comment": {
 										"description": "Reason for editing the page. To allow the comment to be filled in by the server, use \"comment: null.\"",
+										"example": "Testing out the REST API",
 										"type": "string"
 									},
 									"content_model": {
 										"description": "Page content format: wikitext (default), css, javascript, json, or text.",
+										"example": "wikitext",
 										"type": "string"
 									},
 									"latest": {
 										"additionalProperties": false,
 										"description": "Information about the latest version of the page. You can fetch this information from the get page source endpoint.",
+										"example": {
+											"id": 1347490218,
+											"timestamp": "2026-04-07T01:20:41Z"
+										},
 										"properties": {
 											"id": {
 												"type": "integer"
@@ -2445,11 +2519,12 @@
 									},
 									"source": {
 										"description": "Page content in the format specified by the content_model property",
+										"example": "Hello, world!",
 										"type": "string"
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -2754,6 +2829,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -2763,6 +2839,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -2881,6 +2958,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Jupiter",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -2890,6 +2968,7 @@
 					},
 					{
 						"description": "Accepts a revision ID. Returns the next 20 revisions older than the given revision ID.",
+						"example": 939967546,
 						"in": "query",
 						"name": "older_than",
 						"required": false,
@@ -2899,6 +2978,7 @@
 					},
 					{
 						"description": "Accepts a revision ID. Returns the next 20 revisions newer than the given revision ID.",
+						"example": 939967600,
 						"in": "query",
 						"name": "newer_than",
 						"required": false,
@@ -2908,6 +2988,7 @@
 					},
 					{
 						"description": "Use a filter to return only revisions tagged as (reverted, anonymous, bot, minor). Accepts one filter per request.",
+						"example": "bot",
 						"in": "query",
 						"name": "filter",
 						"required": false,
@@ -3060,6 +3141,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Jupiter",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3069,6 +3151,7 @@
 					},
 					{
 						"description": "Type of count (anonymous, bot, editors, edits, minor, reverted)",
+						"example": "edits",
 						"in": "path",
 						"name": "type",
 						"required": true,
@@ -3090,6 +3173,7 @@
 					},
 					{
 						"description": "Restricts the count to between two revisions, specified by revision ID. Must be used with the \"to\" parameter.",
+						"example": 384955912,
 						"in": "query",
 						"name": "from",
 						"required": false,
@@ -3099,6 +3183,7 @@
 					},
 					{
 						"description": "Restricts the count to between two revisions, specified by revision ID. Must be used with the \"from\" parameter.",
+						"example": 406217369,
 						"in": "query",
 						"name": "to",
 						"required": false,
@@ -3170,6 +3255,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3179,6 +3265,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -3189,6 +3276,7 @@
 					},
 					{
 						"description": "HTML output renderer stash",
+						"example": false,
 						"in": "query",
 						"name": "stash",
 						"required": false,
@@ -3199,6 +3287,7 @@
 					},
 					{
 						"description": "HTML output renderer flavor",
+						"example": "view",
 						"in": "query",
 						"name": "flavor",
 						"required": false,
@@ -3215,6 +3304,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -3227,6 +3317,7 @@
 					"200": {
 						"content": {
 							"text/html": {
+								"example": "<h2 id=\"mwAA\">Hello world</h2>",
 								"schema": {
 									"type": "string"
 								}
@@ -3264,6 +3355,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Jupiter",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3344,6 +3436,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Jupiter",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3589,6 +3682,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3598,6 +3692,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -3730,6 +3825,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -3739,6 +3835,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -3749,6 +3846,7 @@
 					},
 					{
 						"description": "HTML output renderer stash",
+						"example": false,
 						"in": "query",
 						"name": "stash",
 						"required": false,
@@ -3759,6 +3857,7 @@
 					},
 					{
 						"description": "HTML output renderer flavor",
+						"example": "view",
 						"in": "query",
 						"name": "flavor",
 						"required": false,
@@ -3775,6 +3874,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -3894,6 +3994,7 @@
 				"parameters": [
 					{
 						"description": "Revision used as the base for comparison",
+						"example": 847170467,
 						"in": "path",
 						"name": "from",
 						"required": true,
@@ -3903,6 +4004,7 @@
 					},
 					{
 						"description": "Revision identifier",
+						"example": 851733941,
 						"in": "path",
 						"name": "to",
 						"required": true,
@@ -4166,6 +4268,7 @@
 				"parameters": [
 					{
 						"description": "Revision identifier",
+						"example": 764138197,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -4339,6 +4442,7 @@
 				"parameters": [
 					{
 						"description": "Revision identifier",
+						"example": 764138197,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -4557,6 +4661,7 @@
 				"parameters": [
 					{
 						"description": "Revision identifier",
+						"example": 764138197,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -4566,6 +4671,7 @@
 					},
 					{
 						"description": "HTML output renderer stash",
+						"example": false,
 						"in": "query",
 						"name": "stash",
 						"required": false,
@@ -4576,6 +4682,7 @@
 					},
 					{
 						"description": "HTML output renderer flavor",
+						"example": "view",
 						"in": "query",
 						"name": "flavor",
 						"required": false,
@@ -4592,6 +4699,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -4604,6 +4712,7 @@
 					"200": {
 						"content": {
 							"text/html": {
+								"example": "<h2 id=\"mwAA\">Hello world</h2>",
 								"schema": {
 									"type": "string"
 								}
@@ -4647,6 +4756,7 @@
 				"parameters": [
 					{
 						"description": "Revision identifier",
+						"example": 764138197,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -4778,6 +4888,7 @@
 				"parameters": [
 					{
 						"description": "Revision identifier",
+						"example": 764138197,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -4787,6 +4898,7 @@
 					},
 					{
 						"description": "HTML output renderer stash",
+						"example": false,
 						"in": "query",
 						"name": "stash",
 						"required": false,
@@ -4797,6 +4909,7 @@
 					},
 					{
 						"description": "HTML output renderer flavor",
+						"example": "view",
 						"in": "query",
 						"name": "flavor",
 						"required": false,
@@ -4813,6 +4926,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -4993,6 +5107,7 @@
 				"parameters": [
 					{
 						"description": "Open search description ctype",
+						"example": "application/xml",
 						"in": "query",
 						"name": "ctype",
 						"required": false,
@@ -5005,6 +5120,7 @@
 					"200": {
 						"content": {
 							"application/opensearchdescription+xml": {
+								"example": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\"><Description>Example</Description></OpenSearchDescription>",
 								"schema": {
 									"type": "string"
 								}
@@ -5054,6 +5170,7 @@
 				"parameters": [
 					{
 						"description": "Search terms",
+						"example": "jupiter",
 						"in": "query",
 						"name": "q",
 						"required": true,
@@ -5063,6 +5180,7 @@
 					},
 					{
 						"description": "Maximum number of search results to return, between 1 and 100. Default: 50",
+						"example": 20,
 						"in": "query",
 						"name": "limit",
 						"required": false,
@@ -5239,6 +5357,7 @@
 				"parameters": [
 					{
 						"description": "Search terms",
+						"example": "jupiter",
 						"in": "query",
 						"name": "q",
 						"required": true,
@@ -5248,6 +5367,7 @@
 					},
 					{
 						"description": "Maximum number of search results to return, between 1 and 100. Default: 50",
+						"example": 20,
 						"in": "query",
 						"name": "limit",
 						"required": false,
@@ -5419,11 +5539,12 @@
 		},
 		"/v1/transform/html/to/wikitext": {
 			"post": {
-				"description": "Converts HTML into wikitext.",
+				"description": "Converts HTML provided in the request body into wikitext.",
 				"operationId": "postConvertHtmlToWikitext2",
 				"parameters": [
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -5433,6 +5554,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -5441,43 +5563,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -5494,6 +5581,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -5502,11 +5591,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -5524,6 +5623,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -5532,11 +5633,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -5554,6 +5665,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -5562,11 +5675,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -5579,6 +5702,7 @@
 							}
 						}
 					},
+					"description": "HTML content to convert to wikitext",
 					"required": true
 				},
 				"responses": {
@@ -5633,6 +5757,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -5642,6 +5767,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -5650,43 +5776,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -5877,7 +5968,8 @@
 				"operationId": "postConvertHtmlToWikitext",
 				"parameters": [
 					{
-						"description": "Transform title",
+						"description": "Wiki page title",
+						"example": "Main_Page",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -5886,7 +5978,8 @@
 						}
 					},
 					{
-						"description": "Transform revision",
+						"description": "Revision identifier",
+						"example": "1",
 						"in": "path",
 						"name": "revision",
 						"required": true,
@@ -5896,6 +5989,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -5905,6 +5999,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -5913,43 +6008,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -5966,6 +6026,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -5974,11 +6036,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -5996,6 +6068,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -6004,11 +6078,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6026,6 +6110,8 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext",
+												"example": "<h2>Hello world</h2>",
 												"type": "string"
 											}
 										},
@@ -6034,11 +6120,21 @@
 									{
 										"properties": {
 											"html": {
+												"description": "HTML content to convert to wikitext, with optional headers",
+												"example": {
+													"body": "<h2>Hello world</h2>"
+												},
 												"properties": {
 													"body": {
+														"description": "HTML content",
+														"example": "<h2>Hello world</h2>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the HTML content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6051,6 +6147,7 @@
 							}
 						}
 					},
+					"description": "HTML content to convert to wikitext",
 					"required": true
 				},
 				"responses": {
@@ -6090,11 +6187,12 @@
 		},
 		"/v1/transform/wikitext/to/html": {
 			"post": {
-				"description": "Converts wikitext into HTML.",
+				"description": "Converts wikitext provided in the request body to HTML.",
 				"operationId": "postConvertWikitextToHtml2",
 				"parameters": [
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -6104,6 +6202,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -6112,43 +6211,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -6165,6 +6229,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6173,11 +6239,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6195,6 +6271,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6203,11 +6281,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6225,6 +6313,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6233,11 +6323,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6250,6 +6350,7 @@
 							}
 						}
 					},
+					"description": "Wikitext content to transform",
 					"required": true
 				},
 				"responses": {
@@ -6304,6 +6405,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -6313,6 +6415,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -6321,43 +6424,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -6548,7 +6616,8 @@
 				"operationId": "postConvertWikitextToHtml",
 				"parameters": [
 					{
-						"description": "Transform title",
+						"description": "Wiki page title",
+						"example": "Main_Page",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -6557,7 +6626,8 @@
 						}
 					},
 					{
-						"description": "Transform revision",
+						"description": "Revision identifier. Wikitext from this revision will be transformed to HTML if the request body contains no wikitext.",
+						"example": "1",
 						"in": "path",
 						"name": "revision",
 						"required": true,
@@ -6567,6 +6637,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -6576,6 +6647,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -6584,43 +6656,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -6637,6 +6674,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6645,11 +6684,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6667,6 +6716,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6675,11 +6726,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6697,6 +6758,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform",
+												"example": "== Hello world ==",
 												"type": "string"
 											}
 										},
@@ -6705,11 +6768,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to transform, with optional headers",
+												"example": {
+													"body": "== Hello world =="
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "== Hello world ==",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -6722,6 +6795,7 @@
 							}
 						}
 					},
+					"description": "Wikitext content to transform. When transforming wikitext of the revision specified in the revision field, use an empty request body.",
 					"required": true
 				},
 				"responses": {
@@ -6766,6 +6840,7 @@
 				"parameters": [
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -6775,6 +6850,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -6783,43 +6859,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -7115,6 +7156,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -7124,6 +7166,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -7132,43 +7175,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -7453,7 +7461,8 @@
 				"operationId": "postReturnLintErrorsForWikitext",
 				"parameters": [
 					{
-						"description": "Transform title",
+						"description": "Wiki page title",
+						"example": "Main_Page",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -7462,7 +7471,8 @@
 						}
 					},
 					{
-						"description": "Transform revision",
+						"description": "Revision identifier. The linter will run on wikitext from this revision if the request body contains no wikitext to lint.",
+						"example": "1",
 						"in": "path",
 						"name": "revision",
 						"required": true,
@@ -7472,6 +7482,7 @@
 					},
 					{
 						"description": "Indicates the original media type of a resource before any content encoding is applied.",
+						"example": "application/json",
 						"in": "header",
 						"name": "Content-Type",
 						"required": false,
@@ -7481,6 +7492,7 @@
 					},
 					{
 						"description": "The natural language and locale that the client prefers.",
+						"example": "en",
 						"in": "header",
 						"name": "Accept-Language",
 						"required": false,
@@ -7489,43 +7501,8 @@
 						}
 					},
 					{
-						"description": "Allow servers to store state information on the client's browser, enabling features like session management, personalization, and tracking.",
-						"in": "header",
-						"name": "Cookie",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Provides credentials that authenticate a user agent with a server, allowing access to protected resources.",
-						"in": "header",
-						"name": "Authorization",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Enables tracing and correlating individual HTTP requests as they flow through distributed systems, such as microservices, API gateways, and load balancer.",
-						"in": "header",
-						"name": "X-Request-Id",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"description": "Sends a characteristic string to web servers, allowing them to identify the application, operating system, vendor, and/or version of the requesting client software.",
-						"in": "header",
-						"name": "User-Agent",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
 						"description": "Makes a request conditional, ensuring the requested action (like an update or deletion) is only performed if the resource on the server matches a specific version (identified by its ETag) provided by the client.",
+						"example": "\"abc123\"",
 						"in": "header",
 						"name": "If-Match",
 						"required": false,
@@ -7542,6 +7519,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint",
+												"example": "</div>",
 												"type": "string"
 											}
 										},
@@ -7550,11 +7529,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint, with optional headers",
+												"example": {
+													"body": "</div>"
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "</div>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -7572,6 +7561,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint",
+												"example": "</div>",
 												"type": "string"
 											}
 										},
@@ -7580,11 +7571,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint, with optional headers",
+												"example": {
+													"body": "</div>"
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "</div>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -7602,6 +7603,8 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint",
+												"example": "</div>",
 												"type": "string"
 											}
 										},
@@ -7610,11 +7613,21 @@
 									{
 										"properties": {
 											"wikitext": {
+												"description": "Wikitext content to lint, with optional headers",
+												"example": {
+													"body": "</div>"
+												},
 												"properties": {
 													"body": {
+														"description": "Wikitext content",
+														"example": "</div>",
 														"type": "string"
 													},
 													"headers": {
+														"description": "HTTP headers for the wikitext content",
+														"example": {
+															"content-language": "en"
+														},
 														"type": "object"
 													}
 												},
@@ -7627,6 +7640,7 @@
 							}
 						}
 					},
+					"description": "Wikitext content to lint",
 					"required": true
 				},
 				"responses": {
@@ -7745,6 +7759,170 @@
 				"summary": "Return lint errors for wikitext"
 			}
 		},
+		"/wikimediaantiabuse/v0/mark/revision/{revision}/{tag}/{verdict}": {
+			"post": {
+				"description": "Records a review verdict on a revision. The `false-positive` verdict removes the reviewable tag and adds its false positive version, so the `mw-private-personal-info` tag becomes the `mw-private-personal-info-false-positive` tag. The `no-further-action` verdict adds the no further action version of the tag and keeps the tag that flagged the revision. Requires the ability to see the tag you are changing.",
+				"operationId": "postWikimediaantiabuseV0MarkRevisionByRevisionByTagByVerdict",
+				"parameters": [
+					{
+						"description": "revision parameter",
+						"in": "path",
+						"name": "revision",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "tag parameter",
+						"in": "path",
+						"name": "tag",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "verdict parameter",
+						"in": "path",
+						"name": "verdict",
+						"required": true,
+						"schema": {
+							"enum": [
+								"false-positive",
+								"no-further-action"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/wikimediaantiabuse/v0/unmark/revision/{revision}/{tag}/{verdict}": {
+			"post": {
+				"description": "Removes a review verdict from a revision. Removing the `false-positive` verdict restores the reviewable tag in place of its false positive version. Removing the `no-further-action` verdict removes the no further action version of the tag, which puts the revision back in the review queue. Requires the ability to see the tag you are changing.",
+				"operationId": "postWikimediaantiabuseV0UnmarkRevisionByRevisionByTagByVerdict",
+				"parameters": [
+					{
+						"description": "revision parameter",
+						"in": "path",
+						"name": "revision",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"description": "tag parameter",
+						"in": "path",
+						"name": "tag",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "verdict parameter",
+						"in": "path",
+						"name": "verdict",
+						"required": true,
+						"schema": {
+							"enum": [
+								"false-positive",
+								"no-further-action"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
 		"/wikimediacampaignevents/v0/event_registration/{id}/grant_id": {
 			"delete": {
 				"operationId": "deleteWikimediacampaigneventsV0EventRegistrationByIdGrantId",
@@ -7769,7 +7947,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -7868,7 +8046,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},

@@ -120,17 +120,20 @@
 	},
 	"externalDocs": {
 		"description": "CheckUser extension documentation",
-		"url": "https://www.mediawiki.org/wiki/Extension:CheckUser"
+		"url": "https://www.mediawiki.org/wiki/Help:Extension:CheckUser#APIs"
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
-		"description": "REST API for CheckUser tools. See [CheckUser extension documentation](https://www.mediawiki.org/wiki/Extension:CheckUser).",
+		"description": "REST API for CheckUser tools. See [CheckUser extension documentation](https://www.mediawiki.org/wiki/Help:Extension:CheckUser#APIs).",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "CheckUser API",
 		"version": "0.1.0"
 	},
@@ -138,21 +141,34 @@
 	"paths": {
 		"/batch-temporaryaccount": {
 			"post": {
-				"description": "Batch retrieve IP addresses mapped to temporary accounts and their revision/log/abuse filter IDs.",
-				"operationId": "postBatchRetrieveIpAddressesForTemporaryAccounts",
+				"description": "Returns IP addresses mapped to a list of temporary user names, and log/abuse log IDs.",
+				"operationId": "postGetIpAddressesForTemporaryAccountBatch",
 				"parameters": [],
 				"requestBody": {
 					"content": {
 						"application/json": {
 							"example": {
-								"token": "missing_example",
-								"users": "missing_example"
+								"token": "+\\",
+								"users": {
+									"~2026-10001": {
+										"abuseLogIds": [],
+										"lastUsedIp": true,
+										"logIds": [
+											"789"
+										],
+										"revIds": [
+											"123",
+											"456"
+										]
+									}
+								}
 							},
 							"schema": {
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									},
 									"users": {
@@ -160,22 +176,29 @@
 											"additionalProperties": false,
 											"properties": {
 												"abuseLogIds": {
+													"description": "List of AbuseFilter log IDs to look up",
 													"items": {
+														"description": "AbuseFilter log ID",
 														"type": "string"
 													},
 													"type": "array"
 												},
 												"lastUsedIp": {
+													"description": "Whether to include the last used IP in the response",
 													"type": "boolean"
 												},
 												"logIds": {
+													"description": "List of log IDs to look up",
 													"items": {
+														"description": "Log ID",
 														"type": "string"
 													},
 													"type": "array"
 												},
 												"revIds": {
+													"description": "List of revision IDs to look up",
 													"items": {
+														"description": "Revision ID",
 														"type": "string"
 													},
 													"type": "array"
@@ -188,7 +211,20 @@
 											],
 											"type": "object"
 										},
-										"description": "users parameter",
+										"description": "Map of temporary usernames to their requested revision/log/abuse filter IDs",
+										"example": {
+											"~2026-10001": {
+												"abuseLogIds": [],
+												"lastUsedIp": true,
+												"logIds": [
+													"789"
+												],
+												"revIds": [
+													"123",
+													"456"
+												]
+											}
+										},
 										"type": "object"
 									}
 								},
@@ -199,10 +235,85 @@
 							}
 						}
 					},
+					"description": "Request body containing a map of temporary usernames to their requested revision/log/abuse filter IDs",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"additionalProperties": {
+										"description": "IP data associated with a temporary account",
+										"properties": {
+											"abuseLogIps": {
+												"additionalProperties": {
+													"description": "IP address or null",
+													"nullable": true,
+													"type": "string"
+												},
+												"description": "Map of AbuseFilter log IDs to IP addresses, or null when no AbuseFilter log IDs were requested. The map omits expired IDs.",
+												"nullable": true,
+												"type": "object"
+											},
+											"lastUsedIp": {
+												"description": "Last used IP address for the user, if requested",
+												"nullable": true,
+												"type": "string"
+											},
+											"logIps": {
+												"additionalProperties": {
+													"description": "IP address or null",
+													"nullable": true,
+													"type": "string"
+												},
+												"description": "Map of log IDs to IP addresses, or null when no log IDs were requested. The map omits expired IDs.",
+												"nullable": true,
+												"type": "object"
+											},
+											"revIps": {
+												"additionalProperties": {
+													"description": "IP address or null",
+													"nullable": true,
+													"type": "string"
+												},
+												"description": "Map of revision IDs to IP addresses, or null when no revision IDs were requested. The map omits expired IDs.",
+												"nullable": true,
+												"type": "object"
+											}
+										},
+										"required": [
+											"revIps",
+											"logIps",
+											"lastUsedIp"
+										],
+										"type": "object"
+									},
+									"description": "Response containing IP addresses mapped to target temporary accounts and requested IDs",
+									"example": {
+										"~2026-10001": {
+											"abuseLogIps": [],
+											"lastUsedIp": "192.0.2.1",
+											"logIps": {
+												"789": "2001:db8::1"
+											},
+											"revIps": {
+												"123": "192.0.2.1",
+												"456": "192.0.2.1"
+											}
+										},
+										"autoReveal": false
+									},
+									"properties": {
+										"autoReveal": {
+											"description": "Whether auto-reveal of temporary accounts is enabled for the performer",
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -224,16 +335,17 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Batch retrieve IP addresses for temporary accounts"
+				"summary": "Get IP addresses for temporary account batch"
 			}
 		},
 		"/connectedtemporaryaccounts/{name}": {
 			"post": {
-				"description": "Get other temporary accounts editing from the same IPs as the target temporary account.",
-				"operationId": "postRetrieveConnectedTemporaryAccounts",
+				"description": "Returns other temporary accounts that have edited from the same IPs as a given temporary account.",
+				"operationId": "postGetConnectedTemporaryAccounts",
 				"parameters": [
 					{
-						"description": "name parameter",
+						"description": "Temporary account name to query",
+						"example": "~2026-10001",
 						"in": "path",
 						"name": "name",
 						"required": true,
@@ -246,13 +358,14 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"token": "missing_example"
+								"token": "+\\"
 							},
 							"schema": {
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									}
 								},
@@ -260,10 +373,49 @@
 							}
 						}
 					},
+					"description": "Request body containing the CSRF token.",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing temporary accounts that have edited from the same IPs as the target temporary account",
+									"example": {
+										"autoReveal": false,
+										"connectedAccounts": [
+											"~2026-12345",
+											"~2026-67890"
+										],
+										"ipsUsedCount": 2
+									},
+									"properties": {
+										"autoReveal": {
+											"description": "Whether auto-reveal of temporary accounts is enabled for the performer",
+											"type": "boolean"
+										},
+										"connectedAccounts": {
+											"description": "List of connected temporary account names",
+											"items": {
+												"description": "Temporary account name",
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"ipsUsedCount": {
+											"description": "Number of IP addresses used by the target temporary account",
+											"type": "integer"
+										}
+									},
+									"required": [
+										"connectedAccounts",
+										"ipsUsedCount"
+									],
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -285,16 +437,17 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Retrieve connected temporary accounts"
+				"summary": "Get connected temporary accounts"
 			}
 		},
 		"/suggestedinvestigations/case/{caseId}/update": {
 			"post": {
-				"description": "Update the status and reason of a suggested investigation case.",
-				"operationId": "postUpdateASuggestedInvestigationCaseStatusAndReason",
+				"description": "Updates the status and reason of a suggested investigation case.",
+				"operationId": "postUpdateSuggestedInvestigationCaseStatusAndReason",
 				"parameters": [
 					{
-						"description": "caseId parameter",
+						"description": "Unique identifier of the suggested investigation case",
+						"example": 123,
 						"in": "path",
 						"name": "caseId",
 						"required": true,
@@ -307,29 +460,32 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"reason": "missing_example",
-								"status": "missing_example",
-								"token": "missing_example"
+								"reason": "Resolved after investigation.",
+								"status": "resolved",
+								"token": "+\\"
 							},
 							"schema": {
 								"properties": {
 									"reason": {
 										"default": "",
-										"description": "reason parameter",
+										"description": "Reason for updating the case status",
+										"example": "Resolved after investigation.",
 										"type": "string"
 									},
 									"status": {
-										"description": "status parameter",
+										"description": "New status to apply to the case (open, resolved, or invalid)",
 										"enum": [
 											"open",
 											"resolved",
 											"invalid"
 										],
+										"example": "resolved",
 										"type": "string"
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									}
 								},
@@ -340,10 +496,49 @@
 							}
 						}
 					},
+					"description": "Request body to update the status of a suggested investigation case",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing details of the updated suggested investigation case",
+									"example": {
+										"caseId": 123,
+										"formattedReason": "Resolved by Admin: Resolved after investigation.",
+										"reason": "Resolved after investigation.",
+										"status": "resolved"
+									},
+									"properties": {
+										"caseId": {
+											"description": "Unique identifier of the case",
+											"type": "integer"
+										},
+										"formattedReason": {
+											"description": "Formatted reason status message for display",
+											"type": "string"
+										},
+										"reason": {
+											"description": "Reason for updating the case status",
+											"type": "string"
+										},
+										"status": {
+											"description": "New status of the case",
+											"type": "string"
+										}
+									},
+									"required": [
+										"caseId",
+										"status",
+										"reason",
+										"formattedReason"
+									],
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -365,13 +560,13 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Update a suggested investigation case status and reason"
+				"summary": "Update suggested investigation case status and reason"
 			}
 		},
-		"/temporaryaccount/{name}": {
+		"/suggestedinvestigationsusersummary/{name}": {
 			"post": {
-				"description": "Get the IP addresses associated with a temporary account name.",
-				"operationId": "postRevealIpAddressesForATemporaryAccount",
+				"description": "Return how many accounts and cases a user is related to in suggested investigations",
+				"operationId": "postRetrieveASummaryOfTheUserSAssociationWithSuggestedInvestigationCases",
 				"parameters": [
 					{
 						"description": "name parameter",
@@ -381,16 +576,6 @@
 						"schema": {
 							"type": "string"
 						}
-					},
-					{
-						"description": "limit parameter",
-						"in": "query",
-						"name": "limit",
-						"required": false,
-						"schema": {
-							"default": 5000,
-							"type": "integer"
-						}
 					}
 				],
 				"requestBody": {
@@ -403,7 +588,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -436,16 +621,124 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Reveal IP addresses for a temporary account"
+				"summary": "Retrieve a summary of the user's association with suggested investigation cases"
+			}
+		},
+		"/temporaryaccount/{name}": {
+			"post": {
+				"description": "Returns IP addresses associated with a temporary account name.",
+				"operationId": "postGetIpAddressesForTemporaryAccount",
+				"parameters": [
+					{
+						"description": "Temporary account name to query",
+						"example": "~2026-10001",
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Maximum number of IP addresses to return",
+						"example": 50,
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 5000,
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"token": "+\\"
+							},
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token",
+										"example": "+\\",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"description": "Request body containing the CSRF token.",
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing IP addresses associated with the temporary account name",
+									"example": {
+										"autoReveal": false,
+										"ips": [
+											"192.0.2.1",
+											"2001:db8::1"
+										]
+									},
+									"properties": {
+										"autoReveal": {
+											"description": "Whether auto-reveal of temporary accounts is enabled for the performer",
+											"type": "boolean"
+										},
+										"ips": {
+											"description": "List of IP addresses used by the temporary account",
+											"items": {
+												"description": "IP address in IPv4 or IPv6 format",
+												"type": "string"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"ips"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Get IP addresses for temporary account"
 			}
 		},
 		"/temporaryaccount/ip/{ip}": {
 			"post": {
-				"description": "Get every known temporary account that has edited from a given IP address.",
-				"operationId": "postRevealTemporaryAccountsForAnIpAddress",
+				"description": "Returns temporary accounts that have edited from a given IP address.",
+				"operationId": "postGetTemporaryAccountsForIpAddress",
 				"parameters": [
 					{
-						"description": "ip parameter",
+						"description": "IP address to query",
+						"example": "192.0.2.1",
 						"in": "path",
 						"name": "ip",
 						"required": true,
@@ -454,7 +747,8 @@
 						}
 					},
 					{
-						"description": "limit parameter",
+						"description": "Maximum number of temporary accounts to return",
+						"example": 50,
 						"in": "query",
 						"name": "limit",
 						"required": false,
@@ -468,13 +762,14 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"token": "missing_example"
+								"token": "+\\"
 							},
 							"schema": {
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									}
 								},
@@ -482,10 +777,27 @@
 							}
 						}
 					},
+					"description": "Request body containing the CSRF token.",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing temporary accounts that have edited from the given IP address",
+									"example": [
+										"~2026-12345",
+										"~2026-67890"
+									],
+									"items": {
+										"description": "Temporary account name",
+										"type": "string"
+									},
+									"type": "array"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -507,16 +819,17 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Reveal temporary accounts for an IP address"
+				"summary": "Get temporary accounts for IP address"
 			}
 		},
 		"/useragent-clienthints/{type}/{id}": {
 			"post": {
-				"description": "Store client hints data for a revision or private log event.",
-				"operationId": "postStoreUserAgentClientHints",
+				"description": "Creates user agent client hints data for a given revision or log event.",
+				"operationId": "postCreateUserAgentClientHints",
 				"parameters": [
 					{
-						"description": "type parameter",
+						"description": "Type of event to log, namely revision or privatelog",
+						"example": "revision",
 						"in": "path",
 						"name": "type",
 						"required": true,
@@ -529,7 +842,8 @@
 						}
 					},
 					{
-						"description": "id parameter",
+						"description": "Unique identifier of the revision or private log event",
+						"example": 12345,
 						"in": "path",
 						"name": "id",
 						"required": true,
@@ -542,58 +856,120 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"architecture": "missing_example",
-								"bitness": "missing_example",
-								"brands": "missing_example",
-								"fullVersionList": "missing_example",
-								"mobile": "missing_example",
-								"model": "missing_example",
-								"platform": "missing_example",
-								"platformVersion": "missing_example",
-								"token": "missing_example",
-								"uaFullVersion": "missing_example"
+								"architecture": "x86",
+								"bitness": "64",
+								"brands": [
+									{
+										"brand": "Not/A)Brand",
+										"version": "99"
+									},
+									{
+										"brand": "Chromium",
+										"version": "100"
+									},
+									{
+										"brand": "Google Chrome",
+										"version": "100"
+									}
+								],
+								"fullVersionList": [
+									{
+										"brand": "Not/A)Brand",
+										"version": "99.0.0.0"
+									},
+									{
+										"brand": "Chromium",
+										"version": "100.0.4896.75"
+									},
+									{
+										"brand": "Google Chrome",
+										"version": "100.0.4896.75"
+									}
+								],
+								"mobile": false,
+								"model": "OnePlus 9",
+								"platform": "Windows",
+								"platformVersion": "10.0.0",
+								"token": "+\\",
+								"uaFullVersion": "100.0.4896.75"
 							},
 							"schema": {
 								"properties": {
 									"architecture": {
-										"description": "architecture parameter",
+										"description": "Device CPU architecture",
+										"example": "x86",
 										"type": "string"
 									},
 									"bitness": {
-										"description": "bitness parameter",
+										"description": "CPU bitness",
+										"example": "64",
 										"type": "string"
 									},
 									"brands": {
-										"description": "brands parameter",
+										"description": "User agent brands data",
+										"example": [
+											{
+												"brand": "Not/A)Brand",
+												"version": "99"
+											},
+											{
+												"brand": "Chromium",
+												"version": "100"
+											},
+											{
+												"brand": "Google Chrome",
+												"version": "100"
+											}
+										],
 										"type": "object"
 									},
 									"fullVersionList": {
-										"description": "fullVersionList parameter",
+										"description": "Detailed full version list of user agent brands",
+										"example": [
+											{
+												"brand": "Not/A)Brand",
+												"version": "99.0.0.0"
+											},
+											{
+												"brand": "Chromium",
+												"version": "100.0.4896.75"
+											},
+											{
+												"brand": "Google Chrome",
+												"version": "100.0.4896.75"
+											}
+										],
 										"type": "object"
 									},
 									"mobile": {
-										"description": "mobile parameter",
+										"description": "Whether the device is mobile",
+										"example": false,
 										"type": "boolean"
 									},
 									"model": {
-										"description": "model parameter",
+										"description": "Device model name",
+										"example": "OnePlus 9",
 										"type": "string"
 									},
 									"platform": {
-										"description": "platform parameter",
+										"description": "Device platform name",
+										"example": "Windows",
 										"type": "string"
 									},
 									"platformVersion": {
-										"description": "platformVersion parameter",
+										"description": "Platform version",
+										"example": "10.0.0",
 										"type": "string"
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									},
 									"uaFullVersion": {
-										"description": "uaFullVersion parameter",
+										"description": "Deprecated full user agent version string",
+										"example": "100.0.4896.75",
 										"type": "string"
 									}
 								},
@@ -601,10 +977,31 @@
 							}
 						}
 					},
+					"description": "Request body containing client hints data",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response indicating successful storage of client hints",
+									"example": {
+										"value": "stored"
+									},
+									"properties": {
+										"value": {
+											"description": "Message explaining that the client hints were stored successfully",
+											"type": "string"
+										}
+									},
+									"required": [
+										"value"
+									],
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -626,30 +1023,44 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Store user agent client hints"
+				"summary": "Create user agent client hints"
 			}
 		},
 		"/userinfo": {
 			"post": {
-				"description": "Get public and restricted user data for a given user.",
-				"operationId": "postRetrieveDetailedUserInfoForTheUserinfocard",
+				"description": "Returns information about public and restricted user activity.",
+				"operationId": "postGetUserInformationForUserinfocard",
 				"parameters": [],
 				"requestBody": {
 					"content": {
 						"application/json": {
 							"example": {
-								"token": "missing_example",
-								"username": "missing_example"
+								"openedFrom": "rc",
+								"sourcePage": "Special:RecentChanges",
+								"token": "+\\",
+								"username": "ExampleUser"
 							},
 							"schema": {
 								"properties": {
+									"openedFrom": {
+										"description": "Type of the place which the UserInfoCard is opened from",
+										"example": "rc",
+										"type": "string"
+									},
+									"sourcePage": {
+										"description": "Prefixed title of the page which the UserInfoCard is opened from",
+										"example": "Special:RecentChanges",
+										"type": "string"
+									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token",
+										"example": "+\\",
 										"type": "string"
 									},
 									"username": {
-										"description": "username parameter",
+										"description": "Username to retrieve details for",
+										"example": "ExampleUser",
 										"type": "string"
 									}
 								},
@@ -660,10 +1071,167 @@
 							}
 						}
 					},
+					"description": "Request body to retrieve information for the UserInfoCard",
 					"required": true
 				},
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing detailed public and restricted user activity data",
+									"example": {
+										"abuseFilterHitCount": 3,
+										"activeBlocksOnLocalWiki": 0,
+										"activeLocalBlocksAllWikis": 0,
+										"activeWikis": {
+											"enwiki": "https://en.wikipedia.org/wiki/Special:Contributions/ExampleUser"
+										},
+										"canAccessTemporaryAccountIpAddresses": false,
+										"checkUserChecks": 5,
+										"checkUserLastCheck": "20260610000000",
+										"firstRegistration": "20200101000000",
+										"gender": "unknown",
+										"globalEditCount": 45000,
+										"globalGroups": "<strong>Global groups</strong>: steward",
+										"globalRestrictions": null,
+										"globalRestrictionsTimestamp": null,
+										"groups": "<strong>Groups</strong>: sysop",
+										"hasCheckUserData": true,
+										"hasLocalBlockGlobalBlockOrLock": false,
+										"localRegistration": "20200101000000",
+										"name": "ExampleUser",
+										"pastBlocksOnLocalWiki": 2,
+										"specialCentralAuthUrl": "https://meta.wikimedia.org/wiki/Special:CentralAuth/ExampleUser",
+										"suggestedInvestigationsCaseCount": 2,
+										"tempAccountsOnIPCount": [
+											0,
+											0
+										],
+										"totalEditCount": 12500,
+										"userPageIsKnown": true
+									},
+									"properties": {
+										"abuseFilterHitCount": {
+											"description": "Number of abuse filter log entries triggered by this user. Only present for temporary accounts and accounts that are not autoconfirmed",
+											"type": "integer"
+										},
+										"activeBlocksOnLocalWiki": {
+											"description": "Number of active blocks on the local wiki",
+											"type": "integer"
+										},
+										"activeLocalBlocksAllWikis": {
+											"description": "Total number of active local blocks across all wikis",
+											"type": "integer"
+										},
+										"activeWikis": {
+											"description": "Map between wikis where the user has edit activity and corresponding contributions page URLs",
+											"type": "object"
+										},
+										"canAccessTemporaryAccountIpAddresses": {
+											"description": "Whether the performer can access temporary account IP addresses for the user",
+											"type": "boolean"
+										},
+										"checkUserChecks": {
+											"description": "Number of CheckUser checks performed on this user",
+											"type": "integer"
+										},
+										"checkUserLastCheck": {
+											"description": "Timestamp of the most recent CheckUser check performed on this user",
+											"type": "string"
+										},
+										"firstRegistration": {
+											"description": "First registration timestamp of the user across all wikis",
+											"nullable": true,
+											"type": "string"
+										},
+										"gender": {
+											"description": "Gender of the user",
+											"type": "string"
+										},
+										"globalEditCount": {
+											"description": "Total global edit count of the user",
+											"type": "integer"
+										},
+										"globalGroups": {
+											"description": "Formatted HTML list of global user groups",
+											"type": "string"
+										},
+										"globalRestrictions": {
+											"description": "Global restriction status (e.g., locked, blocked)",
+											"nullable": true,
+											"type": "string"
+										},
+										"globalRestrictionsTimestamp": {
+											"description": "Timestamp when the global restriction was applied",
+											"nullable": true,
+											"type": "string"
+										},
+										"groups": {
+											"description": "Formatted HTML list of local user groups",
+											"type": "string"
+										},
+										"hasCheckUserData": {
+											"description": "Whether the user has any activity recorded in the CheckUser tables on this wiki. Only present if the performer has the checkuser right",
+											"type": "boolean"
+										},
+										"hasLocalBlockGlobalBlockOrLock": {
+											"description": "Whether the user is currently indefinitely blocked locally or globally, or locked",
+											"type": "boolean"
+										},
+										"localRegistration": {
+											"description": "Local registration timestamp of the user",
+											"nullable": true,
+											"type": "string"
+										},
+										"name": {
+											"description": "Username of the user",
+											"type": "string"
+										},
+										"pastBlocksOnLocalWiki": {
+											"description": "Number of past blocks on the local wiki",
+											"type": "integer"
+										},
+										"specialCentralAuthUrl": {
+											"description": "URL to the Special:CentralAuth page for the user",
+											"nullable": true,
+											"type": "string"
+										},
+										"suggestedInvestigationsCaseCount": {
+											"description": "Number of suggested investigation cases associated with this user",
+											"type": "integer"
+										},
+										"tempAccountsOnIPCount": {
+											"description": "List of two integers [min, max] representing the range of active temporary account counts on any IP address used by the user",
+											"items": {
+												"type": "integer"
+											},
+											"type": "array"
+										},
+										"totalEditCount": {
+											"description": "Total local edit count of the user",
+											"type": "integer"
+										},
+										"userPageIsKnown": {
+											"description": "Whether the user page exists",
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"name",
+										"gender",
+										"localRegistration",
+										"firstRegistration",
+										"userPageIsKnown",
+										"hasLocalBlockGlobalBlockOrLock",
+										"groups",
+										"totalEditCount",
+										"activeWikis"
+									],
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {
@@ -685,16 +1253,17 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
-				"summary": "Retrieve detailed user info for the UserInfoCard"
+				"summary": "Get user information for UserInfoCard"
 			}
 		},
 		"/userinfo/blocked/{name}": {
 			"get": {
-				"description": "Retrieve local/global block and lock status for a username.",
+				"description": "Returns local and global block and lock status of a user.",
 				"operationId": "getGetUserBlockStatus",
 				"parameters": [
 					{
-						"description": "name parameter",
+						"description": "Username for whom to query the block or lock status",
+						"example": "ExampleUser",
 						"in": "path",
 						"name": "name",
 						"required": true,
@@ -705,6 +1274,26 @@
 				],
 				"responses": {
 					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "Response containing status indicator of user block or lock",
+									"example": {
+										"shouldShowBlockedIcon": false
+									},
+									"properties": {
+										"shouldShowBlockedIcon": {
+											"description": "Whether the user is indefinitely blocked locally or globally, or locked",
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"shouldShowBlockedIcon"
+									],
+									"type": "object"
+								}
+							}
+						},
 						"description": "OK",
 						"headers": {
 							"Cache-Control": {

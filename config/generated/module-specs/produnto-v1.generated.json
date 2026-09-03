@@ -1,0 +1,1328 @@
+{
+	"components": {
+		"responses": {
+			"GenericErrorResponse": {
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/GenericErrorResponseModel"
+						}
+					}
+				},
+				"description": "Generic error response"
+			}
+		},
+		"schemas": {
+			"array-param": {
+				"type": "object"
+			},
+			"boolean-param": {
+				"type": "boolean"
+			},
+			"double-param": {
+				"format": "double",
+				"type": "number"
+			},
+			"enum-param": {
+				"type": "string"
+			},
+			"expiry-param": {
+				"format": "mw-expiry",
+				"type": "string"
+			},
+			"float-param": {
+				"format": "float",
+				"type": "number"
+			},
+			"GenericErrorResponseModel": {
+				"description": "Generic error response. The message will provide more details about the error.",
+				"properties": {
+					"httpCode": {
+						"description": "The HTTP status code of the error response.",
+						"example": 500,
+						"type": "integer"
+					},
+					"httpMessage": {
+						"description": "The HTTP status message of the error response.",
+						"example": "Internal Server Error",
+						"type": "string"
+					},
+					"message": {
+						"description": "A human-readable error message, useful when no message translations are available",
+						"example": "An unexpected error occurred",
+						"type": "string"
+					},
+					"messageTranslations": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "A map of language codes to human-readable error messages, for clients that can use them.",
+						"example": {
+							"en": "An unexpected error occurred",
+							"es": "Ocurrió un error inesperado"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"httpCode"
+				]
+			},
+			"integer-param": {
+				"type": "integer"
+			},
+			"namespace-param": {
+				"type": "integer"
+			},
+			"password-param": {
+				"type": "string"
+			},
+			"string-param": {
+				"type": "string"
+			},
+			"timestamp-param": {
+				"format": "mw-timestamp",
+				"type": "string"
+			},
+			"title-param": {
+				"format": "mw-title",
+				"type": "string"
+			},
+			"upload-param": {
+				"format": "mw-upload",
+				"type": "string"
+			},
+			"user-param": {
+				"format": "mw-user",
+				"type": "string"
+			}
+		},
+		"securitySchemes": {
+			"CentralAuthSessionProvider-Session": {
+				"description": "MediaWiki Session ID cookie.\nNote: Write operations using this method also require a CSRF token to be submitted in the request body.",
+				"in": "cookie",
+				"name": "testwikiSession",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-Token": {
+				"description": "MediaWiki User Token cookie.\nRequired for persistent session verification.",
+				"in": "cookie",
+				"name": "testwikiToken",
+				"type": "apiKey"
+			},
+			"CentralAuthSessionProvider-UserID": {
+				"description": "MediaWiki User ID cookie.\nRequired alongside the session ID.",
+				"in": "cookie",
+				"name": "testwikiUserID",
+				"type": "apiKey"
+			}
+		}
+	},
+	"info": {
+		"contact": {
+			"email": "noc@wikipedia.org",
+			"name": "Wikipedia",
+			"url": "https://test.wikipedia.org"
+		},
+		"description": "API for the Produnto package manager\n\nCaution: The REST Sandbox executes calls against the production database by default. To avoid unintended edits to live content, select the sandbox server (test.wikimedia.org) from the server dropdown before making POST, PUT, PATCH, or DELETE requests.",
+		"license": {
+			"name": "Creative Commons Attribution-Share Alike 4.0",
+			"url": "https://creativecommons.org/licenses/by-sa/4.0/deed.test"
+		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
+		"title": "Produnto API",
+		"version": "1.0.0"
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/deployment/patch": {
+			"post": {
+				"description": "Make changes to the deployed set of package versions.",
+				"operationId": "postDeploymentPatch",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"ignoreWarnings": {
+										"description": "Whether to ignore validation warnings, such as package requirements not satisfied.",
+										"type": "boolean"
+									},
+									"packages": {
+										"description": "JSON serialized object mapping package names to versions. If a deployed package is absent, it will remain unchanged. If a version is null or the empty string, that package will be undeployed.",
+										"example": "{\"some-package\":\"1.0\"}",
+										"type": "string"
+									},
+									"summary": {
+										"description": "A comment for the revision.",
+										"example": "Updated some-package from 1.0 to 2.0",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"packages"
+								],
+								"type": "object"
+							}
+						},
+						"multipart/form-data": {
+							"schema": {
+								"properties": {
+									"ignoreWarnings": {
+										"description": "Whether to ignore validation warnings, such as package requirements not satisfied.",
+										"type": "boolean"
+									},
+									"packages": {
+										"description": "JSON serialized object mapping package names to versions. If a deployed package is absent, it will remain unchanged. If a version is null or the empty string, that package will be undeployed.",
+										"example": "{\"some-package\":\"1.0\"}",
+										"type": "string"
+									},
+									"summary": {
+										"description": "A comment for the revision.",
+										"example": "Updated some-package from 1.0 to 2.0",
+										"type": "string"
+									},
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"packages"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"deployment": {
+											"properties": {
+												"active": {
+													"description": "Whether the deployment is active by default on the wiki.",
+													"type": "boolean"
+												},
+												"controlWiki": {
+													"description": "The wiki ID of the initiating action.",
+													"example": "enwiki",
+													"type": "string"
+												},
+												"id": {
+													"description": "The ID of the deployment, pd_id.",
+													"example": 1,
+													"type": "integer"
+												},
+												"packages": {
+													"additionalProperties": {
+														"type": "string"
+													},
+													"description": "Map of package name to deployed version.",
+													"example": {
+														"some-package": "1.0"
+													},
+													"type": "object"
+												},
+												"revision": {
+													"description": "The revision ID of the initiating action.",
+													"example": 1,
+													"type": "integer"
+												},
+												"summary": {
+													"description": "The edit summary or comment supplied by the initiating user.",
+													"example": "Updated some-package from 1.0 to 2.0",
+													"type": "string"
+												},
+												"timestamp": {
+													"description": "The ISO-8601 combined date and time of when the deployment was created.",
+													"example": "2026-07-16T05:22:29Z",
+													"type": "string"
+												},
+												"userText": {
+													"description": "The name of the initiating user.",
+													"example": "Some user",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										},
+										"errors": {
+											"description": "Fatal errors",
+											"items": {
+												"properties": {
+													"key": {
+														"description": "The MediaWiki message key",
+														"example": "produnto-fetch-manifest",
+														"type": "string"
+													},
+													"translations": {
+														"additionalProperties": {
+															"description": "The string in each language",
+															"type": "string"
+														},
+														"description": "An array mapping the MediaWiki language code to the translation in that language.",
+														"example": {
+															"en": "Error in produnto.json: invalid JSON"
+														},
+														"required": [
+															"en"
+														],
+														"type": "object"
+													}
+												},
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"ok": {
+											"description": "Whether the deployment was successful",
+											"type": "boolean"
+										},
+										"warnings": {
+											"description": "Validation warnings",
+											"items": {
+												"properties": {
+													"key": {
+														"description": "The MediaWiki message key",
+														"example": "produnto-fetch-manifest",
+														"type": "string"
+													},
+													"translations": {
+														"additionalProperties": {
+															"description": "The string in each language",
+															"type": "string"
+														},
+														"description": "An array mapping the MediaWiki language code to the translation in that language.",
+														"example": {
+															"en": "Error in produnto.json: invalid JSON"
+														},
+														"required": [
+															"en"
+														],
+														"type": "object"
+													}
+												},
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"ok"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/deployment/validate": {
+			"post": {
+				"description": "Validate a proposed new set of package versions.",
+				"operationId": "postDeploymentValidate",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": {
+									"type": "string"
+								},
+								"description": {},
+								"example": {
+									"some-package": "1.0"
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"errors": {
+											"description": "An array of errors.",
+											"items": {
+												"properties": {
+													"key": {
+														"description": "The MediaWiki message key",
+														"example": "produnto-fetch-manifest",
+														"type": "string"
+													},
+													"translations": {
+														"additionalProperties": {
+															"description": "The string in each language",
+															"type": "string"
+														},
+														"description": "An array mapping the MediaWiki language code to the translation in that language.",
+														"example": {
+															"en": "Error in produnto.json: invalid JSON"
+														},
+														"required": [
+															"en"
+														],
+														"type": "object"
+													}
+												},
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"ok": {
+											"description": "This will be true if there were no errors, even if there were warnings. Warnings are significant and need to be acknowledged by the user before deployment.",
+											"type": "boolean"
+										},
+										"warnings": {
+											"description": "An array of warnings. This should be empty before proceeding with an automated deployment.",
+											"items": {
+												"properties": {
+													"key": {
+														"description": "The MediaWiki message key",
+														"example": "produnto-fetch-manifest",
+														"type": "string"
+													},
+													"translations": {
+														"additionalProperties": {
+															"description": "The string in each language",
+															"type": "string"
+														},
+														"description": "An array mapping the MediaWiki language code to the translation in that language.",
+														"example": {
+															"en": "Error in produnto.json: invalid JSON"
+														},
+														"required": [
+															"en"
+														],
+														"type": "object"
+													}
+												},
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/deployments/recent": {
+			"get": {
+				"description": "Get a list of recent deployments, including the active deployment if any.",
+				"operationId": "getDeploymentsRecent",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"deployments": {
+											"items": {
+												"properties": {
+													"active": {
+														"description": "Whether the deployment is active by default on the wiki.",
+														"type": "boolean"
+													},
+													"controlWiki": {
+														"description": "The wiki ID of the initiating action.",
+														"example": "enwiki",
+														"type": "string"
+													},
+													"id": {
+														"description": "The ID of the deployment, pd_id.",
+														"example": 1,
+														"type": "integer"
+													},
+													"packages": {
+														"additionalProperties": {
+															"type": "string"
+														},
+														"description": "Map of package name to deployed version.",
+														"example": {
+															"some-package": "1.0"
+														},
+														"type": "object"
+													},
+													"revision": {
+														"description": "The revision ID of the initiating action.",
+														"example": 1,
+														"type": "integer"
+													},
+													"summary": {
+														"description": "The edit summary or comment supplied by the initiating user.",
+														"example": "Updated some-package from 1.0 to 2.0",
+														"type": "string"
+													},
+													"timestamp": {
+														"description": "The ISO-8601 combined date and time of when the deployment was created.",
+														"example": "2026-07-16T05:22:29Z",
+														"type": "string"
+													},
+													"userText": {
+														"description": "The name of the initiating user.",
+														"example": "Some user",
+														"type": "string"
+													}
+												},
+												"required": [
+													"id"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"deployments"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/gitlab/tag": {
+			"post": {
+				"description": "A GitLab webhook handler for the tag event. See [the GitLab documentation](https://docs.gitlab.com/user/project/integrations/webhook_events/#tag-events).",
+				"operationId": "postGitlabTag",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"event_name": "tag_push",
+								"object_kind": "tag_push",
+								"project": {
+									"web_url": "http://example.com/jsmith/example"
+								},
+								"ref": "refs/tags/v1.0.0"
+							},
+							"schema": {
+								"properties": {
+									"event_name": {
+										"description": "event_name parameter",
+										"enum": [
+											"tag_push"
+										],
+										"example": "tag_push",
+										"type": "string"
+									},
+									"object_kind": {
+										"description": "object_kind parameter",
+										"enum": [
+											"tag_push"
+										],
+										"example": "tag_push",
+										"type": "string"
+									},
+									"project": {
+										"description": "project parameter",
+										"example": {
+											"web_url": "http://example.com/jsmith/example"
+										},
+										"properties": {
+											"web_url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"web_url"
+										],
+										"type": "object"
+									},
+									"ref": {
+										"description": "ref parameter",
+										"example": "refs/tags/v1.0.0",
+										"type": "string"
+									}
+								},
+								"required": [
+									"object_kind",
+									"event_name",
+									"ref"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"202": {
+						"description": "Accepted"
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/packages/all/": {
+			"get": {
+				"description": "The index to a list of all fetched package versions.",
+				"operationId": "getPackagesAll",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"partitions": {
+											"items": {
+												"properties": {
+													"end": {
+														"description": "The highest possible package ID in the partition",
+														"example": 999,
+														"type": "integer"
+													},
+													"href": {
+														"description": "The relative URL of the partition; the partition parameter to the list endpoint",
+														"example": "0",
+														"type": "string"
+													},
+													"start": {
+														"description": "The lowest possible package ID in the partition",
+														"example": 0,
+														"type": "integer"
+													}
+												},
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/packages/all/{partition}": {
+			"get": {
+				"description": "A list of fetched package versions within a partition.",
+				"operationId": "getPackagesAllByPartition",
+				"parameters": [
+					{
+						"description": "The partition number",
+						"in": "path",
+						"name": "partition",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"packages": {
+											"description": "A list of all fetched package versions in the partition",
+											"items": {
+												"properties": {
+													"authors": {
+														"description": "The package's authors.",
+														"example": [
+															"C. Scott Ananian",
+															"Subramanya Sastry",
+															"Tim Starling"
+														],
+														"items": {
+															"type": "string"
+														},
+														"type": "array"
+													},
+													"collabUrl": {
+														"description": "The URL of a human-readable entry point for source code review and contributions. For example, a GitLab project page.",
+														"example": "https://gitlab.wikimedia.org/tstarling/produnto-test",
+														"type": "string"
+													},
+													"description": {
+														"additionalProperties": {
+															"type": "string"
+														},
+														"description": "A short localised description of the package.",
+														"example": {
+															"en": "A test package for testing the package manager."
+														},
+														"type": "object"
+													},
+													"docUrl": {
+														"description": "The URL of the documentation page.",
+														"example": "https://www.mediawiki.org/wiki/Extension:Produnto",
+														"type": "string"
+													},
+													"errors": {
+														"description": "Errors which occurred while fetching the package and parsing its manifest file",
+														"items": {
+															"properties": {
+																"key": {
+																	"description": "The MediaWiki message key",
+																	"example": "produnto-fetch-manifest",
+																	"type": "string"
+																},
+																"translations": {
+																	"additionalProperties": {
+																		"description": "The string in each language",
+																		"type": "string"
+																	},
+																	"description": "An array mapping the MediaWiki language code to the translation in that language.",
+																	"example": {
+																		"en": "Error in produnto.json: invalid JSON"
+																	},
+																	"required": [
+																		"en"
+																	],
+																	"type": "object"
+																}
+															},
+															"type": "object"
+														},
+														"type": "array"
+													},
+													"fetchedUrl": {
+														"description": "An internal URL used when the package was fetched. May be an empty string or otherwise invalid.",
+														"example": "https://gitlab.wikimedia.org/tstarling/produnto-test",
+														"type": "string"
+													},
+													"homepageUrl": {
+														"description": "The URL of the package homepage. Optional: use collabUrl and docUrl if there is no separate homepage. This is the `url` property from the package manifest.",
+														"example": "https://www.mediawiki.org/wiki/Extension:Produnto",
+														"type": "string"
+													},
+													"id": {
+														"description": "The package ID (ppv_id) identifying the name/version pair.",
+														"example": 1,
+														"type": "integer"
+													},
+													"issueUrl": {
+														"description": "The URL of the package's bug tracker.",
+														"example": "https://phabricator.wikimedia.org/project/view/8472/",
+														"type": "string"
+													},
+													"license": {
+														"description": "SPDX identifier for the license under which the package is released.",
+														"example": "GPL-2.0-or-later",
+														"type": "string"
+													},
+													"localName": {
+														"additionalProperties": {
+															"type": "string"
+														},
+														"description": "The localised package name.",
+														"example": {
+															"en": "Produnto test"
+														},
+														"type": "object"
+													},
+													"modules": {
+														"description": "A map of each global Scribunto module name to its implementing file, relative to the package root.",
+														"example": {
+															"produnto_test": "src/init.lua"
+														},
+														"patternProperties": {
+															".*": {
+																"type": "string"
+															}
+														},
+														"type": "object"
+													},
+													"name": {
+														"description": "The name of the package.",
+														"example": "produnto-test",
+														"type": "string"
+													},
+													"requires": {
+														"description": "The dependencies of the package",
+														"example": {
+															"some-package": ">1.0"
+														},
+														"patternProperties": {
+															".*": {
+																"description": "Required package versions",
+																"type": "string"
+															}
+														},
+														"properties": {
+															"Lua": {
+																"description": "The Lua version required",
+																"type": "string"
+															},
+															"MediaWiki": {
+																"description": "The MediaWiki version required",
+																"type": "string"
+															}
+														},
+														"type": "object"
+													},
+													"state": {
+														"default": "ready",
+														"description": "The fetch state of the package",
+														"enum": [
+															"ready",
+															"fetching",
+															"failed"
+														],
+														"type": "string"
+													},
+													"type": {
+														"description": "The type of the package.",
+														"enum": [
+															"scribunto"
+														],
+														"type": "string"
+													},
+													"upstreamRef": {
+														"description": "A string identifying the upstream package version. For packages fetched from Git, this will be a git ref. For packages fetched from elsewhere, this may be an empty string or otherwise not unique.",
+														"example": "refs/tags/v1.2",
+														"type": "string"
+													},
+													"version": {
+														"description": "The package version.",
+														"example": "1.0",
+														"type": "string"
+													}
+												},
+												"required": [
+													"name",
+													"version",
+													"id"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"packages"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/sandbox": {
+			"get": {
+				"description": "List the sandboxes for the current user.",
+				"operationId": "getSandbox",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"properties": {
+											"active": {
+												"description": "Whether the sandbox is used on preview",
+												"type": "boolean"
+											},
+											"id": {
+												"description": "The sandbox ID",
+												"example": 1,
+												"type": "integer"
+											},
+											"mtime": {
+												"description": "The ISO 8601 combined date and time of last modification",
+												"example": "2026-07-17T06:18:14+00:00",
+												"type": "string"
+											},
+											"size": {
+												"description": "The size of the sandbox in bytes, counted towards a per-user limit",
+												"example": 128599,
+												"type": "integer"
+											}
+										},
+										"required": [
+											"id",
+											"size",
+											"mtime",
+											"active"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/sandbox/{id}": {
+			"delete": {
+				"description": "Delete a sandbox from the current user session.",
+				"operationId": "deleteSandboxById",
+				"parameters": [
+					{
+						"description": "The sandbox ID",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "OK (no response body)"
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			},
+			"post": {
+				"description": "Create or modify a sandbox in the current user session.",
+				"operationId": "postSandboxById",
+				"parameters": [
+					{
+						"description": "An arbitrary user-scoped identifier for the sandbox being created or updated.",
+						"example": "sandbox1",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"file": {
+										"additionalProperties": {
+											"format": "binary",
+											"type": "string"
+										},
+										"description": {},
+										"example": "one does not simply create a sandbox with Swagger",
+										"type": "object"
+									},
+									"hash": {
+										"additionalProperties": {
+											"additionalProperties": {
+												"type": "string"
+											},
+											"type": "object"
+										},
+										"description": {},
+										"example": "one does not simply create a sandbox with Swagger",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						},
+						"multipart/form-data": {
+							"schema": {
+								"properties": {
+									"file": {
+										"additionalProperties": {
+											"format": "binary",
+											"type": "string"
+										},
+										"description": {},
+										"example": "one does not simply create a sandbox with Swagger",
+										"type": "object"
+									},
+									"hash": {
+										"additionalProperties": {
+											"additionalProperties": {
+												"type": "string"
+											},
+											"type": "object"
+										},
+										"description": {},
+										"example": "one does not simply create a sandbox with Swagger",
+										"type": "object"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "OK",
+									"properties": {
+										"missingHashes": {
+											"description": "The hashes of files that were not found in the database or in previously posted sandbox update requests.",
+											"example": [
+												"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+											],
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"ok": {
+											"description": "Whether the sandbox has all file contents and is ready to use.",
+											"example": false,
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/sandbox/{id}/activate": {
+			"post": {
+				"description": "Activate a sandbox in the session context so that its packages will be used on preview.",
+				"operationId": "postSandboxByIdActivate",
+				"parameters": [
+					{
+						"description": "The sandbox ID",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						},
+						"multipart/form-data": {
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": [],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		},
+		"/sandbox/{id}/deactivate": {
+			"post": {
+				"description": "Deactivate a sandbox so that its packages will no longer be used on preview.",
+				"operationId": "postSandboxByIdDeactivate",
+				"parameters": [
+					{
+						"description": "The sandbox ID",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						},
+						"multipart/form-data": {
+							"schema": {
+								"properties": {
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": [],
+									"type": "object"
+								}
+							}
+						},
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"description": "(Production)",
+			"url": "https://test.wikipedia.org/w/rest.php/produnto/v1"
+		},
+		{
+			"description": "(Sandbox)",
+			"url": "https://test.wikimedia.org/w/rest.php/produnto/v1"
+		}
+	]
+}

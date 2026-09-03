@@ -124,13 +124,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
 		"description": "Provides information about Wikimedia project sites, including sitemaps. To prevent abusive scraping and ensure fair use of infrastructure, access to endpoints in this API is restricted to specific user groups. For more information about who can access this API, see [CDN/Backend_api/Sitemap_access](https://wikitech.wikimedia.org/wiki/CDN/Backend_api/Sitemap_access) or contact [mailto:bot-traffic@wikimedia.org bot-traffic@wikimedia.org].",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Site API",
 		"version": "1.0.0"
 	},

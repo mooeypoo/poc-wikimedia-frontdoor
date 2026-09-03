@@ -1,6 +1,6 @@
 # ADR: Explorer Deep-Linking and Endpoint Search
 
-**Status:** PR 1 (deep-linking) implemented; PR 2 (endpoint search) pending. Deferred within PR 1: cross-module Back/Forward re-focus, and scroll-spy hash updates (both need follow-up; see Open questions). The transient non-curated-instance picker option (§5) is implemented.
+**Status:** PR 1 (deep-linking) and PR 2 (endpoint search) implemented. Deferred within PR 1: cross-module Back/Forward re-focus, and scroll-spy hash updates (both need follow-up; see Open questions). The transient non-curated-instance picker option (§5) is implemented. **§10 was revised during PR 2** — the deep-link anchor is Scalar's hash, not ours; see §10 and the note in §8.
 **Scope:** A shareable, bidirectional URL scheme for the community API Explorer — path-based deep-links that carry the selected wiki instance, module, and operation, and that update live as the user drives the SPA — plus a keyword search over API endpoints that resolves each result to one of those deep-links. Delivered as **two pull requests**: PR 1 (deep-linking) and PR 2 (endpoint search), which depends on PR 1's URL scheme.
 
 **Related:**
@@ -121,7 +121,9 @@ If none of those expose the module, it falls back to the module's **first (sorte
 
 **Decision:** The operation anchor is a stable, URL-safe slug derived from the operation's **HTTP method and path** — `operationId` is not always present, method+path always is. Working format: `{method}_{path}` with `/` and `{}`/other unsafe characters normalized (e.g. `GET /v1/page/{title}` → `#get_v1_page__title_`). At runtime the anchor is translated to Scalar's internal nav id (`{document}/tag/{tag}/{METHOD}{path}`) by the existing `app/utils/scalarOperationNavigation.ts`, which resolves the tag from the loaded spec/sidebar — so the anchor itself carries no Scalar-specific detail.
 
-**Rationale:** Because we own the hash (§2), the anchor need only be **reversible to (method, path)** and stable across regenerations; it does not need to match Scalar's slugging. The same normalization is used to compute `deepLink` for search records (§10), guaranteeing PR 1 and PR 2 agree byte-for-byte. The exact character-normalization table is finalized in implementation and covered by a round-trip test.
+**Rationale:** Because we own the hash (§2), the anchor need only be **reversible to (method, path)** and stable across regenerations; it does not need to match Scalar's slugging. The exact character-normalization table is finalized in implementation and covered by a round-trip test.
+
+> **Superseded for search links (PR 2).** This paragraph originally continued: *"The same normalization is used to compute `deepLink` for search records (§10), guaranteeing PR 1 and PR 2 agree byte-for-byte."* That is **no longer true**, and was already stale when PR 2 began. The internal-sidebar experiment (`EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR`, PR #40) landed after this section was written and moved hash ownership to Scalar in the shipping build (see the interaction note in §2). `useExplorerDeepLink` therefore does not read our anchor out of the hash at all in that mode. The anchor format described here remains correct for the **sidebar-off module-rail mode**; generated search links use Scalar's format instead. See §10.
 
 ---
 
@@ -144,17 +146,47 @@ If none of those expose the module, it falls back to the module's **first (sorte
 
 ## 10. Endpoint search is a generated index over the committed specs (PR 2)
 
-**Decision:** Endpoint search does **not** hand-maintain an endpoint→keyword mapping. A generator derives an **endpoint index from `config/generated/module-specs/*.generated.json`** — one record per operation:
+**Decision:** Endpoint search does **not** hand-maintain an endpoint→keyword mapping. A generator derives an **endpoint index from `config/generated/module-specs/*.generated.json`** — one record per operation, written to `config/generated/endpointSearchIndex.generated.ts`:
 
 ```
-{ module, instance: specSourceInstance, method, path, summary, description, tags[], deepLink }
+{ module, moduleTitle, instance, method, path, summary?, description?,
+  operationId?, tags?, isDeprecated?, gate?, deepLink }
 ```
 
-where `deepLink` is the §1/§6/§8 URL for that operation. **The index regenerates as part of the same `npm run generate-module-source-of-truth` workflow** (or an equivalent step chained to it), so it can never drift from the specs it is derived from. Optional hand-authored keywords may layer on top later without changing the pipeline.
+**The index regenerates as phase 3 of `npm run generate-module-source-of-truth`** — in every mode, including `--skip-specs` and `--specs-only`, because it derives from both the module registry and the specs. `--index-only` runs it alone. This satisfies the acceptance condition: it cannot drift from what it describes. Optional hand-authored keywords may layer on top later without changing the pipeline.
 
-Endpoints are **not** markdown, so they do not enter the Nuxt Content FTS5 `content` collection. Instead a small client-side index (MiniSearch or Fuse.js) is searched **in parallel** with the existing content search inside `app/composables/useContentSearch.ts`, and rendered as a distinct **"API endpoints"** group in `app/components/shared/SearchResults.vue`, each result a `NuxtLink` to its `deepLink`. This keeps endpoint ranking and English-only endpoint text separate from the locale-partitioned content search. Scale is tiny (10 modules, a few hundred operations), so the index can even be prebuilt to JSON at build time.
+Endpoints are **not** markdown, so they do not enter the Nuxt Content FTS5 `content` collection. A client-side scorer (`app/utils/endpointSearch.ts`) is searched **in parallel** with the content search and rendered as a distinct **"API endpoints"** group in `app/components/shared/SearchResults.vue`, each result a `NuxtLink` to its `deepLink`.
+
+### What changed from the original decision
+
+Three parts of this section were written before PR #40 and did not survive contact with the implementation:
+
+**1. `deepLink` uses Scalar's operation hash, not ours (supersedes §8 for search links).** In the shipping build Scalar owns the hash and reads it on load (§2), so a link has to spell the operation the way Scalar spells it:
+
+```
+untagged  →  /explorer/direct/enwiki/readinglists/v0#GET/lists
+tagged    →  /explorer/direct/enwiki/site/v1#tag/sitemaps/GET/sitemap/{indexId}
+```
+
+Rather than re-implementing Scalar's slugging, the generator calls **Scalar's own id builders** — `createNavigation` from `@scalar/workspace-store` and `makeHrefFromId` from `@scalar/api-reference` (with `isMultiDocument: false`, since the explorer mounts one document, which is what strips the document slug). Nothing is mirrored, so an upgrade that changes the format changes the generated file instead of silently breaking every link. `scalarApiReferenceVersion` is recorded in the index metadata to make such a change attributable, and `tests/endpointSearchIndex.test.mjs` rebuilds the index from the committed specs and asserts byte-equality, turning a format change into a failing test.
+
+Driving off Scalar's navigation tree rather than off `spec.paths` also means operations Scalar hides (`x-internal`, `x-scalar-ignore`) are never indexed — we cannot emit a link whose hash resolves to nothing.
+
+**2. The landing instance is the shared quick-link policy, not `specSourceInstance`.** `specSourceInstance` is where the spec was *captured* (it prefers `mediawikiwiki`); the instance a user should *land* on is a separate product decision that already existed for `/q/` links. Using the capture instance would have made the same module resolve to different wikis via search and via `/q/`. Both paths now call `resolvePreferredModuleInstance`, moved to the self-contained `config/explorerInstancePolicy.ts` so the generator can load it from Node (see "Node-loadable config" below) and re-exported from `config/moduleSourceOfTruth.ts` for app code.
+
+**3. No search library.** MiniSearch/Fuse.js were proposed; at this scale (352 operations) a weighted scorer in `app/utils/endpointSearch.ts` is smaller, dependency-free, and — the deciding factor — allows the field weighting the data actually needs. Roughly 8% of Wikimedia REST operations ship with no `summary`, and a handful with neither summary nor description, so **path segments and `operationId` are indexed as first-class fields**, not as an afterthought; they are the only thing that makes those operations findable at all. Matching is AND across query tokens, which keeps the group precise enough to lead the panel.
+
+### Opt-in gating
+
+Endpoint records carry a `gate` field (`beta` / `internal`) derived from `config/explorerOptIn.ts`. **Internal-gated endpoints are excluded from search** (`isEndpointSearchable` in `config/endpointSearch.ts`): the explorer hides those modules by default and actively re-selects away from them (`useExplorerOptInFilteredModules`), so a search result pointing at one would bounce the user elsewhere on arrival. Beta-gated modules are opt-in *on* by default and stay searchable.
+
+### Node-loadable config
+
+The generator needs three hand-authored values that also belong to the app: the Scalar document slug, the instance policy, and the opt-in gate rules. Node cannot load `config/scalar.ts` or `config/moduleSourceOfTruth.ts` because those use the app's extensionless relative imports. The slug and the policy were therefore split into self-contained leaf modules — `config/scalarDocument.ts` and `config/explorerInstancePolicy.ts` — and re-exported from their original homes, so no call site changed and there is still exactly one definition of each. This mirrors the existing convention noted in `tests/moduleSourceOfTruth.test.mjs`.
 
 **Rationale:** The source-of-truth ADR (§"Derived index, deferred not rejected") explicitly deferred this index to "generate from the committed specs when a consumer needs it." This is that consumer. Generating from the specs — rather than a manual list — is the only option that stays correct as modules change, provided regeneration is wired to the same script (the stated acceptance condition).
+
+**Known consequence — near-duplicate results from upstream specs.** Some modules declare trailing-slash path variants (`readinglists/v0` has both `/lists` and `/lists/`) with identical summaries. These are genuinely distinct operations with distinct hashes, so they are indexed separately and appear as two similar-looking results distinguished only by the path line beneath the title. Collapsing them would mean discarding a real endpoint; the better fix is upstream.
 
 ---
 
@@ -173,7 +205,8 @@ Endpoints are **not** markdown, so they do not enter the Nuxt Content FTS5 `cont
 | `ARCHITECTURE.md` — "API explorer architecture" | Document the deep-link URL grammar (`/explorer/direct/…`, `/explorer/q/…`), the URL↔state sync, and fleet-wide instance resolution as distinct from the curated list. |
 | `docs/TECH_DECISIONS.md` — "Wiki instances" / "Discovery and spec resolution" | Note that bootstrap now resolves `baseUrl` fleet-wide (curated → generated fallback), and that the curated `wikidata` id is renamed `wikidatawiki`. |
 | `config/instances.ts` | Reflect the `wikidata` → `wikidatawiki` rename. |
-| `package.json` — `scripts` | (PR 2) Ensure the endpoint-index generation runs within/after `generate-module-source-of-truth`. |
+| `package.json` — `scripts` | (PR 2) ~~Ensure the endpoint-index generation runs within/after `generate-module-source-of-truth`.~~ **Done differently — no new script.** Index generation is phase 3 *inside* `generate-module-source-of-truth`, so it cannot be run separately and forgotten. `--index-only` re-runs just that phase. |
+| `docs/adr-multilingual-search.md` — §2 "Search scope: content pages only" | Its deferral condition is met. It states Scalar "does not expose programmatic navigation to individual operations (no deep-link API, no hash-anchor callbacks)" and that indexing would "produce dead results". Scalar's operation hash *is* addressable, and PR 1 plus this section deliver the navigation. Note the scope extension there. |
 
 ---
 
@@ -211,12 +244,25 @@ Apply the documentation corrections above (excluding the PR-2 `package.json` row
 
 ---
 
-## PR 2 outline — endpoint search (depends on PR 1)
+## PR 2 — endpoint search (implemented)
 
-1. Generator emits the endpoint index from `config/generated/module-specs/*.generated.json`, wired into `generate-module-source-of-truth` (so it regenerates with the specs — the acceptance condition of §10). `deepLink` uses PR 1's canonical URL + anchor.
-2. Client MiniSearch/Fuse index over the endpoint records; searched in parallel with the content FTS inside `app/composables/useContentSearch.ts`.
-3. "API endpoints" result group in `app/components/shared/SearchResults.vue`, each a `NuxtLink` to its `deepLink`.
-4. Tests: index generation from a fixture spec, search relevance, and click-through URL correctness.
+| Piece | Where |
+|---|---|
+| Index builder (pure) | `scripts/lib/endpointSearchIndex.mjs` |
+| Phase-3 wiring, `--index-only` | `scripts/generate-module-source-of-truth.mjs` |
+| Generated index | `config/generated/endpointSearchIndex.generated.ts` |
+| Search policy (weights, cap, gating) | `config/endpointSearch.ts` |
+| Node-loadable leaf config | `config/scalarDocument.ts`, `config/explorerInstancePolicy.ts` |
+| Scorer (pure) | `app/utils/endpointSearch.ts` |
+| Composable | `app/composables/useEndpointSearch.ts` |
+| Result group | `app/components/shared/SearchResults.vue` |
+| Tests | `tests/endpointSearchIndex.test.mjs` |
+
+Deviations from the original outline — Scalar's hash instead of our anchor, the shared instance policy instead of `specSourceInstance`, and a hand-rolled scorer instead of MiniSearch/Fuse — are explained in §10 under "What changed from the original decision".
+
+**Loading.** The index is ~16 KB gzipped and is only needed once someone searches, so `useEndpointSearch` pulls it in with a dynamic `import()` on the first query of length ≥ 2 and caches it for the session. A failed chunk load degrades to "no endpoint results" rather than breaking the panel.
+
+**Panel placement.** The endpoints group renders **above** the content results, in both normal and all-locales mode. It is capped at 6 and every query token must match, so it cannot flood the panel, and a query that matches an endpoint at all is usually an explicit API intent. Because it is not locale-partitioned, it sits outside the per-locale sections entirely. The "no results in *X*" / "no results in any language" notices are suppressed when endpoints matched — they speak for the whole panel, and would otherwise render directly above a list of results. *This ordering is a judgement call worth reviewing with design.*
 
 ---
 

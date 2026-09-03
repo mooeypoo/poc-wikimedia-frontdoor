@@ -27,6 +27,7 @@ import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/language
 import { useColorMode } from '../../composables/useColorMode'
 import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
+import { useEndpointSearch } from '../../composables/useEndpointSearch'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
 import {
@@ -91,6 +92,10 @@ const {
 	activateAllLocalesSearch,
 	hasQuery
 } = useContentSearch( searchQuery, $interfaceLocale )
+
+// Endpoint search answers the same query from its own index, in parallel with
+// the content FTS above — see useEndpointSearch for why the two stay separate.
+const { endpointResults } = useEndpointSearch( searchQuery )
 
 watch( hasQuery, ( newHasQuery ) => {
 	if ( newHasQuery ) {
@@ -410,6 +415,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					:locale-results="localeResults"
 					:fallback-results="fallbackResults"
 					:all-locale-result-groups="allLocaleResultGroups"
+					:endpoint-results="endpointResults"
 					:is-all-locales-mode="isAllLocalesMode"
 					:active-locale="$interfaceLocale"
 					:search-query="searchQuery"

@@ -27,6 +27,8 @@
 
 ## 2. Search scope: content pages only
 
+> **Superseded.** API endpoints are now searchable. See `docs/adr-explorer-deep-linking.md` §10 and the resolution note at the end of this section.
+
 **Decision:** Search covers the `content/` markdown collection only. The Scalar/OpenAPI explorer is excluded.
 
 **Context:** The explorer loads OpenAPI specs at runtime and renders them inside a third-party `@scalar/api-reference` component.
@@ -34,6 +36,13 @@
 **Rationale:** Scalar does not expose programmatic navigation to individual operations (no deep-link API, no hash-anchor callbacks). Indexing the spec client-side is feasible in principle, but there is no way to navigate a user to a specific operation after a match. This would produce dead results.
 
 **Deferred to a future PR.** Revisit if Scalar adds a navigation API or exposes operation-level hash anchors. When that happens, the approach would be a separate search index over the loaded spec JSON, with results rendered in a distinct section of the same panel.
+
+**Resolution.** The deferral condition was met, and the premise turned out to be wrong in one respect: Scalar's operation hash *is* addressable, and its navigation-id builders are importable, so a link can be computed offline. Two things were needed and both now exist — a URL that names an operation (`docs/adr-explorer-deep-linking.md` PR 1) and an index to search (§10 there).
+
+The shape landed close to what this section predicted, with two differences worth noting:
+
+- The index is generated **offline from the committed specs**, not built from the spec JSON loaded at runtime. Search has to work from any page in the site, not only while the explorer is mounted with a spec already fetched.
+- Endpoint results are rendered in a distinct group of the same panel **as predicted**, but they are deliberately *not* locale-partitioned: OpenAPI summaries come from upstream MediaWiki and are English-only, so the locale bucketing in §3 does not apply to them. Only the group heading is translated. This is the main user-visible limitation of endpoint search — a French speaker searching French words will not match English endpoint text. A hand-authored, translatable keyword layer is the intended fix and is anticipated by the pipeline.
 
 ---
 

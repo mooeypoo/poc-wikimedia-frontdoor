@@ -234,6 +234,8 @@
   "search-all-languages-cta": "Search all languages",
   "search-no-locale-results": "No results in {{bidi:$1}} for {{bidi:$2}}.",
   "search-no-results-any-language": "No results found for {{bidi:$1}} in any language.",
+  "search-results-endpoint-deprecated": "Deprecated",
+  "search-results-endpoints-heading": "API endpoints",
   "search-results-locale-heading": "Results in {{bidi:$1}}",
   "section-nav-about-label": "About sections",
   "section-nav-about-title": "About",

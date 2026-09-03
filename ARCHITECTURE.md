@@ -1152,7 +1152,18 @@ Per-language full-text search uses **Nuxt Content FTS5** via `useSearchCollectio
 
 The search input uses `dir="auto"` to handle RTL query input correctly. All result text (titles, snippets) is wrapped in `<bdi>` for BiDi isolation.
 
-See `docs/adr-multilingual-search.md` for the full decision record and `docs/search-implementation-guide.md` for the implementation recipe.
+### API endpoint search
+
+The same panel also searches **REST API endpoints**, from a second, independent index. `useEndpointSearch( query )` runs alongside `useContentSearch` — not inside it — because the two answer the same query from unrelated indexes with incomparable scores, and because endpoint text is English-only (it comes from upstream OpenAPI specs) and so is deliberately *not* locale-partitioned.
+
+- **Index:** `config/generated/endpointSearchIndex.generated.ts`, one record per operation, generated as phase 3 of `generate-module-source-of-truth` from the committed specs. Consumed through the `config/endpointSearch.ts` policy layer, never directly.
+- **Loading:** a dynamic `import()` on the first query of length ≥ 2, cached for the session — the index is ~16 KB gzipped and is dead weight on pages where nobody searches. A failed load degrades to "no endpoint results".
+- **Scoring:** `app/utils/endpointSearch.ts`, a weighted scorer with no library dependency. Path segments and `operationId` are first-class indexed fields, not decoration: roughly 8% of Wikimedia REST operations ship without a `summary`, and would otherwise be unfindable. Matching is AND across query tokens.
+- **Deep links** carry **Scalar's** operation hash, not ours, because Scalar owns the hash in the shipping Explorer. The generator calls Scalar's own id builders rather than reproducing them, and a drift test fails if an upgrade changes the format. See `docs/adr-explorer-deep-linking.md` §10.
+- **Excluded:** internal-gated modules (the Explorer hides them by default and would bounce the user on arrival), Enterprise endpoints, and modules with no captured spec.
+- **Rendering:** an "API endpoints" group above the content results in `SearchResults.vue`. It is capped and high-precision so it cannot flood the panel. The "no results in *X*" notices are suppressed when endpoints matched, since they speak for the whole panel.
+
+See `docs/adr-multilingual-search.md` for the full decision record (its §2 "content pages only" is superseded), `docs/search-implementation-guide.md` for the content-search implementation recipe, and `docs/adr-explorer-deep-linking.md` §10 for endpoint search.
 
 ---
 

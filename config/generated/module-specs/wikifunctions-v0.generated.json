@@ -120,13 +120,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "Abstract Wikipedia",
+			"url": "https://abstract.wikipedia.org"
 		},
 		"description": "APIs for interacting with Wikifunctions",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Wikifunctions API",
 		"version": "0.1.0"
 	},

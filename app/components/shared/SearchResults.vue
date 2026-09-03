@@ -5,12 +5,22 @@ import {
 	type ContentSearchResult,
 	type LocaleResultGroup
 } from '~/composables/useContentSearch'
+import { endpointResultTitle } from '~/utils/endpointSearch'
+import type { EndpointSearchResult } from '~/utils/endpointSearch'
 
 /**
  * Renders FTS search results from useContentSearch in three modes:
  *  - all-locales: one section per locale in allLocaleResultGroups order
  *  - normal:      locale section + optional English fallback section
  *  - no-locale:   "no results in X for Y" message + expand CTA
+ *
+ * Above all of them, when the query matches any REST API operations, an
+ * "API endpoints" group from useEndpointSearch — each result a deep link into
+ * the community API Explorer at that exact operation. It leads because it is
+ * capped and high-precision (every query token must match), so it never floods
+ * the panel, and because a query that matches an endpoint is usually an explicit
+ * API intent. Endpoint text is English-only and locale-independent, so it sits
+ * outside the locale partitioning and renders once in every mode.
  *
  * Emits result-select when the user activates a result link so the parent can
  * close the search panel. Emits activate-all-locales from the no-locale CTA.
@@ -20,6 +30,7 @@ const props = defineProps<{
 	localeResults: ContentSearchResult[]
 	fallbackResults: ContentSearchResult[]
 	allLocaleResultGroups: LocaleResultGroup[]
+	endpointResults: EndpointSearchResult[]
 	isAllLocalesMode: boolean
 	activeLocale: string
 	searchQuery: string
@@ -53,19 +64,72 @@ const noResultsAnyLanguageMessage = computed( () =>
 )
 
 const allLanguagesCta = computed( () => $bananaI18n( 'search-all-languages-cta' ) )
+const endpointsHeading = computed( () => $bananaI18n( 'search-results-endpoints-heading' ) )
+const deprecatedLabel = computed( () => $bananaI18n( 'search-results-endpoint-deprecated' ) )
 
 const hasLocaleResults = computed( () => props.localeResults.length > 0 )
 const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
+const hasEndpointResults = computed( () => props.endpointResults.length > 0 )
+
+// The "no results in X" notices speak for the whole panel, so they are suppressed
+// when endpoints matched — otherwise "No results…" would render directly above a
+// list of results. Endpoints are not locale-partitioned, so they cannot be folded
+// into the per-locale messaging instead.
+const shouldShowNoLocaleResults = computed( () => !hasLocaleResults.value && !hasEndpointResults.value )
+const shouldShowNoResultsAnyLanguage = computed(
+	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value
+)
 </script>
 
 <template>
+	<!--
+		API endpoints — locale-independent, so it renders identically in both modes
+		and is hoisted above them. Paths and summaries come from upstream OpenAPI
+		specs: external text, hence dir="ltr" on the list and <bdi> on every value.
+	-->
+	<section
+		v-if="hasEndpointResults"
+		class="fd-search-results__endpoints"
+	>
+		<h3 class="fd-search-results__locale-heading">
+			{{ endpointsHeading }}
+		</h3>
+		<ul
+			class="fd-search-results__list"
+			dir="ltr"
+		>
+			<li
+				v-for="endpointResult in endpointResults"
+				:key="endpointResult.record.deepLink"
+				class="fd-search-results__item"
+			>
+				<NuxtLink
+					:to="endpointResult.record.deepLink"
+					class="fd-search-results__link fd-search-results__link--endpoint"
+					@click="emit( 'result-select', endpointResult.record.deepLink )"
+				>
+					<span class="fd-search-results__endpoint-heading">
+						<bdi class="fd-search-results__endpoint-method">{{ endpointResult.record.method }}</bdi>
+						<bdi class="fd-search-results__title">{{ endpointResultTitle( endpointResult.record ) }}</bdi>
+						<span
+							v-if="endpointResult.record.isDeprecated"
+							class="fd-search-results__endpoint-deprecated"
+						>{{ deprecatedLabel }}</span>
+					</span>
+					<bdi class="fd-search-results__endpoint-path">{{ endpointResult.record.path }}</bdi>
+					<bdi class="fd-search-results__snippet">{{ endpointResult.record.moduleTitle }}</bdi>
+				</NuxtLink>
+			</li>
+		</ul>
+	</section>
+
 	<!-- All-locales mode: every locale that returned results gets its own section -->
 	<div
 		v-if="isAllLocalesMode"
 		class="fd-search-results fd-search-results--all-locales"
 	>
 		<p
-			v-if="allLocaleResultGroups.length === 0"
+			v-if="shouldShowNoResultsAnyLanguage"
 			class="fd-search-results__no-any-language"
 		>
 			{{ noResultsAnyLanguageMessage }}
@@ -150,7 +214,7 @@ const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
 
 		<!-- No locale results: message + CTA to expand to all languages -->
 		<div
-			v-if="!hasLocaleResults"
+			v-if="shouldShowNoLocaleResults"
 			class="fd-search-results__no-locale"
 		>
 			<p class="fd-search-results__no-locale-message">
@@ -211,6 +275,53 @@ const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
 	margin-block-start: var( --spacing-150 );
 	padding-block-start: var( --spacing-150 );
 	border-block-start: 1px solid var( --border-color-subtle );
+}
+
+/*
+ * The endpoints section is a sibling of the results wrapper (not inside it), so
+ * it carries its own block padding and the separator that divides it from the
+ * content results below.
+ */
+.fd-search-results__endpoints {
+	padding-block-start: var( --spacing-75 );
+	padding-block-end: var( --spacing-150 );
+	border-block-end: 1px solid var( --border-color-subtle );
+}
+
+.fd-search-results__link--endpoint {
+	gap: var( --spacing-12 );
+}
+
+.fd-search-results__endpoint-heading {
+	display: flex;
+	align-items: baseline;
+	gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.fd-search-results__endpoint-method {
+	flex-shrink: 0;
+	font-family: var( --font-family-monospace );
+	font-size: var( --font-size-x-small );
+	font-weight: var( --font-weight-bold );
+	color: var( --color-subtle );
+	letter-spacing: 0.05em;
+}
+
+.fd-search-results__endpoint-path {
+	font-family: var( --font-family-monospace );
+	font-size: var( --font-size-x-small );
+	color: var( --color-subtle );
+	overflow-wrap: anywhere;
+}
+
+.fd-search-results__endpoint-deprecated {
+	flex-shrink: 0;
+	padding-inline: var( --spacing-25 );
+	border-radius: var( --border-radius-base );
+	background-color: var( --background-color-warning-subtle );
+	font-size: var( --font-size-x-small );
+	color: var( --color-warning );
 }
 
 .fd-search-results__locale-heading {
