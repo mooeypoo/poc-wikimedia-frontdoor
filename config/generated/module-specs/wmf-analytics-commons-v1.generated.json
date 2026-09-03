@@ -1,0 +1,2567 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.CategoryEdits": {
+			"properties": {
+				"edit-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryEditsContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"edit-type": {
+					"example": "create",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/edits-per-category-monthly",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryEditsResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.CategoryEditsContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.CategoryEdits"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryMetric": {
+			"properties": {
+				"leveraging-page-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"leveraging-page-count-deep": {
+					"example": 47,
+					"type": "integer"
+				},
+				"leveraging-wiki-count": {
+					"example": 12,
+					"type": "integer"
+				},
+				"leveraging-wiki-count-deep": {
+					"example": 120,
+					"type": "integer"
+				},
+				"media-file-count": {
+					"example": 12345,
+					"type": "integer"
+				},
+				"media-file-count-deep": {
+					"example": 1234567,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				},
+				"used-media-file-count": {
+					"example": 453,
+					"type": "integer"
+				},
+				"used-media-file-count-deep": {
+					"example": 4536,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryMetricResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.CategoryMetricsSnapshotContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.CategoryMetric"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryMetricsSnapshotContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/category-metrics-snapshot",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryPageviews": {
+			"properties": {
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryPageviewsContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/pageviews-per-category-monthly",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.CategoryPageviewsResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.CategoryPageviewsContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.CategoryPageviews"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFileMetricsSnapshot": {
+			"properties": {
+				"leveraging-page-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"leveraging-wiki-count": {
+					"example": 12,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFileMetricsSnapshotContext": {
+			"properties": {
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/media-file-metrics-snapshot",
+					"type": "string"
+				},
+				"media-file": {
+					"example": "Flag_of_UNESCO.svg",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFileMetricsSnapshotResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.MediaFileMetricsSnapshotContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.MediaFileMetricsSnapshot"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFilePageviews": {
+			"properties": {
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFilePageviewsContext": {
+			"properties": {
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/pageviews-per-media-file-monthly",
+					"type": "string"
+				},
+				"media-file": {
+					"example": "Flag_of_UNESCO.svg",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.MediaFilePageviewsResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.MediaFilePageviewsContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.MediaFilePageviews"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditedCategories": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"edit-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditedCategoriesContext": {
+			"properties": {
+				"category-scope": {
+					"example": "shallow",
+					"type": "string"
+				},
+				"edit-type": {
+					"example": "create",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-edited-categories-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditedCategoriesResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopEditedCategoriesContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopEditedCategories"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditors": {
+			"properties": {
+				"edit-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				},
+				"user-name": {
+					"example": "SchlurcherBot",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditorsContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"edit-type": {
+					"example": "create",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-editors-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopEditorsResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopEditorsContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopEditors"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByCategory": {
+			"properties": {
+				"page-title": {
+					"example": "Bangkok",
+					"type": "string"
+				},
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByCategoryContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-pages-per-category-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByCategoryResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopPagesByCategoryContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopPagesByCategory"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByMediaFile": {
+			"properties": {
+				"page-title": {
+					"example": "Bangkok",
+					"type": "string"
+				},
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByMediaFileContext": {
+			"properties": {
+				"endpoint": {
+					"example": "commons-analytics/top-pages-per-media-file-monthly",
+					"type": "string"
+				},
+				"media-file": {
+					"example": "Flag_of_UNESCO.svg",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesByMediaFileResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopPagesByMediaFileContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopPagesByMediaFile"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedCategories": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedCategoriesContext": {
+			"properties": {
+				"category-scope": {
+					"example": "shallow",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-viewed-categories-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "all-wikis",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedCategoriesResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopViewedCategoriesContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopViewedCategories"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedMediaFiles": {
+			"properties": {
+				"media-file": {
+					"example": "Habits_gaulois.jpg",
+					"type": "string"
+				},
+				"pageview-count": {
+					"example": 46,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedMediaFilesContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-viewed-media-files-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"wiki": {
+					"example": "all-wikis",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopViewedMediaFilesResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopViewedMediaFilesContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopViewedMediaFiles"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByCategory": {
+			"properties": {
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByCategoryContext": {
+			"properties": {
+				"category": {
+					"example": "Gallica",
+					"type": "string"
+				},
+				"category-scope": {
+					"example": "deep",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "commons-analytics/top-wikis-per-category-monthly",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByCategoryResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopWikisByCategoryContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopWikisByCategory"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByMediaFile": {
+			"properties": {
+				"pageview-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"rank": {
+					"example": 4,
+					"type": "integer"
+				},
+				"wiki": {
+					"example": "en.wikipedia",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByMediaFileContext": {
+			"properties": {
+				"endpoint": {
+					"example": "commons-analytics/top-wikis-per-media-file-monthly",
+					"type": "string"
+				},
+				"media-file": {
+					"example": "Flag_of_UNESCO.svg",
+					"type": "string"
+				},
+				"month": {
+					"example": "05",
+					"type": "string"
+				},
+				"year": {
+					"example": "2024",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopWikisByMediaFileResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.TopWikisByMediaFileContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.TopWikisByMediaFile"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.UserEdits": {
+			"properties": {
+				"edit-count": {
+					"example": 47,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2024010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.UserEditsContext": {
+			"properties": {
+				"edit-type": {
+					"example": "update",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024050100",
+					"type": "string"
+				},
+				"end-point": {
+					"example": "commons-analytics/edits-per-user-monthly",
+					"type": "string"
+				},
+				"start": {
+					"example": "2024010100",
+					"type": "string"
+				},
+				"user-name": {
+					"example": "SchlurcherBot",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.UserEditsResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.UserEditsContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.UserEdits"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Commons Impact Metrics provides analytical data on the impact of community\ncontributions to Wikimedia Commons, focused on contributions from galleries,\nlibraries, archives, and museums. Data provided by this API is available\nunder the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Commons Impact Metrics API",
+		"version": "1"
+	},
+	"paths": {
+		"/commons-analytics/category-metrics-snapshot/{category}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series with metrics about the given Commons category and category tree, including media file counts and leverage counts.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.CategoryMetricResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of category metrics"
+			}
+		},
+		"/commons-analytics/edits-per-category-monthly/{category}/{category-scope}/{edit-type}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of the number of edits to Commons media files associated to the given category or category tree.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The type of edit: create, update or all-edit-types",
+						"enum": [
+							"create",
+							"update",
+							"all-edit-types"
+						],
+						"example": "create",
+						"in": "path",
+						"name": "edit-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.CategoryEditsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of edit counts for a given category"
+			}
+		},
+		"/commons-analytics/edits-per-user-monthly/{user-name}/{edit-type}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of the number of edits to Commons media files performed by the given user.",
+				"parameters": [
+					{
+						"description": "The username of the desired editor",
+						"example": "SchlurcherBot",
+						"in": "path",
+						"name": "user-name",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The type of edit: create, update or all-edit-types",
+						"enum": [
+							"create",
+							"update",
+							"all-edit-types"
+						],
+						"example": "update",
+						"in": "path",
+						"name": "edit-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.UserEditsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of edit counts for a given user"
+			}
+		},
+		"/commons-analytics/media-file-metrics-snapshot/{media-file}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series with metrics about the given Commons media file, including wiki and page leverage counts.",
+				"parameters": [
+					{
+						"description": "The title of the desired media file, in URL format",
+						"example": "Flag_of_UNESCO.svg",
+						"in": "path",
+						"name": "media-file",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.MediaFileMetricsSnapshotResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of media file metrics"
+			}
+		},
+		"/commons-analytics/pageviews-per-category-monthly/{category}/{category-scope}/{wiki}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of the number of pageviews to Commons media files associated to the given category or category tree.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "en.wikipedia",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.CategoryPageviewsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of pageview counts for a given category"
+			}
+		},
+		"/commons-analytics/pageviews-per-media-file-monthly/{media-file}/{wiki}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of the number of pageviews to the given Commons media file.",
+				"parameters": [
+					{
+						"description": "The title of the desired media file, in URL format",
+						"example": "Flag_of_UNESCO.svg",
+						"in": "path",
+						"name": "media-file",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "en.wikipedia",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month (inclusive), in YYYYMM01 format",
+						"example": "20240101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month (exclusive), in YYYYMM01 format",
+						"example": "20240501",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.MediaFilePageviewsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get time series of pageview counts for a given media file"
+			}
+		},
+		"/commons-analytics/top-edited-categories-monthly/{category-scope}/{edit-type}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of the Commons categories or category trees with most edits to their associated media files.",
+				"parameters": [
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "shallow",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The type of edit: create, update or all-edit-types",
+						"enum": [
+							"create",
+							"update",
+							"all-edit-types"
+						],
+						"example": "create",
+						"in": "path",
+						"name": "edit-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopEditedCategoriesResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of most edited categories"
+			}
+		},
+		"/commons-analytics/top-editors-monthly/{category}/{category-scope}/{edit-type}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of users with most edits to Commons media files associated to the given category or category tree.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The type of edit: create, update or all-edit-types",
+						"enum": [
+							"create",
+							"update",
+							"all-edit-types"
+						],
+						"example": "create",
+						"in": "path",
+						"name": "edit-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopEditorsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of users with most edits to a given category"
+			}
+		},
+		"/commons-analytics/top-pages-per-category-monthly/{category}/{category-scope}/{wiki}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of the most visited wiki pages containing Commons media files associated to the given category or category tree.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "en.wikipedia",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopPagesByCategoryResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of pages with most pageviews for a given category"
+			}
+		},
+		"/commons-analytics/top-pages-per-media-file-monthly/{media-file}/{wiki}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of the most visited wiki pages containing the given media file.",
+				"parameters": [
+					{
+						"description": "The title of the desired media-file, in URL format",
+						"example": "Flag_of_UNESCO.svg",
+						"in": "path",
+						"name": "media-file",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "en.wikipedia",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopPagesByMediaFileResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of pages with most pageviews for a given media file"
+			}
+		},
+		"/commons-analytics/top-viewed-categories-monthly/{category-scope}/{wiki}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of Commons categories or category trees whose associated media files appear in the wiki pages with most pageviews.",
+				"parameters": [
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "shallow",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "all-wikis",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopViewedCategoriesResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of categories with most pageviews"
+			}
+		},
+		"/commons-analytics/top-viewed-media-files-monthly/{category}/{category-scope}/{wiki}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of Commons media files appearing in the wiki pages with most pageviews.",
+				"parameters": [
+					{
+						"description": "The title of the desired category. in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "The wiki to show metrics for. Use 'all-wikis' for an overall aggregate count",
+						"example": "all-wikis",
+						"in": "path",
+						"name": "wiki",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopViewedMediaFilesResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of media files with most pageviews"
+			}
+		},
+		"/commons-analytics/top-wikis-per-category-monthly/{category}/{category-scope}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of wikis with the most viewed pages containing media files from the given Commons category or category tree.",
+				"parameters": [
+					{
+						"description": "The title of the desired category, in URL format",
+						"example": "Gallica",
+						"in": "path",
+						"name": "category",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Plain category counts (shallow) or top-level category tree counts (deep)",
+						"enum": [
+							"shallow",
+							"deep"
+						],
+						"example": "deep",
+						"in": "path",
+						"name": "category-scope",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopWikisByCategoryResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of wikis with most pageviews for a given category"
+			}
+		},
+		"/commons-analytics/top-wikis-per-media-file-monthly/{media-file}/{year}/{month}": {
+			"get": {
+				"description": "Returns the ranking of wikis with the most viewed pages containing the given Commons media file.",
+				"parameters": [
+					{
+						"description": "The title of the desired media file, in URL format",
+						"example": "Flag_of_UNESCO.svg",
+						"in": "path",
+						"name": "media-file",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year, in YYYY format",
+						"example": "2024",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month, in MM format",
+						"example": "05",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopWikisByMediaFileResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get ranking of wikis with most pageviews for a given media file"
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

@@ -124,13 +124,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
 		"description": "Self-documentation module providing discovery, specs, and schemas for all available modules.",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Specs API",
 		"version": "0.1.0"
 	},
@@ -138,18 +141,18 @@
 	"paths": {
 		"/discovery": {
 			"get": {
-				"operationId": "getDiscovery",
+				"operationId": "getGetAvailableRestApiModules",
 				"parameters": [],
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$id": "https://www.mediawiki.org/schema/discovery-1.0",
+									"$id": "https://www.mediawiki.org/schema/discovery-1.1",
 									"$schema": "http://json-schema.org/draft-06/schema#",
 									"definitions": {
 										"Info": {
-											"description": "Information about the wiki site that offers the API",
+											"description": "Information about the wiki site that offers the API.",
 											"properties": {
 												"contact": {
 													"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28#/definitions/Contact"
@@ -158,7 +161,7 @@
 													"$ref": "https://spec.openapis.org/oas/3.0/schema/2021-09-28#/definitions/License"
 												},
 												"mediawiki": {
-													"description": "The version of the MediaWiki software serving the document",
+													"description": "The version of the MediaWiki software serving the document.",
 													"type": "string"
 												},
 												"title": {
@@ -173,7 +176,7 @@
 											"type": "object"
 										},
 										"Module": {
-											"description": "Information about a given REST module available of the wiki. Corresponds to the https://www.mediawiki.org/schema/mwapi-1.0 schema.",
+											"description": "Information about a given REST module available of the wiki. Corresponds to the https://www.mediawiki.org/schema/mwapi-1.2 schema.",
 											"properties": {
 												"base": {
 													"description": "The base path of the module, to be appended to the server URL. This may or may not be a functioning endpoint, as defined by the module's specification.",
@@ -196,7 +199,16 @@
 											"type": "object"
 										},
 										"ModuleInfo": {
-											"$ref": "https://www.mediawiki.org/schema/mwapi-1.0#/definitions/Info"
+											"allOf": [
+												{
+													"$ref": "https://www.mediawiki.org/schema/mwapi-1.2#/definitions/Info"
+												},
+												{
+													"required": [
+														"groups"
+													]
+												}
+											]
 										}
 									},
 									"description": "Discovery documents provide all information needed to locate and access REST APIs on a given wiki.",
@@ -209,7 +221,6 @@
 												"$ref": "#/definitions/Module"
 											},
 											"description": "Information about the API modules available for interacting with the wiki. Depends on the extensions installed on the wiki, and may further vary with the wiki's version and configuration.",
-											"minProperties": 1,
 											"type": "object"
 										},
 										"mw-discovery": {
@@ -256,6 +267,7 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
+				"summary": "Get available REST API modules",
 				"tags": [
 					"Discovery"
 				]
@@ -263,7 +275,7 @@
 		},
 		"/module/{module}": {
 			"get": {
-				"operationId": "getModuleByModule",
+				"operationId": "getGetSpecForAModule",
 				"parameters": [
 					{
 						"description": "Module spec module",
@@ -306,6 +318,7 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
+				"summary": "Get spec for a module",
 				"tags": [
 					"Modules"
 				]
@@ -313,7 +326,7 @@
 		},
 		"/module/{module}/{version}": {
 			"get": {
-				"operationId": "getModuleByModuleByVersion",
+				"operationId": "getGetSpecForAModuleAndVersion",
 				"parameters": [
 					{
 						"description": "Module spec module",
@@ -366,6 +379,7 @@
 						"CentralAuthSessionProvider-UserID": []
 					}
 				],
+				"summary": "Get spec for a module and version",
 				"tags": [
 					"Modules"
 				]

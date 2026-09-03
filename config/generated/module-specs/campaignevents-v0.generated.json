@@ -120,13 +120,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
 		"description": "REST API for the CampaignEvents extension, which enables organizers to create and manage campaign events, invite and track participants, and associate wiki contributions with events.",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "CampaignEvents API",
 		"version": "0.1.0",
 		"x-doc-url": "https://www.mediawiki.org/wiki/Extension:CampaignEvents"
@@ -158,7 +161,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -194,6 +197,51 @@
 				"summary": "Delete an event contribution record",
 				"tags": [
 					"Contributions"
+				]
+			}
+		},
+		"/event_discovery/discoverable_events": {
+			"get": {
+				"description": "Returns the open events whose worklist contains the given page and for which the authenticated user (a non-participant who has not opted out) should be shown the event discovery dialog, recording the once-per-user-and-event suppression as it does so. Used by the front-end to trigger the discovery dialog after a VisualEditor save, where the server-side BeforePageDisplay hook does not run.",
+				"operationId": "getListDiscoverableEventsForAPage",
+				"parameters": [
+					{
+						"description": "page parameter",
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "mw-title",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "List discoverable events for a page",
+				"tags": [
+					"Worklists"
 				]
 			}
 		},
@@ -549,7 +597,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									},
 									"topics": {
@@ -758,6 +806,7 @@
 											"bnwiktionary",
 											"boardgovcomwiki",
 											"boardwiki",
+											"bolwiki",
 											"bowiki",
 											"bowikibooks",
 											"bowiktionary",
@@ -1772,7 +1821,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -2222,7 +2271,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									},
 									"topics": {
@@ -2431,6 +2480,7 @@
 											"bnwiktionary",
 											"boardgovcomwiki",
 											"boardwiki",
+											"bolwiki",
 											"bowiki",
 											"bowikibooks",
 											"bowiktionary",
@@ -3572,6 +3622,7 @@
 								"bnwiktionary",
 								"boardgovcomwiki",
 								"boardwiki",
+								"bolwiki",
 								"bowiki",
 								"bowikibooks",
 								"bowiktionary",
@@ -4537,7 +4588,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -4624,7 +4675,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									},
 									"user_ids": {
@@ -4754,7 +4805,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -4828,7 +4879,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									},
 									"user_ids": {
@@ -4974,7 +5025,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -5093,7 +5144,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -5911,7 +5962,18 @@
 			"get": {
 				"description": "Returns a list of events in which the currently authenticated user is a participant and that are eligible for contribution association. Used internally to populate the post-edit contribution prompt.",
 				"operationId": "getListEventsAvailableForContributionAssociation",
-				"parameters": [],
+				"parameters": [
+					{
+						"description": "title parameter",
+						"in": "query",
+						"name": "title",
+						"required": false,
+						"schema": {
+							"format": "mw-title",
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "OK",
@@ -5938,6 +6000,83 @@
 				"summary": "List events available for contribution association",
 				"tags": [
 					"Participants"
+				]
+			}
+		},
+		"/worklist/{title}/pages": {
+			"patch": {
+				"description": "Applies a delta to a worklist's page list: pages to add and/or remove, grouped by wiki. The worklist is identified by its page title.",
+				"operationId": "patchAddOrRemoveWorklistPages",
+				"parameters": [
+					{
+						"description": "title parameter",
+						"in": "path",
+						"name": "title",
+						"required": true,
+						"schema": {
+							"format": "mw-title",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"add": "missing_example",
+								"remove": "missing_example",
+								"token": "missing_example"
+							},
+							"schema": {
+								"properties": {
+									"add": {
+										"default": [],
+										"description": "add parameter",
+										"type": "object"
+									},
+									"remove": {
+										"default": [],
+										"description": "remove parameter",
+										"type": "object"
+									},
+									"token": {
+										"default": "",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Cache-Control": {
+								"description": "Dictates caching behavior for a browser, letting it know how often to refresh locally stored resources.",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"$ref": "#/components/responses/GenericErrorResponse"
+					}
+				},
+				"security": [
+					{
+						"CentralAuthSessionProvider-Session": [],
+						"CentralAuthSessionProvider-Token": [],
+						"CentralAuthSessionProvider-UserID": []
+					}
+				],
+				"summary": "Add or remove worklist pages",
+				"tags": [
+					"Worklists"
 				]
 			}
 		}

@@ -219,6 +219,8 @@
   "search-all-languages-cta": "جستجو در همه زبان‌ها",
   "search-no-locale-results": "نتیجه‌ای به زبان {{bidi:$1}} برای {{bidi:$2}} یافت نشد.",
   "search-no-results-any-language": "نتیجه‌ای برای {{bidi:$1}} در هیچ زبانی یافت نشد.",
+  "search-results-endpoint-deprecated": "منسوخ‌شده",
+  "search-results-endpoints-heading": "نقاط پایانی API",
   "search-results-locale-heading": "نتایج به زبان {{bidi:$1}}",
   "section-nav-about-label": "About sections",
   "section-nav-about-title": "About",

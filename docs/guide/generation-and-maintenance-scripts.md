@@ -63,11 +63,13 @@ generalizes to any future fleet-wide collection.
 | Language catalog | [generate-language-catalog.mjs](../../scripts/generate-language-catalog.mjs) | [config/languages.generated.ts](../../config/languages.generated.ts) | [config/languages.ts](../../config/languages.ts) | [adr-language-catalog.md](../adr-language-catalog.md) |
 | Wiki fleet (instances) | [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs) | [config/generated/wikiInstances.generated.ts](../../config/generated/wikiInstances.generated.ts) | [config/moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts) | [adr-module-source-of-truth.md](../adr-module-source-of-truth.md) |
 | REST API modules + specs | [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs) | [config/generated/modules.generated.ts](../../config/generated/modules.generated.ts) and [config/generated/module-specs/](../../config/generated/module-specs/) | [config/moduleSourceOfTruth.ts](../../config/moduleSourceOfTruth.ts) | [adr-module-source-of-truth.md](../adr-module-source-of-truth.md) |
+| Endpoint search index | [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs) | [config/generated/endpointSearchIndex.generated.ts](../../config/generated/endpointSearchIndex.generated.ts) | [config/endpointSearch.ts](../../config/endpointSearch.ts) | [adr-explorer-deep-linking.md](../adr-explorer-deep-linking.md) §10 |
 | Scalar interface strings | [generate-scalar-localization.mjs](../../scripts/generate-scalar-localization.mjs) | [config/generated/scalarLocalization.generated.ts](../../config/generated/scalarLocalization.generated.ts) and [i18n/explorer-scalar/](../../i18n/explorer-scalar/) | [app/scalar/scalarLocalization.ts](../../app/scalar/scalarLocalization.ts) | [adr-scalar-interface-localization.md](../adr-scalar-interface-localization.md) |
 
-Two scripts, three datasets: the instances and the modules come out of the same
-sweep, because you cannot know which modules exist without first enumerating the
-wikis that expose them.
+Two scripts, four datasets: the instances, the modules, and the endpoint index
+all come out of the same run, because you cannot know which modules exist
+without first enumerating the wikis that expose them, and you cannot index
+endpoints without the specs those modules point at.
 
 ## The language catalog
 
@@ -125,9 +127,10 @@ about this dataset.
 
 [generate-module-source-of-truth.mjs](../../scripts/generate-module-source-of-truth.mjs)
 is the larger script. It answers two questions at once: which public, open wikis
-exist, and which REST API modules each of them exposes. It runs in two phases
-that are independently runnable, so refreshing specs never forces a full
-re-sweep of the fleet.
+exist, and which REST API modules each of them exposes — and then derives a
+searchable endpoint index from the answers. It runs in three phases that are
+independently runnable, so refreshing specs never forces a full re-sweep of the
+fleet.
 
 ### Phase 1 – enumerate and sweep
 
@@ -187,18 +190,64 @@ up unnecessary and could be dropped; do not build hard dependencies on the
 snapshot's contents. Phase 1 (the instance and module registries) does not carry
 this caveat – it is the source of truth for *which* modules exist where.
 
+### Phase 3 – derive the endpoint search index
+
+```
+for each module that has a captured spec:
+    nav = Scalar.createNavigation(documentSlug, spec)   # Scalar's own traversal
+    for each operation in nav:
+        record = { module, instance, method, path, summary, …, deepLink }
+    write endpointSearchIndex.generated.ts
+```
+
+The last phase is purely local — it performs no network I/O and reads only what
+phases 1 and 2 already committed. It produces
+[config/generated/endpointSearchIndex.generated.ts](../../config/generated/endpointSearchIndex.generated.ts):
+one record per REST API operation, each carrying a `deepLink` that opens the
+community Explorer on that exact endpoint. This is what powers the "API
+endpoints" group in the site search panel.
+
+Two details are load-bearing and easy to break if you touch this phase:
+
+- **The operation hash is built by Scalar's own id builders**, not by us. Scalar
+  owns the URL hash in the shipping Explorer, so a deep link has to spell the
+  operation the way Scalar does. The builder imports `createNavigation` from
+  `@scalar/workspace-store` and `makeHrefFromId` from `@scalar/api-reference`
+  rather than reproducing their slugging. If a Scalar upgrade changes the format,
+  this file changes and `tests/endpointSearchIndex.test.mjs` fails — which is the
+  intended alarm, not a flaky test. The Scalar version the hashes were built
+  against is recorded in the file's metadata.
+- **Traversal is driven by Scalar's navigation tree, not by `spec.paths`.** That
+  is what keeps operations Scalar hides (`x-internal`, `x-scalar-ignore`) out of
+  the index, so a search result can never link to an operation that will not
+  render. The run warns when the two counts disagree.
+
+Modules whose spec could not be captured contribute no records and are listed in
+the metadata as `modulesWithoutSpec` — never silently dropped, on the same
+principle phase 1 applies to failed discovery: absence of data is not evidence of
+absence.
+
+The pure builder lives in
+[scripts/lib/endpointSearchIndex.mjs](../../scripts/lib/endpointSearchIndex.mjs)
+so the drift test can call it directly.
+
 ### Running it
 
-Both phases run by default:
+All three phases run by default:
 
 ```bash
-npm run generate-module-source-of-truth   # phase 1 + phase 2
+npm run generate-module-source-of-truth   # phase 1 + 2 + 3
 ```
 
 Flags and environment overrides worth knowing:
 
-- `--skip-specs` runs phase 1 only; `--specs-only` runs phase 2 against the
-  already-committed module registry. They are mutually exclusive.
+- `--skip-specs` runs phases 1 + 3; `--specs-only` runs phases 2 + 3 against the
+  already-committed module registry; `--index-only` runs phase 3 alone. They are
+  mutually exclusive. Note that phase 3 runs in *every* mode — the index is
+  derived from both the registry and the specs, so leaving it behind would let it
+  describe an older capture. It is local and cheap, so this costs nothing.
+- `--index-only` is the one to reach for after a dependency bump, to see whether
+  Scalar's hash format moved.
 - `MODULE_SOT_LIMIT` caps the number of instances swept – essential for fast
   local iteration. A limited run is labeled `limited: true` in its metadata and
   warns loudly; never commit a limited run as the real source of truth.
@@ -425,6 +474,21 @@ node scripts/generate-dark-tokens.mjs
 assertion harness for the content locale-fallback logic (`npm run
 test:content-fallback`). It is useful as a template for the kind of lightweight,
 dependency-free test these scripts warrant.
+
+[tests/endpointSearchIndex.test.mjs](../../tests/endpointSearchIndex.test.mjs)
+(`node --test "tests/*.test.mjs"`) goes a step further and is worth copying when
+a generated artifact depends on a third-party format: it re-runs the phase-3
+builder against the committed specs and asserts the result is byte-identical to
+the committed index. That converts "a dependency upgrade silently changed our
+output" — normally invisible until a user reports a broken link — into a failing
+test with a message telling you which command to run.
+
+Note that these tests import the generated files and the leaf config modules
+directly. That works only because those files are self-contained: Node cannot
+resolve the extensionless relative imports the app uses. It is why
+`config/scalarDocument.ts` and `config/explorerInstancePolicy.ts` exist as
+separate modules that their original homes re-export — the generator and the test
+need the same values the app uses, without a second copy.
 
 ## Known gaps and open questions
 

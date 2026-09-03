@@ -1,0 +1,1252 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.Aggregate": {
+			"properties": {
+				"agent": {
+					"description": "Type of user agent",
+					"example": "all-agents",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"media_type": {
+					"description": "Type of media file",
+					"example": "all-media-types",
+					"type": "string"
+				},
+				"referer": {
+					"description": "Origin of the request",
+					"example": "all-referers",
+					"type": "string"
+				},
+				"requests": {
+					"description": "Number of requests",
+					"example": 7611794,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDDHH format",
+					"example": "2023010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.AggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Aggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerFile": {
+			"properties": {
+				"agent": {
+					"description": "Type of user agent",
+					"example": "all-agents",
+					"type": "string"
+				},
+				"file_path": {
+					"description": "Path to the file on upload.wikimedia.org",
+					"example": "/wikipedia/commons/1/1c/Manhattan_Bridge_Construction_1909.jpg",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"referer": {
+					"description": "Origin of the request",
+					"example": "all-referers",
+					"type": "string"
+				},
+				"requests": {
+					"description": "Number of requests",
+					"example": 34875,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDDHH format",
+					"example": "2023010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerFileResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.PerFile"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.Top": {
+			"properties": {
+				"day": {
+					"description": "Day in DD format",
+					"example": "02",
+					"type": "string"
+				},
+				"files": {
+					"description": "Array of file objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopFile"
+					},
+					"type": "array"
+				},
+				"media_type": {
+					"description": "Type of media file",
+					"example": "all-media-types",
+					"type": "string"
+				},
+				"month": {
+					"description": "Month in MM format",
+					"example": "01",
+					"type": "string"
+				},
+				"referer": {
+					"description": "Origin of the request",
+					"example": "all-referers",
+					"type": "string"
+				},
+				"year": {
+					"description": "Year in YYYY format",
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopFile": {
+			"properties": {
+				"file_path": {
+					"description": "Path to the file on upload.wikimedia.org",
+					"example": "/wikipedia/commons/d/d9/En-uk-Taika-Waititi.wav",
+					"type": "string"
+				},
+				"rank": {
+					"description": "File rank",
+					"example": 1,
+					"type": "integer"
+				},
+				"requests": {
+					"description": "Number of requests",
+					"example": 56,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Top"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysAggregateContext": {
+			"properties": {
+				"agent": {
+					"example": "all-agents",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "video_plays/v3/aggregate",
+					"type": "string"
+				},
+				"granularity": {
+					"example": "monthly",
+					"type": "string"
+				},
+				"referer": {
+					"example": "all-referers",
+					"type": "string"
+				},
+				"start": {
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysAggregateItem": {
+			"properties": {
+				"plays": {
+					"example": 3443,
+					"type": "integer"
+				},
+				"poster_views": {
+					"example": 25,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysAggregateResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.VideoPlaysAggregateContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.VideoPlaysAggregateItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysPerFileContext": {
+			"properties": {
+				"agent": {
+					"example": "all-agents",
+					"type": "string"
+				},
+				"end": {
+					"example": "2024-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "video_plays/v3/per_file",
+					"type": "string"
+				},
+				"file_path": {
+					"example": "/wikipedia/commons/4/4e/Sample_video.ogv",
+					"type": "string"
+				},
+				"granularity": {
+					"example": "daily",
+					"type": "string"
+				},
+				"referer": {
+					"example": "all-referers",
+					"type": "string"
+				},
+				"start": {
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysPerFileItem": {
+			"properties": {
+				"plays": {
+					"example": 3443,
+					"type": "integer"
+				},
+				"poster_views": {
+					"example": 25,
+					"type": "integer"
+				},
+				"timestamp": {
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysPerFileResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.VideoPlaysPerFileContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.VideoPlaysPerFileItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysTopContext": {
+			"properties": {
+				"day": {
+					"example": "02",
+					"type": "string"
+				},
+				"endpoint": {
+					"example": "video_plays/v3/top",
+					"type": "string"
+				},
+				"month": {
+					"example": "01",
+					"type": "string"
+				},
+				"referer": {
+					"example": "all-referers",
+					"type": "string"
+				},
+				"year": {
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysTopItem": {
+			"properties": {
+				"file_path": {
+					"example": "/wikipedia/commons/4/4e/Sample_video.ogv",
+					"type": "string"
+				},
+				"play_rank": {
+					"example": 1,
+					"type": "integer"
+				},
+				"play_requests": {
+					"example": 3443,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.VideoPlaysTopResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.VideoPlaysTopContext"
+				},
+				"items": {
+					"items": {
+						"$ref": "#/definitions/entities.VideoPlaysTopItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Media Analytics provides data about requests for media files on Wikimedia projects.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Media Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/mediarequests/aggregate/{referer}/{media-type}/{agent}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of media requests to upload.wikimedia.org.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of media file",
+						"enum": [
+							"all-media-types",
+							"image",
+							"video",
+							"audio",
+							"document",
+							"other"
+						],
+						"example": "all-media-types",
+						"in": "path",
+						"name": "media-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.AggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of media requests"
+			}
+		},
+		"/mediarequests/per-file/{referer}/{agent}/{file-path}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of requests for a media file on upload.wikimedia.org.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Path to the file on upload.wikimedia.org in URL-encoded format. The API sandbox encodes paths automatically",
+						"example": "/wikipedia/commons/1/1c/Manhattan_Bridge_Construction_1909.jpg",
+						"in": "path",
+						"name": "file-path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.PerFileResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of media requests for a file"
+			}
+		},
+		"/mediarequests/top/{referer}/{media-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 1000 most-requested media files on upload.wikimedia.org.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of media file",
+						"enum": [
+							"all-media-types",
+							"image",
+							"video",
+							"audio",
+							"document",
+							"other"
+						],
+						"example": "all-media-types",
+						"in": "path",
+						"name": "media-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-requested files"
+			}
+		},
+		"/video_plays/v3/aggregate/{referer}/{agent}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of video play counts aggregated across all files. This is an Analytics API v3 endpoint: all params and response keys use snake_case, end date parameters are exclusive, and response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format (exclusive)",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.VideoPlaysAggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get aggregate video play counts"
+			}
+		},
+		"/video_plays/v3/per_file/{referer}/{agent}/{file_path}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of video play counts for a specific media file on upload.wikimedia.org. This is an Analytics API v3 endpoint: all params and response keys use snake_case, end date parameters are exclusive, and response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Path to the file on upload.wikimedia.org in URL-encoded format",
+						"example": "/wikipedia/commons/4/4e/Sample_video.ogv",
+						"in": "path",
+						"name": "file_path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "daily",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format (exclusive)",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.VideoPlaysPerFileResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get video play counts for a specific file"
+			}
+		},
+		"/video_plays/v3/top/{referer}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the top 1000 most-played video files on upload.wikimedia.org. This is an Analytics API v3 endpoint: response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Origin of the request. Can be a domain of a Wikimedia project, or any of the allowed values: `all-referers`, `internal`, `external`, `search-engine`, `unknown`, or `none`",
+						"example": "all-referers",
+						"in": "path",
+						"name": "referer",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.VideoPlaysTopResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List top video files by play count"
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

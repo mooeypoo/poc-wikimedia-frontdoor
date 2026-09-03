@@ -1,0 +1,211 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.Country": {
+			"properties": {
+				"country": {
+					"description": "Country code in ISO 3166-1 alpha-2 format",
+					"example": "US",
+					"type": "string"
+				},
+				"editors-ceil": {
+					"description": "Approximate number of editors",
+					"example": 2000,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditorsByCountry": {
+			"properties": {
+				"activity-level": {
+					"description": "Editor activity range",
+					"example": "5..99-edits",
+					"type": "string"
+				},
+				"countries": {
+					"description": "Number of editors per country",
+					"items": {
+						"$ref": "#/definitions/entities.Country"
+					},
+					"type": "array"
+				},
+				"month": {
+					"description": "Month in MM format",
+					"example": "01",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"year": {
+					"description": "Year in YYYY format",
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditorsByCountryResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.EditorsByCountry"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Geo Analytics provides data about editors of Wikimedia projects by country.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Geo Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/editors/by-country/{project}/{activity-level}/{year}/{month}": {
+			"get": {
+				"description": "Returns the approximate number of editors of a Wikimedia project, split by country of origin.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Editor activity range",
+						"enum": [
+							"5..99-edits",
+							"100..-edits"
+						],
+						"example": "5..99-edits",
+						"in": "path",
+						"name": "activity-level",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditorsByCountryResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of editors by country"
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

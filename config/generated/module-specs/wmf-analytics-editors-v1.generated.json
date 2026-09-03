@@ -1,0 +1,1155 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.Aggregate": {
+			"properties": {
+				"activity-level": {
+					"description": "Editor activity range",
+					"example": "all-activity-levels",
+					"type": "string"
+				},
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.AggregateEditorResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.AggregateEditorResult": {
+			"properties": {
+				"editors": {
+					"description": "Number of editors",
+					"example": 379173,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.AggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Aggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.RegisteredUsers": {
+			"properties": {
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.RegisteredUsersResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.RegisteredUsersResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.RegisteredUsers"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.RegisteredUsersResult": {
+			"properties": {
+				"new_registered_users": {
+					"description": "Number of newly registered users",
+					"example": 125538,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifference": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifference"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-02T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of user objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceResultDetails"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceResultDetails": {
+			"properties": {
+				"abs_bytes_diff": {
+					"description": "Number of bytes changed",
+					"example": 63766633,
+					"type": "integer"
+				},
+				"rank": {
+					"description": "User rank",
+					"example": 1,
+					"type": "integer"
+				},
+				"user_text": {
+					"description": "Wikimedia username, or `null` for anonymous users",
+					"example": "MyUsername",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEdits": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEditsResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEdits"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-02T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of user objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEditsResultDetails"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsResultDetails": {
+			"properties": {
+				"edits": {
+					"description": "Number of edits",
+					"example": 41262,
+					"type": "integer"
+				},
+				"rank": {
+					"description": "User rank",
+					"example": 1,
+					"type": "integer"
+				},
+				"user_text": {
+					"description": "Wikimedia username, or `null` for anonymous users",
+					"example": "MyUsername",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifference": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifferenceResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifference"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-02T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of user objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifferenceResultDetails"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceResultDetails": {
+			"properties": {
+				"net_bytes_diff": {
+					"description": "Number of bytes added. A negative value indicates bytes removed",
+					"example": 4090221,
+					"type": "integer"
+				},
+				"rank": {
+					"description": "User rank",
+					"example": 1,
+					"type": "integer"
+				},
+				"user_text": {
+					"description": "Wikimedia username, or `null` for anonymous users",
+					"example": "MyUsername",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Editor Analytics provides data about the number of editors and newly registered users of Wikimedia projects.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Editor Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/editors/aggregate/{project}/{editor-type}/{page-type}/{activity-level}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of editors on a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Editor activity range",
+						"enum": [
+							"all-activity-levels",
+							"1..4-edits",
+							"5..24-edits",
+							"25..99-edits",
+							"100..-edits"
+						],
+						"example": "all-activity-levels",
+						"in": "path",
+						"name": "activity-level",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.AggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of editors"
+			}
+		},
+		"/editors/top-by-absolute-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-active editors on a Wikimedia project, ordered by the absolute change in page length introduced by their edits, in bytes. For example, if an editor adds 5 bytes and removes 10 bytes, the absolute change is 15 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-active editors by number of bytes changed"
+			}
+		},
+		"/editors/top-by-edits/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-active editors on a Wikimedia project, ordered by number of edits.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByEditsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-active editors by number of edits"
+			}
+		},
+		"/editors/top-by-net-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-active editors on a Wikimedia project, ordered by the net change in page length introduced by their edits, in bytes. For example, if an editor adds 5 bytes and removes 10 bytes, the net change is -5 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByNetBytesDifferenceResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-active editors by net difference in bytes"
+			}
+		},
+		"/registered-users/new/{project}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of newly registered users on a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.RegisteredUsersResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of new users"
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

@@ -22,10 +22,19 @@
  *
  *   config/generated/module-specs/<name>.generated.json
  *
- * Both phases run by default. Phases are independently runnable so refreshing
- * specs never requires re-sweeping the fleet (ADR §5):
- *   --skip-specs   phase 1 only
- *   --specs-only   phase 2 only, against the existing module registry
+ * Phase 3: derive the endpoint keyword-search index from those committed specs:
+ *
+ *   config/generated/endpointSearchIndex.generated.ts
+ *
+ * All three phases run by default. Phases are independently runnable so
+ * refreshing specs never requires re-sweeping the fleet (ADR §5):
+ *   --skip-specs   phase 1 + 3 (no network spec fetch)
+ *   --specs-only   phase 2 + 3, against the existing module registry
+ *   --index-only   phase 3 only, against the committed registry and specs
+ *
+ * Phase 3 always follows phases 1 and 2 because the index is derived from both
+ * the module registry and the specs — it must never be left describing an older
+ * capture (docs/adr-explorer-deep-linking.md §10). It performs no network I/O.
  *
  * Correctness (ADR §6): a discovery fetch that FAILS is never recorded as
  * "this instance has no modules". Failures are retried with backoff and, if
@@ -40,8 +49,17 @@
 
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
-import { promises as fs } from 'node:fs'
+import { promises as fs, readFileSync } from 'node:fs'
 import { normalizeDiscoveryModules } from '../app/utils/normalizeDiscoveryModules.ts'
+import { buildExplorerDirectPath } from '../app/utils/explorerRoute.ts'
+import { SCALAR_DOCUMENT_SLUG } from '../config/scalarDocument.ts'
+import { resolvePreferredModuleInstance } from '../config/explorerInstancePolicy.ts'
+import { isExplorerBetaOptInModule, isExplorerInternalOptInModule } from '../config/explorerOptIn.ts'
+import {
+	buildEndpointSearchIndex,
+	countDeclaredOperations,
+	serializeEndpointSearchIndex
+} from './lib/endpointSearchIndex.mjs'
 
 const __filename = fileURLToPath( import.meta.url )
 const projectRoot = dirname( dirname( __filename ) )
@@ -88,6 +106,7 @@ const OUTPUT_DIR = join( projectRoot, 'config', 'generated' )
 const INSTANCES_OUTPUT = join( OUTPUT_DIR, 'wikiInstances.generated.ts' )
 const MODULES_OUTPUT = join( OUTPUT_DIR, 'modules.generated.ts' )
 const SPECS_OUTPUT_DIR = join( OUTPUT_DIR, 'module-specs' )
+const ENDPOINT_INDEX_OUTPUT = join( OUTPUT_DIR, 'endpointSearchIndex.generated.ts' )
 
 /**
  * Fetches a URL as JSON with the required User-Agent.
@@ -643,6 +662,108 @@ async function runPhase1() {
 }
 
 /**
+ * Resolves the opt-in gate that hides a module in the explorer until the user
+ * ticks the matching checkbox, or null when the module is visible by default.
+ *
+ * Indexed so search can apply the same visibility rules the explorer applies —
+ * otherwise a result could deep-link to a module the explorer refuses to select,
+ * bouncing the user to a different module (see useExplorerOptInFilteredModules).
+ *
+ * @param {string} moduleName - Full discovery module name.
+ * @returns {'beta' | 'internal' | null} The gate, or null when ungated.
+ */
+function resolveModuleOptInGate( moduleName ) {
+	if ( isExplorerInternalOptInModule( moduleName ) ) {
+		return 'internal'
+	}
+	if ( isExplorerBetaOptInModule( moduleName ) ) {
+		return 'beta'
+	}
+	return null
+}
+
+/**
+ * Reads the @scalar/api-reference version the operation hashes are built
+ * against, so a format change caused by an upgrade is attributable from the
+ * generated file alone.
+ *
+ * @returns {Promise<string>} The installed version, or `unknown` when unreadable.
+ */
+async function readScalarApiReferenceVersion() {
+	try {
+		const packageJsonPath = join(
+			projectRoot, 'node_modules', '@scalar', 'api-reference', 'package.json'
+		)
+		const packageJson = JSON.parse( await fs.readFile( packageJsonPath, 'utf-8' ) )
+		return typeof packageJson.version === 'string' ? packageJson.version : 'unknown'
+	} catch {
+		return 'unknown'
+	}
+}
+
+/**
+ * Phase 3 (ADR §10): derives the endpoint keyword-search index from the
+ * committed specs and writes it to config/generated/.
+ *
+ * Purely local — no network I/O. Operation hashes come from Scalar's own id
+ * builders (see scripts/lib/endpointSearchIndex.mjs), and the landing instance
+ * comes from the same policy the runtime quick-resolve route uses, so neither
+ * can drift from the application.
+ *
+ * @param {Array<object>} modules - Module registry entries.
+ * @returns {Promise<void>}
+ */
+async function runPhase3( modules ) {
+	const generatedAt = new Date().toISOString()
+	console.log( `[module-sot] building endpoint search index from ${ modules.length } modules` )
+
+	let declaredOperationCount = 0
+
+	const { records, modulesWithoutSpec } = buildEndpointSearchIndex( {
+		modules,
+		documentSlug: SCALAR_DOCUMENT_SLUG,
+		resolveInstance: resolvePreferredModuleInstance,
+		buildModulePath: buildExplorerDirectPath,
+		resolveGate: resolveModuleOptInGate,
+		readSpec: ( wikiModule ) => {
+			const specPath = join( SPECS_OUTPUT_DIR, `${ wikiModule.specFile }.generated.json` )
+			let openApiSpec
+			try {
+				openApiSpec = JSON.parse( readFileSync( specPath, 'utf-8' ) )
+			} catch {
+				return null
+			}
+			declaredOperationCount += countDeclaredOperations( openApiSpec )
+			return openApiSpec
+		}
+	} )
+
+	await fs.mkdir( OUTPUT_DIR, { recursive: true } )
+	await fs.writeFile( ENDPOINT_INDEX_OUTPUT, serializeEndpointSearchIndex( records, {
+		generatedAt,
+		scalarDocumentSlug: SCALAR_DOCUMENT_SLUG,
+		scalarApiReferenceVersion: await readScalarApiReferenceVersion(),
+		moduleCount: modules.length - modulesWithoutSpec.length,
+		endpointCount: records.length,
+		modulesWithoutSpec
+	} ), 'utf-8' )
+
+	console.log( `[module-sot] wrote ${ records.length } endpoints → ${ ENDPOINT_INDEX_OUTPUT }` )
+
+	// Scalar drops operations it will not render (x-internal / x-scalar-ignore),
+	// so a shortfall is expected and benign — but a large or sudden gap is worth
+	// seeing in the run output rather than discovering as missing search results.
+	if ( declaredOperationCount !== records.length ) {
+		console.warn( `[module-sot] ${ declaredOperationCount - records.length } declared operation(s) ` +
+			'not indexed (hidden from Scalar navigation via x-internal / x-scalar-ignore)' )
+	}
+	if ( modulesWithoutSpec.length > 0 ) {
+		console.warn( `[module-sot] ${ modulesWithoutSpec.length } module(s) contributed no endpoints ` +
+			`(no captured spec): ${ modulesWithoutSpec.join( ', ' ) }` )
+	}
+}
+
+/**
  * Loads the module registry from the committed phase-1 output (for --specs-only).
  *
  * @returns {Promise<Array<object>>} Module registry entries.
@@ -659,14 +780,19 @@ async function loadExistingModules() {
 	if ( !Array.isArray( modules ) || modules.length === 0 ) {
 		throw new Error( `no modules in ${ MODULES_OUTPUT } — run phase 1 first` )
 	}
-	console.log( `[module-sot] --specs-only: ${ modules.length } modules from ${ MODULES_OUTPUT }` )
+	console.log( `[module-sot] loaded ${ modules.length } modules from ${ MODULES_OUTPUT }` )
 	return modules
 }
 
 /**
- * Main entrypoint. Runs phase 1 (fleet sweep) and phase 2 (spec capture) by
- * default; --skip-specs runs phase 1 only, --specs-only runs phase 2 only
- * against the existing module registry (ADR §5).
+ * Main entrypoint. Runs phase 1 (fleet sweep), phase 2 (spec capture), and
+ * phase 3 (endpoint search index) by default; --skip-specs runs phases 1 + 3,
+ * --specs-only runs phases 2 + 3 against the existing module registry, and
+ * --index-only runs phase 3 alone (ADR §5).
+ *
+ * Phase 3 runs in every mode because the index is derived from the registry and
+ * the specs — skipping it would leave it describing an older capture
+ * (docs/adr-explorer-deep-linking.md §10). It is local and cheap.
  *
  * @returns {Promise<void>}
  */
@@ -674,13 +800,16 @@ async function main() {
 	const args = process.argv.slice( 2 )
 	const skipSpecs = args.includes( '--skip-specs' )
 	const specsOnly = args.includes( '--specs-only' )
-	if ( skipSpecs && specsOnly ) {
-		throw new Error( '--skip-specs and --specs-only are mutually exclusive' )
+	const indexOnly = args.includes( '--index-only' )
+
+	const exclusiveFlags = [ skipSpecs, specsOnly, indexOnly ].filter( Boolean )
+	if ( exclusiveFlags.length > 1 ) {
+		throw new Error( '--skip-specs, --specs-only and --index-only are mutually exclusive' )
 	}
 
-	const modules = specsOnly ? await loadExistingModules() : await runPhase1()
+	const modules = ( specsOnly || indexOnly ) ? await loadExistingModules() : await runPhase1()
 
-	if ( !skipSpecs ) {
+	if ( !skipSpecs && !indexOnly ) {
 		const { succeeded, failed } = await captureModuleSpecs( modules )
 		console.log( `[module-sot] wrote ${ succeeded } specs → ${ SPECS_OUTPUT_DIR }` )
 		if ( failed.length > 0 ) {
@@ -689,6 +818,8 @@ async function main() {
 			}` )
 		}
 	}
+
+	await runPhase3( modules )
 }
 
 main().catch( ( error ) => {

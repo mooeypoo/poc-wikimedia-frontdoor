@@ -120,12 +120,15 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "MediaWiki",
+			"url": "https://www.mediawiki.org"
 		},
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "ReadingLists REST API",
 		"version": "0.1.1"
 	},
@@ -133,7 +136,7 @@
 	"paths": {
 		"/lists": {
 			"get": {
-				"operationId": "getLists",
+				"operationId": "getGetReadingLists",
 				"parameters": [
 					{
 						"description": "next parameter",
@@ -207,17 +210,19 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading lists"
 			},
 			"post": {
-				"operationId": "postLists",
+				"operationId": "postCreateReadingList",
 				"parameters": [
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -243,7 +248,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -278,12 +283,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create reading list"
 			}
 		},
 		"/lists/": {
 			"get": {
-				"operationId": "getLists2",
+				"operationId": "getGetReadingLists2",
 				"parameters": [
 					{
 						"description": "next parameter",
@@ -357,17 +363,19 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading lists"
 			},
 			"post": {
-				"operationId": "postLists2",
+				"operationId": "postCreateReadingList2",
 				"parameters": [
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -393,7 +401,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -428,12 +436,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create reading list"
 			}
 		},
 		"/lists/{id}": {
 			"delete": {
-				"operationId": "deleteListsById",
+				"operationId": "deleteDeleteReadingList",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -467,10 +476,11 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Delete reading list"
 			},
 			"get": {
-				"operationId": "getListsById",
+				"operationId": "getGetReadingList",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -505,10 +515,11 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading list"
 			},
 			"put": {
-				"operationId": "putListsById",
+				"operationId": "putUpdateReadingList",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -520,11 +531,12 @@
 						}
 					},
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -549,7 +561,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -581,12 +593,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Update reading list"
 			}
 		},
 		"/lists/{id}/entries": {
 			"get": {
-				"operationId": "getListsByIdEntries",
+				"operationId": "getGetReadingListEntries",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -667,10 +680,11 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading list entries"
 			},
 			"post": {
-				"operationId": "postListsByIdEntries",
+				"operationId": "postCreateReadingListEntry",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -682,11 +696,12 @@
 						}
 					},
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -711,7 +726,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -747,12 +762,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create reading list entry"
 			}
 		},
 		"/lists/{id}/entries/": {
 			"get": {
-				"operationId": "getListsByIdEntries2",
+				"operationId": "getGetReadingListEntries2",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -833,10 +849,11 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading list entries"
 			},
 			"post": {
-				"operationId": "postListsByIdEntries2",
+				"operationId": "postCreateReadingListEntry2",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -848,11 +865,12 @@
 						}
 					},
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -877,7 +895,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -913,12 +931,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create reading list entry"
 			}
 		},
 		"/lists/{id}/entries/{entry_id}": {
 			"delete": {
-				"operationId": "deleteListsByIdEntriesByEntry_id",
+				"operationId": "deleteDeleteReadingListEntry",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -961,12 +980,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Delete reading list entry"
 			}
 		},
 		"/lists/{id}/entries/batch": {
 			"post": {
-				"operationId": "postListsByIdEntriesBatch",
+				"operationId": "postCreateMultipleReadingListEntries",
 				"parameters": [
 					{
 						"description": "id parameter",
@@ -978,11 +998,12 @@
 						}
 					},
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -1002,7 +1023,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -1037,19 +1058,21 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create multiple reading list entries"
 			}
 		},
 		"/lists/batch": {
 			"post": {
-				"operationId": "postListsBatch",
+				"operationId": "postCreateMultipleReadingLists",
 				"parameters": [
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -1069,7 +1092,7 @@
 									},
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -1104,12 +1127,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Create multiple reading lists"
 			}
 		},
 		"/lists/changes/since/{date}": {
 			"get": {
-				"operationId": "getListsChangesSinceByDate",
+				"operationId": "getGetReadingListsAndEntriesChangedSinceDate",
 				"parameters": [
 					{
 						"description": "date parameter",
@@ -1192,12 +1216,13 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading lists and entries changed since date"
 			}
 		},
 		"/lists/pages/{project}/{title}": {
 			"get": {
-				"operationId": "getListsPagesByProjectByTitle",
+				"operationId": "getGetReadingListsContainingAPage",
 				"parameters": [
 					{
 						"description": "project parameter",
@@ -1261,19 +1286,22 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Get reading lists containing a page"
 			}
 		},
 		"/lists/setup": {
 			"post": {
-				"operationId": "postListsSetup",
+				"description": "Enables reading lists and creates a default list for the current user.",
+				"operationId": "postEnableReadingLists",
 				"parameters": [
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -1288,7 +1316,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -1320,19 +1348,22 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Enable reading lists"
 			}
 		},
 		"/lists/teardown": {
 			"post": {
-				"operationId": "postListsTeardown",
+				"description": "Soft-deletes all reading lists for the current user. Deleted lists and their entries are permanently purged after the configured retention period, which defaults to 30 days.",
+				"operationId": "postRemoveAllReadingListData",
 				"parameters": [
 					{
-						"description": "csrf_token parameter",
+						"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 						"in": "query",
 						"name": "csrf_token",
 						"required": false,
 						"schema": {
+							"default": "",
 							"type": "string"
 						}
 					}
@@ -1347,7 +1378,7 @@
 								"properties": {
 									"token": {
 										"default": "",
-										"description": "token parameter",
+										"description": "CSRF token.\n**Required** if authenticating via the MediaWiki-Session-CookieSessionProvider cookies.\n**Not required** if using a CSRF-safe mechanism, such as OAuth2.0.",
 										"type": "string"
 									}
 								},
@@ -1379,7 +1410,8 @@
 						"CentralAuthSessionProvider-Token": [],
 						"CentralAuthSessionProvider-UserID": []
 					}
-				]
+				],
+				"summary": "Remove all reading list data"
 			}
 		}
 	},

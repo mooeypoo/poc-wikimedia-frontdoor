@@ -132,7 +132,7 @@
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
-		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use#12._API_Terms",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Attribution API (Beta)",
 		"version": "0.1.0-beta"
 	},
@@ -145,6 +145,7 @@
 				"parameters": [
 					{
 						"description": "Page title. To format the title, replace spaces with underscores, and then URL-encode the result (example: Steller%27s_jay). In the API sandbox, replace spaces with underscores, but do not URL-encode (example: Steller's_jay).",
+						"example": "Earth",
 						"in": "path",
 						"name": "title",
 						"required": true,
@@ -154,6 +155,7 @@
 					},
 					{
 						"description": "Specifies if redirects should be followed, such as following common page aliases or if a page has moved. Default is set to `true`.",
+						"example": true,
 						"in": "query",
 						"name": "redirect",
 						"required": false,
@@ -163,11 +165,15 @@
 						}
 					},
 					{
-						"description": "Allows the caller to include additional types of signals in the response, following the [Attribution Framework](https://wikimedia-attribution.toolforge.org/) categories. By default, only `Essential` signals are returned. Additional categories can be specified as a comma-separated list. Available values: `trust_and_relevance`, `calls_to_action`.",
+						"description": "Allows the caller to include additional types of signals in the response, following the [Attribution Framework](https://wikimedia-attribution.toolforge.org/) categories. By default, only `Essential` signals are returned. Additional categories can be specified as a pipe-separated list (or by repeating the `expand` query parameter). Available values: `trust_and_relevance`, `calls_to_action`.",
 						"in": "query",
 						"name": "expand",
 						"required": false,
 						"schema": {
+							"enum": [
+								"trust_and_relevance",
+								"calls_to_action"
+							],
 							"type": "string"
 						}
 					}
@@ -342,9 +348,15 @@
 												"license": {
 													"description": "Content license",
 													"properties": {
+														"short": {
+															"description": "License short name / abbreviation",
+															"example": "CC BY-SA 4.0",
+															"nullable": true,
+															"type": "string"
+														},
 														"title": {
 															"description": "License name",
-															"example": "CC BY-SA 4.0",
+															"example": "Creative Commons Attribution-ShareAlike 4.0",
 															"nullable": true,
 															"type": "string"
 														},

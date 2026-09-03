@@ -31,7 +31,7 @@ export interface GeneratedWikiInstancesMeta {
 }
 
 export const GENERATED_WIKI_INSTANCES_META: GeneratedWikiInstancesMeta = {
-	"generatedAt": "2026-07-20T18:54:10.300Z",
+	"generatedAt": "2026-09-03T02:40:00.522Z",
 	"source": "https://meta.wikimedia.org/w/api.php",
 	"instanceCount": 841,
 	"limited": false
@@ -743,6 +743,14 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 		"family": "wiktionary"
 	},
 	{
+		"id": "bolwiki",
+		"displayName": "Bole Wikipidiya",
+		"baseUrl": "https://bol.wikipedia.org",
+		"dir": "ltr",
+		"language": "bol",
+		"family": "wiki"
+	},
+	{
 		"id": "bowiki",
 		"displayName": "Tibetan Wikipedia",
 		"baseUrl": "https://bo.wikipedia.org",
@@ -829,14 +837,6 @@ export const GENERATED_WIKI_INSTANCES: GeneratedWikiInstance[] = [
 		"dir": "ltr",
 		"language": "bs",
 		"family": "wikisource"
-	},
-	{
-		"id": "bswiktionary",
-		"displayName": "Bosnian Wikirječnik",
-		"baseUrl": "https://bs.wiktionary.org",
-		"dir": "ltr",
-		"language": "bs",
-		"family": "wiktionary"
 	},
 	{
 		"id": "btmwiki",
