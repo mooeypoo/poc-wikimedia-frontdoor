@@ -48,7 +48,7 @@ These two surfaces have different rules and must not be conflated.
 - `@scalar/nuxt` module is **not used** — it does not support multiple specs
 - Specs are fetched at **runtime** from the discovery endpoint — no spec URLs are hardcoded
 - Reactive configuration updated via `Object.assign()` on a `reactive()` config object
-- Scalar's internal UI strings (button labels, response headers, etc.) do not go through banana-i18n — this is the one documented exception, accepted as third-party tooling
+- Scalar's own interface strings (button labels, response headers, etc.) **do** go through banana-i18n, from the separate `i18n/explorer-scalar/` namespace, injected via Scalar's `localization` config. This retires what was previously documented as the one exception to Rule 1. The **Test Request modal** (`@scalar/api-client`) has no upstream localization support and stays English; OpenAPI document content is not interface text. Direction is pinned `ltr` — see `docs/adr-scalar-interface-localization.md`
 
 ### Scalar typography (Codex families, no CDN fonts)
 

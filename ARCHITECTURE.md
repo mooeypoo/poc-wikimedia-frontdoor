@@ -670,9 +670,20 @@ Message files live in `i18n/[locale].json` using MediaWiki message format (suppo
 
 Markdown content for prose pages lives in `content/[locale]/`. Nuxt Content queries the appropriate locale directory based on the current route locale. Language fallback (requesting content in a locale that has no file) is handled in the page component's `queryContent()` call, falling back through the chain defined in `config/languages.js`.
 
-### Explorer internal strings: accepted exception
+### Explorer internal strings: routed through banana-i18n
 
-Scalar renders its own internal UI strings (button labels, response section headers, etc.) outside the Nuxt component tree. These do not go through banana-i18n. This is the one documented exception: it is third-party developer tooling UI, not our interface. It is noted here explicitly so it is not mistaken for an oversight.
+Scalar's own interface strings (button labels, response section headers, sidebar chrome) **do** go through banana-i18n. They previously did not — this was recorded here as the one accepted exception to Rule 1, on the grounds that Scalar offered no supported way to replace them. Scalar now accepts a translation table on its configuration, so the exception is retired. See `docs/adr-scalar-interface-localization.md`.
+
+Messages live in a **separate namespace**, `i18n/explorer-scalar/`, imported only from the explorer's client-only code. They are deliberately kept out of `i18n/*.json`, which the banana plugin loads eagerly for every visitor on every page — the same bundle-boundary reasoning as `i18n/content/` (`docs/adr-translatable-prose-content.md` §1).
+
+**banana always wins, and Scalar is never left to supply a string.** Scalar merges its built-in English, then its built-in translation for the locale, then ours — so a banana message always overrides Scalar's own. The layer below ours matters too: Scalar translates seven locales, and any one we left uncovered it would serve directly, bypassing banana and (for `ar`) BiDi isolation. So **every locale Scalar translates has a catalogue of ours**, seeded from Scalar's MIT-licensed translation via `npm run seed-scalar-localization` and owned by us thereafter. Scalar's layer is a last-resort fallback for locales nobody has translated, where it resolves to English. Preserve this when Scalar adds a locale: seed it, do not let it through.
+
+Two limits remain, and neither is an oversight:
+
+- **The Test Request modal is not translated.** It is a separate package (`@scalar/api-client`) with no localization support at all; its strings are hardcoded upstream. A non-English visitor sees English modal chrome around the portal's own translated warnings. Accepted for now; revisit if upstream adds localization.
+- **OpenAPI document content is not translated.** Endpoint descriptions, parameter names, schema fields and example values come from the spec, not from Scalar's interface layer. Unchanged by this work — see **Known gap: Scalar spec content** below.
+
+**Direction is pinned to `ltr`.** Scalar sets `dir` on its own root from `localization.direction` and infers RTL from the locale by default. Its stylesheet has no `[dir=rtl]` rules and is overwhelmingly physical rather than logical, so an inferred flip mirrors text while leaving layout unmirrored. Pass `direction: 'ltr'` explicitly — never `auto`, which is inference (Rule 7). BiDi isolation for RTL labels inside that LTR container is applied at injection time with Unicode FSI/PDI, since Scalar's text nodes cannot be wrapped in `<bdi>`.
 
 ---
 

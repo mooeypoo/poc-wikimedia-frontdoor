@@ -1,6 +1,7 @@
 import { reactive, watch } from 'vue'
 import type { Ref } from 'vue'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../config/scalar'
+import { buildScalarLocalization } from '../scalar/scalarLocalization'
 import { useColorMode } from './useColorMode'
 import { useExplorerDiagnostics } from './useExplorerDiagnostics'
 
@@ -18,10 +19,13 @@ interface ScalarConfigOptions {
 export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: ScalarConfigOptions = {} ) {
 	const { logEvent } = useExplorerDiagnostics()
 	const { resolvedMode } = useColorMode()
+	// The shell's interface locale, shared with app/plugins/banana-i18n.ts.
+	const interfaceLocale = useState<string>( 'interfaceLocale', () => 'en' )
 
 	const scalarConfiguration = reactive( {
 		...SCALAR_DEFAULT_CONFIGURATION,
 		darkMode: resolvedMode.value === 'dark',
+		localization: buildScalarLocalization( interfaceLocale.value ),
 		onLoaded: ( slug: string ) => {
 			options.onLoaded?.( slug )
 		},
@@ -56,6 +60,21 @@ export function useScalarConfig( openApiSpecUrl: Ref<string | null>, options: Sc
 		logEvent( 'scalar.config_updated', {
 			updateStrategy: 'object_assign',
 			darkMode: nextResolvedMode
+		} )
+	}, { flush: 'post' } )
+
+	// Scalar reads its translation table through a reactive getter, so mutating
+	// the config in place re-renders the interface without remounting the
+	// component or refetching the OpenAPI document. `scalarReferenceKey` on the
+	// explorer page deliberately excludes the locale for the same reason.
+	watch( interfaceLocale, ( nextInterfaceLocale ) => {
+		Object.assign( scalarConfiguration, {
+			localization: buildScalarLocalization( nextInterfaceLocale )
+		} )
+
+		logEvent( 'scalar.config_updated', {
+			updateStrategy: 'object_assign',
+			interfaceLocale: nextInterfaceLocale
 		} )
 	}, { flush: 'post' } )
 

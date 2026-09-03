@@ -14,7 +14,9 @@ The portal uses two separate i18n systems, and their responsibilities do not ove
 
 From the user's perspective these two systems work together seamlessly: changing the interface language switches both the shell strings (banana) and the content locale (Nuxt i18n routing) at the same time. The implementation keeps them separate because they solve different problems and have different maintenance characteristics.
 
-A third partial exception exists: the API explorer's internal UI strings (button labels, response section headers, and similar copy rendered by Scalar) are outside our control and do not go through banana-i18n. This is a documented, accepted limitation. It should not be treated as a precedent for adding other exceptions.
+This document previously recorded a third partial exception: the API explorer's internal UI strings, rendered by Scalar, did not go through banana-i18n because Scalar offered no supported way to replace them. That is no longer the case, and the exception is retired — Scalar's interface strings are banana messages like any other, in a separate namespace. See [adr-scalar-interface-localization.md](../adr-scalar-interface-localization.md).
+
+What remains untranslated in the explorer is not an exception to the rule but a boundary of what the third party exposes: Scalar's **Test Request modal** is a separate package with no localization support, and **OpenAPI document content** is not interface text at all. Neither is a reason to route interface strings anywhere other than banana.
 
 ## What each system owns
 
@@ -29,7 +31,9 @@ A third partial exception exists: the API explorer's internal UI strings (button
 | Content page routing (`/fr/`, `/ar/`) | Nuxt i18n | URL prefix only |
 | Markdown content translation | Per-locale content directories | `content/[locale]/` |
 | Message-driven prose pages | banana message format, **build time only** | English authored in `content-i18n/`, extracted to `i18n/content/`, expanded into `content/[locale]/` by `npm run generate-content-i18n`. Never loaded at runtime — see [adr-translatable-prose-content.md](../adr-translatable-prose-content.md) |
-| API explorer internal strings | Scalar (third-party) | Accepted exception; not our interface surface |
+| API explorer interface strings | banana-i18n, **separate namespace** | Authored in `i18n/explorer-scalar/`, injected into Scalar's `localization` config. Kept out of `i18n/*.json` for bundle weight — see [adr-scalar-interface-localization.md](../adr-scalar-interface-localization.md) |
+| API explorer Test Request modal | Not translatable | Separate upstream package (`@scalar/api-client`), no localization support; strings are hardcoded |
+| API explorer OpenAPI content | Source language of the spec | Endpoint descriptions, parameter and schema names — document content, not interface text |
 
 ## The canonical language catalog
 
