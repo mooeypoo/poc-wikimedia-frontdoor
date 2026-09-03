@@ -231,6 +231,8 @@
   "search-all-languages-cta": "Button label to expand the search view across all supported languages.",
   "search-no-locale-results": "Message shown when no results are found for the query in the active locale. $1 is the translated language name; $2 is the user's search query. Use {{bidi:$1}} and {{bidi:$2}} for BiDi isolation.",
   "search-no-results-any-language": "Message shown in all-locales mode when no results are found in any language. $1 is the user's search query. Use {{bidi:$1}} for BiDi isolation.",
+  "search-results-endpoint-deprecated": "Short badge shown next to a REST API endpoint search result whose OpenAPI specification marks it as deprecated. Keep very short — it renders as a small inline chip.",
+  "search-results-endpoints-heading": "Heading above the group of REST API endpoint search results, shown alongside the documentation page results. The endpoint names and descriptions themselves come from upstream OpenAPI specifications and are always in English; only this heading is translated.",
   "search-results-locale-heading": "Heading shown above a group of search results in a specific language. $1 is the translated name of the language (e.g. 'French'). Use {{bidi:$1}} for BiDi isolation.",
   "section-nav-about-label": "Accessible name for the About left-hand section navigation.",
   "section-nav-about-title": "Section heading for About links.",

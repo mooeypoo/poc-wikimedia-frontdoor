@@ -223,6 +223,8 @@
   "search-all-languages-cta": "חפש בכל השפות",
   "search-no-locale-results": "אין תוצאות ב{{bidi:$1}} עבור {{bidi:$2}}.",
   "search-no-results-any-language": "לא נמצאו תוצאות עבור {{bidi:$1}} באף שפה.",
+  "search-results-endpoint-deprecated": "מיושן",
+  "search-results-endpoints-heading": "נקודות קצה של ה־API",
   "search-results-locale-heading": "תוצאות ב{{bidi:$1}}",
   "section-nav-about-label": "About sections",
   "section-nav-about-title": "About",
