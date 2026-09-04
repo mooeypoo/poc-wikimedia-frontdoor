@@ -23,8 +23,18 @@ test( 'get-started resolves at its new path (and localized)', () => {
 test( 'other sections still resolve by path', () => {
 	assert.equal( getMainNavigationIdFromPath( '/community' ), 'community' )
 	assert.equal( getMainNavigationIdFromPath( '/community/anything' ), 'community' )
-	assert.equal( getMainNavigationIdFromPath( '/use-content-and-data' ), 'use-content-and-data' )
+	assert.equal( getMainNavigationIdFromPath( '/contribute' ), 'contribute' )
+	assert.equal( getMainNavigationIdFromPath( '/get-help' ), 'get-help' )
 	assert.equal( getMainNavigationIdFromPath( '/fr/community' ), 'community' )
+} )
+
+// `/use-content-and-data` is still an authored content page (and a redirect
+// target from `/learn`), but it was dropped from MAIN_NAVIGATION_ITEMS when the
+// primary nav was renamed. A content page outside the primary nav must resolve
+// to no id, the same as `/account`, so no tab is selected on it.
+test( 'a content page outside the primary nav resolves to no id', () => {
+	assert.equal( getMainNavigationIdFromPath( '/use-content-and-data' ), null )
+	assert.equal( getMainNavigationIdFromPath( '/fr/use-content-and-data' ), null )
 } )
 
 test( 'explorer routes map to the APIs primary nav id', () => {

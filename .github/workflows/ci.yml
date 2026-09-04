@@ -1,0 +1,87 @@
+# Enforces the gates that were previously convention only.
+#
+# `docs/adr-scalar-interface-localization.md` §6 asks for the Scalar drift check
+# to run in review. Nothing enforced it, and commit c494ee4 bumped
+# @scalar/api-reference without regenerating the committed artifacts as a
+# result. That is what the `check` job exists to prevent.
+#
+# See docs/upgrade-plan-dependency-refresh.md §2.2.
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  check:
+    name: Tests and generated-artifact drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Kept in step with .nvmrc and netlify.toml's NODE_VERSION.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Unit tests, the banana-content workspace suite, and the Scalar
+      # interface-string drift check. A drift failure means either the
+      # artifacts need regenerating (`npm run generate-scalar-localization`)
+      # or a string was renamed upstream and a translation silently stopped
+      # applying — review the diff, do not just regenerate past it.
+      - run: npm run check
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The build consumes committed content and never reaches the network,
+      # so this is a genuine offline reproducibility check as well as a
+      # compile gate. Uses the Netlify preset because that is what deploys.
+      - run: npm run build:netlify
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    # Reports only. `npm audit` describes the tree a fresh install resolves,
+    # which is the point (see docs/upgrade-plan-dependency-refresh.md §1) — but
+    # a new upstream advisory should not turn every unrelated PR red. Read the
+    # summary and the uploaded JSON; tighten to a failing gate once the
+    # advisory list has been triaged to a known baseline.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Runs here rather than locally because `npm audit` POSTs the whole
+      # dependency tree to the registry's bulk-advisory endpoint, which stalls
+      # behind a restrictive proxy.
+      - name: Audit
+        run: |
+          npm audit --json > npm-audit.json || true
+          npm audit || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: npm-audit.json
