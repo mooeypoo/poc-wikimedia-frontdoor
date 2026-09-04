@@ -5,6 +5,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "packageManager": "npm@12.0.2",
+  "engines": {
+    "node": ">=22.19.0",
+    "npm": ">=12"
+  },
   "scripts": {
     "build": "nuxt build",
     "build:netlify": "NITRO_PRESET=netlify nuxt build",
@@ -48,6 +53,7 @@
     "rolldown": "^1.0.2"
   },
   "allowScripts": {
-    "better-sqlite3@12.11.1": true
+    "better-sqlite3@12.11.1": true,
+    "sqlite3@6.0.1": true
   }
 }

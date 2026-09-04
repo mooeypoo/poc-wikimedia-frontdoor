@@ -5,6 +5,16 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # npm is pinned, not inherited from NODE_VERSION. package-lock.json is only
+  # reproducible under the npm major that wrote it: several transitive
+  # dependencies use open ranges (`unimport` wants `oxc-parser: "*"`), and npm
+  # majors resolve those differently, so `npm ci` under a different major
+  # rejects the lockfile as out of sync. Node 22 bundles npm 10; this lockfile
+  # is written by npm 12.
+  #
+  # Keep in step with `packageManager` in package.json and NPM_VERSION in
+  # .github/workflows/ci.yml. See docs/upgrade-plan-dependency-refresh.md §4.1.4.
+  NPM_VERSION = "12.0.2"
 
 # Function bundling is declared in `.netlify/functions-internal/server/server.mjs`
 # (`nodeBundler: "none"`). Do not set `node_bundler = "esbuild"` here — it forces a

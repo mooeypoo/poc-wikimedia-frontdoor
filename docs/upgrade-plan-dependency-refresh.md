@@ -309,9 +309,30 @@ Fixed in `.github/workflows/ci.yml` by pinning `npm install -g npm@$NPM_VERSION`
 1. **Pin npm 12 everywhere**, including Netlify. Consistent with the committed lockfile. Requires Netlify to honour an npm version override (`NPM_VERSION`), which is **unverified** — Netlify installs dependencies before the build command runs, so it cannot be fixed from `build:netlify`.
 2. **Regenerate the lockfile under npm 10**, matching what production actually runs. More faithful to §1's premise, but npm 10.9.8 is the version with the `#loadPeerSet` arborist bug (§4.1.3) — it may not be able to resolve this tree at all, which is why npm was upgraded in the first place.
 
-Direction 2 is more principled; direction 1 may be the only one that works. Settle it by checking whether the Netlify preview failed, then whether Netlify can run npm 12.
+**Decided: direction 1 — pin npm 12 everywhere.**
 
-Whichever is chosen, **pin it in all three places** rather than leaving npm implicit. Leaving it unpinned means this recurs whenever a contributor's local npm differs from CI's.
+The argument that settled it is not about npm 12's merits. It is that **Node's bundled npm is a moving target nobody chose.** Today Node 22 → npm 10; the Node 24 move recommended in §7.9 will change it again, and could re-break the lockfile in exactly this way. "Match Node's bundled npm" couples lockfile reproducibility to an unrelated decision. Pinning decouples them, so the Node migration is about Node.
+
+Secondary: npm 10.9.8 is the version with the demonstrated `#loadPeerSet` bug on this tree (§4.1.3). Direction 2 would mean choosing a known-broken toolchain to preserve a default that was never principled. That trades a known blocker for unknown new-major surprises, which is the better trade.
+
+Pinned in four places, which must stay in step:
+
+| Where | Declaration |
+|---|---|
+| `package.json` | `"packageManager": "npm@12.0.2"`, `engines.npm: ">=12"` |
+| `netlify.toml` | `NPM_VERSION = "12.0.2"` |
+| `.github/workflows/ci.yml` | `env.NPM_VERSION`, installed before every `npm ci` |
+| `README.md` | Toolchain table and the reason |
+
+**`.nvmrc` cannot help here, and it is worth being explicit about why:** it pins Node, and `nvm use` then installs the npm Node *bundles*. For Node 22 that is npm 10 — the mismatch itself. Pinning Node is necessary but does nothing for npm.
+
+**Consequence accepted: `allowScripts` is now load-bearing for deploys.** Under npm 10 the gate did not exist in CI or on Netlify, so native installs simply worked. Under npm 12 they are gated there too. Verified safe as configured — `better-sqlite3` is approved so the production connector builds, and blocked scripts warn rather than fail — but the standing cost is that **any bump of a native dependency needs re-approval or the production build breaks**, invisibly to both the dev server and the test suite.
+
+`sqlite3@6.0.1` was approved alongside it. It is not needed by CI or the deploy, but it *is* the dev connector: a fresh clone plus `npm install` under npm 12 would otherwise leave it without a compiled binary and `npm run dev` broken for new contributors. Existing checkouts do not show this because their binary predates the gate.
+
+`esbuild` is deliberately left unapproved — its binary ships via the `@esbuild/<platform>` optional dependency, so the block is inert and there is no reason to grant it script execution.
+
+**Still unverified: whether Netlify honours `NPM_VERSION`.** It cannot be worked around from `build:netlify`, because Netlify installs dependencies before running the build command. Confirm by reading the npm version Netlify prints during install. `packageManager` may also cause Netlify to provision npm via corepack, which would be welcome but is equally unverified — watch for it in the same log.
 
 ### 4.1.5 Auditing runs in CI
 
