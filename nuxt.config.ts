@@ -1,9 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
-import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
-
-import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfigPluginsResolvePlugin'
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_FILES, buildBrandWordmarkFontCss } from './config/brandTypography'
 import { SUPPORTED_LANGUAGES } from './config/languages'
@@ -25,7 +21,6 @@ const colorModeFoucScript = `(function(){try{` +
 	`e.classList.add('fd-theme--'+m);` +
 	`}catch(e){}})();`
 
-const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
@@ -190,18 +185,6 @@ export default defineNuxtConfig( {
 	},
 
 	vite: {
-		plugins: [
-			scalarMapConfigPluginsResolvePlugin( projectRootDirectory )
-		],
-		resolve: {
-			alias: {
-				// ApiReference forwards ClientPlugin UI only through mapConfigPlugins into the modal.
-				[ resolve(
-					projectRootDirectory,
-					'node_modules/@scalar/api-reference/dist/helpers/map-config-plugins.js'
-				) ]: resolve( projectRootDirectory, 'app/scalar/explorerMapConfigPlugins.client.ts' )
-			}
-		},
 		/*
 		 * Pre-bundle deps used on first paint / first explorer entry. Without
 		 * this, Vite discovers them at runtime, invalidates `/_nuxt/pages/…`
@@ -219,25 +202,7 @@ export default defineNuxtConfig( {
 				'github-slugger',
 				// Pulled in by ExplorerEnterpriseCustom on first /explorer entry.
 				'markdown-it'
-			],
-			esbuildOptions: {
-				plugins: [
-					{
-						name: 'front-door-scalar-map-config-plugins-esbuild',
-						setup( build ) {
-							build.onResolve(
-								{ filter: /map-config-plugins\.js$/ },
-								() => ( {
-									path: resolve(
-										projectRootDirectory,
-										'app/scalar/explorerMapConfigPlugins.client.ts'
-									)
-								} )
-							)
-						}
-					}
-				]
-			}
+			]
 		}
 	},
 

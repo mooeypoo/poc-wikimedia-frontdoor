@@ -5,6 +5,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "packageManager": "npm@12.0.2",
+  "engines": {
+    "node": ">=22.19.0",
+    "npm": ">=12"
+  },
   "scripts": {
     "build": "nuxt build",
     "build:netlify": "NITRO_PRESET=netlify nuxt build",
@@ -12,7 +17,10 @@
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
     "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
     "generate-content-i18n-stubs": "node scripts/generate-content-stub-translations.mjs",
+    "test": "node --import ./scripts/lib/nodeTestResolveAppExtensions.mjs --test \"tests/**/*.test.mjs\"",
     "test:banana-content": "npm test --workspace @wikimedia/banana-content",
+    "typecheck": "nuxt typecheck",
+    "check": "npm run test && npm run test:banana-content && npm run generate-scalar-localization -- --check",
     "generate-scalar-localization": "node scripts/generate-scalar-localization.mjs",
     "seed-scalar-localization": "node scripts/seed-scalar-localization.mjs",
     "generate-language-catalog": "node scripts/generate-language-catalog.mjs",
@@ -43,5 +51,9 @@
   "devDependencies": {
     "oxc-parser": "^0.131.0",
     "rolldown": "^1.0.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "sqlite3@6.0.1": true
   }
 }

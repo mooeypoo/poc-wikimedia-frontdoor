@@ -4,20 +4,37 @@ Look at the [Nuxt Content documentation](https://content.nuxt.com) to learn more
 
 ## Setup
 
-Make sure to install dependencies:
+### Toolchain
+
+Both Node **and npm** are pinned. Use these versions — not merely "some Node 22".
+
+| Tool | Version | Declared in |
+|---|---|---|
+| Node | 22 (≥ 22.19.0) | `.nvmrc`, `netlify.toml`, `engines` |
+| npm | 12 | `packageManager`, `engines`, `netlify.toml`, CI workflow |
 
 ```bash
-# npm
+nvm use            # reads .nvmrc
+npm install -g npm@12
 npm install
+```
 
-# pnpm
-pnpm install
+**Why npm is pinned separately.** `nvm use` installs the npm that Node bundles — npm 10 for Node 22 — and that is *not* the npm this lockfile was written with. `package-lock.json` is only reproducible under the npm major that wrote it: several transitive dependencies use open version ranges (`unimport` requires `oxc-parser: "*"`), and npm majors resolve those differently. Installing under npm 10 produces a different tree, and `npm ci` rejects the lockfile outright. See [docs/upgrade-plan-dependency-refresh.md](docs/upgrade-plan-dependency-refresh.md) §4.1.4.
 
-# yarn
-yarn install
+**Use npm, not pnpm/yarn/bun.** The committed `package-lock.json` is the source of truth for the dependency tree, and the deploy installs from it.
 
-# bun
-bun install
+**Native modules need script approval.** npm 11+ blocks install scripts unless listed in `allowScripts` in `package.json`. `better-sqlite3` (production content database) and `sqlite3` (dev content database) are approved there. If you bump either one, **re-approve it** — the key is pinned to the exact version:
+
+```bash
+npm install-scripts approve better-sqlite3
+```
+
+Forgetting this leaves the package without a compiled binary. `better-sqlite3` failing that way breaks `nuxt build` while leaving `npm run dev` and the test suite green, so it will not be caught by either.
+
+### Install dependencies
+
+```bash
+npm install
 ```
 
 ### Environment variables

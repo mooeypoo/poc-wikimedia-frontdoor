@@ -21,6 +21,7 @@
 	"explorer-scalar-ui-client-libraries-select-all": "TODO: describe where this appears. Scalar API reference interface string `clientLibraries.selectAll`; English default \"Select from all clients\".",
 	"explorer-scalar-ui-common-additional-properties": "TODO: describe where this appears. Scalar API reference interface string `common.additionalProperties`; English default \"additional properties\".",
 	"explorer-scalar-ui-common-const": "TODO: describe where this appears. Scalar API reference interface string `common.const`; English default \"const\".",
+	"explorer-scalar-ui-common-copy-pattern": "TODO: describe where this appears. Scalar API reference interface string `common.copyPattern`; English default \"Copy pattern\".",
 	"explorer-scalar-ui-common-deprecated": "TODO: describe where this appears. Scalar API reference interface string `common.deprecated`; English default \"deprecated\".",
 	"explorer-scalar-ui-common-description": "TODO: describe where this appears. Scalar API reference interface string `common.description`; English default \"Description\".",
 	"explorer-scalar-ui-common-discriminator": "TODO: describe where this appears. Scalar API reference interface string `common.discriminator`; English default \"Discriminator\".",
