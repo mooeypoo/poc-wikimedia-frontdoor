@@ -14,6 +14,23 @@ on:
     branches: [ main ]
   pull_request:
 
+# The npm version is pinned, not inherited from Node.
+#
+# package-lock.json is only reproducible under the npm major that wrote it,
+# because several transitive dependencies use open ranges — `unimport` wants
+# `oxc-parser: "*"`, `unplugin` wants `esbuild: "*"`, `unctx` wants
+# `oxc-parser: ">=0.140.0"`. npm 12 satisfies those by reusing versions already
+# in the tree; npm 10 resolves them to actual-latest, computes a different ideal
+# tree, and `npm ci` then refuses the lockfile as out of sync.
+#
+# Node 22 bundles npm 10, so without this pin CI silently disagreed with a
+# lockfile generated locally under npm 12. Keep this in step with the npm used
+# to write the lockfile, and with netlify.toml.
+#
+# See docs/upgrade-plan-dependency-refresh.md §4.1.4.
+env:
+  NPM_VERSION: '12.0.2'
+
 jobs:
   check:
     name: Tests and generated-artifact drift
@@ -26,6 +43,8 @@ jobs:
           # Kept in step with .nvmrc and netlify.toml's NODE_VERSION.
           node-version-file: .nvmrc
           cache: npm
+
+      - run: npm install -g npm@${{ env.NPM_VERSION }}
 
       - run: npm ci
 
@@ -46,6 +65,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+
+      - run: npm install -g npm@${{ env.NPM_VERSION }}
 
       - run: npm ci
 
@@ -70,6 +91,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+
+      - run: npm install -g npm@${{ env.NPM_VERSION }}
 
       - run: npm ci
 
