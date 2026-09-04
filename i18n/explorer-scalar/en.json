@@ -21,6 +21,7 @@
 	"explorer-scalar-ui-client-libraries-select-all": "Select from all clients",
 	"explorer-scalar-ui-common-additional-properties": "additional properties",
 	"explorer-scalar-ui-common-const": "const",
+	"explorer-scalar-ui-common-copy-pattern": "Copy pattern",
 	"explorer-scalar-ui-common-deprecated": "deprecated",
 	"explorer-scalar-ui-common-description": "Description",
 	"explorer-scalar-ui-common-discriminator": "Discriminator",

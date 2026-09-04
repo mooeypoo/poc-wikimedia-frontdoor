@@ -59,6 +59,7 @@ export const GENERATED_SCALAR_LOCALIZATION_MAP: readonly GeneratedScalarLocaliza
 	{ bananaKey: 'explorer-scalar-ui-client-libraries-select-all', scalarPath: 'clientLibraries.selectAll' },
 	{ bananaKey: 'explorer-scalar-ui-common-additional-properties', scalarPath: 'common.additionalProperties' },
 	{ bananaKey: 'explorer-scalar-ui-common-const', scalarPath: 'common.const' },
+	{ bananaKey: 'explorer-scalar-ui-common-copy-pattern', scalarPath: 'common.copyPattern' },
 	{ bananaKey: 'explorer-scalar-ui-common-deprecated', scalarPath: 'common.deprecated' },
 	{ bananaKey: 'explorer-scalar-ui-common-description', scalarPath: 'common.description' },
 	{ bananaKey: 'explorer-scalar-ui-common-discriminator', scalarPath: 'common.discriminator' },
