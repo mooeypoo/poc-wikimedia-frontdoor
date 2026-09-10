@@ -1,0 +1,1693 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.Aggregate": {
+			"properties": {
+				"access": {
+					"description": "Method of access",
+					"example": "all-access",
+					"type": "string"
+				},
+				"agent": {
+					"description": "Type of user agent",
+					"example": "all-agents",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDDHH format",
+					"example": "2023010100",
+					"type": "string"
+				},
+				"views": {
+					"description": "Number of page views",
+					"example": 327909958,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.AggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Aggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.Article": {
+			"properties": {
+				"article": {
+					"description": "Page title in URL-encoded format",
+					"example": "Main_Page",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Page rank",
+					"example": 1,
+					"type": "integer"
+				},
+				"views": {
+					"description": "Number of page views",
+					"example": 4565816,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.Country": {
+			"properties": {
+				"country": {
+					"description": "Country code in ISO 3166-1 alpha-2 format",
+					"example": "PH",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Country rank",
+					"example": 7,
+					"type": "integer"
+				},
+				"views": {
+					"description": "Range of page views",
+					"example": "100000-999999",
+					"type": "string"
+				},
+				"views_ceil": {
+					"description": "Approximate number of page views",
+					"example": 210000,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.Legacy": {
+			"properties": {
+				"access-site": {
+					"description": "Method of access",
+					"example": "all-sites",
+					"type": "string"
+				},
+				"count": {
+					"description": "Number of page views",
+					"example": 9589069146,
+					"type": "integer"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDDHH format",
+					"example": "2015010100",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.LegacyResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Legacy"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerArticle": {
+			"properties": {
+				"access": {
+					"description": "Method of access",
+					"example": "all-access",
+					"type": "string"
+				},
+				"agent": {
+					"description": "Type of user agent",
+					"example": "all-agents",
+					"type": "string"
+				},
+				"article": {
+					"description": "Page title in URL-encoded format",
+					"example": "Jupiter",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDDHH format",
+					"example": "2023010100",
+					"type": "string"
+				},
+				"views": {
+					"description": "Number of page views",
+					"example": 182693,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerArticleResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.PerArticle"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerCountryArticle": {
+			"properties": {
+				"article": {
+					"description": "Page title in URL-encoded format",
+					"example": "Main_Page",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Page rank",
+					"example": 6,
+					"type": "integer"
+				},
+				"views_ceil": {
+					"description": "Approximate number of page views",
+					"example": 47700,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerEditorContext": {
+			"properties": {
+				"end": {
+					"description": "Last date of the time period in ISO-8601 format (exclusive: end date is not included in the response)",
+					"example": "2026-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"endpoint": {
+					"description": "API endpoint used",
+					"example": "pageviews/v3/per_editor",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points (e.g. daily, monthly)",
+					"example": "monthly",
+					"type": "string"
+				},
+				"start": {
+					"description": "First date of the time period in ISO-8601 format",
+					"example": "2025-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"user_central_id": {
+					"description": "Global / central user id (via CentralAuth)",
+					"example": 12345,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerEditorItem": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2025-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"view_count": {
+					"description": "Number of pageviews",
+					"example": 1250,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.PerEditorResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.PerEditorContext"
+				},
+				"items": {
+					"description": "Array of timeseries results",
+					"items": {
+						"$ref": "#/definitions/entities.PerEditorItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.Top": {
+			"properties": {
+				"access": {
+					"description": "Method of access",
+					"example": "all-access",
+					"type": "string"
+				},
+				"articles": {
+					"description": "Array of article objects",
+					"items": {
+						"$ref": "#/definitions/entities.Article"
+					},
+					"type": "array"
+				},
+				"day": {
+					"description": "Day in DD format",
+					"example": "01",
+					"type": "string"
+				},
+				"month": {
+					"description": "Month in MM format",
+					"example": "01",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"year": {
+					"description": "Year in YYYY format",
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByCountry": {
+			"properties": {
+				"access": {
+					"description": "Method of access",
+					"example": "all-access",
+					"type": "string"
+				},
+				"countries": {
+					"description": "Array of country objects",
+					"items": {
+						"$ref": "#/definitions/entities.Country"
+					},
+					"type": "array"
+				},
+				"month": {
+					"description": "Month in MM format",
+					"example": "01",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"year": {
+					"description": "Year in YYYY format",
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByCountryResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByCountry"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesPerEditorContext": {
+			"properties": {
+				"end": {
+					"description": "Last date of the time period in ISO-8601 format (exclusive: end date is not included in the response)",
+					"example": "2026-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"endpoint": {
+					"description": "API endpoint used",
+					"example": "pageviews/v3/top_pages_per_editor",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points (currently only monthly)",
+					"example": "monthly",
+					"type": "string"
+				},
+				"start": {
+					"description": "First date of the time period in ISO-8601 format",
+					"example": "2025-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"user_central_id": {
+					"description": "Global / central user id (via CentralAuth)",
+					"example": 12345,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesPerEditorRankItem": {
+			"properties": {
+				"page_id": {
+					"description": "Id of the page in question within its wiki",
+					"example": 12345,
+					"type": "integer"
+				},
+				"rank": {
+					"description": "Rank number of the page in question",
+					"example": 1,
+					"type": "integer"
+				},
+				"view_count": {
+					"description": "Number of pageviews for the page in question",
+					"example": 1250,
+					"type": "integer"
+				},
+				"wiki_id": {
+					"description": "Id of the wiki the page in question belongs to",
+					"example": "enwiki",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesPerEditorResponse": {
+			"properties": {
+				"context": {
+					"allOf": [
+						{
+							"$ref": "#/definitions/entities.TopPagesPerEditorContext"
+						}
+					],
+					"description": "Context object"
+				},
+				"items": {
+					"description": "Array of timeseries results",
+					"items": {
+						"$ref": "#/definitions/entities.TopPagesPerEditorResponseItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPagesPerEditorResponseItem": {
+			"properties": {
+				"rank_items": {
+					"description": "Array of ranked pages",
+					"items": {
+						"$ref": "#/definitions/entities.TopPagesPerEditorRankItem"
+					},
+					"type": "array"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2025-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"top_k": {
+					"description": "The max number of pages ranked for this data point",
+					"example": 10,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPerCountry": {
+			"properties": {
+				"access": {
+					"description": "Method of access",
+					"example": "all-access",
+					"type": "string"
+				},
+				"articles": {
+					"description": "Array of article objects",
+					"items": {
+						"$ref": "#/definitions/entities.PerCountryArticle"
+					},
+					"type": "array"
+				},
+				"country": {
+					"description": "Country code in ISO 3166-1 alpha-2 format",
+					"example": "FR",
+					"type": "string"
+				},
+				"day": {
+					"description": "Day in DD format",
+					"example": "01",
+					"type": "string"
+				},
+				"month": {
+					"description": "Month in MM format",
+					"example": "01",
+					"type": "string"
+				},
+				"year": {
+					"description": "Year in YYYY format",
+					"example": "2023",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopPerCountryResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopPerCountry"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.Top"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Page Analytics provides data about page views for Wikimedia projects.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Page Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/legacy/pagecounts/aggregate/{project}/{access-site}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of page views for a Wikimedia project, including page views from both users and bots. This endpoint provides data from January 2008 to July 2016.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-sites",
+							"desktop-site",
+							"mobile-site"
+						],
+						"example": "all-sites",
+						"in": "path",
+						"name": "access-site",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"hourly",
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day and hour to include in YYYYMMDDHH format",
+						"example": "2015010100",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day and hour to include in YYYYMMDDHH format. For hourly and daily granularities, this value is inclusive. For monthly granularity, this value is exclusive",
+						"example": "2016010100",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.LegacyResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of page views (legacy)"
+			}
+		},
+		"/pageviews/aggregate/{project}/{access}/{agent}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of page views for a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-access",
+							"desktop",
+							"mobile-app",
+							"mobile-web"
+						],
+						"example": "all-access",
+						"in": "path",
+						"name": "access",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider",
+							"automated"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"hourly",
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day and hour to include in YYYYMMDDHH format",
+						"example": "2023010100",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day and hour to include in YYYYMMDDHH format",
+						"example": "2024010100",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.AggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of page views"
+			}
+		},
+		"/pageviews/per-article/{project}/{access}/{agent}/{article}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of page views for a wiki page.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-access",
+							"desktop",
+							"mobile-app",
+							"mobile-web"
+						],
+						"example": "all-access",
+						"in": "path",
+						"name": "access",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of user agent",
+						"enum": [
+							"all-agents",
+							"user",
+							"spider",
+							"automated"
+						],
+						"example": "all-agents",
+						"in": "path",
+						"name": "agent",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Page title in URL-encoded format. The API sandbox encodes titles automatically",
+						"example": "Jupiter",
+						"in": "path",
+						"name": "article",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day and hour to include in YYYYMMDDHH format",
+						"example": "2023010100",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day and hour to include in YYYYMMDDHH format",
+						"example": "2024010100",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.PerArticleResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of page views for a page"
+			}
+		},
+		"/pageviews/top-by-country/{project}/{access}/{year}/{month}": {
+			"get": {
+				"description": "Returns the approximate number of page views for a Wikimedia project, split by country of origin.\nTo protect the privacy of readers, this endpoint only returns data for countries with more than 100 page views.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-access",
+							"desktop",
+							"mobile-app",
+							"mobile-web"
+						],
+						"example": "all-access",
+						"in": "path",
+						"name": "access",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByCountryResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of page views by country"
+			}
+		},
+		"/pageviews/top-per-country/{country}/{access}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 1000 most-viewed pages for a given country, across all Wikimedia projects, excluding page views from bots and web crawlers.\nTo protect the privacy of readers, this endpoint omits countries and pages with 1000 or fewer views.",
+				"parameters": [
+					{
+						"description": "Country code in the ISO 3166-1 alpha-2 format",
+						"example": "FR",
+						"in": "path",
+						"name": "country",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-access",
+							"desktop",
+							"mobile-app",
+							"mobile-web"
+						],
+						"example": "all-access",
+						"in": "path",
+						"name": "access",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format",
+						"example": "01",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopPerCountryResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-viewed pages for a country"
+			}
+		},
+		"/pageviews/top/{project}/{access}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 1000 most-viewed pages on a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-access",
+							"desktop",
+							"mobile-app",
+							"mobile-web"
+						],
+						"example": "all-access",
+						"in": "path",
+						"name": "access",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "01",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-viewed pages"
+			}
+		},
+		"/pageviews/v3/per_editor/{user_central_id}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a timeseries of pageview counts that an editor's edited pages have received. The list of pages for which pageview counts are summed is the list of pages ever edited by the user on the resulting timeseries date. E.g. if the user edited page A on 2023-01-01 and page B on 2023-01-02, then the pageview counts for 2023-01-01 will be the sum of the pageview counts for page A, and the pageview counts for 2023-01-02 will be the sum of the pageview counts for page A and page B. Please note that this endpoint is Analytics API v3, and may not match exactly with analytics API v1.  E.g. all params and response keys use snake_case, end date parameters are exclusive, and response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Global / central user id (via CentralAuth)",
+						"example": 12345,
+						"in": "path",
+						"name": "user_central_id",
+						"required": true,
+						"type": "integer"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20250101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20260101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.PerEditorResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Returns a timeseries of pageview counts that an editor's edited pages have received."
+			}
+		},
+		"/pageviews/v3/top_pages_per_editor/{user_central_id}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a timeseries of rankings, each data point shows the editor's top edited pages with most pageview counts in that time period. The list of pages for which pageview counts are summed is the list of pages ever edited by the user on the resulting timeseries date. Please note that this endpoint is Analytics API v3, and may not match exactly with analytics API v1.  E.g. all params and response keys use snake_case, end date parameters are exclusive, and response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Global / central user id (via CentralAuth)",
+						"example": 12345,
+						"in": "path",
+						"name": "user_central_id",
+						"required": true,
+						"type": "integer"
+					},
+					{
+						"description": "Time interval between data points, currently only monthly supported",
+						"enum": [
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First month to include in YYYYMMDD format",
+						"example": "20250101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last month to include in YYYYMMDD format",
+						"example": "20260101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopPagesPerEditorResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Returns a timeseries of rankings, each data point shows the editor's top edited pages with most pageviews."
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

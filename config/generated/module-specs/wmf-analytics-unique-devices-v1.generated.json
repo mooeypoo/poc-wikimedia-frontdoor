@@ -1,0 +1,217 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.UniqueDevices": {
+			"properties": {
+				"access-site": {
+					"description": "Method of access",
+					"example": "all-sites",
+					"type": "string"
+				},
+				"devices": {
+					"description": "Number of unique devices",
+					"example": 851183354,
+					"type": "integer"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"offset": {
+					"description": "Number of devices with one visit or an unknown number of visits",
+					"example": 361411016,
+					"type": "integer"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "Timestamp in YYYYMMDD format",
+					"example": "20230101",
+					"type": "string"
+				},
+				"underestimate": {
+					"description": "Number of devices with two or more visits",
+					"example": 489772338,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.UniqueDevicesResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.UniqueDevices"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Device Analytics provides data about the number of unique devices that access Wikimedia projects.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Device Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/unique-devices/{project}/{access-site}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of unique devices that accessed a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Method of access",
+						"enum": [
+							"all-sites",
+							"desktop-site",
+							"mobile-site"
+						],
+						"example": "all-sites",
+						"in": "path",
+						"name": "access-site",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.UniqueDevicesResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of unique devices"
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}
