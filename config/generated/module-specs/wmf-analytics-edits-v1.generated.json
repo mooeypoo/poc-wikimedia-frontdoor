@@ -1,0 +1,2709 @@
+{
+	"basePath": "/api/rest_v1/metrics",
+	"definitions": {
+		"entities.BytesDifferenceAbsoluteAggregate": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceAbsoluteAggregateResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceAbsoluteAggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceAbsoluteAggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceAbsoluteAggregateResult": {
+			"properties": {
+				"abs_bytes_diff": {
+					"description": "Number of bytes changed",
+					"example": 3213130449,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceAbsolutePerPage": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Solar_System",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceAbsolutePerPageResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceAbsolutePerPageResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceAbsolutePerPage"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceAbsolutePerPageResult": {
+			"properties": {
+				"abs_bytes_diff": {
+					"description": "Number of bytes changed",
+					"example": 1505,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetAggregate": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceNetAggregateResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetAggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceNetAggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetAggregateResult": {
+			"properties": {
+				"net_bytes_diff": {
+					"description": "Net change in bytes. A negative value indicates bytes removed",
+					"example": -230801813,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetPerPage": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Solar_System",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceNetPerPageResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetPerPageResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.BytesDifferenceNetPerPage"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.BytesDifferenceNetPerPageResult": {
+			"properties": {
+				"net_bytes_diff": {
+					"description": "Net change in bytes. A negative value indicates bytes removed",
+					"example": 105,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesAggregate": {
+			"properties": {
+				"activity-level": {
+					"description": "Editor activity range",
+					"example": "all-activity-levels",
+					"type": "string"
+				},
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.EditedPagesAggregateResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesAggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.EditedPagesAggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesAggregateResult": {
+			"properties": {
+				"edited_pages": {
+					"description": "Number of edited pages",
+					"example": 2431429,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesNew": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.EditedPagesNewResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesNewResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.EditedPagesNew"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditedPagesNewResult": {
+			"properties": {
+				"new_pages": {
+					"description": "Number of new pages",
+					"example": 184731,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsAggregate": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.EditsAggregateResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsAggregateResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.EditsAggregate"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsAggregateResult": {
+			"properties": {
+				"edits": {
+					"description": "Number of edits",
+					"example": 5771719,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerEditorContext": {
+			"properties": {
+				"end": {
+					"description": "Last date of the time period in ISO-8601 format (exclusive: end date is not included in the response)",
+					"example": "2024-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"endpoint": {
+					"description": "API endpoint used",
+					"example": "edits/per_editor",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points (e.g. daily, monthtly)",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page_type": {
+					"description": "Type of page",
+					"example": "content",
+					"type": "string"
+				},
+				"start": {
+					"description": "First date of the time period in ISO-8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"user_central_id": {
+					"description": "Global / central user id (via CentralAuth)",
+					"example": 12345,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerEditorItem": {
+			"properties": {
+				"edit_count": {
+					"description": "Number of edits",
+					"example": 25,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerEditorResponse": {
+			"properties": {
+				"context": {
+					"$ref": "#/definitions/entities.EditsPerEditorContext"
+				},
+				"items": {
+					"description": "Array of timeseries results",
+					"items": {
+						"$ref": "#/definitions/entities.EditsPerEditorItem"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerPage": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "monthly",
+					"type": "string"
+				},
+				"page-title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Solar_System",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.EditsPerPageResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerPageResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.EditsPerPage"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.EditsPerPageResult": {
+			"properties": {
+				"edits": {
+					"description": "Number of edits",
+					"example": 25,
+					"type": "integer"
+				},
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-01T00:00:00.000Z",
+					"type": "string"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifference": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifference"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-02T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of page objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceTop"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByAbsoluteBytesDifferenceTop": {
+			"properties": {
+				"abs_bytes_diff": {
+					"description": "Number of bytes changed",
+					"example": 1329730,
+					"type": "integer"
+				},
+				"page_title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Project:Sandbox",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Page rank",
+					"example": 1,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEdits": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEditsResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEdits"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2023-01-02T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of page objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByEditsTop"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByEditsTop": {
+			"properties": {
+				"edits": {
+					"description": "Number of edits",
+					"example": 171,
+					"type": "integer"
+				},
+				"page_title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Piolets_d'Or",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Page rank",
+					"example": 1,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifference": {
+			"properties": {
+				"editor-type": {
+					"description": "Type of editor",
+					"example": "all-editor-types",
+					"type": "string"
+				},
+				"granularity": {
+					"description": "Time interval between data points",
+					"example": "daily",
+					"type": "string"
+				},
+				"page-type": {
+					"description": "Type of page",
+					"example": "all-page-types",
+					"type": "string"
+				},
+				"project": {
+					"description": "Wikimedia project domain and subdomain",
+					"example": "en.wikipedia",
+					"type": "string"
+				},
+				"results": {
+					"description": "Array of results objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifferenceResult"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceResponse": {
+			"properties": {
+				"items": {
+					"description": "Top-level response array",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifference"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceResult": {
+			"properties": {
+				"timestamp": {
+					"description": "Timestamp in ISO 8601 format",
+					"example": "2020-12-01T00:00:00.000Z",
+					"type": "string"
+				},
+				"top": {
+					"description": "Array of page objects",
+					"items": {
+						"$ref": "#/definitions/entities.TopByNetBytesDifferenceTop"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"entities.TopByNetBytesDifferenceTop": {
+			"properties": {
+				"net_bytes_diff": {
+					"description": "Net change in bytes. A negative value indicates bytes removed",
+					"example": 989304,
+					"type": "integer"
+				},
+				"page_title": {
+					"description": "Page title, with spaces replaced with underscores",
+					"example": "Project:Sandbox",
+					"type": "string"
+				},
+				"rank": {
+					"description": "Page rank",
+					"example": 1,
+					"type": "integer"
+				}
+			},
+			"type": "object"
+		}
+	},
+	"host": "wikimedia.org",
+	"info": {
+		"contact": {},
+		"description": "Edit Analytics provides data about the number of edits and edited pages on Wikimedia projects.\nData provided by this API is available under the [CC0 1.0 license](https://creativecommons.org/publicdomain/zero/1.0/).",
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use",
+		"title": "Wikimedia Edit Analytics",
+		"version": "1"
+	},
+	"paths": {
+		"/bytes-difference/absolute/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of bytes changed on a Wikimedia project, calculated as the absolute change in page length. For example, if an edit adds 5 bytes and another edit removes 10 bytes, the absolute change is 15 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.BytesDifferenceAbsoluteAggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get absolute change, in bytes"
+			}
+		},
+		"/bytes-difference/absolute/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of bytes changed on a wiki page, calculated as the absolute change in bytes. For example, if a page has an edit that adds 5 bytes and an edit that removes 10 bytes, the absolute change is 15 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Page title in URL-encoded format. The API sandbox encodes titles automatically",
+						"example": "Solar_System",
+						"in": "path",
+						"name": "page-title",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.BytesDifferenceAbsolutePerPageResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get absolute change for a page, in bytes"
+			}
+		},
+		"/bytes-difference/net/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of bytes changed on a Wikimedia project, calculated as the net change in page length. For example, if an edit adds 5 bytes and another edit removes 10 bytes, the net change is -5 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.BytesDifferenceNetAggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get net change, in bytes"
+			}
+		},
+		"/bytes-difference/net/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of bytes changed on a wiki page, calculated as the net change in bytes. For example, if a page has an edit that adds 5 bytes and an edit that removes 10 bytes, the net change is -5 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Page title in URL-encoded format. The API sandbox encodes titles automatically",
+						"example": "Solar_System",
+						"in": "path",
+						"name": "page-title",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.BytesDifferenceNetPerPageResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get net change for a page, in bytes"
+			}
+		},
+		"/edited-pages/aggregate/{project}/{editor-type}/{page-type}/{activity-level}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of edited pages on a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Editor activity range",
+						"enum": [
+							"all-activity-levels",
+							"1..4-edits",
+							"5..24-edits",
+							"25..99-edits",
+							"100..-edits"
+						],
+						"example": "all-activity-levels",
+						"in": "path",
+						"name": "activity-level",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditedPagesAggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of edited pages"
+			}
+		},
+		"/edited-pages/new/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of new pages on a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditedPagesNewResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of new pages"
+			}
+		},
+		"/edited-pages/top-by-absolute-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-edited pages on a Wikimedia project, ordered by the absolute change in bytes. For example, if a page has an edit that adds 5 bytes and an edit that removes 10 bytes, the absolute change is 15 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByAbsoluteBytesDifferenceResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-edited pages by number of bytes changed"
+			}
+		},
+		"/edited-pages/top-by-edits/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-edited pages on a Wikimedia project, ordered by number of edits.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByEditsResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-edited pages by number of edits"
+			}
+		},
+		"/edited-pages/top-by-net-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}": {
+			"get": {
+				"description": "Lists the 100 most-edited pages on a Wikimedia project, ordered by the net change in bytes. For example, if a page has an edit that adds 5 bytes and an edit that removes 10 bytes, the net change is -5 bytes.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Year in YYYY format",
+						"example": "2023",
+						"in": "path",
+						"name": "year",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Month in MM format",
+						"example": "01",
+						"in": "path",
+						"name": "month",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Day in DD format, or `all-days`",
+						"example": "02",
+						"in": "path",
+						"name": "day",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.TopByNetBytesDifferenceResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "List most-edited pages by net difference in bytes"
+			}
+		},
+		"/edits/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of edits to a Wikimedia project.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all-page-types",
+							"content",
+							"non-content"
+						],
+						"example": "all-page-types",
+						"in": "path",
+						"name": "page-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditsAggregateResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of edits"
+			}
+		},
+		"/edits/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of numbers of edits to a wiki page.",
+				"parameters": [
+					{
+						"description": "Domain and subdomain of a Wikimedia project. For all projects, use `all-projects`. For data grouped by project family, use `all-[family]-projects`; for example, `all-wikipedia-projects`",
+						"example": "en.wikipedia.org",
+						"in": "path",
+						"name": "project",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Page title in URL-encoded format. The API sandbox encodes titles automatically",
+						"example": "Solar_System",
+						"in": "path",
+						"name": "page-title",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Type of editor. `group-bot` for registered accounts belonging to the bot group; `name-bot` for registered accounts with bot-like names",
+						"enum": [
+							"all-editor-types",
+							"anonymous",
+							"group-bot",
+							"name-bot",
+							"user"
+						],
+						"example": "all-editor-types",
+						"in": "path",
+						"name": "editor-type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditsPerPageResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of edits to a page"
+			}
+		},
+		"/edits/v3/per_editor/{user_central_id}/{page_type}/{granularity}/{start}/{end}": {
+			"get": {
+				"description": "Returns a time series of the with edit counts per user central id.  Please note that this endpoint is Analytics API v3, and may not match exactly with Analytics API v1.  E.g. all params and response keys use snake_case, end date parameters are exclusive, and response format has a context object and items array.",
+				"parameters": [
+					{
+						"description": "Global / central user id (via CentralAuth)",
+						"example": 12345,
+						"in": "path",
+						"name": "user_central_id",
+						"required": true,
+						"type": "integer"
+					},
+					{
+						"description": "Type of page",
+						"enum": [
+							"all_page_types",
+							"content",
+							"non_content"
+						],
+						"example": "all_page_types",
+						"in": "path",
+						"name": "page_type",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Time interval between data points",
+						"enum": [
+							"daily",
+							"monthly"
+						],
+						"example": "monthly",
+						"in": "path",
+						"name": "granularity",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "First day to include in YYYYMMDD format",
+						"example": "20230101",
+						"in": "path",
+						"name": "start",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "Last day to include in YYYYMMDD format",
+						"example": "20240101",
+						"in": "path",
+						"name": "end",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/entities.EditsPerEditorResponse"
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"404": {
+						"description": "Not found",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"schema": {
+							"properties": {
+								"detail": {
+									"type": "string"
+								},
+								"method": {
+									"type": "string"
+								},
+								"status": {
+									"type": "integer"
+								},
+								"title": {
+									"type": "string"
+								},
+								"type": {
+									"type": "string"
+								},
+								"uri": {
+									"type": "string"
+								}
+							},
+							"type": "object"
+						}
+					}
+				},
+				"summary": "Get number of edits across all wikis by a user."
+			}
+		}
+	},
+	"schemes": [
+		"https"
+	],
+	"swagger": "2.0"
+}

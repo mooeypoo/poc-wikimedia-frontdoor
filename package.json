@@ -9,6 +9,7 @@
     "build": "nuxt build",
     "build:netlify": "NITRO_PRESET=netlify nuxt build",
     "dev": "nuxt dev",
+    "dev:clean": "rm -rf node_modules/.cache/vite .nuxt && nuxt dev",
     "fetch-remote-content": "node scripts/fetch-remote-content.mjs",
     "generate-content-i18n": "node packages/banana-content/src/node/cli.js",
     "generate-content-i18n-stubs": "node scripts/generate-content-stub-translations.mjs",
@@ -43,5 +44,8 @@
   "devDependencies": {
     "oxc-parser": "^0.131.0",
     "rolldown": "^1.0.2"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

@@ -13,6 +13,9 @@
 			}
 		},
 		"schemas": {
+			"anything": {
+				"description": "anything"
+			},
 			"array-param": {
 				"type": "object"
 			},
@@ -80,6 +83,9 @@
 			"string-param": {
 				"type": "string"
 			},
+			"tags-param": {
+				"type": "string"
+			},
 			"timestamp-param": {
 				"format": "mw-timestamp",
 				"type": "string"
@@ -120,13 +126,16 @@
 	},
 	"info": {
 		"contact": {
-			"email": "noc@wikipedia.org"
+			"email": "noc@wikipedia.org",
+			"name": "Wikimedia Commons",
+			"url": "https://commons.wikimedia.org"
 		},
 		"description": "OpenAPI definition of Wikibase REST API",
 		"license": {
 			"name": "Creative Commons Attribution-Share Alike 4.0",
 			"url": "https://creativecommons.org/licenses/by-sa/4.0/"
 		},
+		"termsOfService": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use#12._API_Terms",
 		"title": "Wikibase REST API",
 		"version": "1.0.0"
 	},
