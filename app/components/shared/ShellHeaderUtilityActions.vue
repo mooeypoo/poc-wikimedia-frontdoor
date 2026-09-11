@@ -472,6 +472,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					v-for="option in colorThemePreferenceOptions"
 					:key="option.mode"
 					v-model="colorModeSelection"
+					name="color-theme-preference"
 					:input-value="option.mode"
 				>
 					{{ option.label }}

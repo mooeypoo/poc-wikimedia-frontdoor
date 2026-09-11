@@ -30,7 +30,7 @@ export async function useLocalizedContentPage(
 			const page = await queryCollection( 'content' ).path( pathCandidate ).first()
 			if ( page ) {
 				return {
-					page: page as Record<string, unknown>,
+					page: page as unknown as Record<string, unknown>,
 					resolvedLocale: localeCandidate
 				}
 			}

@@ -31,12 +31,11 @@ const props = defineProps<{
 /**
  * Codex Thumbnail payload for {@link CdxCard}.
  *
- * @returns Thumbnail object with committed public URL and 40px box size.
+ * @returns Thumbnail object with the committed public URL. Box size is
+ * CdxCard's own default; the Thumbnail type carries no size fields.
  */
 const thumbnail = computed( (): Thumbnail => ( {
-	url: props.thumbnailSrc,
-	width: 40,
-	height: 40
+	url: props.thumbnailSrc
 } ) )
 </script>
 

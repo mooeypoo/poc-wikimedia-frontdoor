@@ -7,7 +7,7 @@ export interface ScalarOperationNavigationInput {
 	primaryTag?: string
 }
 
-interface ScalarNavigationEntry {
+export interface ScalarNavigationEntry {
 	id?: string
 	type?: string
 	method?: string

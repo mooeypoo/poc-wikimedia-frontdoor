@@ -31,7 +31,7 @@ const emit = defineEmits<{
 	'heading-select': [ headingId: string ]
 }>()
 
-const selectedHeadingId = ref<MenuItemValue | undefined>( undefined )
+const selectedHeadingId = ref<MenuItemValue | null>( null )
 
 /**
  * Builds Codex menu entries: one group per `h2` (group label + selectable `h2` /
@@ -84,7 +84,7 @@ function onMenuSelection( nextValue: MenuItemValue | null | undefined ): void {
 	}
 
 	emit( 'heading-select', String( nextValue ) )
-	selectedHeadingId.value = undefined
+	selectedHeadingId.value = null
 }
 </script>
 

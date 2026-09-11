@@ -64,7 +64,7 @@ function remoteSourceToNavLink(
  * @returns Merged navigation items
  */
 function mergeRemoteNavSources(
-	items: MainNavigationItem[],
+	items: readonly MainNavigationItem[],
 	localeCode: string,
 	bananaI18n: ( key: string ) => string
 ): MainNavigationLink[] {

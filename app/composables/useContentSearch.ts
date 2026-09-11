@@ -170,7 +170,7 @@ export function useContentSearch(
 				// useSearchCollection searches all content regardless of locale;
 				// client-side path-prefix partitioning is used per ADR §3.
 				// snippet option is passed to search(), not to useSearchCollection() — ADR §1.
-				const rawResults = ( await search( trimmedQuery, { snippet: true } ) ) as ContentSearchResult[]
+				const rawResults = ( await search( trimmedQuery, { snippet: {} } ) ) as ContentSearchResult[]
 
 				// A newer query started while this one was in flight — discard
 				// these stale results so they cannot overwrite the latest run.
