@@ -9,7 +9,10 @@ import messagesPersian from '../../i18n/fa.json'
 
 type MessageMap = Record<string, string>
 
-const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
+// The `en` intersection member keeps the English fallback a guaranteed entry
+// (not routed through the index signature), since every call site below relies
+// on it always resolving.
+const MESSAGES_BY_LOCALE: Record<string, MessageMap> & { en: MessageMap } = {
 	en: messagesEnglish as MessageMap,
 	es: messagesSpanish as MessageMap,
 	fr: messagesFrench as MessageMap,
@@ -54,8 +57,12 @@ export default defineNuxtPlugin( ( nuxtApp ) => {
 		// Extract $1, $2, … in order into a positional array.
 		// banana.i18n() treats the second argument as positional replacements.
 		const args: string[] = []
-		for ( let i = 1; parameters[ `$${ i }` ] !== undefined; i++ ) {
-			args.push( parameters[ `$${ i }` ] )
+		for ( let i = 1; ; i++ ) {
+			const positionalValue = parameters[ `$${ i }` ]
+			if ( positionalValue === undefined ) {
+				break
+			}
+			args.push( positionalValue )
 		}
 
 		const translatedMessage = banana.i18n( messageKey, ...args )

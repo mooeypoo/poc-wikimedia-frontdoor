@@ -65,11 +65,9 @@ export function useApiCatalogProjectFilter(): {
 		const option = API_CATALOG_PROJECT_FILTER_OPTIONS.find(
 			( filterOption ) => filterOption.id === filterId
 		)
-		return option
-			? $bananaI18n( option.messageKey )
-			: $bananaI18n(
-					API_CATALOG_PROJECT_FILTER_OPTIONS[ 0 ].messageKey
-				)
+		// API_CATALOG_PROJECT_FILTER_OPTIONS is a fixed, non-empty literal.
+		?? API_CATALOG_PROJECT_FILTER_OPTIONS[ 0 ]!
+		return $bananaI18n( option.messageKey )
 	}
 
 	/**

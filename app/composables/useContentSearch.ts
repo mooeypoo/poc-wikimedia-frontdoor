@@ -60,7 +60,7 @@ function resultMatchesLocale( resultId: string, localeCode: string ): boolean {
  * @returns URL path such as '/about' or '/fr/about#section'.
  */
 export function contentIdToUrl( resultId: string, defaultLocale: string = 'en' ): string {
-	const [ pathPart, hashPart ] = resultId.split( '#' )
+	const [ pathPart = '', hashPart ] = resultId.split( '#' )
 	const hash = hashPart !== undefined ? `#${ hashPart }` : ''
 	const cleanPath = pathPart.startsWith( '/' ) ? pathPart.slice( 1 ) : pathPart
 	const slashIndex = cleanPath.indexOf( '/' )
