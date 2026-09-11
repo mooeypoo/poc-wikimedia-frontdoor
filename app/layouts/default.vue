@@ -267,7 +267,7 @@ useHead( {
 								>
 									<SharedShellPrimaryNav
 										class="frontdoor-shell__primary-nav"
-										:aria-label="primaryNavigationLabel"
+										:ariaLabel="primaryNavigationLabel"
 										:navigation-links="mainNavigationLinks"
 										:active-navigation-id="activeNavigationId"
 										@navigation-select="handlePrimaryNavigationSelect"
@@ -322,7 +322,7 @@ useHead( {
 				>
 					<SharedShellSidePanelNav
 						v-if="pageSectionNavigationSections.length > 0"
-						:aria-label="pageSectionNavigationLabel"
+						:ariaLabel="pageSectionNavigationLabel"
 						:sections="pageSectionNavigationSections"
 					/>
 				</div>
@@ -361,7 +361,7 @@ useHead( {
 							class="frontdoor-shell__on-this-page-end"
 						>
 							<SharedShellOnThisPageNav
-								:aria-label="onThisPageNavAriaLabel"
+								:ariaLabel="onThisPageNavAriaLabel"
 								:heading-label="onThisPageHeadingLabel"
 								:sections="onThisPageSections"
 								:active-heading-id="onThisPageActiveHeadingId"

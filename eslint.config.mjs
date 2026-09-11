@@ -73,7 +73,16 @@ export default withNuxt(
 			 * skips them, CSS gets a raw-line check, so smart-tabs is what lets
 			 * us keep one comment style on both sides of an SFC.
 			 */
-			'@stylistic/no-mixed-spaces-and-tabs': [ 'error', 'smart-tabs' ]
+			'@stylistic/no-mixed-spaces-and-tabs': [ 'error', 'smart-tabs' ],
+
+			/*
+			 * The rule's own aria-/data- exemption matches on a literal hyphen, so
+			 * it never recognizes a camelCase spelling. ariaLabel props (Shell*Nav
+			 * components) must stay camelCase at call sites: Vue's kebab-to-camel
+			 * attribute matching does not apply to aria- or data- prefixed names,
+			 * so binding :aria-label there does not reach the ariaLabel prop at all.
+			 */
+			'vue/attribute-hyphenation': [ 'error', 'always', { ignore: [ 'ariaLabel' ] } ]
 		}
 	}
 )

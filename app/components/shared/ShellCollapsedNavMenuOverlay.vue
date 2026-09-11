@@ -76,7 +76,7 @@ const emit = defineEmits<{
 					</CdxButton>
 					<SharedShellSidePanelNav
 						class="shell-collapsed-nav-menu-overlay__section-nav"
-						:aria-label="sectionNavigationLabel"
+						:ariaLabel="sectionNavigationLabel"
 						:sections="sectionNavigationSections"
 						:omit-section-title-matching="primaryNavigationLabel"
 					/>
