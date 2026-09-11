@@ -160,6 +160,20 @@ export default defineNuxtConfig( {
 	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
 	compatibilityDate: '2024-05-07',
 
+	// server/api/explorer-bootstrap.get.ts pulls in app/utils/explorerModuleRailHeading.ts
+	// and explorerModuleDescription.ts, which carry the same .ts-extension imports as
+	// the typescript.tsConfig block below. Nitro generates tsconfig.server.json on its
+	// own, separately from that app tsConfig, so it needs the same override.
+	nitro: {
+		typescript: {
+			tsConfig: {
+				compilerOptions: {
+					allowImportingTsExtensions: true
+				}
+			}
+		}
+	},
+
 	vite: {
 		plugins: [
 			scalarMapConfigPluginsResolvePlugin( projectRootDirectory )
@@ -233,6 +247,16 @@ export default defineNuxtConfig( {
 	// global CSS flipping for third-party explorer styles for now.
 
 	hooks: {
+		// typescript.tsConfig above only reaches tsconfig.app.json. nuxt.config.ts
+		// itself is type-checked under tsconfig.node.json, and it pulls in
+		// config/languages.ts, which needs the same override for its own
+		// .ts-extension import of languages.generated.ts.
+		'prepare:types': ( { nodeTsConfig } ) => {
+			nodeTsConfig.compilerOptions = {
+				...nodeTsConfig.compilerOptions,
+				allowImportingTsExtensions: true
+			}
+		},
 		// Per-process SQLite files accumulate across dev server restarts when the
 		// previous process exits uncleanly. Clean them up at startup so the .data/
 		// directory does not grow unboundedly (ADR §9).
