@@ -21,7 +21,7 @@ export interface RemoteContentNavEntry {
 	 *                   implemented; requires extending the `apis` menu in
 	 *                   config/sectionNavigation.js).
 	 */
-	target: 'primary'  // extend to 'primary' | 'explorer-side' when Phase 2 nav is added
+	target: 'primary' // extend to 'primary' | 'explorer-side' when Phase 2 nav is added
 
 	/** banana-i18n message key for the nav label. Must exist in all i18n/*.json files. */
 	messageKey: string
@@ -31,7 +31,7 @@ export interface RemoteContentNavEntry {
 	 * Use a numeric index (0-based) or 'after:{id}' referencing a
 	 * MAIN_NAVIGATION_ITEMS entry id (e.g. 'after:learn').
 	 */
-	navPosition: number | `after:${string}`
+	navPosition: number | `after:${ string }`
 }
 
 export interface RemoteContentSource {
@@ -168,7 +168,7 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		strategy: 'markdown-url',
 		remoteUrl: 'https://gitlab.wikimedia.org/repos/ci-tools/wikimedia-spectral-ruleset/-/raw/main/README.md?ref_type=heads',
 		localPath: 'demo-remote-markdown',
-		overrideFrontmatter: { title: 'Demo Remote Markdown' },
+		overrideFrontmatter: { title: 'Demo Remote Markdown' }
 		// navEntry: {
 		// 	target: 'primary',
 		// 	messageKey: 'nav-remote-md',
@@ -187,7 +187,7 @@ export const REMOTE_CONTENT_SOURCES: readonly RemoteContentSource[] = [
 		localPath: 'wiki-translate-help',
 		minTranslatedPercent: 85,
 		overrideFrontmatter: { title: 'Translate extension (from mediawiki.org)' },
-		attribution: { license: 'CC BY-SA 4.0' },
+		attribution: { license: 'CC BY-SA 4.0' }
 		// navEntry: {
 		// 	target: 'primary',
 		// 	messageKey: 'nav-wiki-translate',

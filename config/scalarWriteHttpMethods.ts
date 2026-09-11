@@ -10,4 +10,4 @@ export const SCALAR_WRITE_HTTP_METHODS = [
 	'patch'
 ] as const
 
-export type ScalarWriteHttpMethod = typeof SCALAR_WRITE_HTTP_METHODS[number]
+export type ScalarWriteHttpMethod = typeof SCALAR_WRITE_HTTP_METHODS[ number ]

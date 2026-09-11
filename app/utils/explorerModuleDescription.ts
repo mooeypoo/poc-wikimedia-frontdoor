@@ -81,7 +81,7 @@ export function normalizeOpenApiModuleDescription(
  * @returns External or interface description text, or undefined when none applies.
  */
 export function resolveExplorerModuleMenuDescription(
-	moduleItem: { name: string; moduleDescription?: string },
+	moduleItem: { name: string, moduleDescription?: string },
 	translateMessage: ( messageKey: string ) => string
 ): string | undefined {
 	const openApiDescription = moduleItem.moduleDescription?.trim()

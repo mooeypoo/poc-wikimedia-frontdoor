@@ -35,7 +35,7 @@ function buildContentRoutePath( navigationItem: MainNavigationItem, localeCode: 
 function remoteSourceToNavLink(
 	source: RemoteContentSource,
 	localeCode: string,
-	bananaI18n: (key: string) => string
+	bananaI18n: ( key: string ) => string
 ): MainNavigationLink {
 	const path = `/${ source.localPath }`
 
@@ -54,7 +54,7 @@ function remoteSourceToNavLink(
  * Remote sources with navEntry.target === 'primary' are inserted according to their
  * navPosition field. Phase 2 will support additional nav targets.
  * @TODO: Support `navPosition` values of the form `before:<id>` for insertion before a reference item.
- *        Requires refactoring to avoid index shifting issues when inserting multiple items. 
+ *        Requires refactoring to avoid index shifting issues when inserting multiple items.
  *        Consider a two-pass approach where items with positional references are processed
  *        after all direct index insertions.
  *
@@ -66,7 +66,7 @@ function remoteSourceToNavLink(
 function mergeRemoteNavSources(
 	items: MainNavigationItem[],
 	localeCode: string,
-	bananaI18n: (key: string) => string
+	bananaI18n: ( key: string ) => string
 ): MainNavigationLink[] {
 	// Convert base items to nav links
 	const baseLinks = items.map( ( navigationItem ) => ( {
@@ -77,7 +77,7 @@ function mergeRemoteNavSources(
 
 	// Filter remote sources with primary nav target
 	const remoteNavSources = REMOTE_CONTENT_SOURCES.filter(
-		source => source.navEntry?.target === 'primary'
+		( source ) => source.navEntry?.target === 'primary'
 	)
 
 	if ( remoteNavSources.length === 0 ) {
@@ -97,7 +97,7 @@ function mergeRemoteNavSources(
 		} else if ( typeof position === 'string' && position.startsWith( 'after:' ) ) {
 			// Insert after reference id
 			const refId = position.substring( 6 ) // 'after:' is 6 chars
-			const refIndex = mergedLinks.findIndex( link => link.id === refId )
+			const refIndex = mergedLinks.findIndex( ( link ) => link.id === refId )
 			if ( refIndex >= 0 ) {
 				mergedLinks.splice( refIndex + 1, 0, newLink )
 			} else {

@@ -106,7 +106,6 @@ const isOptInPopoverOpen = ref( false )
 function onOptInPopoverTriggerClick(): void {
 	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
 }
-
 </script>
 
 <template>
@@ -212,8 +211,8 @@ function onOptInPopoverTriggerClick(): void {
 							<CdxIcon :icon="cdxIconInfo" />
 						</CdxButton>
 						<CdxPopover
-							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							v-model:open="isOptInPopoverOpen"
+							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							:anchor="optInPopoverTrigger"
 							:title="optInPopoverTitle"
 							placement="bottom-start"

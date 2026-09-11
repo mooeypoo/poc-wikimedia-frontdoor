@@ -137,7 +137,7 @@ function importMarker( sourceId ) {
 function createEmptyPlaceholder( title, sourceId ) {
 	return serializeDocument(
 		{ title: title || 'Content unavailable', ...importMarker( sourceId ) },
-		"This page's content could not be fetched at build time.\n"
+		'This page\'s content could not be fetched at build time.\n'
 	)
 }
 

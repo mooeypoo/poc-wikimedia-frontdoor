@@ -3,7 +3,7 @@ import { resolveHttpMethodFromModalElement } from './scalarClientModalHttpMethod
 
 export type ScalarClientServerMeta =
 	| { type: 'document' }
-	| { type: 'operation'; path: string; method: OpenAPI.HttpMethod }
+	| { type: 'operation', path: string, method: OpenAPI.HttpMethod }
 
 /**
  * Extracts the first absolute HTTP(S) URL from address-bar button copy.

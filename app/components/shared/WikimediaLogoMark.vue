@@ -26,7 +26,7 @@ const clipPathId = useId()
 		<clipPath :id="clipPathId">
 			<path d="m1-2v12h-2v-12l-15-15v33h32v-33z" />
 		</clipPath>
-		<g :clip-path="`url(#${clipPathId})`">
+		<g :clip-path="`url(#${ clipPathId })`">
 			<circle
 				r="9"
 				fill="currentColor"

@@ -6,7 +6,7 @@
  */
 export function resolveScalarClientModalAddressBarWarningPlacement(
 	modalRoot: Element
-): { parentElement: Element; insertBefore: Element | null } | null {
+): { parentElement: Element, insertBefore: Element | null } | null {
 	const addressBar = modalRoot.querySelector( '.scalar-address-bar' )
 	const parentElement = addressBar?.parentElement ?? null
 

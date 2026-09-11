@@ -9,8 +9,8 @@
 import YAML from 'yaml'
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---\n?/
-const ATTRIBUTE_QUOTES = new Set( [ '"', "'" ] )
-const ENTITIES = { '"': '&quot;', "'": '&#39;' }
+const ATTRIBUTE_QUOTES = new Set( [ '"', '\'' ] )
+const ENTITIES = { '"': '&quot;', '\'': '&#39;' }
 
 /** YAML frontmatter envelope. */
 export const yamlFrontmatter = {

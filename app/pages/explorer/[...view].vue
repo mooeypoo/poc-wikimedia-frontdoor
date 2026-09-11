@@ -362,7 +362,9 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 				<h1>
 					{{ explorerTitle }}
 				</h1>
-				<p v-if="explorerDescription">{{ explorerDescription }}</p>
+				<p v-if="explorerDescription">
+					{{ explorerDescription }}
+				</p>
 			</header>
 
 			<CdxMessage
@@ -393,7 +395,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 					:visible-modules="visibleModules"
 					:has-selectable-modules="hasVisibleSelectableModules"
 					:select-module="selectModule"
-						:wiki-display-name="wikiDisplayName"
+					:wiki-display-name="wikiDisplayName"
 					:is-instance-bootstrapping="isInstanceBootstrapping"
 				/>
 				<div
@@ -424,7 +426,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			v-if="isCommunityMode && isInstanceBootstrapping"
 			class="explorer-page__bootstrap-loading"
 		>
-			<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+			<div
+				class="explorer-page__scalar-loading-indicator"
+				aria-hidden="true"
+			/>
 			<h2>{{ loadingInstanceLabel }}</h2>
 			<p>{{ loadingInstanceDescriptionLabel }}</p>
 		</section>
@@ -458,7 +463,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 						<template #fallback>
 							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
 								<div class="explorer-page__scalar-loading">
-									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<div
+										class="explorer-page__scalar-loading-indicator"
+										aria-hidden="true"
+									/>
 									<p>{{ enterpriseCustomLoadingLabel }}</p>
 								</div>
 							</div>
@@ -474,7 +482,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 								v-if="!isScalarReady || isScalarSwitching"
 								class="explorer-page__scalar-loading-overlay"
 							>
-								<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+								<div
+									class="explorer-page__scalar-loading-indicator"
+									aria-hidden="true"
+								/>
 								<p>{{ isScalarSwitching ? scalarSwitchingLabel : explorerInterfaceLoadingLabel }}</p>
 							</div>
 							<ExplorerScalarReference
@@ -486,7 +497,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 						<template #fallback>
 							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
 								<div class="explorer-page__scalar-loading">
-									<div class="explorer-page__scalar-loading-indicator" aria-hidden="true"></div>
+									<div
+										class="explorer-page__scalar-loading-indicator"
+										aria-hidden="true"
+									/>
 									<p>{{ explorerInterfaceLoadingLabel }}</p>
 								</div>
 							</div>

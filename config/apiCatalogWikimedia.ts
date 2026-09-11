@@ -52,8 +52,8 @@ export type ApiCatalogCardChip = {
  * - `projects` — shown for “Any” and the listed project id(s) only.
  */
 export type ApiCatalogCardVisibility =
-	| { kind: 'universal'; excludeProjectIds?: readonly ApiCatalogProjectId[] }
-	| { kind: 'projects'; projectIds: readonly ApiCatalogProjectId[] }
+	| { kind: 'universal', excludeProjectIds?: readonly ApiCatalogProjectId[] }
+	| { kind: 'projects', projectIds: readonly ApiCatalogProjectId[] }
 
 /**
  * One Wikimedia APIs catalog card.

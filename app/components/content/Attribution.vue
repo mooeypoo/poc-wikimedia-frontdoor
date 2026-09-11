@@ -22,7 +22,11 @@ const { $bananaI18n } = useNuxtApp()
 
 <template>
 	<aside class="wiki-attribution">
-		<CdxIcon :icon="cdxIconLogoWikimedia" size="small" class="wiki-attribution__icon" />
+		<CdxIcon
+			:icon="cdxIconLogoWikimedia"
+			size="small"
+			class="wiki-attribution__icon"
+		/>
 		<span class="wiki-attribution__text">
 			{{ $bananaI18n( 'content-attribution-adapted-from' ) }}
 			<a

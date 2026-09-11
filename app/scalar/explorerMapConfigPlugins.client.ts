@@ -42,8 +42,8 @@ export function mapConfigPlugins(
 
 			configurationHookPlugin.hooks.responseReceived = onRequestSent
 				? ( payload ) => {
-					onRequestSent( payload.request.url )
-				}
+						onRequestSent( payload.request.url )
+					}
 				: undefined
 		},
 		{ immediate: true }

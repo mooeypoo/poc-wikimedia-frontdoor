@@ -65,7 +65,7 @@ export function useScalarClientWriteEndpointWarnings(
 	let modalScanRetryAttempts = 0
 	let trackedHttpMethod = ''
 	let boundEventBus: ScalarWorkspaceEventBus | null = null
-	let addressBarAlignResizeListener: (() => void) | null = null
+	let addressBarAlignResizeListener: ( () => void ) | null = null
 
 	/** Reactive props for the mounted warning app (updated on each modal scan). */
 	const warningProps = reactive( {
@@ -123,12 +123,12 @@ export function useScalarClientWriteEndpointWarnings(
 				? ''
 				: warningProps.isTestServerSelectable
 					? resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning', [
-						productionWikiDisplayName,
-						resolveInterfaceMessage( getTestWikiDisplayNameMessageKey( wikiInstanceId ) )
-					] )
+							productionWikiDisplayName,
+							resolveInterfaceMessage( getTestWikiDisplayNameMessageKey( wikiInstanceId ) )
+						] )
 					: resolveInterfaceMessage( 'explorer-scalar-write-endpoint-warning-no-test-wiki', [
-						productionWikiDisplayName
-					] )
+							productionWikiDisplayName
+						] )
 
 			mountElement = createScalarWriteEndpointWarningElement( warningProps.slotKey, messageText )
 		} else {

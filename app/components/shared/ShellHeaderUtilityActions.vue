@@ -8,9 +8,10 @@ import {
 	CdxPopover,
 	CdxRadio,
 	CdxSearchInput,
-	type MenuConfig
+	type MenuConfig,
+	type MenuItemData,
+	type MenuItemValue
 } from '@wikimedia/codex'
-import type { MenuItemData, MenuItemValue } from '@wikimedia/codex'
 import {
 	cdxIconConfigure,
 	cdxIconEllipsis,
@@ -214,10 +215,10 @@ const languageMenuItems = computed<MenuItemData[]>( () => {
 
 	const matches = term
 		? allLanguageMenuItems.filter( ( item ) =>
-			( item.label ?? '' ).toLowerCase().includes( term ) ||
-			( item.supportingText ?? '' ).toLowerCase().includes( term ) ||
-			String( item.value ).toLowerCase().includes( term )
-		)
+				( item.label ?? '' ).toLowerCase().includes( term ) ||
+				( item.supportingText ?? '' ).toLowerCase().includes( term ) ||
+				String( item.value ).toLowerCase().includes( term )
+			)
 		: allLanguageMenuItems
 
 	const capped = matches.slice( 0, HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP )

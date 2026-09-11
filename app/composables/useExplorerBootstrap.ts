@@ -346,16 +346,16 @@ export function useExplorerBootstrap(
 
 				selectModule( pendingIntent.moduleName, targetOperation
 					? {
-						source: 'deep-link',
-						operationTarget: {
-							moduleName: pendingIntent.moduleName,
-							method: targetOperation.method,
-							path: targetOperation.path,
-							summary: targetOperation.summary,
-							operationId: targetOperation.operationId,
-							primaryTag: targetOperation.primaryTag
+							source: 'deep-link',
+							operationTarget: {
+								moduleName: pendingIntent.moduleName,
+								method: targetOperation.method,
+								path: targetOperation.path,
+								summary: targetOperation.summary,
+								operationId: targetOperation.operationId,
+								primaryTag: targetOperation.primaryTag
+							}
 						}
-					}
 					: { source: 'deep-link' }
 				)
 

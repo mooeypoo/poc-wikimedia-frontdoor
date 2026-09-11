@@ -54,8 +54,8 @@ async function importDefault( specifier, configDir ) {
  */
 export async function loadConfig( { cwd, configPath } ) {
 	const candidates = configPath ?
-		[ resolve( cwd, configPath ) ] :
-		CONFIG_FILENAMES.map( ( name ) => resolve( cwd, name ) )
+			[ resolve( cwd, configPath ) ] :
+			CONFIG_FILENAMES.map( ( name ) => resolve( cwd, name ) )
 
 	for ( const candidate of candidates ) {
 		let raw
@@ -146,7 +146,7 @@ export async function resolveConfig( raw, configDir ) {
 
 	const keyPattern = merged.keys.pattern instanceof RegExp ?
 		merged.keys.pattern :
-		new RegExp( merged.keys.pattern )
+			new RegExp( merged.keys.pattern )
 
 	// Fallback: a map, a function, or a module exporting one. The library never
 	// asks what languages exist — only what chain to walk for a locale it found.
@@ -199,7 +199,7 @@ export async function resolveConfig( raw, configDir ) {
 		ownership: {
 			...merged.ownership,
 			manifest: merged.ownership.manifest ?
-				resolve( configDir, merged.ownership.manifest ) :
+					resolve( configDir, merged.ownership.manifest ) :
 				false
 		}
 	}

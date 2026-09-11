@@ -30,5 +30,8 @@ const { data: included } = await useAsyncData(
 </script>
 
 <template>
-	<ContentRenderer v-if="included" :value="included" />
+	<ContentRenderer
+		v-if="included"
+		:value="included"
+	/>
 </template>

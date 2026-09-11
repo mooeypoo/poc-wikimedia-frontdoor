@@ -32,7 +32,7 @@ export function findClosingBrace( source, openIndex ) {
 			}
 			continue
 		}
-		if ( char === '"' || char === "'" ) {
+		if ( char === '"' || char === '\'' ) {
 			quote = char
 		} else if ( char === '}' ) {
 			return i
@@ -127,7 +127,7 @@ export function parseAttributes( source, location, diagnostics ) {
 		}
 		const name = source.slice( i, equals ).trim()
 		const quote = source[ equals + 1 ]
-		if ( quote !== '"' && quote !== "'" ) {
+		if ( quote !== '"' && quote !== '\'' ) {
 			diagnostics.error( location, `attribute "${ name }" value must be quoted` )
 			break
 		}

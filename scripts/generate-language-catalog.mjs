@@ -185,7 +185,7 @@ function serializeModule( catalog ) {
 		' * See docs/adr-language-catalog.md.',
 		' */',
 		'',
-		"import type { LanguageConfig } from './languages'",
+		'import type { LanguageConfig } from \'./languages\'',
 		''
 	].join( '\n' )
 
