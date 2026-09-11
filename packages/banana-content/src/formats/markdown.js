@@ -23,7 +23,7 @@ export const yamlFrontmatter = {
 		if ( !match ) {
 			return { metadata: {}, body: text }
 		}
-		let metadata = {}
+		let metadata
 		try {
 			metadata = YAML.parse( match[ 1 ] ) ?? {}
 		} catch {

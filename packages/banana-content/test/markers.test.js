@@ -53,7 +53,7 @@ test( 'text quotes are free inside brackets, and escaped on the way out', () => 
 	// The text span is bracket-delimited, so quotes in it never need escaping —
 	// but landing in a double-quoted attribute they must become entities.
 	const { body, catalog } = build(
-		'::card{title=":message[A project\'s \"best\" tools]{#t qqq=\'T.\'}"}\n'
+		'::card{title=":message[A project\'s "best" tools]{#t qqq=\'T.\'}"}\n'
 	)
 	assert.equal( catalog.messages.get( 'content-page-t' ), 'A project\'s "best" tools' )
 	assert.match( body, /title="A project's &quot;best&quot; tools"/ )

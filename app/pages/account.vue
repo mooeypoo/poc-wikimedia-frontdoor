@@ -91,10 +91,6 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 </script>
 
 <template>
-	<!--
-		Separate roots: never toggle viewport-fill / gap:0 on the dashboard container.
-		Gate owns fill styles; dashboard always keeps Figma Content gap (--spacing-200).
-	-->
 	<AccountLoggedOutGate
 		v-if="!isAccountDashboardAccessible"
 		:title="loggedOutPageTitle"
@@ -111,6 +107,10 @@ watch( isAccountDashboardAccessible, ( isAccessible ) => {
 		v-else
 		class="account-page"
 	>
+		<!--
+			Separate roots: never toggle viewport-fill / gap:0 on the dashboard container.
+			Gate owns fill styles; dashboard always keeps Figma Content gap (--spacing-200).
+		-->
 		<header class="account-page__header">
 			<h1 class="account-page__title">
 				<span

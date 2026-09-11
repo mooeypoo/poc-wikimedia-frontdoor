@@ -66,7 +66,7 @@ export async function loadConfig( { cwd, configPath } ) {
 				if ( error.code === 'ENOENT' ) {
 					continue
 				}
-				throw new Error( `${ candidate }: ${ error.message }` )
+				throw new Error( `${ candidate }: ${ error.message }`, { cause: error } )
 			}
 		} else {
 			try {
@@ -75,7 +75,7 @@ export async function loadConfig( { cwd, configPath } ) {
 				if ( error.code === 'ERR_MODULE_NOT_FOUND' && error.message.includes( candidate ) ) {
 					continue
 				}
-				throw new Error( `${ candidate }: ${ error.message }` )
+				throw new Error( `${ candidate }: ${ error.message }`, { cause: error } )
 			}
 		}
 		delete raw.$schema
