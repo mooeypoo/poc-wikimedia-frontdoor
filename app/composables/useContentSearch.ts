@@ -87,24 +87,34 @@ export function contentIdToUrl( resultId: string, defaultLocale: string = 'en' )
  * FTS5 is language-agnostic so no stemmer configuration is needed, unlike
  * the Lunr approach previously recorded in TECH_DECISIONS.md (superseded — ADR §1).
  *
+ * The index is not free: building it walks every markdown document's AST on the
+ * main thread and inserts a row per section. It is deferred off mount and built
+ * on first focus, the same posture useEndpointSearch takes with its own index.
+ *
  * @param query        - Reactive search query. Results clear when length < 2.
  * @param activeLocale - Reactive BCP 47 locale code of the current interface language.
- * @returns Search state, partitioned results, and the all-locales activation action.
+ * @returns Search state, partitioned results, the all-locales activation action, and the index loader.
  */
 export function useContentSearch(
 	query: Ref<string>,
 	activeLocale: Ref<string>
 ) {
-	const { search } = useSearchCollection( 'content' )
+	// Build deferred off mount; ensureContentIndex() below owns it from there.
+	const { search, init } = useSearchCollection( 'content', { immediate: false } )
 
 	const localeResults = ref<ContentSearchResult[]>( [] )
 	const fallbackResults = ref<ContentSearchResult[]>( [] )
 	const allLocaleResultGroups = ref<LocaleResultGroup[]>( [] )
 	const isAllLocalesMode = ref( false )
 	const isSearching = ref( false )
+	const hasSearchError = ref( false )
 
 	// Retained so activateAllLocalesSearch() can re-partition without a new fetch.
 	const lastRawResults = ref<ContentSearchResult[]>( [] )
+
+	// The one in-flight index build, memoized the way useEndpointSearch memoizes
+	// its own lazy index load.
+	let indexBuild: Promise<void> | null = null
 
 	// Search-as-you-type fires one async search() per keystroke/locale change.
 	// Responses can resolve out of order, so each run claims a sequence number
@@ -132,6 +142,60 @@ export function useContentSearch(
 	}
 
 	/**
+	 * Builds the FTS index, once, and resolves only when it is actually queryable.
+	 *
+	 * `init()` cannot be trusted to dedupe concurrent callers: it returns its
+	 * in-flight promise only once `indexedFor` is populated, and that happens
+	 * after the build, so two calls inside one build window index every section
+	 * twice. And `search()` only falls back to `init()` when its own db handle is
+	 * unset, which it assigns before the build rather than after, so a query
+	 * issued mid-build runs against an empty collection list and comes back
+	 * empty. Every caller waits on this promise instead.
+	 *
+	 * @returns Resolves when the index is queryable; rejects if the build failed.
+	 */
+	function ensureContentIndex(): Promise<void> {
+		if ( !indexBuild ) {
+			indexBuild = init()
+				.then( () => undefined )
+				.catch( ( error: unknown ) => {
+					// Drop the memo so the next query retries the build rather than
+					// replaying the failure for the rest of the session.
+					indexBuild = null
+					throw error
+				} )
+		}
+		return indexBuild
+	}
+
+	/**
+	 * Starts the index build from the search field's focus so the first keystroke
+	 * does not wait on the whole build. Failure is left to the search to report:
+	 * there is no query here to report it against.
+	 *
+	 * @returns Nothing; the build runs in the background.
+	 */
+	function loadContentIndex(): void {
+		ensureContentIndex().catch( ( error ) => {
+			console.error( '[content-search] failed to build the content index', error )
+		} )
+	}
+
+	/**
+	 * Empties every result bucket. The too-short-query path and the failure path
+	 * both need it, and writing it out twice is how the two drift apart.
+	 *
+	 * @returns Nothing.
+	 */
+	function clearResults(): void {
+		localeResults.value = []
+		fallbackResults.value = []
+		lastRawResults.value = []
+		allLocaleResultGroups.value = []
+		isAllLocalesMode.value = false
+	}
+
+	/**
 	 * Expands the results view to all supported locales, using the retained raw
 	 * result set from the last search. No additional network request is made.
 	 *
@@ -151,22 +215,22 @@ export function useContentSearch(
 				// Invalidate any in-flight search so a pending response cannot
 				// repopulate results after the query was cleared.
 				searchSequence++
-				localeResults.value = []
-				fallbackResults.value = []
-				lastRawResults.value = []
-				allLocaleResultGroups.value = []
-				isAllLocalesMode.value = false
+				clearResults()
 				isSearching.value = false
+				hasSearchError.value = false
 				return
 			}
 
 			// Any new query or locale change resets the all-locales view.
 			isAllLocalesMode.value = false
 			isSearching.value = true
+			hasSearchError.value = false
 
 			const sequence = ++searchSequence
 
 			try {
+				await ensureContentIndex()
+
 				// useSearchCollection searches all content regardless of locale;
 				// client-side path-prefix partitioning is used per ADR §3.
 				// snippet option is passed to search(), not to useSearchCollection() — ADR §1.
@@ -189,6 +253,18 @@ export function useContentSearch(
 				fallbackResults.value = nextLocale !== 'en'
 					? rawResults.filter( ( result ) => resultMatchesLocale( result.id, 'en' ) )
 					: []
+			} catch ( error ) {
+				// The index failed to build, so the query never ran. Say that instead
+				// of "no results in French", which claims a search that did not happen.
+				// A rejected FTS expression is not reachable here: `queryFTS()`
+				// swallows its own SQL errors and returns an empty set.
+				if ( sequence !== searchSequence ) {
+					return
+				}
+
+				console.error( '[content-search] search failed', error )
+				clearResults()
+				hasSearchError.value = true
 			} finally {
 				// Only the most recent run owns the searching flag.
 				if ( sequence === searchSequence ) {
@@ -205,7 +281,9 @@ export function useContentSearch(
 		allLocaleResultGroups,
 		isAllLocalesMode,
 		activateAllLocalesSearch,
+		loadContentIndex,
 		isSearching,
+		hasSearchError,
 		hasQuery
 	}
 }

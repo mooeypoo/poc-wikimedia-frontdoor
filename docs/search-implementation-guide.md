@@ -27,12 +27,36 @@ A search bar in the global layout header that:
 already wired up via `nuxt.config.ts`. The correct composable is:
 
 ```ts
-const { search } = useSearchCollection( 'content' )
+const { search, init } = useSearchCollection( 'content', { immediate: false } )
 const results = await search( query, { limit: 30, snippet: { columns: ['content'], around: 20, tag: 'mark' } } )
 ```
 
 `useSearchCollection` is auto-imported by the `@nuxt/content` module — no
 explicit import needed.
+
+**Pass `{ immediate: false }` and call `init()` from the search field's
+`focusin`.** The default builds the index at mount, and the composable is
+instantiated from the layout header, so every route would fetch the collection
+dump and walk every document's AST on the main thread for readers who never
+search.
+
+**Then hold your own promise for that `init()` and await it before every
+`search()`.** Two library details make this mandatory rather than tidy, both in
+`node_modules/@nuxt/content/dist/runtime/client.js`:
+
+- `search()` falls back to `init()` only when its closure `db` is unset, and
+  `db` is assigned as soon as the database chunk resolves, well before
+  `buildFTSIndex` has inserted a single row. `search()` then passes `indexedFor`
+  to `queryFTS`, and that is populated only after the build. A query issued
+  mid-build therefore runs `collection IN ()`, which SQLite rejects, and
+  `queryFTS` swallows the error and returns `[]`. Firing `init()` on focus
+  without awaiting it is how you turn a slow first query into a silently empty
+  one.
+- `init()` does not dedupe concurrent callers. It returns its in-flight promise
+  only once `indexedFor` contains the collection, and `buildFTSIndex`'s own
+  `indexedCollections` guard is set at the end of the build, so two calls inside
+  one build window both index every section. Memoize it yourself, the way
+  `useEndpointSearch` memoizes its `indexLoad`.
 
 **Do NOT use** `searchContent()` — that function does not exist in v3.
 

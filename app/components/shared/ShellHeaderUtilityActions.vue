@@ -92,6 +92,9 @@ const {
 	allLocaleResultGroups,
 	isAllLocalesMode,
 	activateAllLocalesSearch,
+	loadContentIndex,
+	isSearching,
+	hasSearchError,
 	hasQuery
 } = useContentSearch( searchQuery, $interfaceLocale )
 
@@ -352,8 +355,14 @@ function handleLanguageAreaFocusOut( event: FocusEvent ): void {
 
 /**
  * Opens the search results panel when the field is focused and a query is present.
+ *
+ * Focus is also where the content index build starts. We live in the default
+ * layout, so anything we do at mount is paid for on every route by readers who
+ * never search.
  */
 function handleSearchFocusIn(): void {
+	loadContentIndex()
+
 	if ( hasQuery.value ) {
 		isSearchPanelOpen.value = true
 	}
@@ -422,6 +431,8 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					:fallback-results="fallbackResults"
 					:all-locale-result-groups="allLocaleResultGroups"
 					:endpoint-results="endpointResults"
+					:is-searching="isSearching"
+					:has-search-error="hasSearchError"
 					:is-all-locales-mode="isAllLocalesMode"
 					:active-locale="$interfaceLocale"
 					:search-query="searchQuery"

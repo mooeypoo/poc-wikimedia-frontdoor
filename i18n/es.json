@@ -221,6 +221,8 @@
   "oauth-callback-completing-label": "Completando el inicio de sesión…",
   "oauth-callback-error-label": "No se pudo iniciar sesión. Inténtalo de nuevo.",
   "search-all-languages-cta": "Buscar en todos los idiomas",
+  "search-content-in-progress": "Buscando páginas",
+  "search-content-unavailable": "La búsqueda de páginas no está disponible en este momento. Inténtalo de nuevo en unos instantes.",
   "search-no-locale-results": "Sin resultados en {{bidi:$1}} para {{bidi:$2}}.",
   "search-no-results-any-language": "No se encontraron resultados para {{bidi:$1}} en ningún idioma.",
   "search-results-endpoint-deprecated": "Obsoleto",

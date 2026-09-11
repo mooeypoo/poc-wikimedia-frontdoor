@@ -229,6 +229,8 @@
   "oauth-callback-completing-label": "Progress text shown on the OAuth callback page while the login is being completed.",
   "oauth-callback-error-label": "Error message shown on the OAuth callback page when the login could not be completed.",
   "search-all-languages-cta": "Button label to expand the search view across all supported languages.",
+  "search-content-in-progress": "Accessible label on the progress bar shown in the search panel while the documentation page search is still running. The first search of a session waits for the index to build, so this can be on screen for a few seconds.",
+  "search-content-unavailable": "Error message shown in the search panel when the documentation page index could not be built, so the query never ran. Distinct from a search that ran and found nothing. REST API endpoint results come from a separate index and may still be listed alongside this message.",
   "search-no-locale-results": "Message shown when no results are found for the query in the active locale. $1 is the translated language name; $2 is the user's search query. Use {{bidi:$1}} and {{bidi:$2}} for BiDi isolation.",
   "search-no-results-any-language": "Message shown in all-locales mode when no results are found in any language. $1 is the user's search query. Use {{bidi:$1}} for BiDi isolation.",
   "search-results-endpoint-deprecated": "Short badge shown next to a REST API endpoint search result whose OpenAPI specification marks it as deprecated. Keep very short — it renders as a small inline chip.",

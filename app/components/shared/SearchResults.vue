@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CdxButton } from '@wikimedia/codex'
+import { CdxButton, CdxMessage, CdxProgressBar } from '@wikimedia/codex'
 import {
 	contentIdToUrl,
 	type ContentSearchResult,
@@ -13,6 +13,10 @@ import type { EndpointSearchResult } from '~/utils/endpointSearch'
  *  - all-locales: one section per locale in allLocaleResultGroups order
  *  - normal:      locale section + optional English fallback section
  *  - no-locale:   "no results in X for Y" message + expand CTA
+ *
+ * The no-results messaging waits for the content search to settle. A search
+ * still in flight gets a progress bar and a failed one gets an error message,
+ * so neither is reported as a search that found nothing.
  *
  * Above all of them, when the query matches any REST API operations, an
  * "API endpoints" group from useEndpointSearch — each result a deep link into
@@ -31,6 +35,8 @@ const props = defineProps<{
 	fallbackResults: ContentSearchResult[]
 	allLocaleResultGroups: LocaleResultGroup[]
 	endpointResults: EndpointSearchResult[]
+	isSearching: boolean
+	hasSearchError: boolean
 	isAllLocalesMode: boolean
 	activeLocale: string
 	searchQuery: string
@@ -63,6 +69,8 @@ const noResultsAnyLanguageMessage = computed( () =>
 	$bananaI18n( 'search-no-results-any-language', { $1: props.searchQuery } )
 )
 
+const searchErrorMessage = computed( () => $bananaI18n( 'search-content-unavailable' ) )
+const searchingLabel = computed( () => $bananaI18n( 'search-content-in-progress' ) )
 const allLanguagesCta = computed( () => $bananaI18n( 'search-all-languages-cta' ) )
 const endpointsHeading = computed( () => $bananaI18n( 'search-results-endpoints-heading' ) )
 const deprecatedLabel = computed( () => $bananaI18n( 'search-results-endpoint-deprecated' ) )
@@ -75,9 +83,17 @@ const hasEndpointResults = computed( () => props.endpointResults.length > 0 )
 // when endpoints matched — otherwise "No results…" would render directly above a
 // list of results. Endpoints are not locale-partitioned, so they cannot be folded
 // into the per-locale messaging instead.
-const shouldShowNoLocaleResults = computed( () => !hasLocaleResults.value && !hasEndpointResults.value )
+//
+// A search still in flight, or one that failed, suppresses them too: "no results
+// in French" asserts something we never finished checking. The error notice does
+// survive endpoint results, though, because those answer from their own index and
+// matching there says nothing about page search.
+const isContentSearchSettled = computed( () => !props.isSearching && !props.hasSearchError )
+const shouldShowNoLocaleResults = computed(
+	() => !hasLocaleResults.value && !hasEndpointResults.value && isContentSearchSettled.value
+)
 const shouldShowNoResultsAnyLanguage = computed(
-	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value
+	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value && isContentSearchSettled.value
 )
 </script>
 
@@ -122,6 +138,31 @@ const shouldShowNoResultsAnyLanguage = computed(
 			</li>
 		</ul>
 	</section>
+
+	<!--
+		The first search of a session waits on the whole index build, so without
+		this the panel sits visibly empty for seconds.
+	-->
+	<div
+		v-if="isSearching"
+		class="fd-search-results__searching"
+	>
+		<CdxProgressBar :aria-label="searchingLabel" />
+	</div>
+
+	<!--
+		Content search failed, so the panel says so rather than showing an empty
+		result set it never got. Sits outside both modes: what failed is the index,
+		which neither locale partitioning nor the all-languages view changes.
+	-->
+	<CdxMessage
+		v-if="hasSearchError"
+		class="fd-search-results__error"
+		type="error"
+		:inline="true"
+	>
+		{{ searchErrorMessage }}
+	</CdxMessage>
 
 	<!-- All-locales mode: every locale that returned results gets its own section -->
 	<div
@@ -400,5 +441,12 @@ const shouldShowNoResultsAnyLanguage = computed(
 	padding-block: var( --spacing-75 );
 	font-size: var( --font-size-medium );
 	color: var( --color-subtle );
+}
+
+/* Share the panel's text inset; Codex owns everything inside these two. */
+.fd-search-results__error,
+.fd-search-results__searching {
+	padding-inline: var( --spacing-75 );
+	padding-block: var( --spacing-75 );
 }
 </style>
