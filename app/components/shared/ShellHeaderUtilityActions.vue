@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
 import {
 	CdxButton,
 	CdxField,
@@ -111,8 +112,12 @@ const {
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const isPreferencesPopoverOpen = ref( false )
-const settingsButtonRef = ref<InstanceType<typeof CdxButton> | undefined>()
-const utilityMenuButtonRef = ref<InstanceType<typeof CdxMenuButton> | undefined>()
+// Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>
+// / CdxMenuButton) to match CdxPopover's own anchor prop type; the specific
+// instance types aren't assignable to it due to Vue's generic component-instance
+// variance.
+const settingsButtonRef = ref<ComponentPublicInstance | null>( null )
+const utilityMenuButtonRef = ref<ComponentPublicInstance | null>( null )
 
 /**
  * Popover anchor: settings gear when expanded; overflow menu when collapsed.
