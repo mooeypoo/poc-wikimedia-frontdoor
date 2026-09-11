@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Ref } from 'vue'
+import type { Locale } from '@intlify/core-base'
 import { SUPPORTED_LANGUAGES } from '../../config/languages'
 import { useDirection } from '../composables/useDirection'
 import { useOnThisPageNav } from '../composables/useOnThisPageNav'
@@ -26,7 +28,17 @@ import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInter
 
 const { direction } = useDirection()
 const { $bananaI18n, $setInterfaceLocale, $interfaceLocale } = useNuxtApp()
-const { locale } = useI18n()
+// @nuxtjs/i18n generates a global vue-i18n Locale type unioning every
+// SUPPORTED_LANGUAGES code (551+); that union feeds Composer unconditionally,
+// past what the type checker can instantiate. Interface locale is
+// intentionally plain string here (banana-i18n), so bridge the gap once.
+// The excessively-deep instantiation happens evaluating the call itself,
+// before the cast below can apply. No narrower generic passed to useI18n()
+// avoids it either: Composer's own Locales parameter ignores useI18n()'s type
+// arguments once GeneratedTypeConfig is populated. This is the one spot in
+// this cleanup that needs a real suppression, not a cast.
+// @ts-expect-error TS2589, see comment above.
+const { locale } = useI18n() as unknown as { locale: Ref<string> }
 const route = useRoute()
 const switchLocalePath = useSwitchLocalePath()
 const isExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
@@ -59,7 +71,7 @@ const nonDefaultInterfaceLocales = SUPPORTED_LANGUAGES
 const selectedInterfaceLocale = computed<string>( {
 	get: () => $interfaceLocale.value,
 	set: async ( nextLocaleCode ) => {
-		const nextLocalizedPath = isExplorerRoute.value ? null : switchLocalePath( nextLocaleCode )
+		const nextLocalizedPath = isExplorerRoute.value ? null : switchLocalePath( nextLocaleCode as Locale )
 		$setInterfaceLocale( nextLocaleCode )
 		locale.value = nextLocaleCode
 
