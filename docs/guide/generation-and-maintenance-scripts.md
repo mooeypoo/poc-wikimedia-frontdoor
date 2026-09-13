@@ -468,6 +468,22 @@ commit:
 node scripts/generate-dark-tokens.mjs
 ```
 
+## The one that is not a script
+
+[scripts/lib/contentSidebarMap.mjs](../../scripts/lib/contentSidebarMap.mjs)
+builds the per-page sidebar map the shell reads before a content page renders.
+It sits here because it is the same kind of code as the rest of this directory,
+but nobody runs it: `modules/content-sidebar-map.mjs` calls it during the build
+and again whenever a file under `content/` changes, and writes the result to
+`#build/content-sidebar-map`.
+
+The distinction is deliberate. Every dataset above is fetched from somewhere you
+cannot see — a wiki sweep, Scalar's id builders, Codex's Less mixin — so the
+committed file is the review surface for an upstream you did not watch change.
+This one is computed from markdown in the same commit, where a committed copy
+would only be a second place for the same fact to live and a command to forget.
+See ARCHITECTURE.md → Shell section navigation for what it is for.
+
 ## Script-level tests
 
 [tests/contentLocaleFallback.test.mjs](../../tests/contentLocaleFallback.test.mjs)
@@ -494,12 +510,24 @@ the committed index. That converts "a dependency upgrade silently changed our
 output" — normally invisible until a user reports a broken link — into a failing
 test with a message telling you which command to run.
 
+[tests/contentSidebarMap.test.mjs](../../tests/contentSidebarMap.test.mjs) needs
+no drift guard at all — there is no committed artifact to drift. It builds the
+map from `content/` the same way the build does, and asserts the sidebar each
+route resolves to, including the locale fallbacks.
+
 Note that these tests import the generated files and the leaf config modules
 directly. That works only because those files are self-contained: Node cannot
 resolve the extensionless relative imports the app uses. It is why
 `config/scalarDocument.ts` and `config/explorerInstancePolicy.ts` exist as
 separate modules that their original homes re-export — the generator and the test
 need the same values the app uses, without a second copy.
+
+The other way out of the same corner is an explicit `.ts` import extension, which
+Vite resolves unchanged and Node accepts: `config/languages.ts` reaches its
+generated catalog that way, and `app/utils/contentSidebarLookup.ts` reaches both
+of its dependencies that way. Reach for a leaf module when the value is shared
+config; reach for the extension when a single module needs to be loadable from a
+test and splitting it would buy nothing.
 
 ## Known gaps and open questions
 
