@@ -432,6 +432,9 @@ the import names the extension and the module is self-contained, which is the
 same route [config/languages.ts](../../config/languages.ts) takes to its
 generated catalog.
 
+[.github/workflows/ci.yml](../../.github/workflows/ci.yml) runs three checks on
+every pull request: eslint, `nuxt typecheck`, and both test commands.
+
 ## Known gaps and open questions
 
 - **Regeneration is manual and unscheduled.** Nothing yet re-runs these scripts
