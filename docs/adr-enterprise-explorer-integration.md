@@ -5,6 +5,42 @@
 
 ---
 
+## Update (2026-09-14): the Enterprise entry renders the bespoke viewer, not Scalar
+
+The single public Enterprise entry — side-nav "Enterprise APIs", URL
+`/explorer/enterprise`, internal mode `enterprise-full` — now mounts
+`ExplorerEnterpriseCustom.vue` (the path D-c viewer from §7.4) instead of
+`ExplorerScalarReference`. Both implementations remain wired; the switch is the
+single flag `ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER` in
+`config/enterpriseExplorer.ts`, read by `[...view].vue` when it computes
+`isCustomEnterpriseMode`. Setting it to `false` restores Scalar with
+`ENTERPRISE_FULL_SCALAR_OVERRIDES` — no other change needed.
+
+Consequences, superseding §5.4 and §7.3 where they say `enterprise-full` is
+Scalar-rendered:
+
+- The Enterprise experience is **read-only**. Scalar's Test Request, Bearer-token
+  auth panel (§8.6), spec download, client-library snippets, and the per-endpoint
+  parameter / response / schema sections are all gone — the custom viewer renders
+  method + path + summary + Markdown description only. The §7.3 "extreme limited
+  info" end of the product spectrum is therefore what ships today.
+- Enterprise deep-links are tag-granular (`#tag=<name>`), not operation-granular.
+- `ENTERPRISE_SPEC_URL` / `/api/enterprise-spec` are no longer consumed by the
+  Enterprise UI (the viewer reads `/api/enterprise-spec-parsed`). Both routes read
+  the same `server/assets/wme-api.yaml`, and the raw-YAML route is kept for
+  rollback and as a public spec URL.
+- `/explorer/enterprise-custom` still resolves to the same viewer, so it is now a
+  duplicate URL for the same experience. Its side-nav item stays `enabled: false`
+  to avoid a second entry. Open question for product: keep it as a legacy alias or
+  redirect it to `/explorer/enterprise`.
+- The spec has grown since the §8.5 audit: it now declares **13** root tags
+  (`authentication`, `codes`, `languages`, `projects`, `namespaces`, `snapshots`,
+  `structured-snapshots`, `articles`, `structured-contents`, `wikidata`, `batches`,
+  `realtime-articles`, `realtime-wikidata`) across 61 operations, all tagged and
+  all carrying summary + description. The viewer's tablist renders 13 tabs, not 9.
+
+---
+
 ## Update (2026-07-30): Community Explorer also uses Scalar’s native sidebar
 
 PR [#40](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/40) eliminated
