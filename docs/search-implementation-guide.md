@@ -5,6 +5,12 @@ full-text search feature so it can be reimplemented cleanly on top of any future
 state of the repository. Treat it as a recipe, not a diff — adapt placement and
 styling to whatever the layout looks like at the time.
 
+> **The content-search recipe below (a single `content` collection,
+> client-side path-prefix partitioning into a locale bucket and an English
+> fallback bucket) predates the per-locale-collection split. See
+> `ARCHITECTURE.md` → Search for the current design. The SQLite connector and
+> dev-cache history (point 2) is unaffected by that split and still current.**
+
 ---
 
 ## What we are building

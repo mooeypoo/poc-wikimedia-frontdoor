@@ -87,8 +87,7 @@ const searchQuery = ref( '' )
 const isSearchPanelOpen = ref( false )
 
 const {
-	localeResults,
-	fallbackResults,
+	chainResultGroups,
 	allLocaleResultGroups,
 	isAllLocalesMode,
 	activateAllLocalesSearch,
@@ -427,8 +426,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 				@mousedown.prevent
 			>
 				<SharedSearchResults
-					:locale-results="localeResults"
-					:fallback-results="fallbackResults"
+					:chain-result-groups="chainResultGroups"
 					:all-locale-result-groups="allLocaleResultGroups"
 					:endpoint-results="endpointResults"
 					:is-searching="isSearching"

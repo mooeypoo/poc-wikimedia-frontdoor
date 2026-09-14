@@ -6,9 +6,9 @@
  * `tests/contentSidebarMap.test.mjs` calls it to exercise the lookup against the
  * real content tree.
  *
- * Markdown only. The `content` collection's source is `**`, so a non-markdown
- * page would be routable and simply absent here — nothing under content/ is
- * anything but `.md` today.
+ * Markdown only. Every per-locale collection's source is `<locale>/**`, so a
+ * non-markdown page would be routable and simply absent here — nothing under
+ * content/ is anything but `.md` today.
  */
 
 import { readdirSync, readFileSync } from 'node:fs'
@@ -154,5 +154,44 @@ export function serializeContentSidebarMap( map ) {
 		`export const CONTENT_SIDEBAR_MAP: Record<string, boolean | string | null> = ${
 			JSON.stringify( map, null, '\t' )
 		}\n`
+	].join( '\n' )
+}
+
+/**
+ * Lists the locale directories directly under `content/`, skipping `_`-prefixed
+ * ones the way `walkMarkdownFiles` does (`content/_partials` holds shared,
+ * locale-independent partials, not a locale).
+ *
+ * `content.config.ts` calls this to generate one collection per locale;
+ * `modules/content-sidebar-map.mjs` calls it again to expose the same list to
+ * client code (`useContentSearch.ts`'s per-locale search instances and
+ * `useLocalizedContentPage.ts`'s fallback filtering), so all three stay
+ * derived from the same directory listing instead of a hand-maintained one.
+ *
+ * @param {string} contentDirectory - Path to `content/`.
+ * @returns {string[]} Locale codes, sorted.
+ */
+export function listContentLocaleDirectories( contentDirectory ) {
+	return readdirSync( contentDirectory, { withFileTypes: true } )
+		.filter( ( entry ) => entry.isDirectory() && !entry.name.startsWith( '_' ) )
+		.map( ( entry ) => entry.name )
+		.sort( ( a, b ) => a.localeCompare( b ) )
+}
+
+/**
+ * Serializes a locale list into the TypeScript module written to the build
+ * directory.
+ *
+ * @param {string[]} locales - Locale codes.
+ * @returns {string} Module source.
+ */
+export function serializeContentLocales( locales ) {
+	return [
+		'// Written by modules/content-sidebar-map.mjs from the directories under',
+		'// content/, and rewritten whenever that list changes. Not committed: the',
+		'// directory listing is the source of truth and this is a build artifact of it.',
+		'',
+		'/** Locale codes with a content/<locale> collection. */',
+		`export const CONTENT_LOCALES: string[] = ${ JSON.stringify( locales, null, '\t' ) }\n`
 	].join( '\n' )
 }

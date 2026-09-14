@@ -6,7 +6,13 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 import { lookupContentPageSidebar } from '../app/utils/contentSidebarLookup.ts'
-import { buildContentSidebarMap, serializeContentSidebarMap } from '../scripts/lib/contentSidebarMap.mjs'
+import {
+	buildContentSidebarMap,
+	serializeContentSidebarMap,
+	listContentLocaleDirectories,
+	serializeContentLocales
+} from '../scripts/lib/contentSidebarMap.mjs'
+import { SHARED_CONTENT_COLLECTION, contentCollectionForLocale } from '../config/contentCollections.ts'
 
 const projectRoot = dirname( dirname( fileURLToPath( import.meta.url ) ) )
 
@@ -143,4 +149,65 @@ test( 'the emitted module exports the map it was built from', () => {
 	assert.match( source, /export const CONTENT_SIDEBAR_MAP: Record<string, boolean \| string \| null> =/ )
 	assert.match( source, /"\/en": false/ )
 	assert.match( source, /"\/en\/apis": null/ )
+} )
+
+// ---------------------------------------------------------------------------
+// Locale directory listing (content.config.ts's per-locale collection split)
+// ---------------------------------------------------------------------------
+
+test( 'the real content/ tree lists locale directories, not _partials', () => {
+	const locales = listContentLocaleDirectories( join( projectRoot, 'content' ) )
+
+	assert.ok( locales.includes( 'en' ) )
+	assert.ok( locales.includes( 'fr' ) )
+	assert.ok( !locales.includes( '_partials' ) )
+	assert.deepEqual( locales, [ ...locales ].sort( ( a, b ) => a.localeCompare( b ) ) )
+} )
+
+test( 'listContentLocaleDirectories skips underscore-prefixed directories and files', () => {
+	const contentDirectory = mkdtempSync( join( tmpdir(), 'content-locales-' ) )
+	writeMarkdown( join( contentDirectory, 'en/index.md' ), '# Home\n' )
+	writeMarkdown( join( contentDirectory, 'fr/index.md' ), '# Accueil\n' )
+	writeMarkdown( join( contentDirectory, '_partials/shared/portal-note.md' ), '# Note\n' )
+	writeFileSync( join( contentDirectory, 'README.md' ), '# Not a locale directory\n' )
+
+	assert.deepEqual( listContentLocaleDirectories( contentDirectory ), [ 'en', 'fr' ] )
+} )
+
+test( 'the emitted locales module exports the list it was built from', () => {
+	const source = serializeContentLocales( [ 'en', 'fr' ] )
+
+	assert.match( source, /export const CONTENT_LOCALES: string\[\] =/ )
+	assert.match( source, /"en"/ )
+	assert.match( source, /"fr"/ )
+} )
+
+test( 'contentCollectionForLocale names one distinct collection per real locale directory, not colliding with shared', () => {
+	// content.config.ts builds its collections object from exactly this recipe
+	// (listContentLocaleDirectories + contentCollectionForLocale + the shared
+	// collection), but can't be imported directly here: defineCollection's zod
+	// schema validation only resolves inside a full Nuxt build, so importing it
+	// from a plain node:test throws regardless of anything this repo changes.
+	const locales = listContentLocaleDirectories( join( projectRoot, 'content' ) )
+	const collectionNames = locales.map( ( locale ) => contentCollectionForLocale( locale ) )
+
+	assert.ok( locales.length > 0 )
+	assert.equal( new Set( collectionNames ).size, collectionNames.length )
+	assert.ok( !collectionNames.includes( SHARED_CONTENT_COLLECTION ) )
+	assert.ok( collectionNames.includes( contentCollectionForLocale( 'en' ) ) )
+} )
+
+test( 'contentCollectionForLocale sanitizes hyphens so the name is a valid @nuxt/content collection identifier', () => {
+	// @nuxt/content's resolveCollection() (node_modules/@nuxt/content/dist/module.mjs)
+	// silently drops any collection name that fails /^[a-z_]\w*$/i rather than
+	// failing the build, so a hyphenated locale directory (content/pt-br/) has to
+	// become a valid JS identifier or its collection is quietly never registered.
+	const NUXT_CONTENT_COLLECTION_NAME = /^[a-z_]\w*$/i
+
+	assert.equal( contentCollectionForLocale( 'pt-br' ), 'content_pt_br' )
+	assert.match( contentCollectionForLocale( 'pt-br' ), NUXT_CONTENT_COLLECTION_NAME )
+
+	for ( const locale of listContentLocaleDirectories( join( projectRoot, 'content' ) ) ) {
+		assert.match( contentCollectionForLocale( locale ), NUXT_CONTENT_COLLECTION_NAME, locale )
+	}
 } )

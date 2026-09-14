@@ -2,7 +2,6 @@
 import { CdxButton, CdxMessage, CdxProgressBar } from '@wikimedia/codex'
 import {
 	contentIdToUrl,
-	type ContentSearchResult,
 	type LocaleResultGroup
 } from '~/composables/useContentSearch'
 import { endpointResultTitle } from '~/utils/endpointSearch'
@@ -11,8 +10,13 @@ import type { EndpointSearchResult } from '~/utils/endpointSearch'
 /**
  * Renders FTS search results from useContentSearch in three modes:
  *  - all-locales: one section per locale in allLocaleResultGroups order
- *  - normal:      locale section + optional English fallback section
+ *  - normal:      one section per locale in the active locale's fallback
+ *                 chain, in chainResultGroups order
  *  - no-locale:   "no results in X for Y" message + expand CTA
+ *
+ * Normal and all-locales mode share the same per-group rendering — both are
+ * "a list of locale-headed groups," differing only in which groups are
+ * populated and whether the "expand to all languages" CTA applies.
  *
  * The no-results messaging waits for the content search to settle. A search
  * still in flight gets a progress bar and a failed one gets an error message,
@@ -31,8 +35,7 @@ import type { EndpointSearchResult } from '~/utils/endpointSearch'
  */
 
 const props = defineProps<{
-	localeResults: ContentSearchResult[]
-	fallbackResults: ContentSearchResult[]
+	chainResultGroups: LocaleResultGroup[]
 	allLocaleResultGroups: LocaleResultGroup[]
 	endpointResults: EndpointSearchResult[]
 	isSearching: boolean
@@ -75,8 +78,28 @@ const allLanguagesCta = computed( () => $bananaI18n( 'search-all-languages-cta' 
 const endpointsHeading = computed( () => $bananaI18n( 'search-results-endpoints-heading' ) )
 const deprecatedLabel = computed( () => $bananaI18n( 'search-results-endpoint-deprecated' ) )
 
-const hasLocaleResults = computed( () => props.localeResults.length > 0 )
-const hasFallbackResults = computed( () => props.fallbackResults.length > 0 )
+// The active mode's groups. Normal and all-locales mode render the same way,
+// just over a different data source.
+const displayedGroups = computed( () =>
+	props.isAllLocalesMode ? props.allLocaleResultGroups : props.chainResultGroups
+)
+
+// A heading only earns its place when the group it labels could otherwise be
+// mistaken for something else. Two or more groups always need it. A single
+// chain group needs it too, unless that group *is* the reader's own locale —
+// a lone fallback group (e.g. a French reader whose only matches are English)
+// is exactly the case the previous two-bucket design always labelled
+// "Results in English", and an unlabelled list would drop that signal. All-
+// locales mode always shows its heading: even a single matching locale there
+// is worth naming, since the reader just asked for every language.
+const showGroupHeadings = computed( () => {
+	if ( props.isAllLocalesMode || displayedGroups.value.length > 1 ) {
+		return true
+	}
+	const [ onlyGroup ] = displayedGroups.value
+	return onlyGroup !== undefined && onlyGroup.locale !== props.activeLocale
+} )
+
 const hasEndpointResults = computed( () => props.endpointResults.length > 0 )
 
 // The "no results in X" notices speak for the whole panel, so they are suppressed
@@ -89,8 +112,17 @@ const hasEndpointResults = computed( () => props.endpointResults.length > 0 )
 // survive endpoint results, though, because those answer from their own index and
 // matching there says nothing about page search.
 const isContentSearchSettled = computed( () => !props.isSearching && !props.hasSearchError )
+
+// Keyed on the active locale's own group, not on the whole chain: a French
+// reader whose search only matched English pages still gets the "no results
+// in French" CTA to expand further, even though the English fallback group
+// renders right below it. Only the active locale's own miss should trigger
+// this — the fallback groups already speak for themselves once they render.
+const hasOwnLocaleResults = computed(
+	() => props.chainResultGroups.some( ( group ) => group.locale === props.activeLocale )
+)
 const shouldShowNoLocaleResults = computed(
-	() => !hasLocaleResults.value && !hasEndpointResults.value && isContentSearchSettled.value
+	() => !hasOwnLocaleResults.value && !hasEndpointResults.value && isContentSearchSettled.value
 )
 const shouldShowNoResultsAnyLanguage = computed(
 	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value && isContentSearchSettled.value
@@ -164,98 +196,21 @@ const shouldShowNoResultsAnyLanguage = computed(
 		{{ searchErrorMessage }}
 	</CdxMessage>
 
-	<!-- All-locales mode: every locale that returned results gets its own section -->
-	<div
-		v-if="isAllLocalesMode"
-		class="fd-search-results fd-search-results--all-locales"
-	>
+	<div class="fd-search-results">
 		<p
-			v-if="shouldShowNoResultsAnyLanguage"
+			v-if="isAllLocalesMode && shouldShowNoResultsAnyLanguage"
 			class="fd-search-results__no-any-language"
 		>
 			{{ noResultsAnyLanguageMessage }}
 		</p>
-		<section
-			v-for="group in allLocaleResultGroups"
-			:key="group.locale"
-			class="fd-search-results__locale-group"
-		>
-			<h3 class="fd-search-results__locale-heading">
-				{{ localeHeading( group.locale ) }}
-			</h3>
-			<ul
-				class="fd-search-results__list"
-				:dir="group.dir"
-			>
-				<li
-					v-for="result in group.results"
-					:key="result.id"
-					class="fd-search-results__item"
-				>
-					<NuxtLink
-						:to="contentIdToUrl( result.id )"
-						class="fd-search-results__link"
-						@click="emit( 'result-select', result.id )"
-					>
-						<bdi class="fd-search-results__title">{{ result.title }}</bdi>
-						<!-- eslint-disable-next-line vue/no-v-html -->
-						<bdi
-							v-if="result.snippets?.content"
-							class="fd-search-results__snippet"
-							v-html="result.snippets.content"
-						/>
-					</NuxtLink>
-				</li>
-			</ul>
-		</section>
-	</div>
 
-	<!-- Normal mode -->
-	<div
-		v-else
-		class="fd-search-results"
-	>
-		<!-- Results for the active locale -->
-		<section
-			v-if="hasLocaleResults"
-			class="fd-search-results__locale-group"
-		>
-			<!-- Heading only when there is also a fallback section to distinguish the two -->
-			<h3
-				v-if="hasFallbackResults"
-				class="fd-search-results__locale-heading"
-			>
-				{{ localeHeading( activeLocale ) }}
-			</h3>
-			<ul
-				class="fd-search-results__list"
-				dir="auto"
-			>
-				<li
-					v-for="result in localeResults"
-					:key="result.id"
-					class="fd-search-results__item"
-				>
-					<NuxtLink
-						:to="contentIdToUrl( result.id )"
-						class="fd-search-results__link"
-						@click="emit( 'result-select', result.id )"
-					>
-						<bdi class="fd-search-results__title">{{ result.title }}</bdi>
-						<!-- eslint-disable-next-line vue/no-v-html -->
-						<bdi
-							v-if="result.snippets?.content"
-							class="fd-search-results__snippet"
-							v-html="result.snippets.content"
-						/>
-					</NuxtLink>
-				</li>
-			</ul>
-		</section>
-
-		<!-- No locale results: message + CTA to expand to all languages -->
+		<!--
+			Ahead of the groups, not after them: when the active locale found
+			nothing, the groups below are all fallbacks, and this is what explains
+			why the reader is looking at another language.
+		-->
 		<div
-			v-if="shouldShowNoLocaleResults"
+			v-if="!isAllLocalesMode && shouldShowNoLocaleResults"
 			class="fd-search-results__no-locale"
 		>
 			<p class="fd-search-results__no-locale-message">
@@ -270,20 +225,23 @@ const shouldShowNoResultsAnyLanguage = computed(
 			</CdxButton>
 		</div>
 
-		<!-- English fallback (only present when activeLocale is not 'en') -->
 		<section
-			v-if="hasFallbackResults"
+			v-for="group in displayedGroups"
+			:key="group.locale"
 			class="fd-search-results__locale-group"
 		>
-			<h3 class="fd-search-results__locale-heading">
-				{{ localeHeading( 'en' ) }}
+			<h3
+				v-if="showGroupHeadings"
+				class="fd-search-results__locale-heading"
+			>
+				{{ localeHeading( group.locale ) }}
 			</h3>
 			<ul
 				class="fd-search-results__list"
-				dir="ltr"
+				:dir="group.dir"
 			>
 				<li
-					v-for="result in fallbackResults"
+					v-for="result in group.results"
 					:key="result.id"
 					class="fd-search-results__item"
 				>

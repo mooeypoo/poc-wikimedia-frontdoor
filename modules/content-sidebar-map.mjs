@@ -9,6 +9,15 @@
  * SQLite WASM runtime and the whole collection dump — 1.95 MB on first paint of
  * every content page, to read one boolean. The map is a few kB of the bundle.
  *
+ * Also writes `#build/content-locales` — the same content/ walk's locale
+ * directory list, exported for client code (`useContentSearch.ts`'s per-
+ * locale collections and its "search all languages" expansion) that needs
+ * every locale content.config.ts made a collection for. @nuxt/content does
+ * publish an equivalent list at runtime (`#content/manifest`'s `tables`,
+ * keyed by collection name), but that alias is internal and undocumented;
+ * this repo already owns the walk that produces the same answer, so a second
+ * source of truth here is the more stable dependency, not a needless one.
+ *
  * Generated rather than committed so the frontmatter under content/ stays the
  * only place a sidebar is declared. See ARCHITECTURE.md → Shell section
  * navigation.
@@ -18,10 +27,16 @@ import { readFileSync, watch } from 'node:fs'
 import { join } from 'node:path'
 import { defineNuxtModule, addTemplate, useLogger } from '@nuxt/kit'
 
-import { buildContentSidebarMap, serializeContentSidebarMap } from '../scripts/lib/contentSidebarMap.mjs'
+import {
+	buildContentSidebarMap,
+	serializeContentSidebarMap,
+	listContentLocaleDirectories,
+	serializeContentLocales
+} from '../scripts/lib/contentSidebarMap.mjs'
 
 const MODULE_NAME = 'content-sidebar-map'
 const TEMPLATE_FILENAME = `${ MODULE_NAME }.ts`
+const LOCALES_TEMPLATE_FILENAME = 'content-locales.ts'
 
 /** Redraw window for bursts of file events (a branch switch, a bulk rename). */
 const WATCH_DEBOUNCE_MS = 100
@@ -91,6 +106,31 @@ export default defineNuxtModule( {
 			getContents: renderSidebarMap
 		} )
 
+		/**
+		 * Renders the locale directory list. Unlike the sidebar map, this has
+		 * nothing to hold "last good" for — a plain directory listing has no
+		 * per-file frontmatter to fail on — so it's recomputed fresh every time.
+		 *
+		 * A brand-new content/<locale>/ directory added mid-dev-session updates
+		 * this list on the next watch tick, but content.config.ts's own
+		 * collections are resolved once at server start — @nuxt/content does not
+		 * hot-reload a newly-added collection — so a reader whose chain reaches
+		 * that locale before a restart hits a listed locale with no collection
+		 * behind it yet. A dev-only gap; a restart picks it up like any other
+		 * content.config.ts change would.
+		 *
+		 * @returns {string} Module source for the template.
+		 */
+		function renderContentLocales() {
+			return serializeContentLocales( listContentLocaleDirectories( contentDirectory ) )
+		}
+
+		addTemplate( {
+			filename: LOCALES_TEMPLATE_FILENAME,
+			write: true,
+			getContents: renderContentLocales
+		} )
+
 		if ( !nuxt.options.dev ) {
 			return
 		}
@@ -118,6 +158,7 @@ export default defineNuxtModule( {
 			pendingRedraw = setTimeout( () => {
 				nuxt.hooks.callHook( 'builder:generateApp', {
 					filter: ( template ) => template.filename === TEMPLATE_FILENAME
+						|| template.filename === LOCALES_TEMPLATE_FILENAME
 				} ).catch( ( error ) => {
 					// renderSidebarMap holds its own errors, so a rejection here belongs
 					// to something else in the build. Log it: an unhandled rejection out
