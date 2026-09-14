@@ -37,11 +37,9 @@
     "@wikimedia/codex": "^2.5.1",
     "@wikimedia/codex-design-tokens": "^2.5.1",
     "banana-i18n": "^2.4.0",
-    "better-sqlite3": "^12.10.0",
     "markdown-it": "^14.1.0",
     "nuxt": "^4.4.6",
     "pinia": "^3.0.4",
-    "sqlite3": "^6.0.1",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7",
     "yaml": "^2.5.0"

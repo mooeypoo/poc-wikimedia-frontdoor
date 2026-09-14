@@ -92,18 +92,19 @@ export default defineNuxtConfig( {
 		'~/assets/css/color-modes.css'
 	],
 
-	// Nuxt Content behaves differently across environments here:
-	// - dev: `sqlite3` avoids the native-binding double-load issue we observed
-	//   with `better-sqlite3` in Nuxt's dev pipeline.
-	// - build/prod: `better-sqlite3` is synchronous and avoids the noisy locked
-	//   table warnings emitted by the async `sqlite3` connector during builds.
+	// `native` (Node's built-in node:sqlite) everywhere: synchronous like
+	// `better-sqlite3`, so it doesn't race the dev cache's unawaited
+	// delete-then-insert and doesn't produce noisy locked-table warnings during
+	// builds, but ships with Node itself, so there's no compiled addon to break
+	// across environments. See docs/search-implementation-guide.md point 2 for
+	// the history and the two problems this replaces.
 	content: {
 		_localDatabase: {
 			type: 'sqlite',
 			filename: contentLocalDatabaseFilename
 		},
 		experimental: {
-			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
+			sqliteConnector: 'native'
 		},
 		build: {
 			markdown: {

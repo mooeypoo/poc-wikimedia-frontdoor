@@ -95,10 +95,56 @@ export default defineNuxtConfig( {
 } )
 ```
 
-### 2. No other nuxt.config.ts changes needed
+### 2. SQLite connector: `native` everywhere
 
-The SQLite connector split (`sqlite3` in dev, `better-sqlite3` in prod) and the
-`_localDatabase` filename config are already present on main and must be kept.
+The `_localDatabase` filename config is already present on main and must be
+kept. The connector choice needs to be:
+
+```ts
+experimental: {
+    sqliteConnector: 'native'
+}
+```
+
+**Why not `sqlite3` in dev.** `@nuxt/content`'s `insertDevelopmentCache` does a
+delete-then-insert "upsert" without awaiting the delete
+(`node_modules/@nuxt/content/dist/module.mjs:354-359`). Under the synchronous
+`better-sqlite3` connector this is harmless, since the unawaited delete
+finishes before the insert's queries run regardless. Under the async `sqlite3`
+connector the delete and the insert are two unordered round-trips against the
+same file: editing any file under `content/` intermittently produces
+`SQLITE_BUSY: database is locked` followed by `SQLITE_CONSTRAINT: UNIQUE
+constraint failed: _development_cache.id`, both as unhandled rejections, and
+the dev server restarts. No upstream issue is filed for this as of 2026-09-13;
+an unmerged fix exists at
+[nuxt/content#3846](https://github.com/nuxt/content/pull/3846).
+
+**Why `native` and not just `better-sqlite3` in dev too.** `better-sqlite3` is
+a compiled native addon and has broken in this project's dev pipeline before
+(see the `node-22-via-nvmrc` project memory on ABI mismatches from installing
+under the wrong Node). `native` (Node's built-in `node:sqlite`, unflagged since
+Node 22.5) is synchronous like `better-sqlite3`, so it avoids the same race,
+and it ships with Node itself, so there is no addon to mismatch. Verified in
+dev against three hand-edits under a fresh `dev:clean` on 2026-09-13: no
+`SQLITE_BUSY`, no restart.
+
+**Why `native` in build/prod too, not `better-sqlite3`.** `better-sqlite3` was
+never chosen there on its own merits: the connector split was originally a
+single `sqliteConnector: 'sqlite3'` everywhere (`a0a4941`, Moriel, 2026-05-22),
+rejecting `native` at the time on the stated grounds that `node:sqlite` was
+"not yet available in Node 22 LTS." A week later, `5320ae64` (sai, 2026-05-29)
+split prod off to `better-sqlite3` specifically to avoid "noisy locked table
+warnings emitted by the async `sqlite3` connector during builds" (the same
+async-contention family of problem as the dev-cache race above, just
+manifesting as build noise rather than a crash), without revisiting whether
+`native` had become available since. It has: this repo's Netlify build and
+functions runtime both resolve `NODE_VERSION = "22"` to the latest 22.x patch
+(or fall back to Node 24), well past the `>= 22.5` floor `node:sqlite` needs.
+Netlify wasn't even configured for this repo yet at Moriel's original commit
+(`netlify.toml` didn't land until five days later), so her comment was about a
+local Node pin, not Netlify specifically. Unifying on `native` drops
+`better-sqlite3` (and the now-fully-unused `sqlite3`) as dependencies
+entirely, removing the compiled-addon risk from both environments at once.
 
 ---
 
