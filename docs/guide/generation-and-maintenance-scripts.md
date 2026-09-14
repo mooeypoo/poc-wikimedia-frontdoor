@@ -421,10 +421,21 @@ node scripts/generate-dark-tokens.mjs
 
 ## Script-level tests
 
-[test-content-fallback.mjs](../../scripts/test-content-fallback.mjs) is a small
-assertion harness for the content locale-fallback logic (`npm run
-test:content-fallback`). It is useful as a template for the kind of lightweight,
-dependency-free test these scripts warrant.
+[tests/contentLocaleFallback.test.mjs](../../tests/contentLocaleFallback.test.mjs)
+covers the content locale-fallback logic and runs with everything else under
+`tests/` (`npm test`). It used to be a standalone harness in this directory with
+its own copy of the two helpers it tested, which passes happily no matter what
+the real helpers do.
+
+Import the module the app imports instead. Node loads a `.ts` file directly when
+the import names the extension and the module is self-contained, which is the
+same route [config/languages.ts](../../config/languages.ts) takes to its
+generated catalog.
+
+[.github/workflows/ci.yml](../../.github/workflows/ci.yml) runs four checks on
+every pull request: eslint, `nuxt typecheck`, both test commands, and actionlint
+over the workflow file itself (`brew install actionlint` to run that one
+locally).
 
 ## Known gaps and open questions
 

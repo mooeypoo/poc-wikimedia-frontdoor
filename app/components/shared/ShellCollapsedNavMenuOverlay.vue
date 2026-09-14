@@ -76,7 +76,7 @@ const emit = defineEmits<{
 					</CdxButton>
 					<SharedShellSidePanelNav
 						class="shell-collapsed-nav-menu-overlay__section-nav"
-						:aria-label="sectionNavigationLabel"
+						:ariaLabel="sectionNavigationLabel"
 						:sections="sectionNavigationSections"
 						:omit-section-title-matching="primaryNavigationLabel"
 					/>
@@ -177,5 +177,4 @@ const emit = defineEmits<{
 .shell-collapsed-nav-menu-overlay__primary-nav :deep( .cdx-menu-item--enabled:not( .cdx-menu-item--selected ):hover .cdx-menu-item__content ) {
 	color: var( --color-progressive );
 }
-
 </style>

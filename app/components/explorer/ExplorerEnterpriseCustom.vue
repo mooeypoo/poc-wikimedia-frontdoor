@@ -276,7 +276,10 @@ watch( () => route.hash, () => {
 			v-if="isLoading"
 			class="explorer-enterprise-custom__loading"
 		>
-			<div class="explorer-enterprise-custom__spinner" aria-hidden="true"></div>
+			<div
+				class="explorer-enterprise-custom__spinner"
+				aria-hidden="true"
+			/>
 			<p>{{ loadingLabel }}</p>
 		</div>
 
@@ -284,7 +287,9 @@ watch( () => route.hash, () => {
 			v-else-if="hasError"
 			type="error"
 		>
-			{{ errorLabel }}<template v-if="errorMessage">: <bdi>{{ errorMessage }}</bdi></template>
+			{{ errorLabel }}<template v-if="errorMessage">
+				: <bdi>{{ errorMessage }}</bdi>
+			</template>
 		</CdxMessage>
 
 		<CdxMessage
@@ -305,7 +310,7 @@ watch( () => route.hash, () => {
 				class="explorer-enterprise-custom__tablist"
 			>
 				<button
-					v-for="(tag, tagIndex) in tags"
+					v-for="( tag, tagIndex ) in tags"
 					:id="tabId( tag.name )"
 					:key="tag.name"
 					:ref="( element ) => {
@@ -343,7 +348,7 @@ watch( () => route.hash, () => {
 						v-if="selectedTag.description"
 						class="explorer-enterprise-custom__tag-description"
 					>
-						<bdi v-html="renderMarkdown( selectedTag.description )"></bdi>
+						<bdi v-html="renderMarkdown( selectedTag.description )" />
 					</div>
 				</header>
 
@@ -386,7 +391,7 @@ watch( () => route.hash, () => {
 							v-if="operation.description"
 							class="explorer-enterprise-custom__description"
 						>
-							<bdi v-html="renderMarkdown( operation.description )"></bdi>
+							<bdi v-html="renderMarkdown( operation.description )" />
 						</div>
 					</li>
 				</ol>

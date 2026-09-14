@@ -158,14 +158,14 @@ export async function run( config, options = {} ) {
 			const template = config.output.overrides?.[ source.path ] ?? config.output.path
 			const outputPath = applyPathTemplate( template, source.path, locale )
 			const metadata = config.format.envelope && config.ownership.marker ?
-				{
-					...source.metadata,
-					[ config.ownership.marker ]: true,
-					sourceFile: provenancePath( config.source.relativeDir, source.path )
-				} :
+					{
+						...source.metadata,
+						[ config.ownership.marker ]: true,
+						sourceFile: provenancePath( config.source.relativeDir, source.path )
+					} :
 				source.metadata
 			const content = config.format.envelope ?
-				config.format.envelope.serialize( metadata, rendered.body ) :
+					config.format.envelope.serialize( metadata, rendered.body ) :
 				rendered.body
 
 			planned.push( { outputPath, content } )

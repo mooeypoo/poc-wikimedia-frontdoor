@@ -184,8 +184,8 @@ const stretchedLinkBind = computed( () => {
 	return {
 		href: props.url,
 		...( isExternalDestination.value ?
-			{ target: '_blank', rel: 'noopener noreferrer' } :
-			{} )
+				{ target: '_blank', rel: 'noopener noreferrer' } :
+				{} )
 	}
 } )
 
@@ -451,7 +451,7 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 				<slot name="chips">
 					<CdxInfoChip
 						v-for="( chip, chipIndex ) in parsedChips"
-						:key="`${chip.label}-${chipIndex}`"
+						:key="`${ chip.label }-${ chipIndex }`"
 						:status="chip.status ?? 'subtle'"
 						:icon="resolveChipIcon( chip )"
 						:class="{

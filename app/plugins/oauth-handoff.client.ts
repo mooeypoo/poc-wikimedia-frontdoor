@@ -30,7 +30,7 @@ interface RestoredOAuthSession {
 export default defineNuxtPlugin( async () => {
 	const store = useOAuthSessionStore()
 
-	let raw: string | null = null
+	let raw: string | null
 	try {
 		raw = sessionStorage.getItem( OAUTH_HANDOFF_STORAGE_KEY )
 	} catch {

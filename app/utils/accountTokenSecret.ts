@@ -32,7 +32,7 @@ function copyTextToClipboardWithExecCommand( text: string ): void {
 	textArea.select()
 	textArea.setSelectionRange( 0, text.length )
 
-	let didCopy = false
+	let didCopy: boolean
 	try {
 		didCopy = document.execCommand( 'copy' )
 	} finally {

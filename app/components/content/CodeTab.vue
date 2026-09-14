@@ -38,6 +38,9 @@ registerTab?.( {
 } )
 </script>
 
-<template>
-	<!-- Content is rendered by CodeTabs inside CdxTab. -->
-</template>
+<script lang="ts">
+// Content is rendered by CodeTabs inside CdxTab; this component renders nothing of its own.
+export default {
+	render: () => null
+}
+</script>

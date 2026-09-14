@@ -8,63 +8,69 @@ const { locale } = useI18n()
 const { $bananaI18n } = useNuxtApp()
 
 const slugPath = computed( () => {
-  const routeSlug = route.params.slug
-  if ( Array.isArray( routeSlug ) ) {
-    return routeSlug.join( '/' )
-  }
-  if ( typeof routeSlug === 'string' ) {
-    return routeSlug
-  }
-  return ''
+	const routeSlug = route.params.slug
+	if ( Array.isArray( routeSlug ) ) {
+		return routeSlug.join( '/' )
+	}
+	if ( typeof routeSlug === 'string' ) {
+		return routeSlug
+	}
+	return ''
 } )
 
 const { data: page } = await useAsyncData( 'page-' + route.path, async () => {
-  const localizedPageResult = await useLocalizedContentPage( locale.value, slugPath.value )
-  return localizedPageResult?.page ?? null
-})
+	const localizedPageResult = await useLocalizedContentPage( locale.value, slugPath.value )
+	return localizedPageResult?.page ?? null
+} )
 
 if ( !page.value ) {
-  throw createError( {
-    statusCode: 404,
-    statusMessage: 'Page not found',
-    fatal: true
-  } )
+	throw createError( {
+		statusCode: 404,
+		statusMessage: 'Page not found',
+		fatal: true
+	} )
 }
 
-type NavLink = { text: string; link: string }
+type NavLink = { text: string, link: string }
 const prevPage = computed( () => page.value?.prev as NavLink | undefined )
 const nextPage = computed( () => page.value?.next as NavLink | undefined )
 </script>
 
 <template>
-  <div class="fd-content-page">
-    <ContentRenderer
-      v-if="page"
-      :value="page"
-    />
-    <nav
-      v-if="prevPage || nextPage"
-      class="page-nav"
-      :aria-label="$bananaI18n( 'content-page-nav-label' )"
-    >
-      <NuxtLink
-        v-if="prevPage"
-        :to="prevPage.link"
-        class="page-nav__link page-nav__link--prev"
-      >
-        <CdxIcon :icon="cdxIconArrowPrevious" :flip-for-rtl="true" />
-        {{ prevPage.text }}
-      </NuxtLink>
-      <NuxtLink
-        v-if="nextPage"
-        :to="nextPage.link"
-        class="page-nav__link page-nav__link--next"
-      >
-        {{ nextPage.text }}
-        <CdxIcon :icon="cdxIconArrowNext" :flip-for-rtl="true" />
-      </NuxtLink>
-    </nav>
-  </div>
+	<div class="fd-content-page">
+		<ContentRenderer
+			v-if="page"
+			:value="page"
+		/>
+		<nav
+			v-if="prevPage || nextPage"
+			class="page-nav"
+			:aria-label="$bananaI18n( 'content-page-nav-label' )"
+		>
+			<NuxtLink
+				v-if="prevPage"
+				:to="prevPage.link"
+				class="page-nav__link page-nav__link--prev"
+			>
+				<CdxIcon
+					:icon="cdxIconArrowPrevious"
+					:flip-for-rtl="true"
+				/>
+				{{ prevPage.text }}
+			</NuxtLink>
+			<NuxtLink
+				v-if="nextPage"
+				:to="nextPage.link"
+				class="page-nav__link page-nav__link--next"
+			>
+				{{ nextPage.text }}
+				<CdxIcon
+					:icon="cdxIconArrowNext"
+					:flip-for-rtl="true"
+				/>
+			</NuxtLink>
+		</nav>
+	</div>
 </template>
 
 <style scoped>

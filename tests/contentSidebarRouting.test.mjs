@@ -23,8 +23,14 @@ test( 'get-started resolves at its new path (and localized)', () => {
 test( 'other sections still resolve by path', () => {
 	assert.equal( getMainNavigationIdFromPath( '/community' ), 'community' )
 	assert.equal( getMainNavigationIdFromPath( '/community/anything' ), 'community' )
-	assert.equal( getMainNavigationIdFromPath( '/use-content-and-data' ), 'use-content-and-data' )
 	assert.equal( getMainNavigationIdFromPath( '/fr/community' ), 'community' )
+} )
+
+// a0cb7f2 cut the primary nav to five tabs, and this page was one of the ones
+// dropped: still reachable (/learn redirects to it), no tab of its own. The
+// file could not load back then, so nothing caught the assertion going stale.
+test( 'a page outside the primary nav selects no tab', () => {
+	assert.equal( getMainNavigationIdFromPath( '/use-content-and-data' ), null )
 } )
 
 test( 'explorer routes map to the APIs primary nav id', () => {

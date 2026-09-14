@@ -49,7 +49,7 @@ export function filterExplorerBootstrapModulesByOptIn<T extends { name: string }
  * @param filterOptions - Opt-in checkbox values (defaults match initial explorer load).
  * @returns First healthy module for the REST API module select and rail, or undefined when none qualify.
  */
-export function resolveFirstExplorerRailModule<T extends { name: string; hasSpecError: boolean }>(
+export function resolveFirstExplorerRailModule<T extends { name: string, hasSpecError: boolean }>(
 	modules: T[],
 	filterOptions: ExplorerModuleOptInFilterOptions
 ): T | undefined {

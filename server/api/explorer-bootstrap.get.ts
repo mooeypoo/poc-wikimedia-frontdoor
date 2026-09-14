@@ -348,7 +348,8 @@ async function mapWithConcurrency<InputType, OutputType>(
 				return
 			}
 
-			results[ currentIndex ] = await mapper( items[ currentIndex ], currentIndex )
+			// currentIndex < items.length is checked above.
+			results[ currentIndex ] = await mapper( items[ currentIndex ]!, currentIndex )
 		}
 	}
 

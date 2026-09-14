@@ -88,7 +88,10 @@ provide( 'code-tabs:register', registerTab )
 <template>
 	<div class="code-tabs">
 		<!-- Mount CodeTab children so they register during setup (SSR-safe). -->
-		<div class="code-tabs__registry" hidden>
+		<div
+			class="code-tabs__registry"
+			hidden
+		>
 			<slot />
 		</div>
 		<CdxTabs

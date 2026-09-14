@@ -26,6 +26,7 @@ const mixinPath = require.resolve(
 	'@wikimedia/codex-design-tokens/theme-wikimedia-ui-mixin-dark.less'
 )
 const pkg = require( '@wikimedia/codex-design-tokens/package.json' )
+
 const outPath = join( repoRoot, 'app/assets/css/color-modes.css' )
 
 const src = readFileSync( mixinPath, 'utf8' )

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
 import {
 	CdxButton,
 	CdxField,
@@ -8,9 +9,10 @@ import {
 	CdxPopover,
 	CdxRadio,
 	CdxSearchInput,
-	type MenuConfig
+	type MenuConfig,
+	type MenuItemData,
+	type MenuItemValue
 } from '@wikimedia/codex'
-import type { MenuItemData, MenuItemValue } from '@wikimedia/codex'
 import {
 	cdxIconConfigure,
 	cdxIconEllipsis,
@@ -110,8 +112,12 @@ const {
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const isPreferencesPopoverOpen = ref( false )
-const settingsButtonRef = ref<InstanceType<typeof CdxButton> | undefined>()
-const utilityMenuButtonRef = ref<InstanceType<typeof CdxMenuButton> | undefined>()
+// Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>
+// / CdxMenuButton) to match CdxPopover's own anchor prop type; the specific
+// instance types aren't assignable to it due to Vue's generic component-instance
+// variance.
+const settingsButtonRef = ref<ComponentPublicInstance | null>( null )
+const utilityMenuButtonRef = ref<ComponentPublicInstance | null>( null )
 
 /**
  * Popover anchor: settings gear when expanded; overflow menu when collapsed.
@@ -214,10 +220,10 @@ const languageMenuItems = computed<MenuItemData[]>( () => {
 
 	const matches = term
 		? allLanguageMenuItems.filter( ( item ) =>
-			( item.label ?? '' ).toLowerCase().includes( term ) ||
-			( item.supportingText ?? '' ).toLowerCase().includes( term ) ||
-			String( item.value ).toLowerCase().includes( term )
-		)
+				( item.label ?? '' ).toLowerCase().includes( term ) ||
+				( item.supportingText ?? '' ).toLowerCase().includes( term ) ||
+				String( item.value ).toLowerCase().includes( term )
+			)
 		: allLanguageMenuItems
 
 	const capped = matches.slice( 0, HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP )
@@ -466,6 +472,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 					v-for="option in colorThemePreferenceOptions"
 					:key="option.mode"
 					v-model="colorModeSelection"
+					name="color-theme-preference"
 					:input-value="option.mode"
 				>
 					{{ option.label }}

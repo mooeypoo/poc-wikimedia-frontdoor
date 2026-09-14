@@ -104,7 +104,7 @@ export function usePageSectionNav() {
 		// frontmatter typo resolving to a prototype object with no `sections`).
 		if ( typeof preference === 'string' ) {
 			return Object.hasOwn( SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID, preference )
-				? SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID[ preference ]
+				? ( SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID[ preference ] ?? EMPTY_SECTION_SOURCE )
 				: EMPTY_SECTION_SOURCE
 		}
 

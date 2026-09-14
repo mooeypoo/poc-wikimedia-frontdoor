@@ -20,14 +20,14 @@ const showHeadingAnchor = computed( () => !isLandingRoutePath( route.path ) )
 
 <template>
 	<component
-		:is="`h${level}`"
+		:is="`h${ level }`"
 		:id="id"
 		class="prose-heading"
 	>
 		<slot />
 		<a
 			v-if="id && showHeadingAnchor"
-			:href="`#${id}`"
+			:href="`#${ id }`"
 			:aria-label="$bananaI18n( 'content-heading-anchor-label' )"
 			class="prose-heading__anchor"
 		>

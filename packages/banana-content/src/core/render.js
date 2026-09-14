@@ -89,7 +89,7 @@ export function renderSource( source, options ) {
 		.map( ( part ) => (
 			typeof part === 'string' ?
 				part :
-				escapeForContexts( resolve( part.key, part.parameters ), part.contexts, contextRules )
+					escapeForContexts( resolve( part.key, part.parameters ), part.contexts, contextRules )
 		) )
 		.join( '' )
 		.replace( /\n+$/, '\n' )

@@ -34,20 +34,12 @@ export default defineNuxtConfig( {
 	modules: [
 		'@nuxt/content',
 		'@pinia/nuxt',
-		'@nuxtjs/i18n'
+		'@nuxtjs/i18n',
+		// Generates .nuxt/eslint.config.mjs with this project's auto-import
+		// globals, which eslint.config.mjs then layers house style onto.
+		'@nuxt/eslint'
 	],
-
-	// Wikimedia OAuth 2.0 + PKCE (docs/adr-wikimedia-oauth-authentication.md §10 Step B1).
-	// oauthCookieSecret is server-only; the public block is safe to expose since the
-	// OAuth client is a public PKCE client (no client secret involved).
-	runtimeConfig: {
-		oauthCookieSecret: '',
-		public: {
-			oauthClientId: '',
-			oauthAuthorizeUrl: 'https://meta.wikimedia.org/w/rest.php/oauth2/authorize',
-			oauthScope: 'basic'
-		}
-	},
+	devtools: { enabled: true },
 
 	app: {
 		head: {
@@ -85,39 +77,34 @@ export default defineNuxtConfig( {
 			]
 		}
 	},
-	devtools: { enabled: true },
 
-	// Several first-party modules import sibling config with an explicit `.ts`
-	// extension (config/explorerOptIn.ts, config/explorerModuleDescriptions.ts,
-	// config/languages.generated.ts). That style is required so the same modules
-	// can also be imported by plain `.mjs` tooling — Node's ESM resolver cannot
-	// resolve an extensionless relative specifier — and it lets the prose-content
-	// generator read config/languages.ts itself rather than reaching past its
-	// override layer into the generated catalog. Vite resolves these unchanged;
-	// TypeScript needs this flag to accept them.
-	typescript: {
-		tsConfig: {
-			compilerOptions: {
-				allowImportingTsExtensions: true
-			}
-		}
-	},
-	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
-	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
-	compatibilityDate: '2024-05-07',
+	// Global CSS: Codex design tokens + our shell styles.
+	// Use Codex’s experimental bidi sheet (`[dir=ltr]` / `[dir=rtl]` selectors) so
+	// runtime interface-locale switches do not stack LTR + RTL mirror sheets.
+	// Stacking those sheets breaks clearable TextInput/Lookup icon placement in RTL.
+	css: [
+		'@wikimedia/codex/dist/codex.style-bidi.css',
+		'~/assets/css/main.css',
+		// Platform home / landing page surface (full-bleed bands, hero typography).
+		'~/assets/css/landing-page.css',
+		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
+		// Loads after main.css so it overrides the light :root token defaults.
+		'~/assets/css/color-modes.css'
+	],
 
-	// Nuxt Content behaves differently across environments here:
-	// - dev: `sqlite3` avoids the native-binding double-load issue we observed
-	//   with `better-sqlite3` in Nuxt's dev pipeline.
-	// - build/prod: `better-sqlite3` is synchronous and avoids the noisy locked
-	//   table warnings emitted by the async `sqlite3` connector during builds.
+	// `native` (Node's built-in node:sqlite) everywhere: synchronous like
+	// `better-sqlite3`, so it doesn't race the dev cache's unawaited
+	// delete-then-insert and doesn't produce noisy locked-table warnings during
+	// builds, but ships with Node itself, so there's no compiled addon to break
+	// across environments. See docs/search-implementation-guide.md point 2 for
+	// the history and the two problems this replaces.
 	content: {
 		_localDatabase: {
 			type: 'sqlite',
 			filename: contentLocalDatabaseFilename
 		},
 		experimental: {
-			sqliteConnector: isDevelopment ? 'sqlite3' : 'better-sqlite3'
+			sqliteConnector: 'native'
 		},
 		build: {
 			markdown: {
@@ -149,35 +136,17 @@ export default defineNuxtConfig( {
 		}
 	},
 
-	i18n: {
-		strategy: 'prefix_except_default',
-		defaultLocale: 'en',
-		detectBrowserLanguage: false,
-		// One list for every locale: sourced from the generated language catalog
-		// (config/languages.ts). Locales without content or interface strings fall
-		// back through the chain to English. See docs/adr-language-catalog.md.
-		// Registered under the SSR build; full static generation does not scale to
-		// this many locales (ADR §7).
-		locales: SUPPORTED_LANGUAGES.map( ( language ) => ( {
-			code: language.code,
-			language: language.bcp47,
-			dir: language.dir
-		} ) )
+	// Wikimedia OAuth 2.0 + PKCE (docs/adr-wikimedia-oauth-authentication.md §10 Step B1).
+	// oauthCookieSecret is server-only; the public block is safe to expose since the
+	// OAuth client is a public PKCE client (no client secret involved).
+	runtimeConfig: {
+		oauthCookieSecret: '',
+		public: {
+			oauthClientId: '',
+			oauthAuthorizeUrl: 'https://meta.wikimedia.org/w/rest.php/oauth2/authorize',
+			oauthScope: 'basic'
+		}
 	},
-
-	// Global CSS: Codex design tokens + our shell styles.
-	// Use Codex’s experimental bidi sheet (`[dir=ltr]` / `[dir=rtl]` selectors) so
-	// runtime interface-locale switches do not stack LTR + RTL mirror sheets.
-	// Stacking those sheets breaks clearable TextInput/Lookup icon placement in RTL.
-	css: [
-		'@wikimedia/codex/dist/codex.style-bidi.css',
-		'~/assets/css/main.css',
-		// Platform home / landing page surface (full-bleed bands, hero typography).
-		'~/assets/css/landing-page.css',
-		// Dark-mode token overrides, scoped under html.fd-theme--* (see color-modes.css).
-		// Loads after main.css so it overrides the light :root token defaults.
-		'~/assets/css/color-modes.css'
-	],
 
 	routeRules: {
 		'/explorer': { ssr: false },
@@ -187,6 +156,23 @@ export default defineNuxtConfig( {
 		'/account': { ssr: false },
 		'/*/account': { ssr: false },
 		...buildLegacyContentRedirectRouteRules()
+	},
+	// Must be >= 2024-05-07 so Nitro uses the modern `netlify` preset (not `netlify-legacy`),
+	// which emits ESM Functions 2.0 handlers compatible with Netlify's runtime.
+	compatibilityDate: '2024-05-07',
+
+	// server/api/explorer-bootstrap.get.ts pulls in app/utils/explorerModuleRailHeading.ts
+	// and explorerModuleDescription.ts, which carry the same .ts-extension imports as
+	// the typescript.tsConfig block below. Nitro generates tsconfig.server.json on its
+	// own, separately from that app tsConfig, so it needs the same override.
+	nitro: {
+		typescript: {
+			tsConfig: {
+				compilerOptions: {
+					allowImportingTsExtensions: true
+				}
+			}
+		}
 	},
 
 	vite: {
@@ -241,11 +227,37 @@ export default defineNuxtConfig( {
 		}
 	},
 
+	// Several first-party modules import sibling config with an explicit `.ts`
+	// extension (config/explorerOptIn.ts, config/explorerModuleDescriptions.ts,
+	// config/languages.generated.ts). That style is required so the same modules
+	// can also be imported by plain `.mjs` tooling — Node's ESM resolver cannot
+	// resolve an extensionless relative specifier — and it lets the prose-content
+	// generator read config/languages.ts itself rather than reaching past its
+	// override layer into the generated catalog. Vite resolves these unchanged;
+	// TypeScript needs this flag to accept them.
+	typescript: {
+		tsConfig: {
+			compilerOptions: {
+				allowImportingTsExtensions: true
+			}
+		}
+	},
+
 	// Direction handling is currently driven by the shell dir attribute and
 	// logical CSS properties in first-party styles. We intentionally avoid
 	// global CSS flipping for third-party explorer styles for now.
 
 	hooks: {
+		// typescript.tsConfig above only reaches tsconfig.app.json. nuxt.config.ts
+		// itself is type-checked under tsconfig.node.json, and it pulls in
+		// config/languages.ts, which needs the same override for its own
+		// .ts-extension import of languages.generated.ts.
+		'prepare:types': ( { nodeTsConfig } ) => {
+			nodeTsConfig.compilerOptions = {
+				...nodeTsConfig.compilerOptions,
+				allowImportingTsExtensions: true
+			}
+		},
 		// Per-process SQLite files accumulate across dev server restarts when the
 		// previous process exits uncleanly. Clean them up at startup so the .data/
 		// directory does not grow unboundedly (ADR §9).
@@ -268,5 +280,39 @@ export default defineNuxtConfig( {
 				// .data/content does not exist yet on a fresh checkout — safe to ignore.
 			}
 		}
+	},
+
+	/*
+	 * Lint-time only, and deliberately not wired into dev or build: nothing
+	 * here blocks a deploy, `npm run lint` is the only thing that reads it.
+	 * eslint.config.mjs carries the spacing rules @stylistic has no option for.
+	 */
+	eslint: {
+		config: {
+			stylistic: {
+				indent: 'tab',
+				quotes: 'single',
+				semi: false,
+				commaDangle: 'never',
+				arrowParens: true,
+				braceStyle: '1tbs'
+			}
+		}
+	},
+
+	i18n: {
+		strategy: 'prefix_except_default',
+		defaultLocale: 'en',
+		detectBrowserLanguage: false,
+		// One list for every locale: sourced from the generated language catalog
+		// (config/languages.ts). Locales without content or interface strings fall
+		// back through the chain to English. See docs/adr-language-catalog.md.
+		// Registered under the SSR build; full static generation does not scale to
+		// this many locales (ADR §7).
+		locales: SUPPORTED_LANGUAGES.map( ( language ) => ( {
+			code: language.code,
+			language: language.bcp47,
+			dir: language.dir
+		} ) )
 	}
 } )

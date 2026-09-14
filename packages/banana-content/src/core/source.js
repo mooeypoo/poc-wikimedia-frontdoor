@@ -33,8 +33,8 @@ export function parseSource( text, options ) {
 	const contextRules = format.contexts ?? []
 
 	const { metadata, body } = format.envelope ?
-		format.envelope.parse( text ) :
-		{ metadata: {}, body: text }
+			format.envelope.parse( text ) :
+			{ metadata: {}, body: text }
 
 	const keyPrefix = keyPrefixForPath( path, keys.prefix )
 	const template = []

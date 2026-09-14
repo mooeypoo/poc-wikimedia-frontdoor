@@ -57,7 +57,9 @@ async function fetchText( url ) {
 	let response = await fetch( url, { headers: { 'User-Agent': USER_AGENT } } )
 	if ( response.status === 429 ) {
 		const retryAfter = Number( response.headers.get( 'retry-after' ) ) || 2
-		await new Promise( ( resolve ) => setTimeout( resolve, retryAfter * 1000 ) )
+		await new Promise( ( resolve ) => {
+			setTimeout( resolve, retryAfter * 1000 )
+		} )
 		response = await fetch( url, { headers: { 'User-Agent': USER_AGENT } } )
 	}
 	if ( !response.ok ) {
@@ -93,7 +95,7 @@ function parseFrontmatter( content ) {
 	if ( !match ) {
 		return { data: {}, body: content }
 	}
-	let data = {}
+	let data
 	try {
 		data = YAML.parse( match[ 1 ] ) ?? {}
 	} catch {
@@ -137,7 +139,7 @@ function importMarker( sourceId ) {
 function createEmptyPlaceholder( title, sourceId ) {
 	return serializeDocument(
 		{ title: title || 'Content unavailable', ...importMarker( sourceId ) },
-		"This page's content could not be fetched at build time.\n"
+		'This page\'s content could not be fetched at build time.\n'
 	)
 }
 

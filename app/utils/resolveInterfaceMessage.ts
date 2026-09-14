@@ -8,7 +8,10 @@ import { resolveActiveInterfaceLocale } from './resolveActiveInterfaceLocale'
 
 type MessageMap = Record<string, string>
 
-const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
+// The `en` intersection member keeps the English fallback a guaranteed entry
+// (not routed through the index signature), since every call site below relies
+// on it always resolving.
+const MESSAGES_BY_LOCALE: Record<string, MessageMap> & { en: MessageMap } = {
 	en: messagesEnglish as MessageMap,
 	es: messagesSpanish as MessageMap,
 	fr: messagesFrench as MessageMap,

@@ -24,5 +24,5 @@ export function isLandingRoutePath( path: string ): boolean {
 	if ( !singleSegmentMatch ) {
 		return false
 	}
-	return LOCALE_HOME_SEGMENTS.has( singleSegmentMatch[ 1 ] )
+	return LOCALE_HOME_SEGMENTS.has( singleSegmentMatch[ 1 ] ?? '' )
 }

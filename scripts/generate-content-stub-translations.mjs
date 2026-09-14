@@ -83,7 +83,7 @@ function pseudoLocalize( value ) {
 			// Odd indices are the captured protected segments.
 			index % 2 === 1 ?
 				piece :
-				piece.replace( /[a-zA-Z]/g, ( letter ) => ACCENTS[ letter ] ?? letter )
+					piece.replace( /[a-zA-Z]/g, ( letter ) => ACCENTS[ letter ] ?? letter )
 		) )
 		.join( '' ) + '⟧'
 }

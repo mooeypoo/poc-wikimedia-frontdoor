@@ -266,7 +266,6 @@ export function useScalarClientModalBackgroundScrollLock(
 			dialogResizeObserver.disconnect()
 			dialogResizeObserver = null
 		}
-
 	}
 
 	/**

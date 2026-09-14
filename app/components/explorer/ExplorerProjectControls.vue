@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
 import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover, CdxSelect } from '@wikimedia/codex'
 import { cdxIconInfo } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule } from '../../composables/useExplorerBootstrap'
@@ -95,7 +96,10 @@ const { optInCheckboxOptions, selectedOptInValues } = useExplorerOptInCheckboxGr
 	includeInternalEndpoints
 )
 
-const optInPopoverTrigger = ref<InstanceType<typeof CdxButton> | undefined>()
+// Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>)
+// to match CdxPopover's own anchor prop type; the specific instance type isn't
+// assignable to it due to Vue's generic component-instance variance.
+const optInPopoverTrigger = ref<ComponentPublicInstance | null>( null )
 const isOptInPopoverOpen = ref( false )
 
 /**
@@ -106,7 +110,6 @@ const isOptInPopoverOpen = ref( false )
 function onOptInPopoverTriggerClick(): void {
 	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
 }
-
 </script>
 
 <template>
@@ -212,8 +215,8 @@ function onOptInPopoverTriggerClick(): void {
 							<CdxIcon :icon="cdxIconInfo" />
 						</CdxButton>
 						<CdxPopover
-							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							v-model:open="isOptInPopoverOpen"
+							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
 							:anchor="optInPopoverTrigger"
 							:title="optInPopoverTitle"
 							placement="bottom-start"

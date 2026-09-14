@@ -9,8 +9,8 @@
 import YAML from 'yaml'
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---\n?/
-const ATTRIBUTE_QUOTES = new Set( [ '"', "'" ] )
-const ENTITIES = { '"': '&quot;', "'": '&#39;' }
+const ATTRIBUTE_QUOTES = new Set( [ '"', '\'' ] )
+const ENTITIES = { '"': '&quot;', '\'': '&#39;' }
 
 /** YAML frontmatter envelope. */
 export const yamlFrontmatter = {
@@ -23,7 +23,7 @@ export const yamlFrontmatter = {
 		if ( !match ) {
 			return { metadata: {}, body: text }
 		}
-		let metadata = {}
+		let metadata
 		try {
 			metadata = YAML.parse( match[ 1 ] ) ?? {}
 		} catch {

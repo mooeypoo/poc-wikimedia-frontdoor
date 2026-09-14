@@ -7,7 +7,7 @@ export interface ScalarOperationNavigationInput {
 	primaryTag?: string
 }
 
-interface ScalarNavigationEntry {
+export interface ScalarNavigationEntry {
 	id?: string
 	type?: string
 	method?: string
@@ -246,20 +246,18 @@ export function resolveScalarOperationNavigationId(
 		return null
 	}
 
-	const preferredTaggedMatch = input.primaryTag
-		? suffixMatches.find( ( elementId ) => elementId.includes( `/tag/${ slugScalarNavigationSegment( input.primaryTag ) }/` ) )
+	const primaryTag = input.primaryTag
+	const preferredTaggedMatch = primaryTag
+		? suffixMatches.find( ( elementId ) => elementId.includes( `/tag/${ slugScalarNavigationSegment( primaryTag ) }/` ) )
 		: undefined
 
 	if ( preferredTaggedMatch ) {
 		return preferredTaggedMatch
 	}
 
-	if ( suffixMatches.length === 1 ) {
-		return suffixMatches[ 0 ]
-	}
-
-	// Prefer the longest id (usually the most qualified tag path) over ambiguous short matches.
-	return suffixMatches.sort( ( leftId, rightId ) => rightId.length - leftId.length )[ 0 ]
+	// Prefer the longest id (usually the most qualified tag path) over ambiguous short
+	// matches. A single match sorts to itself, so this also covers that case.
+	return suffixMatches.sort( ( leftId, rightId ) => rightId.length - leftId.length )[ 0 ] ?? null
 }
 
 /**

@@ -4,7 +4,9 @@ import type { ShikiTransformer } from 'shiki'
 const lineNumbersTransformer: ShikiTransformer = {
 	name: 'line-numbers',
 	pre( node ) {
-		const meta = ( this as any ).options?.meta?.__raw ?? ''
+		// __raw carries the fence-info string beyond the language tag; Shiki's own
+		// ShikiTransformerContextMeta is deliberately untyped for this purpose.
+		const meta = ( this.options.meta as { __raw?: string } ).__raw ?? ''
 		if ( meta.includes( ':line-numbers' ) ) {
 			node.properties[ 'data-line-numbers' ] = ''
 		}
