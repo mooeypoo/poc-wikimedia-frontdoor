@@ -25,6 +25,7 @@ import { useEnterpriseExplorer } from '../../composables/useEnterpriseExplorer'
 import { isExplorerRoutePath } from '../../utils/explorerRoute'
 import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorerOptIn'
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
+import { ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER } from '../../../config/enterpriseExplorer'
 import { buildScalarLocalization } from '../../scalar/scalarLocalization'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../../config/explorerInternalSidebarExperiment'
 import { SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED } from '../../../config/scalarClientWriteWarnings'
@@ -42,7 +43,17 @@ const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) 
 const { selectedWikiInstanceId } = useDirection()
 const { explorerMode } = useExplorerMode()
 const isCommunityMode = computed( () => explorerMode.value === 'community' )
-const isCustomEnterpriseMode = computed( () => explorerMode.value === 'enterprise-custom' )
+
+/*
+ * Whether the reference panel renders the bespoke Enterprise viewer instead of Scalar.
+ * True for the dedicated `/explorer/enterprise-custom` route, and — while
+ * ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER is on — for the public `/explorer/enterprise`
+ * entry as well. See config/enterpriseExplorer.ts for the rollback switch.
+ */
+const isCustomEnterpriseMode = computed( () =>
+	explorerMode.value === 'enterprise-custom' ||
+	( explorerMode.value === 'enterprise-full' && ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER )
+)
 
 // Hydrate selection from a deep-link URL. Runs before bootstrap so it can steer
 // the instance and hand over the module/operation intent. See docs/adr-explorer-deep-linking.md.

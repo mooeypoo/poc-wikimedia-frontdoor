@@ -65,9 +65,11 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 					{ id: 'wikimedia-api-modules', messageKey: 'explorer-side-nav-wikimedia-api-modules', href: '/explorer' },
 					{ id: 'enterprise-apis', messageKey: 'explorer-side-nav-enterprise-apis', href: '/explorer/enterprise' },
 					{
-						// Hidden for now (functionality retained — the enterprise-custom
-						// mode, route, and component are all still wired; flip `enabled`
-						// to true to re-expose it). See ADR §5.2 on the `enabled` toggle.
+						// Stays hidden: the "Enterprise APIs" entry above now renders the
+						// bespoke viewer itself (ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER in
+						// config/enterpriseExplorer.ts), so exposing this would be a second
+						// nav item for the same experience. The `/explorer/enterprise-custom`
+						// route and component remain wired. See ADR §5.2 on `enabled`.
 						id: 'enterprise-apis-custom',
 						messageKey: 'explorer-side-nav-enterprise-apis-custom',
 						href: '/explorer/enterprise-custom',
