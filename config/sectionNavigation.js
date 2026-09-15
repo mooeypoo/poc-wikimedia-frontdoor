@@ -97,28 +97,24 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-get-started',
 				items: [
 					{ id: 'get-started-overview', messageKey: 'section-nav-overview', href: '/get-started' },
-					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start', href: '/get-started/quick-start' },
 					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' }
 				]
 			},
 			{
 				id: 'for-communities',
-				titleMessageKey: 'section-nav-get-started-for-communities-title',
+				titleMessageKey: 'Use content and data',
 				items: [
-					{ id: 'community-overview', messageKey: 'section-nav-overview', href: '/get-started/build-for-communities' },
-					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content', href: '/get-started/wiki-content' },
-					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data', href: '/get-started/open-data' },
-					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots', href: '/get-started/tools-and-bots' },
-					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features', href: '/get-started/on-wiki' }
+					{ id: 'community-overview', messageKey: 'Use wiki content', href: '/get-started/wiki-content2' },
+					{ id: 'access-open-data', messageKey: 'Work with open datasets', href: '/get-started/open-data' },
+					{ id: 'access-open-data', messageKey: 'High-volume and commercial access', href: '/get-started/wikimedia-enterprise' }
 				]
 			},
 			{
 				id: 'for-enterprise',
-				titleMessageKey: 'section-nav-get-started-for-enterprise-title',
+				titleMessageKey: 'Tools and bots for Wikimedia communities',
 				items: [
-					{ id: 'wikimedia-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/get-started/wikimedia-enterprise' },
-					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases', href: '/get-started/commercial-use-cases' },
-					{ id: 'data-for-research', messageKey: 'section-nav-get-started-data-for-research', href: '/get-started/data-for-research' }
+					{ id: 'wikimedia-enterprise', messageKey: 'Get started', href: '' },
+					{ id: 'commercial-use-cases', messageKey: 'Build tools and bots', href: '/get-started/tools-and-bots' },
 				]
 			},
 			{
