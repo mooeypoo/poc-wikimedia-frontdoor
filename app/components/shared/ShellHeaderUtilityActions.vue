@@ -32,6 +32,7 @@ import { useDirection } from '../../composables/useDirection'
 import { useEndpointSearch } from '../../composables/useEndpointSearch'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
+import { useShellCollapsedSearchOverlay } from '../../composables/useShellCollapsedSearchOverlay'
 import {
 	SHELL_HEADER_UTILITY_MENU_VALUE,
 	useShellHeaderUtilityMenu
@@ -80,6 +81,11 @@ const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', 
 
 const actionsRootRef = useTemplateRef<HTMLElement>( 'actionsRootRef' )
 const { isUtilityCollapsed } = useHeaderUtilityCollapse( actionsRootRef )
+const {
+	isCollapsedSearchOverlayOpen,
+	openCollapsedSearchOverlay,
+	closeCollapsedSearchOverlay
+} = useShellCollapsedSearchOverlay( { isUtilityCollapsed } )
 const { direction } = useDirection()
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
@@ -186,6 +192,10 @@ const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label'
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
+const collapsedSearchOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-search-overlay-label' ) )
+const collapsedSearchOverlayCloseButtonLabel = computed( () =>
+	$bananaI18n( 'shell-collapsed-search-overlay-close-button-label' )
+)
 
 const selectedLanguageCodeLabel = computed( () => {
 	return selectedInterfaceLocale.value.toUpperCase()
@@ -382,7 +392,7 @@ function handleSearchAreaFocusOut( event: FocusEvent ): void {
 /**
  * Clears the query and closes the search panel after a result is chosen.
  *
- * @param _resultId - Selected search result id (navigation deferred in prototype).
+ * @param _resultId - Selected search result id; the result's own NuxtLink performs navigation.
  */
 function handleResultSelect( _resultId: string ): void {
 	searchQuery.value = ''
@@ -390,12 +400,30 @@ function handleResultSelect( _resultId: string ): void {
 }
 
 /**
- * Placeholder for collapsed search icon activation — behaviour deferred.
+ * Opens the collapsed search overlay from the icon button.
+ *
+ * Kicks off the content index build explicitly: the desktop field starts it on
+ * `focusin`, but an icon button has no equivalent focus event to hang that off of.
  *
  * @param event - Click event on the collapsed search button.
  */
 function handleCollapsedSearchClick( event: MouseEvent ): void {
 	event.preventDefault()
+	loadContentIndex()
+	openCollapsedSearchOverlay()
+}
+
+/**
+ * Clears the query and dismisses the overlay after a result is chosen.
+ *
+ * The result's own `NuxtLink` navigates, which would close the overlay through the
+ * route watcher anyway; closing here covers results that resolve to the current path.
+ *
+ * @param resultId - Selected search result id.
+ */
+function handleOverlayResultSelect( resultId: string ): void {
+	handleResultSelect( resultId )
+	closeCollapsedSearchOverlay()
 }
 </script>
 
@@ -449,6 +477,25 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 		>
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
+
+		<SharedShellHeaderSearchOverlay
+			v-if="isCollapsedSearchOverlayOpen"
+			v-model:search-query="searchQuery"
+			:overlay-label="collapsedSearchOverlayLabel"
+			:close-button-label="collapsedSearchOverlayCloseButtonLabel"
+			:search-placeholder-label="searchPlaceholderLabel"
+			:has-query="hasQuery"
+			:chain-result-groups="chainResultGroups"
+			:all-locale-result-groups="allLocaleResultGroups"
+			:endpoint-results="endpointResults"
+			:is-searching="isSearching"
+			:has-search-error="hasSearchError"
+			:is-all-locales-mode="isAllLocalesMode"
+			:active-locale="$interfaceLocale"
+			@close="closeCollapsedSearchOverlay"
+			@activate-all-locales="activateAllLocalesSearch"
+			@result-select="handleOverlayResultSelect"
+		/>
 
 		<span
 			v-show="!isUtilityCollapsed"

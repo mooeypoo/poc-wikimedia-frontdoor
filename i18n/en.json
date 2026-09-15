@@ -326,5 +326,7 @@
   "shell-collapsed-nav-label": "Collapsed site navigation",
   "shell-collapsed-nav-menu-back-button-label": "Back to site navigation",
   "shell-collapsed-nav-menu-button-label": "Open site navigation menu",
-  "shell-collapsed-nav-menu-overlay-label": "Site navigation menu"
+  "shell-collapsed-nav-menu-overlay-label": "Site navigation menu",
+  "shell-collapsed-search-overlay-close-button-label": "Close search",
+  "shell-collapsed-search-overlay-label": "Site search"
 }
