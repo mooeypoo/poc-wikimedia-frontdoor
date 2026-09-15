@@ -16,15 +16,23 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ## What would you like to do?
 
 :::navigation-card-grid
-::navigation-card{url="/get-started/build-for-communities" title="Build for Wikimedia communities" description="Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tool and bots using Wikimedia infrastructure." supporting-text="Learn about building tools →" leading-icon="userGroup"}
+::navigation-card{url="/get-started/wiki-content2" title="Use Wikimedia content in your apps" leading-icon="book"}
 ::
 
-::navigation-card{url="/get-started/data-for-research" title="Work with Wikimedia datasets for research" description="Power research and create visualizations using APIs and bulk downloads of Wikimedia projects' data." supporting-text="Learn about bulk data sources →" leading-icon="labFlask"}
+::navigation-card{url="/get-started/open-data" title="Work with Wikimedia datasets for research" leading-icon="labFlask"}
 ::
 
-::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
+::navigation-card{url="/get-started/tools-and-bots" title="Build tools and bots for Wikimedia communities" leading-icon="robot"}
 ::
 :::
+
+</br>
+
+::highlight
+[**Use Wikimedia content for commercial use cases →**](/get-started/wikimedia-enterprise)
+
+Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale.
+::
 ::::
 
 :::::landing-band{variant="apis"}
