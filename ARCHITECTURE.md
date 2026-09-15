@@ -1527,7 +1527,7 @@ Imported wiki message boxes map to `::callout{type=…}` via the remote-content 
 
 **Why framed:** Tabbed code blocks are self-contained modules on prose pages, not page-level navigation. Framed tabs supply the gray header row, white selected-tab label, and content panel chrome without reimplementing tab interaction states.
 
-**MDC bridge:** `CdxTabs` requires direct `CdxTab` children. MDC nests `:::code-tab` blocks inside `::::code-tabs`, so `CodeTab` registers each panel (label + default-slot render function) during `setup()` via `provide`/`inject`; `CodeTabs` renders `CdxTab` panels from that registry. A hidden `<slot />` mount point keeps registration SSR-safe (registration must not wait for `onMounted`).
+**MDC bridge:** `CdxTabs` requires direct `CdxTab` children, and MDC nests `:::code-tab` blocks inside `::::code-tabs`. `CodeTabs` reads its panel list off its own slot vnodes at render time, recognising a code tab by shape (a `label` prop over a default slot), and renders the `CdxTab` panels itself; `CodeTab` is a marker that never mounts. For why the children do not register themselves, see `docs/TECH_DECISIONS.md` → Framed code tabs.
 
 **Styling exceptions** (documented; tab header metrics remain Codex-owned):
 
@@ -1536,7 +1536,7 @@ Imported wiki message boxes map to `::callout{type=…}` via the remote-content 
 | Module border | `1px solid var(--border-color-muted)` | Muted module edge per Codex framed-tabs-in-a-box pattern |
 | Module radius | `var(--fd-explorer-controls-surface-border-radius)` (**4px**) | Matches CodeBlock / NavigationCard / explorer surfaces (not Codex 2px base) |
 | Code padding | `var(--spacing-75)` (12px) on `pre` | Inset code inside the white content panel |
-| Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM for find-in-page across tabs |
+| Inactive panels | `v-show` via `CdxTab` | Panels stay in the DOM, but `.cdx-tab[aria-hidden='true']` is `display: none`, so find-in-page does **not** reach them |
 
 ### Page-layer features
 
