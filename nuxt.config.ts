@@ -193,6 +193,16 @@ export default defineNuxtConfig( {
 		 * this, Vite discovers them at runtime, invalidates `/_nuxt/pages/…`
 		 * modules mid-navigation, and the browser shows 500 “Failed to fetch
 		 * dynamically imported module” for `pages/explorer/[...view].vue`.
+		 *
+		 * `@scalar/api-reference`'s optimized chunk can intermittently trip a
+		 * Vite regex-backtracking bug on a cold `dev:clean` start:
+		 * `assetImportMetaUrlRE` runs an unbounded `.+` against every
+		 * transformed module, and chokes on this one once it's multi-MB.
+		 * Surfaces as "Pre-transform error: Maximum call stack size exceeded"
+		 * on `/explorer/enterprise`, then Nuxt self-restarts to a blank page
+		 * that renders fine on reload. Fixed upstream in Vite 8
+		 * (vitejs/vite#21800); we're on Nuxt's pinned Vite 7, so nothing to
+		 * do here until that bump happens. Not caused by anything in this repo.
 		 */
 		optimizeDeps: {
 			include: [
