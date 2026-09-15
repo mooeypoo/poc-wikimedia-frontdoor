@@ -1,39 +1,40 @@
 ---
-status: mockup
+status: vnext mockup
 ---
 # Use wiki content
 
-Access articles from Wikipedia, media files, structured data, and more with public APIs and open-source libraries.
+Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
 
-## Explore APIs
+## Fetch pages and media files
+
+Wikimedia APIs allow you to fetch content by page. [Explore all Wikimedia APIs in the API catalog.](/apis)
 
 :::navigation-card-grid
-::navigation-card{url="/explorer" title="MediaWiki REST API" description="Search pages, get page contents, fetch media files, and more."}
+::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/search/page" title="Search API" description="Search for pages by title or using full-text search."}
 ::
 
-::navigation-card{url="/explorer" title="Reading lists API" description="Fetch and manage reading lists on Wikipedia."}
+::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/page/{title}/bare" title="Page API" description="Fetch wiki pages in HTML or source format, explore page history, and get citations."}
+::
+
+::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/file/{title}" title="Media API" description="Get information about photos, video, and other media files used on Wikimedia projects."}
+::
+
+::navigation-card{url="/explorer/direct/enwiki/attribution/v0-beta" title="Attribution API" description="Get the data you need to provide attribution when reusing Wikimedia content."}
 ::
 :::
 
-## High-volume and commercial access
+## Download content in bulk
+
+Wikimedia content is also available to download in bulk, giving you access to all pages from a given project.
 
 :::navigation-card-grid
-::navigation-card{url="/get-started/wikimedia-enterprise" title="Wikimedia Enterprise APIs" description="Wikimedia Enterprise provides a suite of APIs and services designed for high-volume, commercial access to Wikimedia content and data."}
+::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Bulk downloads of pages as they appear to users are available though Wikimedia Enterprise using a free account or a Wikimedia developer account."}
 ::
 
-::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps" title="Download content in bulk" description="Access free downloads of wiki content and data that you can use in research, offline reading, bot editing, and other projects." supporting-text="Read more on Meta-Wiki"}
+::navigation-card{url="https://dumps.wikimedia.org/other/mediawiki_content_history/readme.html" title="Download content in source format" description="Get bulk downloads of content in their editable format, wikitext."}
 ::
 :::
 
-## Learn with tutorials
+## Commercial and high-volume access
 
-:::navigation-card-grid
-::navigation-card{url="/get-started/quick-start" title="Quick start" description="Get started, and make your first API request."}
-::
-
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/API:Picture_of_the_day_viewer" title="Get featured content" description="Get daily featured articles, most read pages, and more." supporting-text="Read more on mediawiki.org"}
-::
-
-::navigation-card{url="/get-started/tutorials" title="Browse all tutorials" description="Browse featured tutorials."}
-::
-:::
+Wikimedia Enterprise offers APIs to download bulk snapshots of Wikimedia content at scale. Try the free tier for Wikimedia communities. [Learn more about Wikimedia Enterprise.](https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps)
