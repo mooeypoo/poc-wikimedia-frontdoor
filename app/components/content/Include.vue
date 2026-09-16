@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { contentCollectionForLocale } from '../../../config/contentCollections'
+import { CONTENT_LOCALES } from '#build/content-locales'
+
 const props = defineProps<{
 	file: string
 }>()
@@ -23,9 +26,30 @@ const contentPath = computed( () => {
 	return filePath
 } )
 
+// contentPath is always locale-prefixed (built with locale.value above, or an
+// absolute prop authored under a specific locale's directory), so its own
+// first segment names the collection content.config.ts put it in — not
+// necessarily locale.value, since an absolute `file` can name any locale.
+const contentLocale = computed( () => {
+	const [ , localeSegment ] = contentPath.value.split( '/' )
+	return localeSegment ?? locale.value
+} )
+
+// A segment that isn't a real content locale (e.g. an absolute path into
+// content/_partials/shared/, which ::partial{name} owns instead) has no
+// collection to query — queryCollection on a name that doesn't exist throws,
+// so this is treated the same as "nothing at this path" rather than left to throw.
+const hasContentCollection = computed( () => CONTENT_LOCALES.includes( contentLocale.value ) )
+
+if ( !hasContentCollection.value && import.meta.dev ) {
+	console.warn( `[Include] "${ props.file }" does not resolve to a content locale — nothing rendered` )
+}
+
 const { data: included } = await useAsyncData(
 	`include:${ contentPath.value }`,
-	() => queryCollection( 'content' ).path( contentPath.value ).first()
+	() => hasContentCollection.value
+		? queryCollection( contentCollectionForLocale( contentLocale.value ) ).path( contentPath.value ).first()
+		: Promise.resolve( null )
 )
 </script>
 
