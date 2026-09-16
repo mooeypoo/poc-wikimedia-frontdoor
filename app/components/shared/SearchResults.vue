@@ -151,8 +151,14 @@ const shouldShowNoResultsAnyLanguage = computed(
 				:key="endpointResult.record.deepLink"
 				class="fd-search-results__item"
 			>
+				<!--
+					Any of these scrolling into view queues the explorer bundle, 884 kB
+					for a route nobody picked. Keep the binding: prefetch is Boolean, so
+					a bare prefetch="false" arrives truthy and does nothing.
+				-->
 				<NuxtLink
 					:to="endpointResult.record.deepLink"
+					:prefetch="false"
 					class="fd-search-results__link fd-search-results__link--endpoint"
 					@click="emit( 'result-select', endpointResult.record.deepLink )"
 				>
