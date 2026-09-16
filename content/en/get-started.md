@@ -14,36 +14,30 @@ Ready to start using Wikimedia APIs? [**Go to the quick start →**](/get-starte
 
 We're so happy you're here! Read the [introduction](/get-started/about-wikimedia) to learn about Wikimedia projects and technology.
 
-## Build for Wikimedia communities
+## Use content and data 
 
-Communities are the heart of the Wikimedia movement. Whether you're interested in automating tasks for wiki editors, accessing open data for research, or expanding the reach of free knowledge, you can find APIs, data sets, and hosting options to support you and your community.
+Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
 
 :::navigation-card-grid
 ::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
 ::
 
-::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data that you can use in research and machine learning."}
+::navigation-card{url="/get-started/open-data" title="Work with open datasets" description="Explore public data that you can use in research and machine learning."}
 ::
 
-::navigation-card{url="/get-started/on-wiki" title="Build on-wiki features" description="Learn how to help readers and editors by adding features to Wikimedia wikis."}
-::
-
-::navigation-card{url="/get-started/tools-and-bots" title="Build tools and bots" description="Tools and bots make it easier to edit and maintain Wikimedia projects."}
+::navigation-card{url="/get-started/wikimedia-enterprise" title="About Wikimedia Enterprise" description="Learn how Wikimedia Enterprise APIs provide realtime and on-demand access to Wikimedia content."}
 ::
 :::
 
-## Get high-volume and commercial access
+## Tools and bots for Wikimedia communities
 
-Create product experiences backed by human-curated free knowledge using APIs designed for commercial and high-volume access.
+Tools and bots make it easier to edit and maintain Wikimedia projects.
 
 :::navigation-card-grid
-::navigation-card{url="/get-started/wikimedia-enterprise" title="About Wikimedia Enterprise" description="Learn how Wikimedia Enterprise APIs provide realtime and on-demand access to Wikimedia content."}
+::navigation-card{url="" title="Get started" description="Discover tools, and get started running scripts and queries."}
 ::
 
-::navigation-card{url="/get-started/commercial-use-cases" title="Commercial use cases" description="Explore ways to use Wikimedia Enterprise in your products, from machine learning to misinformation defense."}
-::
-
-::navigation-card{url="/get-started/data-for-research" title="Bulk data for research" description="Wikimedia offers bulk datasets that you can use to answer research questions."}
+::navigation-card{url="" title="Build tools and bots" description="Learn about APIs, data sources, and hosting options for building for Wikimedia communities."}
 ::
 :::
 

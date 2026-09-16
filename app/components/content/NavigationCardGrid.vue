@@ -78,6 +78,16 @@ const isTwoColumnGrid = computed( () => {
 	.navigation-card-grid:not( .navigation-card-grid--columns-2 ) {
 		grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
 	}
+
+	/*
+	 * Only two cards slotted into the default (max-3) grid: expand to a
+	 * 2-up row that fills the width instead of leaving a dead third
+	 * track. `:nth-child(2):last-child` matches a container whose second
+	 * child is also its last — i.e. exactly two slotted elements.
+	 */
+	.navigation-card-grid:not( .navigation-card-grid--columns-2 ):has( > :nth-child( 2 ):last-child ) {
+		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
+	}
 }
 
 .navigation-card-grid :deep( .navigation-card ) {
