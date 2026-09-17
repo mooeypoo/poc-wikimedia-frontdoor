@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { contentCollectionForLocale } from '../../../config/contentCollections'
 import { CONTENT_LOCALES } from '#build/content-locales'
+import { useContentDocument } from '../../composables/useContentDocument'
 
 const props = defineProps<{
 	file: string
@@ -37,8 +37,8 @@ const contentLocale = computed( () => {
 
 // A segment that isn't a real content locale (e.g. an absolute path into
 // content/_partials/shared/, which ::partial{name} owns instead) has no
-// collection to query — queryCollection on a name that doesn't exist throws,
-// so this is treated the same as "nothing at this path" rather than left to throw.
+// collection to query. content-document.get.ts treats an unknown locale as a
+// miss too, so this guard only saves the round trip.
 const hasContentCollection = computed( () => CONTENT_LOCALES.includes( contentLocale.value ) )
 
 if ( !hasContentCollection.value && import.meta.dev ) {
@@ -48,7 +48,7 @@ if ( !hasContentCollection.value && import.meta.dev ) {
 const { data: included } = await useAsyncData(
 	`include:${ contentPath.value }`,
 	() => hasContentCollection.value
-		? queryCollection( contentCollectionForLocale( contentLocale.value ) ).path( contentPath.value ).first()
+		? useContentDocument( contentPath.value, contentLocale.value )
 		: Promise.resolve( null )
 )
 </script>

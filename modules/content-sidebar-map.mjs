@@ -15,8 +15,10 @@
  * reads `#build/content-locales` (`useContentSearch.ts`'s per-locale
  * collections and its "search all languages" expansion), Nitro reads
  * `#content-locales` (`server/api/content-page.get.ts`, which narrows a
- * reader's fallback chain). @nuxt/content does publish an equivalent list at
- * runtime (`#content/manifest`'s `tables`, keyed by collection name), but that
+ * reader's fallback chain, and `server/api/content-document.get.ts`, which
+ * validates a single-document request's locale against it). @nuxt/content does
+ * publish an equivalent list at runtime (`#content/manifest`'s `tables`, keyed
+ * by collection name), but that
  * alias is internal and undocumented; this repo already owns the walk that
  * produces the same answer, so a second source of truth here is the more
  * stable dependency, not a needless one.
