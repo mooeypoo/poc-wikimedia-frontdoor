@@ -2,6 +2,7 @@
 import { CdxIcon } from '@wikimedia/codex'
 import { cdxIconArrowPrevious, cdxIconArrowNext } from '@wikimedia/codex-icons'
 import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
+import { provideResolvedContentLocaleFromPage } from '../utils/contentLocaleContext'
 
 const route = useRoute()
 const { locale } = useI18n()
@@ -30,6 +31,11 @@ if ( !page.value ) {
 		fatal: true
 	} )
 }
+
+// The fallback chain in useLocalizedContentPage can resolve to a locale other
+// than the interface one; a relative ::include in the page needs the actual
+// resolved locale, not the reader's, so descendants (Include.vue) inject it.
+provideResolvedContentLocaleFromPage( page, locale )
 
 type NavLink = { text: string, link: string }
 const prevPage = computed( () => page.value?.prev as NavLink | undefined )

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import {
 	buildLocaleCandidates,
 	buildLocaleContentPaths,
+	localeFromContentPath,
 	resolveContentLocaleChain
 } from '../app/utils/contentLocalePaths.ts'
 
@@ -30,6 +31,16 @@ test( 'an unknown or empty locale still resolves against English', () => {
 test( 'a slug builds one candidate path per locale', () => {
 	assert.deepEqual( buildLocaleContentPaths( 'fr', 'get-help' ), [ '/fr/get-help' ] )
 	assert.deepEqual( buildLocaleContentPaths( 'en', 'get-help' ), [ '/en/get-help' ] )
+} )
+
+test( 'a locale-qualified content path yields its own locale segment', () => {
+	assert.equal( localeFromContentPath( '/en/learn', 'fr' ), 'en' )
+	assert.equal( localeFromContentPath( '/fr/get-help', 'en' ), 'fr' )
+} )
+
+test( 'a path with no second segment falls back to the given locale', () => {
+	assert.equal( localeFromContentPath( '', 'en' ), 'en' )
+	assert.equal( localeFromContentPath( 'no-leading-slash', 'en' ), 'en' )
 } )
 
 test( 'the missing French page has an English file behind it', () => {

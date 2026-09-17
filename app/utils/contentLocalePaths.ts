@@ -45,6 +45,21 @@ export function buildLocaleCandidates(
 }
 
 /**
+ * Locale segment of a content path built by `buildLocaleContentPaths`
+ * (e.g. `/fr/learn` → `fr`), or `fallbackLocaleCode` when the path has none
+ * (e.g. an absolute path into `_partials/shared/`, which `::partial` owns
+ * instead and isn't under any locale directory).
+ *
+ * @param contentPath - Locale-qualified content path, or an absolute one with no locale segment.
+ * @param fallbackLocaleCode - Locale to use when `contentPath` has no locale segment.
+ * @returns The path's locale segment, or `fallbackLocaleCode`.
+ */
+export function localeFromContentPath( contentPath: string, fallbackLocaleCode: string ): string {
+	const [ , localeSegment ] = contentPath.split( '/' )
+	return localeSegment ?? fallbackLocaleCode
+}
+
+/**
  * Resolves which locales are worth querying for a reader: the catalog's
  * fallback chain, narrowed to locales that have a content/<locale> directory.
  * Querying a collection name with no backing directory throws rather than
