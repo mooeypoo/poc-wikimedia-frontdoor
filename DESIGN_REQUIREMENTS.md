@@ -211,7 +211,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; start drawer on expand |
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide **only** under `.frontdoor-shell--nav-drawer-expanding` (viewport expand); landing / `sidebar: false` route changes instant; Codex transition tokens |
-| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
+| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)** |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
@@ -325,11 +325,11 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Section list | Reuses **`ShellSidePanelNav`** (including explorer mode links via `navigateTo`); **`omitSectionTitleMatching`** hides a section heading when it equals the back label (avoids duplicating the primary section name) |
 | Primary list | Flat **`CdxMenuItem`** rows (main tabs, including **APIs**); selection navigates and closes overlay |
 | Dismiss | Backdrop click, **Escape**, route change, or nav expand |
-| Scroll lock | `html.shell-collapsed-nav-menu-open { overflow: hidden }` in **`shell-collapsed-nav-menu.css`** |
+| Scroll lock | **None, and none is needed.** Don't re-add one on `.frontdoor-shell__body-scroll`; it would drop the body band's scrollbar on every open. Mechanism in `ARCHITECTURE.md` → Responsive navigation collapse and start drawer |
 
-**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
+**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
-**Collapsed search overlay:** The collapsed utility row has room for a search icon but not the 256px field, so the icon opens a full-viewport overlay (`ShellHeaderSearchOverlay`, teleported to `<body>`, **`z-index: 20`** alongside the nav overlay). Mask: **`--background-color-backdrop-light`**. The panel is anchored to the **block-start** edge at full inline size with **`--spacing-100`** padding and **`--background-color-base`**, so a short result list leaves backdrop below and a long one scrolls inside the panel. It holds the `CdxSearchInput` and a quiet **`cdxIconClose`** button on one row, then reuses **`SharedSearchResults`** unchanged. Scroll lock: `html.shell-collapsed-search-overlay-open` in **`shell-collapsed-search-overlay.css`**.
+**Collapsed search overlay:** The collapsed utility row has room for a search icon but not the 256px field, so the icon opens a full-viewport overlay (`ShellHeaderSearchOverlay`, teleported to `<body>`, **`z-index: 20`** alongside the nav overlay). Mask: **`--background-color-backdrop-light`**. The panel is anchored to the **block-start** edge at full inline size with **`--spacing-100`** padding and **`--background-color-base`**, so a short result list leaves backdrop below and a long one scrolls inside the panel. It holds the `CdxSearchInput` and a quiet **`cdxIconClose`** button on one row, then reuses **`SharedSearchResults`** unchanged. Scroll lock: none, for the reasons given for the nav overlay above.
 
 | Overlay element | Token / behaviour |
 |-----------------|-------------------|
@@ -340,7 +340,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 Focus is not trapped and not restored on close, matching the collapsed nav overlay; see **Accessibility (AA)** under Open questions.
 
-**Source:** `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/assets/css/shell-collapsed-search-overlay.css`, `i18n/*` (`shell-collapsed-search-overlay-*`).
+**Source:** `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `i18n/*` (`shell-collapsed-search-overlay-*`).
 
 **Utility row alignment:** Utility controls are grouped at the **inline-end** in `ShellHeaderUtilityActions`. Expanded spacing: **16px** search→preferences; **8px** between preferences, language, and Login/account. Brand and utilities are vertically centered.
 
@@ -372,7 +372,7 @@ Focus is not trapped and not restored on close, matching the collapsed nav overl
 
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
-**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `config/shellNavigation.ts`.
+**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`.
 
 ### Account dashboard (`/account`)
 
@@ -1002,13 +1002,13 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `config/remoteContentSources.ts` |
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css` |
-| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
+| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css` |
 | Start column chrome | `app/layouts/default.vue` (scrollport border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/composables/usePageSectionNav.ts` |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/WikimediaLogoMark.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts`, `public/fonts/montserrat/`, `nuxt.config.ts` (`app.head` brand font inject) |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
-| Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/assets/css/shell-collapsed-search-overlay.css`, `app/components/shared/SearchResults.vue` |
+| Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/components/shared/SearchResults.vue` |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |
 | Codex direction CSS | `nuxt.config.ts` (`codex.style-bidi.css`) — see `ARCHITECTURE.md` → RTL and BiDi |
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |

@@ -103,21 +103,12 @@ export function useShellCollapsedNavMenu( options: {
 		}
 	} )
 
-	watch( isCollapsedNavMenuOpen, ( isOpen ) => {
-		if ( typeof document === 'undefined' ) {
-			return
-		}
-
-		document.documentElement.classList.toggle( 'shell-collapsed-nav-menu-open', isOpen )
-	} )
-
 	onMounted( () => {
 		document.addEventListener( 'keydown', handleCollapsedNavMenuKeydown )
 	} )
 
 	onUnmounted( () => {
 		document.removeEventListener( 'keydown', handleCollapsedNavMenuKeydown )
-		document.documentElement.classList.remove( 'shell-collapsed-nav-menu-open' )
 	} )
 
 	return {

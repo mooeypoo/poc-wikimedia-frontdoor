@@ -64,21 +64,12 @@ export function useShellCollapsedSearchOverlay( options: {
 		}
 	} )
 
-	watch( isCollapsedSearchOverlayOpen, ( isOpen ) => {
-		if ( typeof document === 'undefined' ) {
-			return
-		}
-
-		document.documentElement.classList.toggle( 'shell-collapsed-search-overlay-open', isOpen )
-	} )
-
 	onMounted( () => {
 		document.addEventListener( 'keydown', handleCollapsedSearchOverlayKeydown )
 	} )
 
 	onUnmounted( () => {
 		document.removeEventListener( 'keydown', handleCollapsedSearchOverlayKeydown )
-		document.documentElement.classList.remove( 'shell-collapsed-search-overlay-open' )
 	} )
 
 	return {
