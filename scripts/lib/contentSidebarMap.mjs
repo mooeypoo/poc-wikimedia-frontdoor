@@ -191,7 +191,7 @@ export function serializeContentLocales( locales ) {
 		'// content/, and rewritten whenever that list changes. Not committed: the',
 		'// directory listing is the source of truth and this is a build artifact of it.',
 		'',
-		'/** Locale codes with a content/<locale> collection. */',
-		`export const CONTENT_LOCALES: string[] = ${ JSON.stringify( locales, null, '\t' ) }\n`
+		'/** @type {string[]} Locale codes with a content/<locale> collection. */',
+		`export const CONTENT_LOCALES = ${ JSON.stringify( locales, null, '\t' ) }\n`
 	].join( '\n' )
 }

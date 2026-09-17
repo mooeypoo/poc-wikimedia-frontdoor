@@ -177,7 +177,7 @@ test( 'listContentLocaleDirectories skips underscore-prefixed directories and fi
 test( 'the emitted locales module exports the list it was built from', () => {
 	const source = serializeContentLocales( [ 'en', 'fr' ] )
 
-	assert.match( source, /export const CONTENT_LOCALES: string\[\] =/ )
+	assert.match( source, /export const CONTENT_LOCALES =/ )
 	assert.match( source, /"en"/ )
 	assert.match( source, /"fr"/ )
 } )
