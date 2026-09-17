@@ -12,7 +12,8 @@ import type { EndpointSearchResult } from '~/utils/endpointSearch'
  *  - all-locales: one section per locale in allLocaleResultGroups order
  *  - normal:      one section per locale in the active locale's fallback
  *                 chain, in chainResultGroups order
- *  - no-locale:   "no results in X for Y" message + expand CTA
+ *  - no-locale:   "no results in X for Y" message and/or expand CTA — the
+ *                 message suppresses above endpoint results, the CTA doesn't
  *
  * Normal and all-locales mode share the same per-group rendering — both are
  * "a list of locale-headed groups," differing only in which groups are
@@ -124,6 +125,12 @@ const hasOwnLocaleResults = computed(
 const shouldShowNoLocaleResults = computed(
 	() => !hasOwnLocaleResults.value && !hasEndpointResults.value && isContentSearchSettled.value
 )
+// The expand-to-all-languages CTA is a separate affordance from the notice above: it
+// doesn't assert anything that could contradict a rendered endpoint result, so it stays
+// available whenever the active locale found nothing, endpoints or not.
+const shouldShowExpandLocalesCta = computed(
+	() => !hasOwnLocaleResults.value && isContentSearchSettled.value
+)
 const shouldShowNoResultsAnyLanguage = computed(
 	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value && isContentSearchSettled.value
 )
@@ -216,13 +223,17 @@ const shouldShowNoResultsAnyLanguage = computed(
 			why the reader is looking at another language.
 		-->
 		<div
-			v-if="!isAllLocalesMode && shouldShowNoLocaleResults"
+			v-if="!isAllLocalesMode && shouldShowExpandLocalesCta"
 			class="fd-search-results__no-locale"
 		>
-			<p class="fd-search-results__no-locale-message">
+			<p
+				v-if="shouldShowNoLocaleResults"
+				class="fd-search-results__no-locale-message"
+			>
 				{{ noLocaleResultsMessage }}
 			</p>
 			<CdxButton
+				v-if="shouldShowExpandLocalesCta"
 				class="fd-search-results__cta"
 				weight="quiet"
 				@click="emit( 'activate-all-locales' )"
