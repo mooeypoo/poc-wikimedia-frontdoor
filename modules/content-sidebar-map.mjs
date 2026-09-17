@@ -9,14 +9,17 @@
  * SQLite WASM runtime and the whole collection dump — 1.95 MB on first paint of
  * every content page, to read one boolean. The map is a few kB of the bundle.
  *
- * Also writes `#build/content-locales` — the same content/ walk's locale
- * directory list, exported for client code (`useContentSearch.ts`'s per-
- * locale collections and its "search all languages" expansion) that needs
- * every locale content.config.ts made a collection for. @nuxt/content does
- * publish an equivalent list at runtime (`#content/manifest`'s `tables`,
- * keyed by collection name), but that alias is internal and undocumented;
- * this repo already owns the walk that produces the same answer, so a second
- * source of truth here is the more stable dependency, not a needless one.
+ * Also writes the same content/ walk's locale directory list, for code that
+ * needs every locale content.config.ts made a collection for. One file, read
+ * under two aliases, because Nuxt forbids `#build/` in server code: the app
+ * reads `#build/content-locales` (`useContentSearch.ts`'s per-locale
+ * collections and its "search all languages" expansion), Nitro reads
+ * `#content-locales` (`server/api/content-page.get.ts`, which narrows a
+ * reader's fallback chain). @nuxt/content does publish an equivalent list at
+ * runtime (`#content/manifest`'s `tables`, keyed by collection name), but that
+ * alias is internal and undocumented; this repo already owns the walk that
+ * produces the same answer, so a second source of truth here is the more
+ * stable dependency, not a needless one.
  *
  * Generated rather than committed so the frontmatter under content/ stays the
  * only place a sidebar is declared. See ARCHITECTURE.md → Shell section
@@ -37,6 +40,8 @@ import {
 const MODULE_NAME = 'content-sidebar-map'
 const TEMPLATE_FILENAME = `${ MODULE_NAME }.ts`
 const LOCALES_TEMPLATE_FILENAME = 'content-locales.ts'
+/** Alias Nitro reads the locale list under, since `#build/` is app-side only. */
+const SERVER_LOCALES_ALIAS = '#content-locales'
 
 /** Redraw window for bursts of file events (a branch switch, a bulk rename). */
 const WATCH_DEBOUNCE_MS = 100
@@ -117,7 +122,9 @@ export default defineNuxtModule( {
 		 * hot-reload a newly-added collection — so a reader whose chain reaches
 		 * that locale before a restart hits a listed locale with no collection
 		 * behind it yet. A dev-only gap; a restart picks it up like any other
-		 * content.config.ts change would.
+		 * content.config.ts change would. The app and Nitro read the same
+		 * written file, so they cannot drift apart from each other, only from
+		 * the collections.
 		 *
 		 * @returns {string} Module source for the template.
 		 */
@@ -125,11 +132,20 @@ export default defineNuxtModule( {
 			return serializeContentLocales( listContentLocaleDirectories( contentDirectory ) )
 		}
 
-		addTemplate( {
+		const localesTemplate = addTemplate( {
 			filename: LOCALES_TEMPLATE_FILENAME,
 			write: true,
 			getContents: renderContentLocales
 		} )
+
+		/*
+		 * Aliased rather than registered as a second Nitro-side template, which
+		 * is how @nuxt/content publishes its own `#content/manifest`
+		 * (dist/module.mjs:3131). An alias onto the written file teaches the
+		 * bundler and both generated tsconfigs at once, where a bare Nitro
+		 * virtual would have resolved at runtime and failed typecheck.
+		 */
+		nuxt.options.alias[ SERVER_LOCALES_ALIAS ] = localesTemplate.dst
 
 		if ( !nuxt.options.dev ) {
 			return

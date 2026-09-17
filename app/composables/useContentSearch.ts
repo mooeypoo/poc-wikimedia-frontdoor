@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../config/languages'
 import { contentCollectionForLocale } from '../../config/contentCollections'
-import { buildLocaleCandidates } from '../utils/contentLocalePaths'
+import { resolveContentLocaleChain } from '../utils/contentLocalePaths'
 import { CONTENT_LOCALES } from '#build/content-locales'
 
 /**
@@ -138,19 +138,17 @@ export function useContentSearch(
 	const hasQuery = computed( () => query.value.trim().length >= MIN_QUERY_LENGTH )
 
 	/**
-	 * Resolves which locales are worth searching for a given active locale: its
-	 * fallback chain (`buildLocaleCandidates`, the same helper
-	 * `useLocalizedContentPage` resolves page fallback with), filtered to
-	 * locales that actually have a collection. English is always present in
-	 * both, so the result is never empty.
+	 * Resolves which locales are worth searching for a given active locale.
+	 *
+	 * `resolveContentLocaleChain` is the same recipe page resolution runs
+	 * (`server/api/content-page.get.ts`), which is what keeps search from
+	 * offering a hit in a locale that page resolution would then 404 on.
 	 *
 	 * @param localeCode - BCP 47 locale code.
 	 * @returns Locale codes worth searching, in chain order.
 	 */
 	function resolveSearchLocales( localeCode: string ): string[] {
-		const fallbackChain = getLanguageByCode( localeCode )?.fallbackChain ?? [ 'en' ]
-		return buildLocaleCandidates( localeCode, fallbackChain )
-			.filter( ( code ) => CONTENT_LOCALES.includes( code ) )
+		return resolveContentLocaleChain( localeCode, CONTENT_LOCALES )
 	}
 
 	/**

@@ -1,3 +1,5 @@
+import { getLanguageByCode } from '../../config/languages.ts'
+
 /**
  * Builds locale-qualified Nuxt Content paths for a route slug.
  *
@@ -40,4 +42,27 @@ export function buildLocaleCandidates(
 	}
 
 	return uniqueCandidates
+}
+
+/**
+ * Resolves which locales are worth querying for a reader: the catalog's
+ * fallback chain, narrowed to locales that have a content/<locale> directory.
+ * Querying a collection name with no backing directory throws rather than
+ * returning no match, and English is always present, so this is never empty.
+ *
+ * The list is a parameter because the two callers read it from different
+ * generated modules: the app gets `#build/content-locales`, Nitro gets
+ * `#content-locales`.
+ *
+ * @param localeCode - Requested locale code.
+ * @param contentLocales - Locale codes that have a collection.
+ * @returns Locale codes worth querying, in chain order.
+ */
+export function resolveContentLocaleChain(
+	localeCode: string,
+	contentLocales: string[]
+): string[] {
+	const fallbackChain = getLanguageByCode( localeCode )?.fallbackChain ?? [ 'en' ]
+	return buildLocaleCandidates( localeCode, fallbackChain )
+		.filter( ( candidate ) => contentLocales.includes( candidate ) )
 }

@@ -164,8 +164,8 @@ export function serializeContentSidebarMap( map ) {
  *
  * `content.config.ts` calls this to generate one collection per locale;
  * `modules/content-sidebar-map.mjs` calls it again to expose the same list to
- * client code (`useContentSearch.ts`'s per-locale search instances and
- * `useLocalizedContentPage.ts`'s fallback filtering), so all three stay
+ * `useContentSearch.ts`'s per-locale search instances and to
+ * `server/api/content-page.get.ts`'s fallback filtering, so all three stay
  * derived from the same directory listing instead of a hand-maintained one.
  *
  * @param {string} contentDirectory - Path to `content/`.

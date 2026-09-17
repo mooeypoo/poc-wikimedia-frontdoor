@@ -18,10 +18,10 @@ const slugPath = computed( () => {
 	return ''
 } )
 
-const { data: page } = await useAsyncData( 'page-' + route.path, async () => {
-	const localizedPageResult = await useLocalizedContentPage( locale.value, slugPath.value )
-	return localizedPageResult?.page ?? null
-} )
+const { data: page } = await useAsyncData(
+	'page-' + route.path,
+	() => useLocalizedContentPage( locale.value, slugPath.value )
+)
 
 if ( !page.value ) {
 	throw createError( {
