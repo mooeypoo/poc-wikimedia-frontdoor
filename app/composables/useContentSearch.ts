@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../config/languages'
 import { contentCollectionForLocale } from '../../config/contentCollections'
 import { dropDuplicateChainDocuments, resolveContentLocaleChain } from '../utils/contentLocalePaths'
+import { escapeFtsSnippetMarkup } from '../utils/searchSnippetMarkup'
 import { CONTENT_LOCALES } from '#build/content-locales'
 
 /**
@@ -210,9 +211,19 @@ export function useContentSearch(
 				try {
 					await ensureLocaleIndex( locale )
 					const handle = searchByLocale.get( locale )
-					const results = handle
+					const rawResults = handle
 						? ( await handle.search( trimmedQuery, { snippet: {} } ) ) as ContentSearchResult[]
 						: []
+					// SQLite's snippet() escapes nothing around the <mark> tags it
+					// inserts, and the panel renders this with v-html, so it is escaped
+					// before it ever leaves the composable rather than at the render site.
+					const results = rawResults.map( ( result ) => ( {
+						...result,
+						snippets: {
+							...result.snippets,
+							content: escapeFtsSnippetMarkup( result.snippets?.content )
+						}
+					} ) )
 					return { locale, results, failed: false }
 				} catch ( error ) {
 					console.error( `[content-search] ${ locale } failed to build or search`, error )
