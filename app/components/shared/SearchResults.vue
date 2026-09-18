@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CdxButton, CdxMessage, CdxProgressBar } from '@wikimedia/codex'
+import { getLanguageByCode } from '../../../config/languages'
 import {
 	contentIdToUrl,
 	type LocaleResultGroup
@@ -54,18 +55,46 @@ const emit = defineEmits<{
 const { $bananaI18n } = useNuxtApp()
 
 /**
+ * Names a language for the headings and notices below.
+ *
+ * Prefers the translated `interface-language-<code>` message, which is the only
+ * way "Results in English" reads as "Résultats en Anglais" for a French reader.
+ * Those messages exist for the five locales with their own `i18n/*.json`, while
+ * search spans all 23 `content/<locale>` directories, so the rest fall back to
+ * the language catalog's autonym: correct in its own language rather than an
+ * untranslated English name, and the same label the interface-language picker
+ * already shows. banana returns the key itself for a message it does not have,
+ * which is what the comparison detects.
+ *
+ * The result is isolated at every use site, since an autonym can arrive in any
+ * script or direction.
+ *
+ * @param localeCode - BCP 47 locale code.
+ * @returns The language's name, or the bare code if the catalog has neither.
+ */
+function languageName( localeCode: string ): string {
+	const messageKey = `interface-language-${ localeCode }`
+	const translated = $bananaI18n( messageKey )
+
+	if ( translated !== messageKey ) {
+		return translated
+	}
+
+	return getLanguageByCode( localeCode )?.autonym ?? localeCode
+}
+
+/**
  * Returns the "Results in [language]" heading for a given locale code.
  *
  * @param localeCode - BCP 47 locale code.
  * @returns Translated heading string with FSI/PDI isolation around the language name.
  */
 function localeHeading( localeCode: string ): string {
-	const langName = $bananaI18n( `interface-language-${ localeCode }` )
-	return $bananaI18n( 'search-results-locale-heading', { $1: langName } )
+	return $bananaI18n( 'search-results-locale-heading', { $1: languageName( localeCode ) } )
 }
 
 const noLocaleResultsMessage = computed( () => {
-	const langName = $bananaI18n( `interface-language-${ props.activeLocale }` )
+	const langName = languageName( props.activeLocale )
 	return $bananaI18n( 'search-no-locale-results', { $1: langName, $2: props.searchQuery } )
 } )
 
