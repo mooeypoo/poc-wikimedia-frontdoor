@@ -56,7 +56,9 @@ export function buildLocaleCandidates(
  */
 export function localeFromContentPath( contentPath: string, fallbackLocaleCode: string ): string {
 	const [ , localeSegment ] = contentPath.split( '/' )
-	return localeSegment ?? fallbackLocaleCode
+	// Truthiness, not `??`: split yields an empty string for an empty segment,
+	// so `'/'` reaches here as `''` rather than as undefined.
+	return localeSegment || fallbackLocaleCode
 }
 
 /**

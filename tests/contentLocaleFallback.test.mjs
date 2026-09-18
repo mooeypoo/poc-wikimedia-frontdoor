@@ -30,6 +30,13 @@ test( 'an unknown or empty locale still resolves against English', () => {
 	assert.deepEqual( resolveContentLocaleChain( '', [ 'en' ] ), [ 'en' ] )
 } )
 
+test( 'a path with no locale segment falls back, empty segment included', () => {
+	assert.equal( localeFromContentPath( '/fr/learn', 'en' ), 'fr' )
+	// split yields '' here, not undefined, so `??` would have returned ''.
+	assert.equal( localeFromContentPath( '/', 'en' ), 'en' )
+	assert.equal( localeFromContentPath( '', 'en' ), 'en' )
+} )
+
 test( 'translations of one page share a document identity', () => {
 	assert.equal( contentDocumentIdentity( '/en/about' ), '/about' )
 	assert.equal( contentDocumentIdentity( '/fr/about' ), '/about' )

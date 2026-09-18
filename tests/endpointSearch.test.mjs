@@ -107,6 +107,18 @@ test( 'a typo still finds the endpoint', () => {
 	assert.equal( search( records, 'pagevies' ).length, 1 )
 } )
 
+test( 'a short token gets prefix matching but not fuzziness', () => {
+	// MiniSearch turns the 0.2 fraction into round( length * 0.2 ), which would
+	// otherwise hand a full edit to a four-character token.
+	const records = [ record( { path: '/v1/pages', summary: 'List pages' } ) ]
+
+	// Prefix, which is what a reader typing a short token actually wants.
+	assert.equal( search( records, 'page' ).length, 1 )
+	// One edit away from "page", and not the endpoint anyone meant.
+	assert.deepEqual( search( records, 'cage' ), [] )
+	assert.deepEqual( search( records, 'gage' ), [] )
+} )
+
 test( 'internal-gated endpoints never appear', () => {
 	const records = [
 		record( { path: '/v1/open', summary: 'Get widgets' } ),

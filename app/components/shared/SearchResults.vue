@@ -122,14 +122,17 @@ const isContentSearchSettled = computed( () => !props.isSearching && !props.hasS
 const hasOwnLocaleResults = computed(
 	() => props.chainResultGroups.some( ( group ) => group.locale === props.activeLocale )
 )
-const shouldShowNoLocaleResults = computed(
-	() => !hasOwnLocaleResults.value && !hasEndpointResults.value && isContentSearchSettled.value
-)
-// The expand-to-all-languages CTA is a separate affordance from the notice above: it
+// The expand-to-all-languages CTA is a separate affordance from the notice below: it
 // doesn't assert anything that could contradict a rendered endpoint result, so it stays
 // available whenever the active locale found nothing, endpoints or not.
 const shouldShowExpandLocalesCta = computed(
 	() => !hasOwnLocaleResults.value && isContentSearchSettled.value
+)
+// Defined over the CTA's condition rather than re-spelling its two terms, so the
+// notice cannot drift from the affordance it sits above; the notice is the CTA's
+// case plus the endpoint suppression.
+const shouldShowNoLocaleResults = computed(
+	() => shouldShowExpandLocalesCta.value && !hasEndpointResults.value
 )
 const shouldShowNoResultsAnyLanguage = computed(
 	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value && isContentSearchSettled.value
@@ -179,11 +182,13 @@ const shouldShowNoResultsAnyLanguage = computed(
 					</span>
 					<bdi class="fd-search-results__endpoint-path">{{ endpointResult.record.path }}</bdi>
 					<!--
-						buildEndpointSnippet escapes the upstream description and adds only
-						its own <mark> pairs, so this renders the same highlight the FTS5
-						content snippets below get. Operations with no description fall back
-						to the module title this line used to carry.
+						Escaped in buildEndpointSnippet, which emits only its own <mark>
+						pairs; the content snippets below are escaped in useContentSearch.
+						Neither source is ours, so neither is trusted at the render site.
+						Operations with no description fall back to the module title this
+						line used to carry.
 					-->
+					<!-- eslint-disable-next-line vue/no-v-html -->
 					<bdi
 						class="fd-search-results__snippet"
 						v-html="endpointResult.snippet"
@@ -241,8 +246,8 @@ const shouldShowNoResultsAnyLanguage = computed(
 			>
 				{{ noLocaleResultsMessage }}
 			</p>
+			<!-- No v-if: the wrapper above is already gated on this CTA's own condition. -->
 			<CdxButton
-				v-if="shouldShowExpandLocalesCta"
 				class="fd-search-results__cta"
 				weight="quiet"
 				@click="emit( 'activate-all-locales' )"

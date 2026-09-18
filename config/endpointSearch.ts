@@ -69,16 +69,25 @@ export const ENDPOINT_SEARCH_DEPRECATED_WEIGHT = 0.4
 export const ENDPOINT_SEARCH_PREFIX_WEIGHT = 0.5
 
 /**
- * Edit distance allowed on a term, as a fraction of its length, and the score
- * multiplier a term that only matched fuzzily earns.
+ * Edit distance allowed on a term, as a fraction of its length, the shortest
+ * term that earns any fuzzy matching at all, and the score multiplier a term
+ * that only matched fuzzily earns.
  *
  * New capability rather than a port: the hand-rolled scorer had no typo
- * tolerance at all, so "pagevies" found nothing. 0.2 is roughly one edit per
- * five characters, which catches a transposed or dropped letter without letting
- * short words match each other. Fuzzy hits are weighted well below prefix ones
- * so they surface only when nothing better matched.
+ * tolerance at all, so "pagevies" found nothing. MiniSearch turns the fraction
+ * into `Math.round( term.length * fuzzy )`, so 0.2 buys one edit from five
+ * characters up.
+ *
+ * The length floor is the part that matters here. Without it that rounding also
+ * gives a full edit to three- and four-character terms, and endpoint queries are
+ * full of short path tokens ("v1", "id", "page") whose neighbours at distance 1
+ * are unrelated endpoints. Prefix matching already covers the short-token case
+ * that users actually want ("page" finding "pages"), so fuzzy starts above it.
+ * Fuzzy hits are weighted well below prefix ones either way, so they surface
+ * only when nothing better matched.
  */
 export const ENDPOINT_SEARCH_FUZZY_DISTANCE = 0.2
+export const ENDPOINT_SEARCH_FUZZY_MIN_TERM_LENGTH = 5
 export const ENDPOINT_SEARCH_FUZZY_WEIGHT = 0.3
 
 /**

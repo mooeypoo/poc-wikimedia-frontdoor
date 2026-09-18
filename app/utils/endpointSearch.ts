@@ -23,11 +23,13 @@ import {
 	ENDPOINT_SEARCH_MIN_QUERY_LENGTH,
 	ENDPOINT_SEARCH_PREFIX_WEIGHT,
 	ENDPOINT_SEARCH_FUZZY_DISTANCE,
+	ENDPOINT_SEARCH_FUZZY_MIN_TERM_LENGTH,
 	ENDPOINT_SEARCH_FUZZY_WEIGHT,
 	ENDPOINT_SEARCH_SNIPPET_MAX_LENGTH,
 	isEndpointSearchable
 } from '../../config/endpointSearch.ts'
 import type { GeneratedEndpointSearchRecord } from '../../config/endpointSearch.ts'
+import { escapeHtml } from './searchSnippetMarkup.ts'
 
 /** An endpoint record paired with the score it earned and its snippet markup. */
 export interface EndpointSearchResult {
@@ -170,7 +172,12 @@ export function buildEndpointSearcher(
 			// return an endpoint that only matches "list".
 			combineWith: 'AND',
 			prefix: true,
-			fuzzy: ENDPOINT_SEARCH_FUZZY_DISTANCE,
+			// Per term, so short path tokens get prefix matching but no fuzziness.
+			fuzzy: ( term ) => (
+				term.length >= ENDPOINT_SEARCH_FUZZY_MIN_TERM_LENGTH
+					? ENDPOINT_SEARCH_FUZZY_DISTANCE
+					: false
+			),
 			weights: {
 				prefix: ENDPOINT_SEARCH_PREFIX_WEIGHT,
 				fuzzy: ENDPOINT_SEARCH_FUZZY_WEIGHT
@@ -184,24 +191,6 @@ export function buildEndpointSearcher(
 	miniSearch.addAll( searchableRecords.map( toSearchDocument ) )
 
 	return { miniSearch, records: searchableRecords }
-}
-
-/**
- * Escapes the five characters that matter in HTML text and attribute content.
- *
- * @param value - Raw text.
- * @returns The same text, safe to place in markup.
- */
-function escapeHtml( value: string ): string {
-	return value.replace( /[&<>"']/gu, ( character ) => {
-		switch ( character ) {
-			case '&': return '&amp;'
-			case '<': return '&lt;'
-			case '>': return '&gt;'
-			case '"': return '&quot;'
-			default: return '&#39;'
-		}
-	} )
 }
 
 /**
@@ -222,6 +211,12 @@ function escapeRegExp( value: string ): string {
  * word rather than leaving a stray tail. Longest terms alternate first so the
  * more specific of two overlapping terms wins at a given position.
  *
+ * The word start is a captured character rather than a lookbehind: WebKit only
+ * shipped lookbehind in Safari 16.4, and `new RegExp` throwing on an older iOS
+ * would take the whole endpoint group down rather than just the highlight.
+ * Group 1 is that character (empty at the start of the text) and group 2 is the
+ * word to wrap.
+ *
  * @param matchedTerms - Document terms MiniSearch reported for the result.
  * @returns A global pattern, or null when there is nothing to highlight.
  */
@@ -236,7 +231,10 @@ function buildMatchedTermPattern( matchedTerms: string[] ): RegExp | null {
 		.map( escapeRegExp )
 		.join( '|' )
 
-	return new RegExp( `(?<![\\p{L}\\p{N}])(?:${ alternation })[\\p{L}\\p{N}]*`, 'giu' )
+	return new RegExp(
+		`(^|[^\\p{L}\\p{N}])((?:${ alternation })[\\p{L}\\p{N}]*)`,
+		'giu'
+	)
 }
 
 /**
@@ -311,8 +309,11 @@ function markMatchedTerms( text: string, pattern: RegExp | null ): string {
 		if ( match[ 0 ].length === 0 ) {
 			pattern.lastIndex++
 		} else {
+			// Group 1 is the word-start character the pattern had to consume in
+			// place of a lookbehind, so it is re-emitted outside the highlight.
 			markup += escapeHtml( text.slice( cursor, match.index ) )
-			markup += `<mark>${ escapeHtml( match[ 0 ] ) }</mark>`
+			markup += escapeHtml( match[ 1 ] ?? '' )
+			markup += `<mark>${ escapeHtml( match[ 2 ] ?? '' ) }</mark>`
 			cursor = match.index + match[ 0 ].length
 		}
 		match = pattern.exec( text )
@@ -348,9 +349,11 @@ export function buildEndpointSnippet(
 
 	const pattern = buildMatchedTermPattern( matchedTerms )
 	const firstMatch = pattern ? pattern.exec( sourceText ) : null
+	// Past group 1's consumed word-start character, so the window centres on the
+	// matched word rather than on the space in front of it.
 	const { excerpt, isCutAtStart, isCutAtEnd } = excerptAroundMatch(
 		sourceText,
-		firstMatch ? firstMatch.index : -1,
+		firstMatch ? firstMatch.index + ( firstMatch[ 1 ]?.length ?? 0 ) : -1,
 		maxLength
 	)
 

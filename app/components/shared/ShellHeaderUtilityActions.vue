@@ -105,7 +105,16 @@ const {
 
 // Endpoint search answers the same query from its own index, in parallel with
 // the content FTS above — see useEndpointSearch for why the two stay separate.
-const { endpointResults } = useEndpointSearch( searchQuery )
+const { endpointResults, isEndpointIndexLoading } = useEndpointSearch( searchQuery )
+
+/*
+ * Both searches feed one panel, and its progress bar and "no results" notices
+ * speak for the whole of it, so a query is in flight until both have answered.
+ * Only the first query of a session can differ: the endpoint index loads once,
+ * behind a dynamic import, and without it folded in here that first query can
+ * render "no results" and then drop a list of endpoints in above it.
+ */
+const isAnySearchInFlight = computed( () => isSearching.value || isEndpointIndexLoading.value )
 
 watch( hasQuery, ( newHasQuery ) => {
 	if ( newHasQuery ) {
@@ -462,7 +471,7 @@ function handleOverlayResultSelect( resultId: string ): void {
 					:chain-result-groups="chainResultGroups"
 					:all-locale-result-groups="allLocaleResultGroups"
 					:endpoint-results="endpointResults"
-					:is-searching="isSearching"
+					:is-searching="isAnySearchInFlight"
 					:has-search-error="hasSearchError"
 					:is-all-locales-mode="isAllLocalesMode"
 					:active-locale="$interfaceLocale"
@@ -493,7 +502,7 @@ function handleOverlayResultSelect( resultId: string ): void {
 			:chain-result-groups="chainResultGroups"
 			:all-locale-result-groups="allLocaleResultGroups"
 			:endpoint-results="endpointResults"
-			:is-searching="isSearching"
+			:is-searching="isAnySearchInFlight"
 			:has-search-error="hasSearchError"
 			:is-all-locales-mode="isAllLocalesMode"
 			:active-locale="$interfaceLocale"
