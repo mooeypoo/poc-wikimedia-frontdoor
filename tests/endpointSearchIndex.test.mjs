@@ -19,8 +19,8 @@ import { resolvePreferredModuleInstance } from '../config/explorerInstancePolicy
 import { isExplorerBetaOptInModule, isExplorerInternalOptInModule } from '../config/explorerOptIn.ts'
 import { parseExplorerDeepLink, buildExplorerDirectPath } from '../app/utils/explorerRoute.ts'
 import {
-	buildEndpointSearchEntries,
-	searchEndpointIndex,
+	buildEndpointSearcher,
+	searchEndpoints,
 	endpointResultTitle,
 	tokenizeEndpointText
 } from '../app/utils/endpointSearch.ts'
@@ -156,7 +156,7 @@ test( 'internal-gated modules are marked so search can exclude them', () => {
 // Search relevance
 // ---------------------------------------------------------------------------
 
-const searchEntries = buildEndpointSearchEntries( GENERATED_ENDPOINT_SEARCH_INDEX )
+const searcher = buildEndpointSearcher( GENERATED_ENDPOINT_SEARCH_INDEX )
 
 test( 'gated modules never appear in results', () => {
 	const gatedModules = GENERATED_ENDPOINT_SEARCH_INDEX
@@ -166,7 +166,7 @@ test( 'gated modules never appear in results', () => {
 	// Query each gated module by its own title — the strongest possible match.
 	for ( const moduleName of new Set( gatedModules ) ) {
 		const record = GENERATED_ENDPOINT_SEARCH_INDEX.find( ( entry ) => entry.module === moduleName )
-		const results = searchEndpointIndex( searchEntries, record.moduleTitle, 50 )
+		const results = searchEndpoints( searcher, record.moduleTitle, 50 )
 		assert.ok(
 			results.every( ( result ) => result.record.module !== moduleName ),
 			`${ moduleName } is internal-gated but reachable from search`
@@ -186,7 +186,7 @@ test( 'a summary-less endpoint is still findable by its path', () => {
 		if ( !pathToken ) {
 			continue
 		}
-		const results = searchEndpointIndex( searchEntries, pathToken, 100 )
+		const results = searchEndpoints( searcher, pathToken, 100 )
 		assert.ok(
 			results.some( ( result ) => result.record.deepLink === record.deepLink ),
 			`${ record.method } ${ record.path } is not findable by "${ pathToken }"`
@@ -195,28 +195,28 @@ test( 'a summary-less endpoint is still findable by its path', () => {
 } )
 
 test( 'all query tokens must match (AND semantics)', () => {
-	const results = searchEndpointIndex( searchEntries, 'reading zzzznotaword', 50 )
+	const results = searchEndpoints( searcher, 'reading zzzznotaword', 50 )
 	assert.deepEqual( results, [] )
 } )
 
 test( 'a multi-word query outranks a single-word overlap', () => {
-	const results = searchEndpointIndex( searchEntries, 'reading list', 5 )
+	const results = searchEndpoints( searcher, 'reading list', 5 )
 
 	assert.ok( results.length > 0, 'expected reading list endpoints' )
 	assert.equal( results[ 0 ].record.module, 'readinglists/v0' )
 } )
 
 test( 'queries shorter than the minimum return nothing', () => {
-	assert.deepEqual( searchEndpointIndex( searchEntries, 'a', 5 ), [] )
-	assert.deepEqual( searchEndpointIndex( searchEntries, '   ', 5 ), [] )
+	assert.deepEqual( searchEndpoints( searcher, 'a', 5 ), [] )
+	assert.deepEqual( searchEndpoints( searcher, '   ', 5 ), [] )
 } )
 
 test( 'a query of only separators returns nothing rather than matching everything', () => {
-	assert.deepEqual( searchEndpointIndex( searchEntries, '///', 5 ), [] )
+	assert.deepEqual( searchEndpoints( searcher, '///', 5 ), [] )
 } )
 
 test( 'results respect the requested limit and are ordered by score', () => {
-	const results = searchEndpointIndex( searchEntries, 'page', 3 )
+	const results = searchEndpoints( searcher, 'page', 3 )
 
 	assert.ok( results.length <= 3 )
 	for ( let index = 1; index < results.length; index++ ) {
@@ -225,8 +225,8 @@ test( 'results respect the requested limit and are ordered by score', () => {
 } )
 
 test( 'ranking is deterministic for a given query', () => {
-	const first = searchEndpointIndex( searchEntries, 'revision', 10 )
-	const second = searchEndpointIndex( buildEndpointSearchEntries( GENERATED_ENDPOINT_SEARCH_INDEX ), 'revision', 10 )
+	const first = searchEndpoints( searcher, 'revision', 10 )
+	const second = searchEndpoints( buildEndpointSearcher( GENERATED_ENDPOINT_SEARCH_INDEX ), 'revision', 10 )
 
 	assert.deepEqual(
 		first.map( ( result ) => result.record.deepLink ),

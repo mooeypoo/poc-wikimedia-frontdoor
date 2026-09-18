@@ -178,7 +178,16 @@ const shouldShowNoResultsAnyLanguage = computed(
 						>{{ deprecatedLabel }}</span>
 					</span>
 					<bdi class="fd-search-results__endpoint-path">{{ endpointResult.record.path }}</bdi>
-					<bdi class="fd-search-results__snippet">{{ endpointResult.record.moduleTitle }}</bdi>
+					<!--
+						buildEndpointSnippet escapes the upstream description and adds only
+						its own <mark> pairs, so this renders the same highlight the FTS5
+						content snippets below get. Operations with no description fall back
+						to the module title this line used to carry.
+					-->
+					<bdi
+						class="fd-search-results__snippet"
+						v-html="endpointResult.snippet"
+					/>
 				</NuxtLink>
 			</li>
 		</ul>

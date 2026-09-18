@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
-import { buildEndpointSearchEntries, searchEndpointIndex } from '../utils/endpointSearch'
-import type { EndpointSearchResult } from '../utils/endpointSearch'
+import { buildEndpointSearcher, searchEndpoints } from '../utils/endpointSearch'
+import type { EndpointSearcher, EndpointSearchResult } from '../utils/endpointSearch'
 import { ENDPOINT_SEARCH_MIN_QUERY_LENGTH } from '../../config/endpointSearch'
 
 /**
@@ -28,7 +28,7 @@ export function useEndpointSearch( query: Ref<string> ) {
 	const isEndpointIndexLoading = ref( false )
 
 	// Built once from the lazily imported index, then reused for every keystroke.
-	let searchEntries: ReturnType<typeof buildEndpointSearchEntries> | null = null
+	let searcher: EndpointSearcher | null = null
 	let indexLoad: Promise<void> | null = null
 
 	// Search-as-you-type: the same out-of-order guard the content search uses.
@@ -46,13 +46,15 @@ export function useEndpointSearch( query: Ref<string> ) {
 			isEndpointIndexLoading.value = true
 			indexLoad = import( '../../config/generated/endpointSearchIndex.generated' )
 				.then( ( indexModule ) => {
-					searchEntries = buildEndpointSearchEntries( indexModule.GENERATED_ENDPOINT_SEARCH_INDEX )
+					searcher = buildEndpointSearcher( indexModule.GENERATED_ENDPOINT_SEARCH_INDEX )
 				} )
 				.catch( ( error ) => {
 					// Non-fatal: the panel still shows content results. Surfaced in the
-					// console because a persistent chunk failure is worth noticing.
+					// console because a persistent chunk failure is worth noticing. An
+					// empty index rather than null, so later queries answer "nothing
+					// matched" instead of re-entering the load that just failed.
 					console.error( '[endpoint-search] failed to load the endpoint index', error )
-					searchEntries = []
+					searcher = buildEndpointSearcher( [] )
 				} )
 				.finally( () => {
 					isEndpointIndexLoading.value = false
@@ -73,7 +75,7 @@ export function useEndpointSearch( query: Ref<string> ) {
 
 		const sequence = ++searchSequence
 
-		if ( !searchEntries ) {
+		if ( !searcher ) {
 			await loadEndpointIndex()
 			// A newer query started while the index was loading — that run owns the results.
 			if ( sequence !== searchSequence ) {
@@ -81,7 +83,7 @@ export function useEndpointSearch( query: Ref<string> ) {
 			}
 		}
 
-		endpointResults.value = searchEndpointIndex( searchEntries ?? [], trimmedQuery )
+		endpointResults.value = searchEndpoints( searcher, trimmedQuery )
 	} )
 
 	return {

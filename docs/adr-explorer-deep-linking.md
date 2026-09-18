@@ -174,7 +174,13 @@ Driving off Scalar's navigation tree rather than off `spec.paths` also means ope
 
 **2. The landing instance is the shared quick-link policy, not `specSourceInstance`.** `specSourceInstance` is where the spec was *captured* (it prefers `mediawikiwiki`); the instance a user should *land* on is a separate product decision that already existed for `/q/` links. Using the capture instance would have made the same module resolve to different wikis via search and via `/q/`. Both paths now call `resolvePreferredModuleInstance`, moved to the self-contained `config/explorerInstancePolicy.ts` so the generator can load it from Node (see "Node-loadable config" below) and re-exported from `config/moduleSourceOfTruth.ts` for app code.
 
-**3. No search library.** MiniSearch/Fuse.js were proposed; at this scale (352 operations) a weighted scorer in `app/utils/endpointSearch.ts` is smaller, dependency-free, and — the deciding factor — allows the field weighting the data actually needs. Roughly 8% of Wikimedia REST operations ship with no `summary`, and a handful with neither summary nor description, so **path segments and `operationId` are indexed as first-class fields**, not as an afterthought; they are the only thing that makes those operations findable at all. Matching is AND across query tokens, which keeps the group precise enough to lead the panel.
+**3. A search library after all, on the second pass.** The original outline proposed MiniSearch or Fuse.js. PR 2 shipped a hand-rolled weighted scorer instead, on two grounds: that 352 operations did not justify a dependency, and that the ranking this data needs was not something a library would give us. **Path segments and `operationId` have to be first-class indexed fields**, because roughly 8% of Wikimedia REST operations ship with no `summary` and a handful with neither summary nor description; and every query token has to match, or the group is too noisy to lead the panel.
+
+The second ground was simply wrong. MiniSearch's per-field `boost` expresses that weighting directly, and `combineWith: 'AND'` *is* that precision, so the only real cost was ever the dependency. It carries no transitive deps and rides in the same lazy chunk as the 16 KB index it searches, so it costs nothing on a page where nobody searches.
+
+Two things the hand-rolled scorer could not do decided it. `storeFields` carries the operation description through to the result, so an endpoint hit renders a **highlighted snippet** like the FTS5 content hits beside it, instead of repeating its module title. And `fuzzy` gives the panel typo tolerance it previously had none of: "pagevies" found nothing at all.
+
+`app/utils/endpointSearch.ts` still owns what is specific to OpenAPI shape: the tokenizer (MiniSearch's default splits on Unicode spaces and punctuation only, which leaves symbols like `+` glued inside a token, and path tokenization is what makes the summary-less operations findable), the deprecated-rank penalty via `boostDocument`, the module-then-path tie-break for the trailing-slash duplicates noted below, and the snippet builder, which escapes the upstream text and emits only its own `<mark>` elements.
 
 ### Opt-in gating
 
@@ -251,16 +257,16 @@ Apply the documentation corrections above (excluding the PR-2 `package.json` row
 | Index builder (pure) | `scripts/lib/endpointSearchIndex.mjs` |
 | Phase-3 wiring, `--index-only` | `scripts/generate-module-source-of-truth.mjs` |
 | Generated index | `config/generated/endpointSearchIndex.generated.ts` |
-| Search policy (weights, cap, gating) | `config/endpointSearch.ts` |
+| Search policy (weights, cap, gating, snippet length) | `config/endpointSearch.ts` |
 | Node-loadable leaf config | `config/scalarDocument.ts`, `config/explorerInstancePolicy.ts` |
-| Scorer (pure) | `app/utils/endpointSearch.ts` |
+| Scorer and snippet builder (pure) | `app/utils/endpointSearch.ts` |
 | Composable | `app/composables/useEndpointSearch.ts` |
 | Result group | `app/components/shared/SearchResults.vue` |
-| Tests | `tests/endpointSearchIndex.test.mjs` |
+| Tests | `tests/endpointSearchIndex.test.mjs` (generator and real-index relevance), `tests/endpointSearch.test.mjs` (scorer and snippet) |
 
-Deviations from the original outline — Scalar's hash instead of our anchor, the shared instance policy instead of `specSourceInstance`, and a hand-rolled scorer instead of MiniSearch/Fuse — are explained in §10 under "What changed from the original decision".
+Deviations from the original outline — Scalar's hash instead of our anchor, the shared instance policy instead of `specSourceInstance`, and the scorer's route from hand-rolled back to MiniSearch — are explained in §10 under "What changed from the original decision".
 
-**Loading.** The index is ~16 KB gzipped and is only needed once someone searches, so `useEndpointSearch` pulls it in with a dynamic `import()` on the first query of length ≥ 2 and caches it for the session. A failed chunk load degrades to "no endpoint results" rather than breaking the panel. Each endpoint result is a `NuxtLink`, which prefetches on viewport visibility by default; on preview 66, four endpoint results scrolling into view queued 884 kB (3.06 MB decoded) for a route nobody picked, so the endpoint link sets `:prefetch="false"` while content-result links keep the default (they all resolve to the same two small chunks regardless of count).
+**Loading.** The index is ~16 KB gzipped and is only needed once someone searches, so `useEndpointSearch` pulls it in with a dynamic `import()` on the first query of length ≥ 2 and caches it for the session. MiniSearch rides in the same chunk and the index is built once on arrival, so the dependency costs nothing on a page where nobody searches. A failed chunk load degrades to "no endpoint results" rather than breaking the panel. Each endpoint result is a `NuxtLink`, which prefetches on viewport visibility by default; on preview 66, four endpoint results scrolling into view queued 884 kB (3.06 MB decoded) for a route nobody picked, so the endpoint link sets `:prefetch="false"` while content-result links keep the default (they all resolve to the same two small chunks regardless of count).
 
 **Panel placement.** The endpoints group renders **above** the content results, in both normal and all-locales mode. It is capped at 6 and every query token must match, so it cannot flood the panel, and a query that matches an endpoint at all is usually an explicit API intent. Because it is not locale-partitioned, it sits outside the per-locale sections entirely. The "no results in *X*" / "no results in any language" notices are still suppressed when endpoints matched, since they speak for the whole panel and would otherwise render directly above a list of results. The "expand to all languages" CTA is a separate affordance, though: it stays available whenever the active locale found nothing, endpoint hits or not, so a query that only matches an endpoint no longer strands the reader with no way to widen the search. *This ordering is a judgement call worth reviewing with design.*
 

@@ -1,34 +1,77 @@
 /**
- * Keyword scoring over the generated endpoint search index.
+ * MiniSearch over the generated endpoint search index.
  *
- * A hand-rolled scorer rather than a search library: the index is a few hundred
- * records, so the cost is negligible, and the ranking needs field weights that
- * are specific to OpenAPI shape — notably that path segments and `operationId`
- * have to carry the ~8% of Wikimedia REST operations whose upstream spec omits a
- * summary entirely. See docs/adr-explorer-deep-linking.md §10.
- *
- * Matching is AND across query tokens (every token must hit some field) with a
- * per-token best-field score, so "reading list" ranks the reading-list endpoints
- * above anything matching only one of the two words.
+ * The ranking this needs is specific to OpenAPI shape: path segments and
+ * `operationId` have to carry the ~8% of Wikimedia REST operations whose
+ * upstream spec omits a summary entirely, and every query token has to match
+ * so the group stays precise enough to lead the panel. Both are MiniSearch
+ * options (`boost`, `combineWith: 'AND'`), which is what reversed the earlier
+ * decision to hand-roll a scorer — see docs/adr-explorer-deep-linking.md §10.
+ * Typo tolerance and the highlighted snippet come along for free; neither was
+ * reachable without the library.
  *
  * Endpoint text is English-only — it comes from the upstream OpenAPI specs,
  * which Wikimedia does not translate — so unlike the content search this is not
  * locale-partitioned. Results are rendered in their own labelled group.
  */
 
+import MiniSearch from 'minisearch'
 import {
 	ENDPOINT_SEARCH_FIELD_WEIGHTS,
 	ENDPOINT_SEARCH_DEPRECATED_WEIGHT,
 	ENDPOINT_SEARCH_RESULT_LIMIT,
 	ENDPOINT_SEARCH_MIN_QUERY_LENGTH,
+	ENDPOINT_SEARCH_PREFIX_WEIGHT,
+	ENDPOINT_SEARCH_FUZZY_DISTANCE,
+	ENDPOINT_SEARCH_FUZZY_WEIGHT,
+	ENDPOINT_SEARCH_SNIPPET_MAX_LENGTH,
 	isEndpointSearchable
 } from '../../config/endpointSearch.ts'
 import type { GeneratedEndpointSearchRecord } from '../../config/endpointSearch.ts'
 
-/** An endpoint record paired with the score it earned for a query. */
+/** An endpoint record paired with the score it earned and its snippet markup. */
 export interface EndpointSearchResult {
 	record: GeneratedEndpointSearchRecord
 	score: number
+	/**
+	 * Snippet markup for the result line. Safe to render with `v-html`: the
+	 * upstream text is escaped by {@link buildEndpointSnippet} and the only tags
+	 * in it are the `<mark>` elements that function adds.
+	 */
+	snippet: string
+}
+
+/**
+ * A built MiniSearch index, plus the records its document ids point back into.
+ *
+ * Named for what it does rather than what it holds, because
+ * `scripts/lib/endpointSearchIndex.mjs` already owns "endpoint search index" —
+ * that one generates the records, this one searches them.
+ */
+export interface EndpointSearcher {
+	miniSearch: MiniSearch<EndpointSearchDocument>
+	records: GeneratedEndpointSearchRecord[]
+}
+
+/**
+ * One record flattened for indexing.
+ *
+ * `id` is the record's position in {@link EndpointSearcher.records}, so a
+ * result maps back to its record without storing the whole thing twice. Every
+ * searched field is a plain string because MiniSearch tokenizes field values,
+ * and leaving `tags` an array would put that join behind its default
+ * `stringifyField` rather than in front of us.
+ */
+export interface EndpointSearchDocument {
+	id: number
+	summary: string
+	path: string
+	operationId: string
+	tags: string
+	moduleTitle: string
+	method: string
+	description: string
+	isDeprecated: boolean
 }
 
 /**
@@ -48,13 +91,6 @@ export function endpointResultTitle( record: GeneratedEndpointSearchRecord ): st
 	return record.summary || record.operationId || record.path
 }
 
-/** A record's searchable text, split into words once and reused across queries. */
-interface EndpointSearchEntry {
-	record: GeneratedEndpointSearchRecord
-	/** Field name → the words that field contributes. */
-	fieldWords: Array<{ weight: number, words: string[] }>
-}
-
 /**
  * Splits a string into lower-cased, alphanumeric word tokens.
  *
@@ -62,6 +98,10 @@ interface EndpointSearchEntry {
  * rather than splitting a word in two. Everything else — slashes, braces,
  * underscores, punctuation — is a separator, which is what turns an OpenAPI path
  * like `/v1/page/{title}/bare` into the words a developer would actually type.
+ *
+ * Used in place of MiniSearch's default tokenizer, which splits on Unicode
+ * spaces and punctuation only and so leaves symbols like `+` and `=` glued
+ * inside a token.
  *
  * @param value - Raw text.
  * @returns Lower-cased word tokens (empty when there is no usable text).
@@ -77,129 +117,292 @@ export function tokenizeEndpointText( value: string | undefined ): string[] {
 }
 
 /**
- * Builds the reusable word index for a set of endpoint records.
+ * Flattens one generated record into its indexed document.
  *
- * Tokenizing every record on every keystroke would be wasteful, so callers build
+ * @param record        - A record from the generated index.
+ * @param documentId    - The record's position in the searchable record list.
+ * @returns The document MiniSearch indexes.
+ */
+function toSearchDocument(
+	record: GeneratedEndpointSearchRecord,
+	documentId: number
+): EndpointSearchDocument {
+	return {
+		id: documentId,
+		summary: record.summary ?? '',
+		path: record.path,
+		operationId: record.operationId ?? '',
+		tags: record.tags?.join( ' ' ) ?? '',
+		moduleTitle: record.moduleTitle,
+		method: record.method,
+		description: record.description ?? '',
+		isDeprecated: record.isDeprecated === true
+	}
+}
+
+/**
+ * Builds the searchable index for a set of endpoint records.
+ *
+ * Indexing every record on every keystroke would be wasteful, so callers build
  * this once (after the index module is loaded) and pass it to
- * {@link searchEndpointIndex} for each query.
+ * {@link searchEndpoints} for each query.
  *
  * Records excluded by {@link isEndpointSearchable} are dropped here, so gated
  * endpoints can never leak into a result set regardless of the query.
  *
  * @param records - Records from the generated endpoint index.
- * @returns Prepared search entries.
+ * @returns The built index, ready to search.
  */
-export function buildEndpointSearchEntries(
+export function buildEndpointSearcher(
 	records: GeneratedEndpointSearchRecord[]
-): EndpointSearchEntry[] {
-	return records.filter( isEndpointSearchable ).map( ( record ) => ( {
-		record,
-		fieldWords: [
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.summary, words: tokenizeEndpointText( record.summary ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.path, words: tokenizeEndpointText( record.path ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.operationId, words: tokenizeEndpointText( record.operationId ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.tags, words: tokenizeEndpointText( record.tags?.join( ' ' ) ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.moduleTitle, words: tokenizeEndpointText( record.moduleTitle ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.method, words: tokenizeEndpointText( record.method ) },
-			{ weight: ENDPOINT_SEARCH_FIELD_WEIGHTS.description, words: tokenizeEndpointText( record.description ) }
-		].filter( ( field ) => field.words.length > 0 )
-	} ) )
+): EndpointSearcher {
+	const searchableRecords = records.filter( isEndpointSearchable )
+
+	const miniSearch = new MiniSearch<EndpointSearchDocument>( {
+		fields: Object.keys( ENDPOINT_SEARCH_FIELD_WEIGHTS ),
+		// Only what scoring and the snippet read back. The rest of the record is
+		// reached through `records[ id ]`, so it isn't duplicated into the index.
+		storeFields: [ 'summary', 'description', 'isDeprecated' ],
+		tokenize: tokenizeEndpointText,
+		searchOptions: {
+			boost: { ...ENDPOINT_SEARCH_FIELD_WEIGHTS },
+			// Every query token must match some field: "reading list" will not
+			// return an endpoint that only matches "list".
+			combineWith: 'AND',
+			prefix: true,
+			fuzzy: ENDPOINT_SEARCH_FUZZY_DISTANCE,
+			weights: {
+				prefix: ENDPOINT_SEARCH_PREFIX_WEIGHT,
+				fuzzy: ENDPOINT_SEARCH_FUZZY_WEIGHT
+			},
+			boostDocument: ( _documentId, _term, storedFields ) => (
+				storedFields?.isDeprecated ? ENDPOINT_SEARCH_DEPRECATED_WEIGHT : 1
+			)
+		}
+	} )
+
+	miniSearch.addAll( searchableRecords.map( toSearchDocument ) )
+
+	return { miniSearch, records: searchableRecords }
 }
 
 /**
- * Scores one query token against one prepared entry.
+ * Escapes the five characters that matter in HTML text and attribute content.
  *
- * A whole-word hit scores the field's full weight; a prefix hit scores half, so
- * typing "list" still finds "lists" but ranks behind an exact "list". The best
- * field wins rather than the sum, so an endpoint does not out-rank another just
- * by repeating the same word across several fields.
- *
- * @param entry - Prepared search entry.
- * @param queryToken - A single lower-cased query token.
- * @returns The token's score, or 0 when no field matches it.
+ * @param value - Raw text.
+ * @returns The same text, safe to place in markup.
  */
-function scoreTokenAgainstEntry( entry: EndpointSearchEntry, queryToken: string ): number {
-	let bestScore = 0
+function escapeHtml( value: string ): string {
+	return value.replace( /[&<>"']/gu, ( character ) => {
+		switch ( character ) {
+			case '&': return '&amp;'
+			case '<': return '&lt;'
+			case '>': return '&gt;'
+			case '"': return '&quot;'
+			default: return '&#39;'
+		}
+	} )
+}
 
-	for ( const field of entry.fieldWords ) {
-		for ( const word of field.words ) {
-			if ( word === queryToken ) {
-				bestScore = Math.max( bestScore, field.weight )
-				// Full weight is the ceiling for this field; no better hit is possible.
-				break
-			}
-			if ( word.startsWith( queryToken ) ) {
-				bestScore = Math.max( bestScore, field.weight / 2 )
-			}
+/**
+ * Escapes a string for literal use inside a regular expression.
+ *
+ * @param value - Raw text.
+ * @returns The same text with regex metacharacters escaped.
+ */
+function escapeRegExp( value: string ): string {
+	return value.replace( /[.*+?^${}()|[\]\\]/gu, '\\$&' )
+}
+
+/**
+ * Builds the pattern that finds matched terms in snippet text.
+ *
+ * Anchored at a word start and allowed to run to the word's end, so a term that
+ * matched a longer word — by prefix or by edit distance — highlights the whole
+ * word rather than leaving a stray tail. Longest terms alternate first so the
+ * more specific of two overlapping terms wins at a given position.
+ *
+ * @param matchedTerms - Document terms MiniSearch reported for the result.
+ * @returns A global pattern, or null when there is nothing to highlight.
+ */
+function buildMatchedTermPattern( matchedTerms: string[] ): RegExp | null {
+	const usableTerms = matchedTerms.filter( ( term ) => term.length > 0 )
+	if ( usableTerms.length === 0 ) {
+		return null
+	}
+
+	const alternation = [ ...usableTerms ]
+		.sort( ( a, b ) => b.length - a.length )
+		.map( escapeRegExp )
+		.join( '|' )
+
+	return new RegExp( `(?<![\\p{L}\\p{N}])(?:${ alternation })[\\p{L}\\p{N}]*`, 'giu' )
+}
+
+/**
+ * Narrows text to a window around the first matched term.
+ *
+ * Keeps roughly a third of the window ahead of the match so the matched word
+ * reads in context rather than starting the line, and snaps both edges to word
+ * boundaries so the excerpt never begins or ends mid-word.
+ *
+ * @param text      - Full source text.
+ * @param matchIndex - Index of the first matched term, or -1 when none matched.
+ * @param maxLength - Longest excerpt to return.
+ * @returns The excerpt and whether either edge was cut.
+ */
+function excerptAroundMatch(
+	text: string,
+	matchIndex: number,
+	maxLength: number
+): { excerpt: string, isCutAtStart: boolean, isCutAtEnd: boolean } {
+	if ( text.length <= maxLength ) {
+		return { excerpt: text, isCutAtStart: false, isCutAtEnd: false }
+	}
+
+	const leadingContext = Math.floor( maxLength / 3 )
+	const anchorIndex = matchIndex === -1 ? 0 : matchIndex
+	let end = Math.min( text.length, Math.max( 0, anchorIndex - leadingContext ) + maxLength )
+	let start = Math.max( 0, end - maxLength )
+
+	if ( start > 0 ) {
+		const nextBoundary = text.indexOf( ' ', start )
+		if ( nextBoundary !== -1 && nextBoundary < anchorIndex ) {
+			start = nextBoundary + 1
+		}
+	}
+	if ( end < text.length ) {
+		const previousBoundary = text.lastIndexOf( ' ', end )
+		if ( previousBoundary > anchorIndex ) {
+			end = previousBoundary
 		}
 	}
 
-	return bestScore
+	return {
+		excerpt: text.slice( start, end ),
+		isCutAtStart: start > 0,
+		isCutAtEnd: end < text.length
+	}
+}
+
+/**
+ * Escapes text and wraps every matched term in `<mark>`.
+ *
+ * Each run between matches is escaped on its own and the matched text is
+ * escaped too, so the only markup that survives is the `<mark>` pairs added
+ * here — escaping the whole string first would have shifted every match offset.
+ *
+ * @param text    - Raw excerpt.
+ * @param pattern - Pattern from {@link buildMatchedTermPattern}, or null.
+ * @returns Escaped markup with matches highlighted.
+ */
+function markMatchedTerms( text: string, pattern: RegExp | null ): string {
+	if ( !pattern ) {
+		return escapeHtml( text )
+	}
+
+	let markup = ''
+	let cursor = 0
+	pattern.lastIndex = 0
+
+	let match = pattern.exec( text )
+	while ( match !== null ) {
+		// A zero-length match cannot advance lastIndex on its own and would spin.
+		if ( match[ 0 ].length === 0 ) {
+			pattern.lastIndex++
+		} else {
+			markup += escapeHtml( text.slice( cursor, match.index ) )
+			markup += `<mark>${ escapeHtml( match[ 0 ] ) }</mark>`
+			cursor = match.index + match[ 0 ].length
+		}
+		match = pattern.exec( text )
+	}
+
+	return markup + escapeHtml( text.slice( cursor ) )
+}
+
+/**
+ * Builds the snippet line shown under an endpoint result.
+ *
+ * Prefers the operation's description, which is the only field with enough prose
+ * to excerpt; an operation without one keeps the module title that this line
+ * carried before snippets existed, so the line is never empty.
+ *
+ * The source is external text from an upstream OpenAPI spec and is escaped here.
+ * It still needs BiDi isolation at the render site, like every other spec value.
+ *
+ * @param record       - The matched endpoint record.
+ * @param matchedTerms - Document terms MiniSearch reported for the result.
+ * @param maxLength    - Longest snippet to return.
+ * @returns Escaped markup with the matched terms wrapped in `<mark>`.
+ */
+export function buildEndpointSnippet(
+	record: GeneratedEndpointSearchRecord,
+	matchedTerms: string[],
+	maxLength: number = ENDPOINT_SEARCH_SNIPPET_MAX_LENGTH
+): string {
+	const sourceText = record.description || record.moduleTitle
+	if ( !sourceText ) {
+		return ''
+	}
+
+	const pattern = buildMatchedTermPattern( matchedTerms )
+	const firstMatch = pattern ? pattern.exec( sourceText ) : null
+	const { excerpt, isCutAtStart, isCutAtEnd } = excerptAroundMatch(
+		sourceText,
+		firstMatch ? firstMatch.index : -1,
+		maxLength
+	)
+
+	const markup = markMatchedTerms( excerpt, pattern )
+
+	return `${ isCutAtStart ? '...' : '' }${ markup }${ isCutAtEnd ? '...' : '' }`
 }
 
 /**
  * Ranks endpoints against a free-text query.
  *
- * Every query token must match some field (AND semantics) — a query of
- * "reading list" will not return an endpoint that only matches "list" — which
- * keeps the endpoint group small and precise next to the content results.
- *
- * @param entries - Prepared entries from {@link buildEndpointSearchEntries}.
- * @param query - Raw user query.
+ * @param searcher    - Searcher from {@link buildEndpointSearcher}, or null before it loads.
+ * @param query       - Raw user query.
  * @param resultLimit - Maximum results to return.
  * @returns Scored results, highest score first; empty when the query is too short.
  */
-export function searchEndpointIndex(
-	entries: EndpointSearchEntry[],
+export function searchEndpoints(
+	searcher: EndpointSearcher | null,
 	query: string,
 	resultLimit: number = ENDPOINT_SEARCH_RESULT_LIMIT
 ): EndpointSearchResult[] {
 	const trimmedQuery = query.trim()
-	if ( trimmedQuery.length < ENDPOINT_SEARCH_MIN_QUERY_LENGTH ) {
+	if ( !searcher || trimmedQuery.length < ENDPOINT_SEARCH_MIN_QUERY_LENGTH ) {
+		return []
+	}
+	if ( tokenizeEndpointText( trimmedQuery ).length === 0 ) {
 		return []
 	}
 
-	const queryTokens = tokenizeEndpointText( trimmedQuery )
-	if ( queryTokens.length === 0 ) {
-		return []
-	}
+	const scored = searcher.miniSearch.search( trimmedQuery )
 
-	const results: EndpointSearchResult[] = []
-
-	for ( const entry of entries ) {
-		let totalScore = 0
-		let hasUnmatchedToken = false
-
-		for ( const queryToken of queryTokens ) {
-			const tokenScore = scoreTokenAgainstEntry( entry, queryToken )
-			if ( tokenScore === 0 ) {
-				hasUnmatchedToken = true
-				break
-			}
-			totalScore += tokenScore
-		}
-
-		if ( hasUnmatchedToken ) {
-			continue
-		}
-
-		if ( entry.record.isDeprecated ) {
-			totalScore *= ENDPOINT_SEARCH_DEPRECATED_WEIGHT
-		}
-
-		results.push( { record: entry.record, score: totalScore } )
-	}
-
-	// Ties break on module then path so the ordering is stable for a given query
-	// rather than depending on index order.
-	results.sort( ( a, b ) => {
+	// MiniSearch orders by score, but some upstream modules declare trailing-slash
+	// path variants with identical text (`readinglists/v0` has both `/lists` and
+	// `/lists/`), which score exactly equal. Break those on module then path so a
+	// given query always returns them in the same order.
+	scored.sort( ( a, b ) => {
 		if ( b.score !== a.score ) {
 			return b.score - a.score
 		}
-		return a.record.module.localeCompare( b.record.module )
-			|| a.record.path.localeCompare( b.record.path )
-			|| a.record.method.localeCompare( b.record.method )
+		const first = searcher.records[ a.id as number ]
+		const second = searcher.records[ b.id as number ]
+		return first.module.localeCompare( second.module )
+			|| first.path.localeCompare( second.path )
+			|| first.method.localeCompare( second.method )
 	} )
 
-	return results.slice( 0, resultLimit )
+	return scored.slice( 0, resultLimit ).map( ( result ) => {
+		const record = searcher.records[ result.id as number ]
+		return {
+			record,
+			score: result.score,
+			snippet: buildEndpointSnippet( record, result.terms )
+		}
+	} )
 }

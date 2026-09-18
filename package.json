@@ -38,6 +38,7 @@
     "@wikimedia/codex-design-tokens": "^2.5.1",
     "banana-i18n": "^2.4.0",
     "markdown-it": "^14.1.0",
+    "minisearch": "^7.2.0",
     "nuxt": "^4.4.6",
     "pinia": "^3.0.4",
     "vue": "^3.5.34",
