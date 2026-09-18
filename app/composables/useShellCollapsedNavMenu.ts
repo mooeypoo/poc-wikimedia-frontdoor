@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { useOverlayDismissal } from './useOverlayDismissal'
 
 /**
  * View level for the collapsed-shell navigation overlay menu.
@@ -24,46 +25,14 @@ export type ShellCollapsedNavMenuView = 'section' | 'primary'
  *   openCollapsedNavMenu: () => void,
  *   closeCollapsedNavMenu: () => void,
  *   toggleCollapsedNavMenu: () => void,
- *   showCollapsedNavMenuPrimaryView: () => void,
- *   showCollapsedNavMenuSectionView: () => void
+ *   showCollapsedNavMenuPrimaryView: () => void
  * }} Overlay open flag, view level, and open / close / back actions.
  */
 export function useShellCollapsedNavMenu( options: {
 	isNavigationCollapsed: Ref<boolean>
 	hasSectionNavigation: Ref<boolean>
 } ) {
-	const isCollapsedNavMenuOpen = ref( false )
 	const collapsedNavMenuView = ref<ShellCollapsedNavMenuView>( 'section' )
-
-	const route = useRoute()
-
-	/**
-	 * Opens the overlay, resetting the view to section or primary as appropriate.
-	 */
-	function openCollapsedNavMenu(): void {
-		collapsedNavMenuView.value = options.hasSectionNavigation.value ? 'section' : 'primary'
-		isCollapsedNavMenuOpen.value = true
-	}
-
-	/**
-	 * Closes the overlay and resets the view to section for the next open.
-	 */
-	function closeCollapsedNavMenu(): void {
-		isCollapsedNavMenuOpen.value = false
-		collapsedNavMenuView.value = 'section'
-	}
-
-	/**
-	 * Toggles the overlay open or closed.
-	 */
-	function toggleCollapsedNavMenu(): void {
-		if ( isCollapsedNavMenuOpen.value ) {
-			closeCollapsedNavMenu()
-			return
-		}
-
-		openCollapsedNavMenu()
-	}
 
 	/**
 	 * Steps back within the overlay to the primary navigation list.
@@ -79,37 +48,36 @@ export function useShellCollapsedNavMenu( options: {
 		collapsedNavMenuView.value = 'section'
 	}
 
+	const {
+		isOpen: isCollapsedNavMenuOpen,
+		open,
+		close: closeCollapsedNavMenu
+	} = useOverlayDismissal( {
+		isCollapsed: options.isNavigationCollapsed,
+		// Every dismissal path resets the view, as the explicit close always did:
+		// nothing reads it while closed today, and this way nothing needs to.
+		onClose: showCollapsedNavMenuSectionView
+	} )
+
 	/**
-	 * Closes the overlay when the Escape key is pressed while it is open.
-	 *
-	 * @param keyboardEvent - Keydown event from the document listener.
+	 * Opens the overlay, resetting the view to section or primary as appropriate.
 	 */
-	function handleCollapsedNavMenuKeydown( keyboardEvent: KeyboardEvent ): void {
-		if ( keyboardEvent.key !== 'Escape' || !isCollapsedNavMenuOpen.value ) {
+	function openCollapsedNavMenu(): void {
+		collapsedNavMenuView.value = options.hasSectionNavigation.value ? 'section' : 'primary'
+		open()
+	}
+
+	/**
+	 * Toggles the overlay open or closed.
+	 */
+	function toggleCollapsedNavMenu(): void {
+		if ( isCollapsedNavMenuOpen.value ) {
+			closeCollapsedNavMenu()
 			return
 		}
 
-		keyboardEvent.preventDefault()
-		closeCollapsedNavMenu()
+		openCollapsedNavMenu()
 	}
-
-	watch( () => route.fullPath, () => {
-		closeCollapsedNavMenu()
-	} )
-
-	watch( options.isNavigationCollapsed, ( isCollapsed ) => {
-		if ( !isCollapsed ) {
-			closeCollapsedNavMenu()
-		}
-	} )
-
-	onMounted( () => {
-		document.addEventListener( 'keydown', handleCollapsedNavMenuKeydown )
-	} )
-
-	onUnmounted( () => {
-		document.removeEventListener( 'keydown', handleCollapsedNavMenuKeydown )
-	} )
 
 	return {
 		isCollapsedNavMenuOpen,
@@ -117,7 +85,6 @@ export function useShellCollapsedNavMenu( options: {
 		openCollapsedNavMenu,
 		closeCollapsedNavMenu,
 		toggleCollapsedNavMenu,
-		showCollapsedNavMenuPrimaryView,
-		showCollapsedNavMenuSectionView
+		showCollapsedNavMenuPrimaryView
 	}
 }

@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { useOverlayDismissal } from './useOverlayDismissal'
 
 /**
  * Manages open state for the collapsed header search overlay.
@@ -6,7 +7,8 @@ import type { Ref } from 'vue'
  * The collapsed utility row has room for a search icon but not the field, so the
  * icon opens a full-viewport overlay instead. Closes on route change, viewport
  * expand (utility row uncollapsed), Escape, or explicit
- * `closeCollapsedSearchOverlay`.
+ * `closeCollapsedSearchOverlay`; the first three come from
+ * `useOverlayDismissal`, shared with the collapsed nav overlay.
  *
  * Keyed to the utility row's own collapse signal, not the primary nav's: the two
  * rows observe their own widths and collapse independently.
@@ -22,55 +24,11 @@ import type { Ref } from 'vue'
 export function useShellCollapsedSearchOverlay( options: {
 	isUtilityCollapsed: Ref<boolean>
 } ) {
-	const isCollapsedSearchOverlayOpen = ref( false )
-
-	const route = useRoute()
-
-	/**
-	 * Opens the search overlay.
-	 */
-	function openCollapsedSearchOverlay(): void {
-		isCollapsedSearchOverlayOpen.value = true
-	}
-
-	/**
-	 * Closes the search overlay.
-	 */
-	function closeCollapsedSearchOverlay(): void {
-		isCollapsedSearchOverlayOpen.value = false
-	}
-
-	/**
-	 * Closes the overlay when the Escape key is pressed while it is open.
-	 *
-	 * @param keyboardEvent - Keydown event from the document listener.
-	 */
-	function handleCollapsedSearchOverlayKeydown( keyboardEvent: KeyboardEvent ): void {
-		if ( keyboardEvent.key !== 'Escape' || !isCollapsedSearchOverlayOpen.value ) {
-			return
-		}
-
-		keyboardEvent.preventDefault()
-		closeCollapsedSearchOverlay()
-	}
-
-	watch( () => route.fullPath, () => {
-		closeCollapsedSearchOverlay()
-	} )
-
-	watch( options.isUtilityCollapsed, ( isCollapsed ) => {
-		if ( !isCollapsed ) {
-			closeCollapsedSearchOverlay()
-		}
-	} )
-
-	onMounted( () => {
-		document.addEventListener( 'keydown', handleCollapsedSearchOverlayKeydown )
-	} )
-
-	onUnmounted( () => {
-		document.removeEventListener( 'keydown', handleCollapsedSearchOverlayKeydown )
-	} )
+	const {
+		isOpen: isCollapsedSearchOverlayOpen,
+		open: openCollapsedSearchOverlay,
+		close: closeCollapsedSearchOverlay
+	} = useOverlayDismissal( { isCollapsed: options.isUtilityCollapsed } )
 
 	return {
 		isCollapsedSearchOverlayOpen,
