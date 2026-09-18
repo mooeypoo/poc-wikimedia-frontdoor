@@ -386,29 +386,32 @@ export function searchEndpoints(
 		return []
 	}
 
-	const scored = searcher.miniSearch.search( trimmedQuery )
+	const { miniSearch, records } = searcher
+
+	// Each hit is paired with its record once, so the tie-break and the mapping
+	// below both read a checked value rather than indexing again. A hit with no
+	// record is unreachable, since every document id is a position in this same
+	// array, but the index signature allows it and dropping one is honest where
+	// asserting it away would not be.
+	const hits = miniSearch.search( trimmedQuery ).flatMap( ( result ) => {
+		const record = records[ result.id as number ]
+		return record ? [ { record, score: result.score, terms: result.terms } ] : []
+	} )
 
 	// MiniSearch orders by score, but some upstream modules declare trailing-slash
 	// path variants with identical text (`readinglists/v0` has both `/lists` and
 	// `/lists/`), which score exactly equal. Break those on module then path so a
 	// given query always returns them in the same order.
-	scored.sort( ( a, b ) => {
-		if ( b.score !== a.score ) {
-			return b.score - a.score
-		}
-		const first = searcher.records[ a.id as number ]
-		const second = searcher.records[ b.id as number ]
-		return first.module.localeCompare( second.module )
-			|| first.path.localeCompare( second.path )
-			|| first.method.localeCompare( second.method )
+	hits.sort( ( a, b ) => {
+		return b.score - a.score
+			|| a.record.module.localeCompare( b.record.module )
+			|| a.record.path.localeCompare( b.record.path )
+			|| a.record.method.localeCompare( b.record.method )
 	} )
 
-	return scored.slice( 0, resultLimit ).map( ( result ) => {
-		const record = searcher.records[ result.id as number ]
-		return {
-			record,
-			score: result.score,
-			snippet: buildEndpointSnippet( record, result.terms )
-		}
-	} )
+	return hits.slice( 0, resultLimit ).map( ( hit ) => ( {
+		record: hit.record,
+		score: hit.score,
+		snippet: buildEndpointSnippet( hit.record, hit.terms )
+	} ) )
 }
