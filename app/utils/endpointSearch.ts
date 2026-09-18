@@ -167,6 +167,9 @@ export function buildEndpointSearcher(
 		storeFields: [ 'summary', 'description', 'isDeprecated' ],
 		tokenize: tokenizeEndpointText,
 		searchOptions: {
+			// Copied, not passed through: this object outlives the call inside a
+			// long-lived MiniSearch instance, and the policy layer's own is frozen
+			// by `as const`.
 			boost: { ...ENDPOINT_SEARCH_FIELD_WEIGHTS },
 			// Every query token must match some field: "reading list" will not
 			// return an endpoint that only matches "list".
