@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../config/languages'
 import { contentCollectionForLocale } from '../../config/contentCollections'
-import { resolveContentLocaleChain } from '../utils/contentLocalePaths'
+import { dropDuplicateChainDocuments, resolveContentLocaleChain } from '../utils/contentLocalePaths'
 import { CONTENT_LOCALES } from '#build/content-locales'
 
 /**
@@ -329,7 +329,12 @@ export function useContentSearch(
 			const sequence = ++searchSequence
 
 			try {
-				const groups = await searchLocales( trimmedQuery, resolveSearchLocales( nextLocale ) )
+				// Deduped across the chain, so a translated page the reader already
+				// found in their own language does not repeat under every fallback
+				// heading below it. All-locales mode leaves its groups alone.
+				const groups = dropDuplicateChainDocuments(
+					await searchLocales( trimmedQuery, resolveSearchLocales( nextLocale ) )
+				)
 
 				// A newer query started while this one was in flight — discard
 				// these stale results so they cannot overwrite the latest run.

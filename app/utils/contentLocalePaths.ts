@@ -60,6 +60,79 @@ export function localeFromContentPath( contentPath: string, fallbackLocaleCode: 
 }
 
 /**
+ * Locale-independent identity of a content search result.
+ *
+ * Nuxt Content's FTS ids are locale-prefixed paths (`/en/about`,
+ * `/fr/about#history`), so dropping the locale segment and the section hash
+ * leaves what every translation of one page has in common. A locale's root
+ * page (`/en`, `/fr`) is one document by the same rule.
+ *
+ * @param resultId - FTS result id.
+ * @returns Path shared by every translation of that page.
+ */
+export function contentDocumentIdentity( resultId: string ): string {
+	const [ pathPart = '' ] = resultId.split( '#' )
+	const withoutLocalePrefix = pathPart.replace( /^\/+/, '' )
+	const slashIndex = withoutLocalePrefix.indexOf( '/' )
+
+	return slashIndex === -1 ? '/' : withoutLocalePrefix.slice( slashIndex )
+}
+
+/** A locale's search results: as much of the group shape as the dedupe reads. */
+interface LocaleGroupWithResults<TResult extends { id: string }> {
+	locale: string
+	results: TResult[]
+}
+
+/**
+ * Drops fallback-locale hits for documents an earlier chain locale matched.
+ *
+ * The fallback chain fills gaps: a Brazilian Portuguese reader falls through
+ * `pt`, then `en`, for pages `pt-br` does not have. When a page *is*
+ * translated and matched, the later locales' copies are the same document
+ * said again, so a query whose term appears in every translation would list
+ * one page three times under three headings.
+ *
+ * Identity is per page rather than per section, so having found the page in
+ * their own language a reader does not then get three more sections of it in
+ * other languages. Within one group nothing is dropped: two matching sections
+ * of the same page are two real hits there, and they link to different
+ * anchors.
+ *
+ * Groups are taken in chain order, most preferred first, and a group left with
+ * nothing is dropped so no empty heading renders. All-locales mode
+ * deliberately does not run this: there the reader asked for every language.
+ *
+ * @param groups - Locale groups in chain order.
+ * @returns The same groups, minus later duplicates and minus emptied groups.
+ */
+export function dropDuplicateChainDocuments<
+	TResult extends { id: string },
+	TGroup extends LocaleGroupWithResults<TResult>
+>( groups: TGroup[] ): TGroup[] {
+	const seenDocuments = new Set<string>()
+	const deduped: TGroup[] = []
+
+	for ( const group of groups ) {
+		const results = group.results.filter(
+			( result ) => !seenDocuments.has( contentDocumentIdentity( result.id ) )
+		)
+
+		if ( results.length > 0 ) {
+			deduped.push( { ...group, results } )
+		}
+
+		// Recorded after the filter above, not during it, so a page matching in
+		// several of its own sections keeps all of them in the group that owns it.
+		for ( const result of group.results ) {
+			seenDocuments.add( contentDocumentIdentity( result.id ) )
+		}
+	}
+
+	return deduped
+}
+
+/**
  * Resolves which locales are worth querying for a reader: the catalog's
  * fallback chain, narrowed to locales that have a content/<locale> directory.
  * Querying a collection name with no backing directory throws rather than

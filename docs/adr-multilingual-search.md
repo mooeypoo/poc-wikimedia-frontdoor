@@ -75,6 +75,12 @@ resultId.startsWith('/{locale}#')      // section on root page
 
 **UI string key:** A single parameterized key, `search-results-locale-heading` (`"Results in {{bidi:$1}}"`), serves both the active-locale and English-fallback headings. The translated language name is passed as `$1`, so there is no separate `search-results-fallback-heading` key — the English-fallback section reuses the same key with `$1` resolved to "English". `{{bidi:$1}}` provides BiDi isolation around the language name (see §8).
 
+**Amendment: a fallback group shows what the reader is missing, not what they already found.** Once the single English hop became the catalog's full chain, this section's "the content is not yet translated" rationale stopped holding on its own. A page translated into several locales of one chain matched in each of them, so a Brazilian Portuguese reader (chain `pt-br → pt → en`, all three of which have a content collection) searching a term common to every translation got that one page under three headings, and only the first was a page they had any reason to open.
+
+Deduping needs an identity a document keeps across locales, which the FTS ids already carry: they are locale-prefixed paths, so dropping the locale segment and the section hash leaves what the translations share. `contentDocumentIdentity()` and `dropDuplicateChainDocuments()` in `app/utils/contentLocalePaths.ts` do that, and the chain keeps only the most-preferred locale's copy.
+
+Two boundaries on it. Identity is **per page**, not per section, so a reader who found the page in their own language does not get other sections of it in three more languages; the dedupe therefore never applies *within* a group, where two matching sections of one page are two real hits pointing at different anchors. And **all-locales mode does not dedupe at all**, because that view is an explicit request to see every language.
+
 ---
 
 ## 5. Stay on `nuxt build` — do not switch to `nuxt generate`
