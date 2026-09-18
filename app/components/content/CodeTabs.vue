@@ -94,6 +94,16 @@ function codeTabs(): CodeTabEntry[] {
 				:name="tab.name"
 				:label="tab.label"
 			>
+				<!--
+					Triggers Vue's "Slot invoked outside of the render function" warning on
+					every hydration. MDCRenderer builds its slot closures by hand
+					(@nuxtjs/mdc MDCRenderer.vue's _renderSlots) without setting `_ctx`, so
+					Vue's normalizeSlot wraps them with ctx=undefined instead of the null it
+					needs to recognize a safely-scoped slot. No invocation style from here
+					avoids the check; it's baked into the closure MDC hands us. Harmless for
+					this static markdown content (nothing reactive inside a panel to lose
+					tracking on).
+				-->
 				<component :is="tab.content" />
 			</CdxTab>
 		</CdxTabs>
