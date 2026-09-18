@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { nextTick, reactive, ref } from 'vue'
 import { useOverlayDismissal } from '../app/composables/useOverlayDismissal.ts'
+import { useShellCollapsedNavMenu } from '../app/composables/useShellCollapsedNavMenu.ts'
 import { useShellCollapsedSearchOverlay } from '../app/composables/useShellCollapsedSearchOverlay.ts'
 
 // Vue's onMounted / onUnmounted no-op with a console warning when called
@@ -93,4 +94,67 @@ test( 'useShellCollapsedSearchOverlay exposes the same dismissal rules under its
 		false,
 		'route change forwarded to the shared composable closes it'
 	)
+} )
+
+test( 'useShellCollapsedNavMenu opens to section or primary view based on hasSectionNavigation', () => {
+	const hasSectionNavigation = ref( true )
+	const { collapsedNavMenuView, openCollapsedNavMenu, closeCollapsedNavMenu } = useShellCollapsedNavMenu( {
+		isNavigationCollapsed: ref( true ),
+		hasSectionNavigation,
+		route: fakeRoute()
+	} )
+
+	openCollapsedNavMenu()
+	assert.equal( collapsedNavMenuView.value, 'section' )
+
+	closeCollapsedNavMenu()
+	hasSectionNavigation.value = false
+	openCollapsedNavMenu()
+	assert.equal( collapsedNavMenuView.value, 'primary' )
+} )
+
+test( 'useShellCollapsedNavMenu toggle opens when closed and closes when open', () => {
+	const { isCollapsedNavMenuOpen, toggleCollapsedNavMenu } = useShellCollapsedNavMenu( {
+		isNavigationCollapsed: ref( true ),
+		hasSectionNavigation: ref( true ),
+		route: fakeRoute()
+	} )
+
+	toggleCollapsedNavMenu()
+	assert.equal( isCollapsedNavMenuOpen.value, true )
+
+	toggleCollapsedNavMenu()
+	assert.equal( isCollapsedNavMenuOpen.value, false )
+} )
+
+test( 'useShellCollapsedNavMenu resets to section view on explicit close, route change, and uncollapse', async () => {
+	const isNavigationCollapsed = ref( true )
+	const route = fakeRoute()
+	const {
+		collapsedNavMenuView,
+		openCollapsedNavMenu,
+		closeCollapsedNavMenu,
+		showCollapsedNavMenuPrimaryView
+	} = useShellCollapsedNavMenu( {
+		isNavigationCollapsed,
+		hasSectionNavigation: ref( true ),
+		route
+	} )
+
+	openCollapsedNavMenu()
+	showCollapsedNavMenuPrimaryView()
+	closeCollapsedNavMenu()
+	assert.equal( collapsedNavMenuView.value, 'section', 'explicit close resets the view' )
+
+	openCollapsedNavMenu()
+	showCollapsedNavMenuPrimaryView()
+	route.fullPath = '/explorer'
+	await nextTick()
+	assert.equal( collapsedNavMenuView.value, 'section', 'a route change resets the view too' )
+
+	openCollapsedNavMenu()
+	showCollapsedNavMenuPrimaryView()
+	isNavigationCollapsed.value = false
+	await nextTick()
+	assert.equal( collapsedNavMenuView.value, 'section', 'uncollapsing the nav resets the view too' )
 } )

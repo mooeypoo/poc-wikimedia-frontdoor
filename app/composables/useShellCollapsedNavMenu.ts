@@ -1,5 +1,7 @@
 import type { Ref } from 'vue'
-import { useOverlayDismissal } from './useOverlayDismissal'
+import { ref } from 'vue'
+import type { OverlayDismissalRoute } from './useOverlayDismissal.ts'
+import { useOverlayDismissal } from './useOverlayDismissal.ts'
 
 /**
  * View level for the collapsed-shell navigation overlay menu.
@@ -19,6 +21,7 @@ export type ShellCollapsedNavMenuView = 'section' | 'primary'
  * @param options - Reactive inputs that affect default view and auto-close behaviour.
  * @param options.isNavigationCollapsed - When false, the overlay closes immediately.
  * @param options.hasSectionNavigation - Whether the route exposes section nav links.
+ * @param options.route - Forwarded to {@link useOverlayDismissal}.
  * @returns {{
  *   isCollapsedNavMenuOpen: import('vue').Ref<boolean>,
  *   collapsedNavMenuView: import('vue').Ref<ShellCollapsedNavMenuView>,
@@ -31,6 +34,7 @@ export type ShellCollapsedNavMenuView = 'section' | 'primary'
 export function useShellCollapsedNavMenu( options: {
 	isNavigationCollapsed: Ref<boolean>
 	hasSectionNavigation: Ref<boolean>
+	route?: OverlayDismissalRoute
 } ) {
 	const collapsedNavMenuView = ref<ShellCollapsedNavMenuView>( 'section' )
 
@@ -56,7 +60,8 @@ export function useShellCollapsedNavMenu( options: {
 		isCollapsed: options.isNavigationCollapsed,
 		// Every dismissal path resets the view, as the explicit close always did:
 		// nothing reads it while closed today, and this way nothing needs to.
-		onClose: showCollapsedNavMenuSectionView
+		onClose: showCollapsedNavMenuSectionView,
+		route: options.route
 	} )
 
 	/**
