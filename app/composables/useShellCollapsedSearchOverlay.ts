@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
-import { useOverlayDismissal } from './useOverlayDismissal'
+import type { OverlayDismissalRoute } from './useOverlayDismissal.ts'
+import { useOverlayDismissal } from './useOverlayDismissal.ts'
 
 /**
  * Manages open state for the collapsed header search overlay.
@@ -15,6 +16,7 @@ import { useOverlayDismissal } from './useOverlayDismissal'
  *
  * @param options - Reactive inputs that affect auto-close behaviour.
  * @param options.isUtilityCollapsed - When false, the overlay closes immediately.
+ * @param options.route - Forwarded to {@link useOverlayDismissal}.
  * @returns {{
  *   isCollapsedSearchOverlayOpen: import('vue').Ref<boolean>,
  *   openCollapsedSearchOverlay: () => void,
@@ -23,12 +25,13 @@ import { useOverlayDismissal } from './useOverlayDismissal'
  */
 export function useShellCollapsedSearchOverlay( options: {
 	isUtilityCollapsed: Ref<boolean>
+	route?: OverlayDismissalRoute
 } ) {
 	const {
 		isOpen: isCollapsedSearchOverlayOpen,
 		open: openCollapsedSearchOverlay,
 		close: closeCollapsedSearchOverlay
-	} = useOverlayDismissal( { isCollapsed: options.isUtilityCollapsed } )
+	} = useOverlayDismissal( { isCollapsed: options.isUtilityCollapsed, route: options.route } )
 
 	return {
 		isCollapsedSearchOverlayOpen,

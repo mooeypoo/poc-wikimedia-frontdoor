@@ -1,4 +1,15 @@
 import type { Ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+
+/**
+ * A route reference for the close-on-navigation watch. Must be reactive
+ * (Nuxt's `useRoute()` return value, or `reactive()` in a test) — a plain
+ * object's `fullPath` never changes as far as the watcher can tell, so the
+ * overlay would stop closing on navigation.
+ */
+export interface OverlayDismissalRoute {
+	fullPath: string
+}
 
 /**
  * Open state and the dismissal rules both collapsed-shell overlays share:
@@ -13,6 +24,8 @@ import type { Ref } from 'vue'
  * @param options - Reactive inputs and per-overlay teardown.
  * @param options.isCollapsed - When false, the overlay closes immediately.
  * @param options.onClose - Extra teardown to run once the overlay has closed.
+ * @param options.route - Defaults to `useRoute()`; overridable so the watch
+ * logic is testable without a Nuxt router context. See {@link OverlayDismissalRoute}.
  * @returns {{
  *   isOpen: import('vue').Ref<boolean>,
  *   open: () => void,
@@ -22,10 +35,11 @@ import type { Ref } from 'vue'
 export function useOverlayDismissal( options: {
 	isCollapsed: Ref<boolean>
 	onClose?: () => void
+	route?: OverlayDismissalRoute
 } ) {
 	const isOpen = ref( false )
 
-	const route = useRoute()
+	const route = options.route ?? useRoute()
 
 	/**
 	 * Opens the overlay.
