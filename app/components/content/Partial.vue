@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { resolveSharedPartialPath } from '../../../config/sharedPartials'
+import { useContentDocument } from '../../composables/useContentDocument'
 
 /**
  * Inserts a shared, portal-authored partial by registered name (ADR §11).
@@ -22,7 +23,7 @@ if ( !path && import.meta.dev ) {
 const { data: partial } = await useAsyncData(
 	`shared-partial:${ props.name }`,
 	() => path
-		? queryCollection( 'content' ).path( path ).first()
+		? useContentDocument( path )
 		: Promise.resolve( null )
 )
 </script>

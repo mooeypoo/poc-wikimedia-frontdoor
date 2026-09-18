@@ -211,7 +211,7 @@ On **desktop** and **desktop wide**, both side columns are **always present** in
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; start drawer on expand |
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide **only** under `.frontdoor-shell--nav-drawer-expanding` (viewport expand); landing / `sidebar: false` route changes instant; Codex transition tokens |
-| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
+| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)** |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
@@ -299,7 +299,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Utility row layout (Figma `Header/Default`, node 284:11443; collapsed reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)):** Row 1 is **`justify-between`** with **`gap: var(--spacing-150)` (24px)** between the brand lockup and `ShellHeaderUtilityActions` (`flex: 1 1 auto`). Brand and utilities share a **vertical centerline** (`align-items: center` / `align-self: center` on brand + chrome-main). Search uses **`flex: 1 1 auto`**, **`max-inline-size: min(40rem, 100%)`**, and **`min-inline-size: 16rem` (256px)** on the Codex text input when expanded. Gaps **between utility options** (settings, language, session / collapsed overflow) are **`column-gap: var(--spacing-50)` (8px)**; **search → preferences** is **`--spacing-100` (16px)** (`column-gap` + search-wrap `margin-inline-end: var(--spacing-50)`). No other extra margins on option wrappers. `useHeaderUtilityCollapse` observes the utility track with **`ResizeObserver`** and switches to compact mode below **`HEADER_UTILITY_COLLAPSE_THRESHOLD_PX`** (`config/headerChrome.ts`).
 
-**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (opens color-theme preferences popover) and **Log in** (or username → account + **Log out** when authenticated). Search button activation is **deferred**.
+**Collapsed utility row:** Icon-only **search** button, the language button (see below), then icon-only **`CdxMenuButton`** (`cdxIconEllipsis`) for **Settings** (opens color-theme preferences popover) and **Log in** (or username → account + **Log out** when authenticated). The search button opens a **full-viewport search overlay** (see below).
 
 **Utility row layout (expanded):** Search field, **quiet** settings icon button, quiet language button, log-in text link — or authenticated **username** link to `/account`. All share the row’s vertical center (`align-items: center`; session links use `min-block-size: var(--min-size-interactive-pointer)`).
 
@@ -325,16 +325,29 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Section list | Reuses **`ShellSidePanelNav`** (including explorer mode links via `navigateTo`); **`omitSectionTitleMatching`** hides a section heading when it equals the back label (avoids duplicating the primary section name) |
 | Primary list | Flat **`CdxMenuItem`** rows (main tabs, including **APIs**); selection navigates and closes overlay |
 | Dismiss | Backdrop click, **Escape**, route change, or nav expand |
-| Scroll lock | `html.shell-collapsed-nav-menu-open { overflow: hidden }` in **`shell-collapsed-nav-menu.css`** |
+| Scroll lock | **None, and none is needed.** Don't re-add one on `.frontdoor-shell__body-scroll`; it would drop the body band's scrollbar on every open. Mechanism in `ARCHITECTURE.md` → Responsive navigation collapse and start drawer |
 
-**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
+**Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
+
+**Collapsed search overlay:** The collapsed utility row has room for a search icon but not the 256px field, so the icon opens a full-viewport overlay (`ShellHeaderSearchOverlay`, teleported to `<body>`, **`z-index: 20`** alongside the nav overlay). Mask: **`--background-color-backdrop-light`**. The panel is anchored to the **block-start** edge at full inline size with **`--spacing-100`** padding and **`--background-color-base`**, so a short result list leaves backdrop below and a long one scrolls inside the panel. It holds the `CdxSearchInput` and a quiet **`cdxIconClose`** button on one row, then reuses **`SharedSearchResults`** unchanged. Scroll lock: none, for the reasons given for the nav overlay above.
+
+| Overlay element | Token / behaviour |
+|-----------------|-------------------|
+| Field | Autofocused on open, so the keyboard is ready without a second tap; placeholder reuses `header-search-placeholder` |
+| Close control | Quiet `CdxButton` + **`cdxIconClose`**; `aria-label` from `shell-collapsed-search-overlay-close-button-label`. Present because a full-viewport panel can cover the backdrop entirely, and a phone keyboard has no Escape |
+| Dismiss | Close button, backdrop click, **Escape**, route change, or the utility row expanding past the collapse threshold |
+| Results | `SharedSearchResults` with the same content and endpoint groups the expanded dropdown shows; result links navigate and close the overlay |
+
+Focus is not trapped and not restored on close, matching the collapsed nav overlay; see **Accessibility (AA)** under Open questions.
+
+**Source:** `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `i18n/*` (`shell-collapsed-search-overlay-*`).
 
 **Utility row alignment:** Utility controls are grouped at the **inline-end** in `ShellHeaderUtilityActions`. Expanded spacing: **16px** search→preferences; **8px** between preferences, language, and Login/account. Brand and utilities are vertically centered.
 
 | Element | Behaviour |
 |---------|-----------|
 | Search (`CdxSearchInput`) | Flexes in the header (max **640px**); **`min-inline-size: 256px`** when expanded; **`margin-inline-end: var(--spacing-50)`** so search→preferences is **16px**; collapses to icon-only when the actions track is narrower than `HEADER_UTILITY_COLLAPSE_THRESHOLD_PX` (`useHeaderUtilityCollapse`) |
-| Search icon button | Shown in collapsed mode; **activation deferred** (no overlay yet) |
+| Search icon button | Shown in collapsed mode; opens the **collapsed search overlay** (see below) |
 | Settings (`CdxButton` + configure icon) | **Quiet** weight; opens **preferences** popover (color theme radios); inline when expanded; overflow menu when collapsed |
 | Interface language (`CdxLookup`) | **Globe + uppercase code** quiet `CdxButton` ([Button with icon](https://doc.wikimedia.org/codex/latest/components/demos/button.html#with-icon) — native color/spacing); click opens the searchable lookup in a popover. Keeps the bar compact. |
 | Log in / account | **Log in** text link when signed out (starts Meta OAuth + PKCE, returns to the current page). When signed in: **username only** (no “Logged in as” prefix) as a Codex progressive link (`NuxtLink` → locale-aware `/account`); `aria-label` from `header-auth-link-aria`; `min-block-size: var(--min-size-interactive-pointer)` for row center alignment. Collapsed overflow menu: username → account, plus **Log out** |
@@ -359,7 +372,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Status:** Visual chrome prototype aligned to [Unified Developer Front Door — header (Figma)](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=284-11443), collapsed utility reference [Off-wiki page templates 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563), collapsed nav reference [50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731), and collapsed nav overlay [25:1929](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=25-1929).
 
-**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css`, `config/shellNavigation.ts`.
+**Source:** `app/layouts/default.vue`, `app/components/shared/ShellPrimaryNav.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/composables/usePrimaryNavigationTab.ts`, `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/assets/css/shell-start-nav-reveal.css`, `config/shellNavigation.ts`.
 
 ### Account dashboard (`/account`)
 
@@ -886,6 +899,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Collapsed header search overlay | Search icon below the **560px** collapse threshold opens `ShellHeaderSearchOverlay` (teleported, backdrop-light, block-start panel) instead of doing nothing; autofocused field + `cdxIconClose` close button; reuses `SharedSearchResults` |
 | *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
 | *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
@@ -959,25 +973,24 @@ Mapping of notable commits to design areas (newest first among design-only work)
 ## Open questions / future design work
 
 1. **Wire content section navigation** to real content routes (replace `href="#"` placeholders and prototype active map on non-explorer pages).
-2. **Search overlay** — wire collapsed utility search icon to open search UI.
-3. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
-4. **Wire explorer side nav** to real doc routes or in-page anchors.
-5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
-6. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
-7. **Mobile explorer** — endpoint list is Scalar’s native sidebar inside the reference panel; remaining mobile polish may still evolve.
-8. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
-9. **Editorial content** for Use content and data, Community, Contribute, Get help.
-10. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
-11. **Confirm footer width with design** — keep **main-column only** or adopt Figma [354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) main+end span.
-12. **Add footer horizontal logo asset** — replace composed 14px mark + wordmark with Figma **227×14px** lockup when asset is finalized.
-13. **Codex `style-bidi.css` production readiness** — confirm experimental bidi sheet remains acceptable before production, or switch to a single direction sheet per request if Codex guidance changes (`ARCHITECTURE.md` → RTL and BiDi).
-14. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
-15. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Delete is not shown** (revoke flow unavailable). **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys — then reintroduce Delete on list cards (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
-16. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
-17. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology.
-18. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
-19. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
-20. **Codex styling review** — Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
+2. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
+3. **Wire explorer side nav** to real doc routes or in-page anchors.
+4. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
+5. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
+6. **Mobile explorer** — endpoint list is Scalar’s native sidebar inside the reference panel; remaining mobile polish may still evolve.
+7. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
+8. **Editorial content** for Use content and data, Community, Contribute, Get help.
+9. **Instance display names** — move from English literals in `config/instances.ts` to i18n or API-sourced labels.
+10. **Confirm footer width with design** — keep **main-column only** or adopt Figma [354:33034](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=354-33034) main+end span.
+11. **Add footer horizontal logo asset** — replace composed 14px mark + wordmark with Figma **227×14px** lockup when asset is finalized.
+12. **Codex `style-bidi.css` production readiness** — confirm experimental bidi sheet remains acceptable before production, or switch to a single direction sheet per request if Codex guidance changes (`ARCHITECTURE.md` → RTL and BiDi).
+13. **Replace chrome height estimate** — `--fd-layout-shell-chrome-block-size-estimate` (`11rem`) is a prototype constant; measure header band at runtime when sticky panels need exact alignment.
+14. **Account API keys (backend)** — `/account` UI uses **placeholder** key rows and Reset credentials for usability testing. **Delete is not shown** (revoke flow unavailable). **Pending:** Meta/backend integration to list, reset, and revoke real personal and application API keys — then reintroduce Delete on list cards (see `ARCHITECTURE.md` → Account dashboard → Prototype placeholders).
+15. **Internationalization review** — Audit global shell and explorer UX against best practices for multilingual and BiDi interfaces.
+16. **Accessibility (AA)** — Test and remediate for WCAG AA; ensure the site is fully operable via screen reader technology. Includes focus trapping and focus restore for the collapsed navigation and search overlays, neither of which manages focus today.
+17. **Standardized shell chrome** — Replace prototype header, side navigation menus, and footer with shared standardized Wikimedia portal components.
+18. **Codex loading patterns** — Replace default Nuxt skeleton/loading elements with Codex components.
+19. **Codex styling review** — Audit visual styles to make sure that the correct [Codex design tokens](https://doc.wikimedia.org/codex/latest/design-tokens/overview.html) are being applied accross the site.
 
 ---
 
@@ -989,12 +1002,13 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Primary nav + redirects | `config/mainNavigation.ts`, `config/contentRedirects.ts`, `config/remoteContentSources.ts` |
 | Shell | `app/layouts/default.vue`, `app/assets/css/main.css` |
 | Shell scroll regions | `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `app/assets/css/shell-start-nav-scroll.css`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/main.css` |
-| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css`, `app/assets/css/shell-collapsed-nav-menu.css` |
+| Nav collapse + drawer | `app/composables/useShellNavigationCollapse.ts`, `app/composables/useShellNavigationBreadcrumbs.ts`, `app/composables/useShellCollapsedNavMenu.ts`, `app/composables/useOverlayDismissal.ts`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `config/shellNavigation.ts`, `app/assets/css/shell-start-nav-reveal.css` |
 | Start column chrome | `app/layouts/default.vue` (scrollport border), `app/assets/css/page-grid.css` (`--fd-layout-start-panel-inline-size`), `app/assets/css/shell-start-nav-scroll.css`, `app/components/shared/ShellSidePanelNav.vue` (dividers), `app/composables/usePageSectionNav.ts` |
 | Site footer | `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue`, `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`) |
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/WikimediaLogoMark.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts`, `public/fonts/montserrat/`, `nuxt.config.ts` (`app.head` brand font inject) |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
+| Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/composables/useOverlayDismissal.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/components/shared/SearchResults.vue` |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |
 | Codex direction CSS | `nuxt.config.ts` (`codex.style-bidi.css`) — see `ARCHITECTURE.md` → RTL and BiDi |
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |
