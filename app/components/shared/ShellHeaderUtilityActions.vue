@@ -448,8 +448,13 @@ function handleOverlayResultSelect( resultId: string ): void {
 				:placeholder="searchPlaceholderLabel"
 				@focusin="handleSearchFocusIn"
 			/>
+			<!--
+				`v-show` above hides the wrapper at the collapsed width without
+				unmounting it, so without the viewport test the overlay's results
+				get a hidden second copy.
+			-->
 			<div
-				v-if="isSearchPanelOpen && hasQuery"
+				v-if="!isUtilityCollapsed && isSearchPanelOpen && hasQuery"
 				class="shell-header-utility-actions__search-panel"
 				@mousedown.prevent
 			>
