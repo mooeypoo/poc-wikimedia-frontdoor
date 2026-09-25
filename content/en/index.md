@@ -15,16 +15,22 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::::landing-section
 ## What would you like to do?
 
-:::navigation-card-grid
-::navigation-card{url="/get-started/build-for-communities" title="Build for Wikimedia communities" description="Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tool and bots using Wikimedia infrastructure." supporting-text="Learn about building tools →" leading-icon="userGroup"}
+:::navigation-card-grid{columns="3"}
+::navigation-card{url="/get-started/wiki-content2" title="Use Wikimedia content in your apps" leading-icon="book" description="Get articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
 ::
 
-::navigation-card{url="/get-started/data-for-research" title="Work with Wikimedia datasets for research" description="Power research and create visualizations using APIs and bulk downloads of Wikimedia projects' data." supporting-text="Learn about bulk data sources →" leading-icon="labFlask"}
+::navigation-card{url="/get-started/open-data" title="Work with Wikimedia datasets for research" leading-icon="labFlask" description="Power research and create visualizations using open datasets from Wikimedia projects."}
 ::
 
-::navigation-card{url="/get-started/wikimedia-enterprise" title="Use Wikimedia content for commercial use cases" description="Get high-volume access to Wikimedia content through APIs designed for search results, AI training, knowledge panels, and enriched experiences at scale." supporting-text="Learn about Wikimedia Enterprise →" title-logo="wikimediaEnterprise"}
+::navigation-card{url="/get-started/tools-and-bots" title="Build tools and bots for Wikimedia communities" leading-icon="robot" description="Automate edits, detect vandalism, and learn about hosting tools using Wikimedia infrastructure."}
 ::
 :::
+
+::highlight
+🐿️ **Services for enterprise**
+
+Wikimedia Enterprise provides APIs and services designed for high-volume, commercial access to Wikimedia content and data. [Learn about Wikimedia Enterprise →](/get-started/enterprise)
+::
 ::::
 
 :::::landing-band{variant="apis"}
@@ -49,7 +55,7 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 
 Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
 
-:::navigation-card-grid
+:::navigation-card-grid{columns="3"}
 ::navigation-card{url="https://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
 ::
 
@@ -60,7 +66,7 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 ::
 :::
 
-::landing-section-cta{href="https://toolhub.wikimedia.org/" label="Discover more apps on Toolhub"}
+::landing-section-cta{href="/get-started/featured-apps" label="Discover more featured apps"}
 ::
 ::::
 
@@ -68,10 +74,10 @@ Tools, bots, and application highlights built by the Wikimedia technical communi
 ## Join the Wikimedia community
 
 :::navigation-card-grid{columns="2"}
-::navigation-card{url="/contribute" title="Contribute to Wikimedia open source" description="Help build the Wikimedia ecosystem with open source software." supporting-text="Start coding →" leading-icon="code"}
+::navigation-card{url="/contribute" title="Contribute to Wikimedia open source" description="Help build the Wikimedia ecosystem with open source software." leading-icon="code"}
 ::
 
-::navigation-card{url="/community" title="Connect with the Wikimedia developer community" description="Explore hackathons and events, and find opportunities for support and learning." supporting-text="Get involved →" leading-icon="userTalk"}
+::navigation-card{url="/community" title="Connect with the Wikimedia developer community" description="Explore hackathons and events, and find opportunities for support and learning." leading-icon="userTalk"}
 ::
 :::
 ::::

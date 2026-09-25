@@ -52,10 +52,28 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-api',
 				items: [
 					{ id: 'apis-overview', messageKey: 'section-nav-overview', href: '/apis' },
-					{ id: 'licensing-attribution', messageKey: 'explorer-side-nav-licensing-attribution', href: '/apis/attribution' },
-					{ id: 'authentication', messageKey: 'explorer-side-nav-authentication', href: '/apis/authentication' },
-					{ id: 'rate-limits', messageKey: 'explorer-side-nav-rate-limits', href: '/apis/rate-limits' },
-					{ id: 'policies', messageKey: 'explorer-side-nav-policies', href: '/apis/policies' }
+					{ id: 'quickstart', messageKey: 'Quickstart', href: '/apis/quickstart' }
+				]
+			},
+			{
+				id: 'requests',
+				titleMessageKey: 'Make requests',
+				items: [
+					{ id: 'requests-overview', messageKey: 'section-nav-overview', href: '/apis/overview' },
+					{ id: 'client-id', messageKey: 'Client identification', href: '/apis/client-id' },
+					{ id: 'errors', messageKey: 'Error handling', href: '/apis/errors' }
+
+				]
+			},
+			{
+				id: 'auth',
+				titleMessageKey: 'Authenticate',
+				items: [
+					{ id: 'auth-overview', messageKey: 'section-nav-overview', href: '/apis/auth' },
+					{ id: 'access-tokens', messageKey: 'Personal access tokens', href: '/apis/access-tokens' },
+					{ id: 'log-in', messageKey: 'Log in with Wikimedia', href: '/apis/log-in' },
+					{ id: 'bost', messageKey: 'Bot passwords', href: '/apis/bots' }
+
 				]
 			},
 			{
@@ -74,8 +92,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 						messageKey: 'explorer-side-nav-enterprise-apis-custom',
 						href: '/explorer/enterprise-custom',
 						enabled: false
-					},
-					{ id: 'libraries-sdks', messageKey: 'explorer-side-nav-libraries-sdks', href: '/apis/libraries-sdks' }
+					}
 				]
 			},
 			{
@@ -83,8 +100,9 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'explorer-side-nav-resources-title',
 				items: [
 					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
-					{ id: 'stability-policy', messageKey: 'explorer-side-nav-stability-policy', href: '/apis/stability' },
-					{ id: 'troubleshooting-guide', messageKey: 'section-nav-get-help-troubleshooting-guide', href: '/apis/troubleshooting' }
+					{ id: 'stability-policy', messageKey: 'Stability and versioning', href: '/apis/stability' },
+					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
+					{ id: 'policies', messageKey: 'Policies', href: '/apis/policies' }
 				]
 			}
 		]
@@ -97,37 +115,29 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-get-started',
 				items: [
 					{ id: 'get-started-overview', messageKey: 'section-nav-overview', href: '/get-started' },
-					{ id: 'quick-start', messageKey: 'section-nav-get-started-quick-start', href: '/get-started/quick-start' },
-					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' }
+					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' },
+					{ id: 'explore-featured-apps', messageKey: 'Explore featured apps', href: '/get-started/featured-apps' },
+					{ id: 'tutorials', messageKey: 'Learn with tutorials', href: '/get-started/tutorials' }
 				]
 			},
 			{
 				id: 'for-communities',
-				titleMessageKey: 'section-nav-get-started-for-communities-title',
+				titleMessageKey: 'Use Wikimedia content and data',
 				items: [
-					{ id: 'community-overview', messageKey: 'section-nav-overview', href: '/get-started/build-for-communities' },
-					{ id: 'use-wiki-content', messageKey: 'section-nav-get-started-use-wiki-content', href: '/get-started/wiki-content' },
-					{ id: 'access-open-data', messageKey: 'section-nav-get-started-access-open-data', href: '/get-started/open-data' },
-					{ id: 'tools-and-bots', messageKey: 'section-nav-get-started-tools-and-bots', href: '/get-started/tools-and-bots' },
-					{ id: 'on-wiki-features', messageKey: 'section-nav-get-started-on-wiki-features', href: '/get-started/on-wiki' }
+					{ id: 'community-overview', messageKey: 'Overview', href: '/get-started/content-and-data' },
+					{ id: 'community-overview', messageKey: 'Use wiki content', href: '/get-started/wiki-content' },
+					{ id: 'access-open-data', messageKey: 'Work with open datasets', href: '/get-started/open-data' },
+					{ id: 'access-open-data', messageKey: 'Get enterprise services', href: '/get-started/wikimedia-enterprise' }
 				]
 			},
 			{
 				id: 'for-enterprise',
-				titleMessageKey: 'section-nav-get-started-for-enterprise-title',
+				titleMessageKey: 'Build for Wikimedia communities',
 				items: [
-					{ id: 'wikimedia-enterprise', messageKey: 'section-nav-get-started-about-enterprise', href: '/get-started/wikimedia-enterprise' },
-					{ id: 'commercial-use-cases', messageKey: 'section-nav-get-started-commercial-use-cases', href: '/get-started/commercial-use-cases' },
-					{ id: 'data-for-research', messageKey: 'section-nav-get-started-data-for-research', href: '/get-started/data-for-research' }
-				]
-			},
-			{
-				id: 'explore',
-				titleMessageKey: 'section-nav-get-started-explore-title',
-				items: [
-					{ id: 'explore-featured-apps', messageKey: 'section-nav-get-started-explore-featured-apps', href: '/get-started/featured-apps' },
-					{ id: 'tutorials', messageKey: 'section-nav-get-started-tutorials', href: '/get-started/tutorials' },
-					{ id: 'by-language', messageKey: 'section-nav-get-started-by-language', href: '/get-started/by-language' }
+					{ id: 'wikimedia-enterprise', messageKey: 'Overview', href: '/get-started/tools' },
+					{ id: 'commercial-use-cases', messageKey: 'Build tools and bots', href: '/get-started/tools-and-bots' },
+					{ id: 'commercial-use-cases', messageKey: 'Host tools on Wikimedia servers', href: '/get-started/host-tools' },
+					{ id: 'commercial-use-cases', messageKey: 'Contribute to MediaWiki', href: '/get-started/mediawiki' }
 				]
 			}
 		]
