@@ -242,6 +242,7 @@ useHead( {
 			'frontdoor-shell--explorer': isExplorerRoute,
 			'frontdoor-shell--explorer-internal-sidebar': isExplorerInternalSidebar,
 			'frontdoor-shell--landing': isLandingRoute,
+			'frontdoor-shell--on-this-page-end-panel': showOnThisPageEndPanel,
 			'frontdoor-shell--nav-collapsed': isNavigationCollapsed,
 			'frontdoor-shell--nav-drawer-expanding': isNavDrawerExpanding,
 			'frontdoor-shell--sidebar-hidden': isSidebarHidden
@@ -445,7 +446,10 @@ useHead( {
 	.frontdoor-shell__side-panel--start {
 		flex: 1 1 auto;
 		min-block-size: 0;
-		/* Fixed drawer width — track clips during open; do not use 100% of the track. */
+		/*
+		 * Fixed drawer panel inside the 241px navigation allocation. PageGrid
+		 * supplies the outer margin; this panel owns the remaining inline size.
+		 */
 		inline-size: var( --fd-layout-start-panel-inline-size );
 		min-inline-size: var( --fd-layout-start-panel-inline-size );
 		max-inline-size: var( --fd-layout-start-panel-inline-size );
@@ -546,14 +550,14 @@ useHead( {
 		/*
 		 * Keep the first row as one flex formatting context so the 24px gap is
 		 * measured between the actual brand group and utility actions. The brand
-		 * can be wider than the fixed 281px start panel in some locales.
+		 * can be wider than the fixed start panel in some locales.
 		 */
 		grid-column: 1 / -1;
 		grid-row: 1;
 	}
 
 	.frontdoor-shell__chrome-start--nav {
-		/* Full header width — tabs need more than the start column track (281px). */
+		/* Full header width — tabs need more than the fixed start navigation track. */
 		grid-column: 1 / -1;
 		grid-row: 2;
 	}
@@ -567,6 +571,21 @@ useHead( {
 	min-block-size: 0;
 	/* Footer pin on short pages — scroll lives on `.frontdoor-shell__body-scroll`. */
 	min-block-size: 100%;
+}
+
+/*
+ * Standard content pages use the 14-column / 792px measure from the responsive
+ * shell specification. Landing sections and Scalar Explorer retain their
+ * dedicated wider measures.
+ */
+.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__content,
+.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__main {
+	inline-size: 100%;
+	max-inline-size: var( --fd-layout-main-content-max-inline-size );
+}
+
+.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__content {
+	margin-inline: auto;
 }
 
 /*
@@ -594,14 +613,54 @@ useHead( {
 	display: none;
 }
 
-@media screen and ( min-width: 1120px ) {
-	.frontdoor-shell__body-columns {
-		grid-template-columns: minmax( 0, 4fr ) minmax( 0, 1fr );
-		column-gap: var( --fd-layout-grid-gutter );
+@media screen and ( min-width: 640px ) {
+	/*
+	 * With no end-panel TOC, preserve the 40px local-navigation gap and keep
+	 * content fluid up to its 792px cap. Remaining inline space stays at page end.
+	 */
+	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
+		grid-template-columns:
+			var( --fd-layout-navigation-content-min-gap )
+			minmax( 0, var( --fd-layout-main-content-max-inline-size ) )
+			minmax(
+				calc(
+					var( --fd-layout-navigation-content-min-gap )
+					- var( --fd-layout-page-margin )
+				),
+				1fr
+			);
+		column-gap: 0;
 	}
 
-	.frontdoor-shell__side-panel--end {
+	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__content {
+		grid-column: 2;
+	}
+
+	/*
+	 * Once local navigation collapses, centre the capped content between the
+	 * breakpoint's default exterior margins.
+	 */
+	.frontdoor-shell--nav-collapsed:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns,
+	.frontdoor-shell--sidebar-hidden:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
+		grid-template-columns:
+			minmax( 0, 1fr )
+			minmax( 0, var( --fd-layout-main-content-max-inline-size ) )
+			minmax( 0, 1fr );
+	}
+}
+
+@media screen and ( min-width: 1120px ) {
+	.frontdoor-shell--on-this-page-end-panel .frontdoor-shell__side-panel--end,
+	.frontdoor-shell--explorer:not( .frontdoor-shell--explorer-internal-sidebar ) .frontdoor-shell__side-panel--end {
 		display: flex;
+	}
+
+	.frontdoor-shell--on-this-page-end-panel:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__side-panel--end {
+		grid-column: 4;
+	}
+
+	.frontdoor-shell--sidebar-hidden:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__side-panel--end {
+		display: none;
 	}
 
 	/*
@@ -619,24 +678,52 @@ useHead( {
 	}
 }
 
-@media screen and ( min-width: 1680px ) {
+/*
+ * Reserve the end-panel track at the wide TOC breakpoint even when a page has
+ * too few headings to render a TOC. Keeping the grid geometry independent of
+ * TOC presence prevents the 792px content column from shifting between pages.
+ *
+ * The 1354px literal mirrors ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX in
+ * config/onThisPageNav.ts; CSS custom properties cannot be used in media queries.
+ */
+@media screen and ( min-width: 1354px ) {
+	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ):not( .frontdoor-shell--nav-collapsed ):not( .frontdoor-shell--sidebar-hidden ) .frontdoor-shell__body-columns {
+		grid-template-columns:
+			minmax( var( --fd-layout-navigation-content-min-gap ), 1fr )
+			minmax( 0, var( --fd-layout-main-content-max-inline-size ) )
+			minmax( var( --fd-layout-navigation-content-min-gap ), 1fr )
+			var( --fd-layout-end-panel-inline-size );
+	}
+}
+
+@media screen and ( min-width: 1440px ) {
 	/*
-	 * Lock main:end content width at desktop wide; the scrollport still extends to
-	 * the viewport inline-end so the gutter/margin zone scrolls central content too.
+	 * Lock standard shell geometry at 1440px; viewport growth becomes exterior
+	 * margin while navigation-to-content spacing stays unchanged.
 	 */
-	.frontdoor-shell__body-columns {
+	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-max-inline-size );
 		transition: none;
 	}
 
-	.frontdoor-shell--nav-drawer-expanding .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-drawer-expanding:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
 		transition: max-inline-size var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}
 
 	/* Collapsed start nav: body band grows into the former start-panel + gutter space. */
-	.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns,
-	.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns {
+	.frontdoor-shell--nav-collapsed:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns,
+	.frontdoor-shell--sidebar-hidden:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-collapsed-max-inline-size );
+	}
+
+	/* Explorer keeps the wider Codex desktop measure. */
+	.frontdoor-shell--explorer .frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-explorer-body-columns-max-inline-size );
+	}
+
+	.frontdoor-shell--explorer.frontdoor-shell--nav-collapsed .frontdoor-shell__body-columns,
+	.frontdoor-shell--explorer.frontdoor-shell--sidebar-hidden .frontdoor-shell__body-columns {
+		max-inline-size: var( --fd-layout-explorer-body-columns-collapsed-max-inline-size );
 	}
 
 	/*

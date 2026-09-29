@@ -1,8 +1,10 @@
 /**
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
- * Desktop (≥ 1120px): fixed 281px start panel + body band (main:end 16:4 inside
- * `default.vue`). Tablet (≥ 640px): fixed 281px start + fluid body. Mobile: stacked.
+ * Desktop (≥ 1120px): 241px start navigation allocation (209px panel + 32px
+ * outer margin) + body band. Standard content uses a centred 792px maximum with
+ * the same 241px allocation at inline-end. Tablet (≥ 640px): fixed navigation
+ * allocation + fluid body. Mobile: stacked.
  *
  * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
  * `default.vue` (main column only — matches central page content, not main + end).
@@ -27,8 +29,8 @@
  * start-column panels must not repeat viewport insets.
  *
  * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
- * project-specific breakpoint (Figma shell chrome), not a Codex token. The page grid
- * caps at Codex desktop max (1679px) at ≥ 1680px — see ARCHITECTURE.md → Shell layout.
+ * project-specific breakpoint (Figma shell chrome), not a Codex token. Above that
+ * width the shell geometry stays fixed and exterior margins grow.
  *
  * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
  * legacy exploratory value — superseded by transparent panel + inline-end border.
@@ -39,18 +41,27 @@
  */
 
 :root {
-	/* Locked shell width at desktop wide (Codex max-width-breakpoint-desktop, 1679px) */
-	--fd-layout-grid-max-inline-size: var( --max-width-breakpoint-desktop );
+	/* Desktop shell locks at 1440px; wider viewports add exterior margin. */
+	--fd-layout-grid-max-inline-size: 90rem; /* 1440px */
 
-	/* Fixed start (left) side panel width — Figma side panel + one grid column */
+	/*
+	 * Each navigation allocation is 241px including its 32px desktop outer
+	 * margin. The in-grid panel subtracts the breakpoint page margin because
+	 * PageGrid/body-scroll already provide that outer spacing.
+	 */
+	--fd-layout-navigation-region-inline-size: 15.0625rem; /* 241px */
 	--fd-layout-start-panel-inline-size: calc(
-		15.0625rem + var( --fd-layout-desktop-wide-column-width )
-	); /* 281px */
+		var( --fd-layout-navigation-region-inline-size )
+		- var( --fd-layout-page-margin )
+	);
+	--fd-layout-end-panel-inline-size: var( --fd-layout-start-panel-inline-size );
 
-	/* Column spans on 24-column desktop (main:end ratio = 16:4) */
+	/* Column spans on the 24-column desktop grid: 4 | 14 | 4. */
 	--fd-layout-grid-columns: 24;
 	--fd-layout-side-span: 4;
-	--fd-layout-main-span: 16;
+	--fd-layout-main-span: 14;
+	--fd-layout-main-content-max-inline-size: 49.5rem; /* 792px */
+	--fd-layout-navigation-content-min-gap: var( --spacing-250 ); /* 40px */
 
 	/* Tablet 8-column split: 2 + 6 */
 	--fd-layout-tablet-columns: 8;
@@ -145,14 +156,14 @@
 	);
 
 	/*
-	 * Max inline size of the main:end sub-grid inside the body scrollport at desktop wide.
-	 * Keeps content width locked when the scroll track extends to the viewport edge.
+	 * Max inline size of the standard-page body sub-grid at desktop wide. This is
+	 * the 1440px shell measure minus both 32px outer margins and the 209px start
+	 * panel; it contains 83 + 792 + 83 + 209.
 	 */
 	--fd-layout-body-columns-max-inline-size: calc(
 		var( --fd-layout-grid-max-inline-size )
 		- ( 2 * var( --spacing-200 ) )
 		- var( --fd-layout-start-panel-inline-size )
-		- var( --fd-layout-grid-gutter )
 	);
 
 	/*
@@ -161,6 +172,21 @@
 	 */
 	--fd-layout-body-columns-collapsed-max-inline-size: calc(
 		var( --fd-layout-grid-max-inline-size )
+		- ( 2 * var( --spacing-200 ) )
+	);
+
+	/*
+	 * Explorer keeps its wide reference-panel measure at desktop wide instead of
+	 * adopting the 792px standard-content cap.
+	 */
+	--fd-layout-explorer-body-columns-max-inline-size: calc(
+		var( --max-width-breakpoint-desktop )
+		- ( 2 * var( --spacing-200 ) )
+		- var( --fd-layout-start-panel-inline-size )
+		- var( --fd-layout-grid-gutter )
+	);
+	--fd-layout-explorer-body-columns-collapsed-max-inline-size: calc(
+		var( --max-width-breakpoint-desktop )
 		- ( 2 * var( --spacing-200 ) )
 	);
 }
@@ -221,7 +247,11 @@
 		display: grid;
 		grid-template-columns: var( --fd-layout-start-panel-inline-size ) minmax( 0, 1fr );
 		grid-template-rows: minmax( 0, 1fr );
-		column-gap: var( --fd-layout-grid-gutter );
+		/*
+		 * The space between navigation and content is owned by the centred body
+		 * sub-grid; no extra gap sits outside the 241px navigation allocation.
+		 */
+		column-gap: 0;
 		row-gap: 0;
 	}
 
@@ -284,7 +314,7 @@
 	}
 }
 
-/* --- Desktop (≥ 1120px): body band holds main:end 16:4 sub-grid in default.vue --- */
+/* --- Desktop (≥ 1120px): standard pages use the 4 | 14 | 4 shell in default.vue --- */
 @media screen and ( min-width: 1120px ) {
 	:root {
 		--fd-layout-page-margin: var( --spacing-200 );
@@ -292,8 +322,8 @@
 	}
 }
 
-/* Desktop wide (≥ 1680px): grow inline-start margin only — body track stays viewport-bleed inline-end */
-@media screen and ( min-width: 1680px ) {
+/* Above 1440px: grow exterior margins while the desktop shell geometry stays fixed. */
+@media screen and ( min-width: 1440px ) {
 	:root {
 		--fd-layout-page-margin-inline-start: max(
 			var( --fd-layout-page-margin ),

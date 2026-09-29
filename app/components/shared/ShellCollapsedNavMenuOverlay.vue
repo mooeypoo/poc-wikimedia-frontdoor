@@ -121,7 +121,11 @@ const emit = defineEmits<{
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-50 );
-	inline-size: var( --fd-layout-start-panel-inline-size );
+	/*
+	 * Overlay starts at the viewport edge, so it owns the full 241px navigation
+	 * allocation instead of subtracting the in-shell outer page margin.
+	 */
+	inline-size: var( --fd-layout-navigation-region-inline-size );
 	max-inline-size: 100%;
 	block-size: 100%;
 	padding-block-start: var( --spacing-100 );
