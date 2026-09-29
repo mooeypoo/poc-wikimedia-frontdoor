@@ -39,8 +39,8 @@ import {
  * Header utility row — search, settings (color theme), interface language, and session control.
  *
  * Compact mode when the allocated actions track is narrower than the expanded minimum
- * (256px search + siblings). Search becomes an icon button; settings and log in move
- * into a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
+ * (256px search + siblings). Search becomes an icon button; preferences, language,
+ * account, and session actions move into a `CdxMenuButton`.
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
@@ -111,7 +111,7 @@ watch( hasQuery, ( newHasQuery ) => {
 } )
 
 const { menuSelection, menuItems, handleMenuSelection: handleUtilityMenuSelection } =
-	useShellHeaderUtilityMenu()
+	useShellHeaderUtilityMenu( selectedInterfaceLocale )
 const {
 	isLoggedIn,
 	username,
@@ -161,7 +161,8 @@ function togglePreferencesPopover(): void {
 
 watch( isUtilityCollapsed, ( nextIsUtilityCollapsed ) => {
 	if ( nextIsUtilityCollapsed ) {
-		// The expanded gear is the popover anchor; dismiss before it is hidden.
+		// The expanded controls anchor their overlays; dismiss before hiding them.
+		closeLanguageLookup()
 		isPreferencesPopoverOpen.value = false
 	}
 } )
@@ -177,6 +178,11 @@ function handleMenuSelection(
 	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.settings ) {
 		menuSelection.value = null
 		isPreferencesDialogOpen.value = true
+		return
+	}
+	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.language ) {
+		// Selection behavior will be defined separately during this header exploration.
+		menuSelection.value = null
 		return
 	}
 	handleUtilityMenuSelection( selectedValue )
@@ -495,6 +501,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 		</CdxDialog>
 
 		<div
+			v-show="!isUtilityCollapsed"
 			ref="languageControlRef"
 			class="shell-header-utility-actions__language"
 			@focusout="handleLanguageAreaFocusOut"
@@ -577,7 +584,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 <style scoped>
 /*
  * Utility options share one flex row: search + settings + language + session
- * (or collapsed search + language + overflow). Gap is always `--spacing-50`
+ * (or collapsed search + overflow). Gap is always `--spacing-50`
  * (8px) between those options; cross-axis center keeps icons/links aligned.
  */
 .shell-header-utility-actions {

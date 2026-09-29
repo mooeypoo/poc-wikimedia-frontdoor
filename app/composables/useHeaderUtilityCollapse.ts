@@ -17,10 +17,10 @@ interface HeaderUtilityCollapseElements {
  * from those controls, their computed gaps, and the configured 256px search
  * minimum. This keeps translated labels and authenticated usernames from making a
  * fixed estimate stale. Once that minimum no longer fits, search collapses to an
- * icon button and settings / session actions move into a menu.
+ * icon button and all non-search actions move into a menu.
  *
  * The last expanded measurement is retained while compact controls are shown,
- * because `v-show` removes the expanded settings and session controls from layout.
+ * because `v-show` removes the expanded non-search controls from layout.
  * Resize observers are disconnected when the consuming component unmounts.
  *
  * @param elements - Template refs for the utility root and expanded controls.
