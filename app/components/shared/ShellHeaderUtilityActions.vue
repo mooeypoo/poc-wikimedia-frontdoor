@@ -2,12 +2,11 @@
 import type { ComponentPublicInstance } from 'vue'
 import {
 	CdxButton,
-	CdxField,
+	CdxDialog,
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
 	CdxPopover,
-	CdxRadio,
 	CdxSearchInput,
 	type MenuConfig,
 	type MenuItemData,
@@ -45,12 +44,13 @@ import {
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
- * Color theme uses `useColorMode` via a quiet settings `CdxPopover` with
- * `CdxField` + `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS`
- * (Light / Dark / System default). Utility options use `--spacing-50` (8px)
- * `column-gap`, with search → preferences at `--spacing-100` (16px) via an
- * extra search-wrap `margin-inline-end`; share a vertical centerline with the
- * brand. Figma:
+ * Color theme uses `useColorMode` with options from
+ * `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark / System default). The
+ * expanded settings gear opens a `CdxPopover`; collapsed-menu Settings opens
+ * a content-height `CdxDialog`. Utility options use `--spacing-50`
+ * (8px) `column-gap`, with search → preferences at `--spacing-100` (16px)
+ * via an extra search-wrap `margin-inline-end`; share a vertical centerline
+ * with the brand. Figma:
  * [Preferences popover 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029).
  *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
@@ -122,19 +122,11 @@ const {
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const isPreferencesPopoverOpen = ref( false )
+const isPreferencesDialogOpen = ref( false )
 // Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>
-// / CdxMenuButton) to match CdxPopover's own anchor prop type; the specific
-// instance types aren't assignable to it due to Vue's generic component-instance
-// variance.
+// ) to match CdxPopover's own anchor prop type; the specific instance type isn't
+// assignable to it due to Vue's generic component-instance variance.
 const settingsButtonRef = ref<ComponentPublicInstance | null>( null )
-const utilityMenuButtonRef = ref<ComponentPublicInstance | null>( null )
-
-/**
- * Popover anchor: settings gear when expanded; overflow menu when collapsed.
- */
-const preferencesPopoverAnchor = computed( () => {
-	return isUtilityCollapsed.value ? utilityMenuButtonRef.value : settingsButtonRef.value
-} )
 
 const colorThemeFieldLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
 
@@ -167,8 +159,15 @@ function togglePreferencesPopover(): void {
 	isPreferencesPopoverOpen.value = !isPreferencesPopoverOpen.value
 }
 
+watch( isUtilityCollapsed, ( nextIsUtilityCollapsed ) => {
+	if ( nextIsUtilityCollapsed ) {
+		// The expanded gear is the popover anchor; dismiss before it is hidden.
+		isPreferencesPopoverOpen.value = false
+	}
+} )
+
 /**
- * Handles collapsed utility menu selection, including opening preferences.
+ * Handles collapsed utility menu selection, including opening the preferences dialog.
  *
  * @param selectedValue - Newly selected menu item value, or null.
  */
@@ -176,8 +175,8 @@ function handleMenuSelection(
 	selectedValue: MenuItemValue | null
 ): void {
 	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.settings ) {
-		isPreferencesPopoverOpen.value = true
 		menuSelection.value = null
+		isPreferencesDialogOpen.value = true
 		return
 	}
 	handleUtilityMenuSelection( selectedValue )
@@ -186,6 +185,9 @@ function handleMenuSelection(
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
+const settingsDialogCloseLabel = computed( () =>
+	$bananaI18n( 'header-settings-dialog-close-label' )
+)
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
@@ -463,34 +465,34 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			</CdxButton>
 		</span>
 
-		<!--
-			Popover stays a sibling so collapsed mode can anchor to the overflow
-			menu; Teleport keeps it out of the flex gap (comment nodes only).
-		-->
+		<!-- Teleport keeps the popover out of the utility-row flex gap. -->
 		<CdxPopover
 			v-model:open="isPreferencesPopoverOpen"
 			class="shell-header-utility-actions__preferences-popover fd-cdx-popover--arrow-seam-fix"
-			:anchor="preferencesPopoverAnchor"
+			:anchor="settingsButtonRef"
 			placement="bottom-end"
 		>
-			<CdxField
-				class="shell-header-utility-actions__color-theme-field"
-				is-fieldset
-			>
-				<template #label>
-					{{ colorThemeFieldLabel }}
-				</template>
-				<CdxRadio
-					v-for="option in colorThemePreferenceOptions"
-					:key="option.mode"
-					v-model="colorModeSelection"
-					name="color-theme-preference"
-					:input-value="option.mode"
-				>
-					{{ option.label }}
-				</CdxRadio>
-			</CdxField>
+			<SharedShellColorThemePreferences
+				v-model:selected-mode="colorModeSelection"
+				:field-label="colorThemeFieldLabel"
+				:options="colorThemePreferenceOptions"
+			/>
 		</CdxPopover>
+
+		<!-- Theme selection applies immediately, so a footer action is unnecessary. -->
+		<CdxDialog
+			v-model:open="isPreferencesDialogOpen"
+			class="shell-header-utility-actions__preferences-dialog"
+			:title="settingsButtonLabel"
+			:use-close-button="true"
+			:close-button-label="settingsDialogCloseLabel"
+		>
+			<SharedShellColorThemePreferences
+				v-model:selected-mode="colorModeSelection"
+				:field-label="colorThemeFieldLabel"
+				:options="colorThemePreferenceOptions"
+			/>
+		</CdxDialog>
 
 		<div
 			ref="languageControlRef"
@@ -560,7 +562,6 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<CdxMenuButton
 			v-show="isUtilityCollapsed"
-			ref="utilityMenuButtonRef"
 			v-model:selected="menuSelection"
 			class="shell-header-utility-actions__utility-menu"
 			weight="quiet"
@@ -643,18 +644,9 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 }
 
 /*
- * Preferences `CdxPopover` is teleported — body padding and arrow/body seam live in
- * `app/assets/css/shell-codex-overrides.css` (class `fd-cdx-popover--arrow-seam-fix`).
+ * Preferences `CdxPopover` and `CdxDialog` are teleported. Popover body padding
+ * and arrow/body seam live in `app/assets/css/shell-codex-overrides.css`.
  */
-
-.shell-header-utility-actions__color-theme-field {
-	margin-block-start: 0;
-	min-inline-size: 12rem;
-}
-
-.shell-header-utility-actions__color-theme-field :deep( .cdx-field__label ) {
-	margin-block-end: var( --spacing-25 );
-}
 
 /*
  * Language control: compact globe + uppercase-code quiet `CdxButton` (Codex
