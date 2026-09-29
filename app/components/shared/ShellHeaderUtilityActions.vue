@@ -78,7 +78,17 @@ const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', 
 } )
 
 const actionsRootRef = useTemplateRef<HTMLElement>( 'actionsRootRef' )
-const { isUtilityCollapsed } = useHeaderUtilityCollapse( actionsRootRef )
+const searchWrapperRef = useTemplateRef<HTMLElement>( 'searchWrapperRef' )
+const settingsControlRef = useTemplateRef<HTMLElement>( 'settingsControlRef' )
+const languageControlRef = useTemplateRef<HTMLElement>( 'languageControlRef' )
+const sessionControlRef = useTemplateRef<HTMLElement>( 'sessionControlRef' )
+const { isUtilityCollapsed } = useHeaderUtilityCollapse( {
+	actionsRootRef,
+	searchWrapperRef,
+	settingsControlRef,
+	languageControlRef,
+	sessionControlRef
+} )
 const { direction } = useDirection()
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
@@ -396,6 +406,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	>
 		<div
 			v-show="!isUtilityCollapsed"
+			ref="searchWrapperRef"
 			class="shell-header-utility-actions__search-wrap"
 			@focusout="handleSearchAreaFocusOut"
 		>
@@ -437,6 +448,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="settingsControlRef"
 			class="shell-header-utility-actions__settings"
 		>
 			<CdxButton
@@ -481,6 +493,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 		</CdxPopover>
 
 		<div
+			ref="languageControlRef"
 			class="shell-header-utility-actions__language"
 			@focusout="handleLanguageAreaFocusOut"
 			@keydown.escape="closeLanguageLookup"
@@ -524,6 +537,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="sessionControlRef"
 			class="shell-header-utility-actions__session"
 		>
 			<NuxtLink

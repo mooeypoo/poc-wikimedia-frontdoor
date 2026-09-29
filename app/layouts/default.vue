@@ -543,16 +543,12 @@ useHead( {
 	}
 
 	.frontdoor-shell__chrome-utility-band {
-		display: contents;
-	}
-
-	.frontdoor-shell__chrome-start--brand {
-		grid-column: 1;
-		grid-row: 1;
-	}
-
-	.frontdoor-shell__chrome-main {
-		grid-column: 2;
+		/*
+		 * Keep the first row as one flex formatting context so the 24px gap is
+		 * measured between the actual brand group and utility actions. The brand
+		 * can be wider than the fixed 281px start panel in some locales.
+		 */
+		grid-column: 1 / -1;
 		grid-row: 1;
 	}
 
