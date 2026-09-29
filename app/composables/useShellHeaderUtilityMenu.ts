@@ -24,8 +24,9 @@ export const SHELL_HEADER_UTILITY_MENU_VALUE = UTILITY_MENU_VALUE
  *
  * Preferences and interface language move into the same ellipsis menu as account
  * and session actions whenever the search field collapses. The parent component
- * owns Preferences and Language selection behavior. When logged in, the menu
- * includes a link to the account dashboard (username label) plus log out.
+ * owns Preferences and Language selection behavior (Language opens the full-screen
+ * compact selector). When logged in, the menu includes a link to the account
+ * dashboard (username label) plus log out.
  *
  * @param selectedInterfaceLocale - Reactive active interface-locale code.
  * @returns Reactive menu state and handlers for `CdxMenuButton`.

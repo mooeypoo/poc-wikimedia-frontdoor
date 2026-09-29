@@ -190,6 +190,7 @@
   "header-account-label": "Votre tableau de bord",
   "header-auth-link-aria": "$1, tableau de bord du compte",
   "header-language-menu-item-label": "Langue ($1)",
+  "header-language-mobile-back-label": "Retour",
   "header-logged-in-as": "Connecté en tant que {{bidi:$1}}",
   "header-login-label": "Se connecter",
   "header-logout-label": "Se déconnecter",

@@ -13,6 +13,7 @@ import {
 	type MenuItemValue
 } from '@wikimedia/codex'
 import {
+	cdxIconArrowPrevious,
 	cdxIconConfigure,
 	cdxIconEllipsis,
 	cdxIconLanguage,
@@ -46,8 +47,10 @@ import {
  *
  * Color theme uses `useColorMode` with options from
  * `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark / System default). The
- * expanded settings gear opens a `CdxPopover`; collapsed-menu Settings opens
- * a content-height `CdxDialog`. Utility options use `--spacing-50`
+ * expanded settings gear opens a `CdxPopover`; collapsed-menu Preferences opens
+ * a content-height `CdxDialog`. Compact Language opens a full-screen `CdxDialog`
+ * with a back button, Lookup input, and shadowless full-height menu.
+ * Utility options use `--spacing-50`
  * (8px) `column-gap`, with search → preferences at `--spacing-100` (16px)
  * via an extra search-wrap `margin-inline-end`; share a vertical centerline
  * with the brand. Figma:
@@ -70,6 +73,14 @@ import {
  */
 const LANGUAGE_LOOKUP_MENU_CONFIG: MenuConfig = {
 	visibleItemLimit: HEADER_LANGUAGE_MENU_VISIBLE_ITEM_LIMIT,
+	renderInPlace: true
+}
+
+/**
+ * The compact full-screen selector lets its native Codex menu fill all space
+ * below the custom dialog header, so it does not use the desktop seven-row cap.
+ */
+const MOBILE_LANGUAGE_LOOKUP_MENU_CONFIG: MenuConfig = {
 	renderInPlace: true
 }
 
@@ -123,6 +134,7 @@ const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const isPreferencesPopoverOpen = ref( false )
 const isPreferencesDialogOpen = ref( false )
+const isMobileLanguageDialogOpen = ref( false )
 // Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>
 // ) to match CdxPopover's own anchor prop type; the specific instance type isn't
 // assignable to it due to Vue's generic component-instance variance.
@@ -164,6 +176,8 @@ watch( isUtilityCollapsed, ( nextIsUtilityCollapsed ) => {
 		// The expanded controls anchor their overlays; dismiss before hiding them.
 		closeLanguageLookup()
 		isPreferencesPopoverOpen.value = false
+	} else if ( isMobileLanguageDialogOpen.value ) {
+		closeMobileLanguageDialog()
 	}
 } )
 
@@ -181,8 +195,8 @@ function handleMenuSelection(
 		return
 	}
 	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.language ) {
-		// Selection behavior will be defined separately during this header exploration.
 		menuSelection.value = null
+		void openMobileLanguageDialog()
 		return
 	}
 	handleUtilityMenuSelection( selectedValue )
@@ -196,6 +210,9 @@ const settingsDialogCloseLabel = computed( () =>
 )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
+const mobileLanguageBackButtonLabel = computed( () =>
+	$bananaI18n( 'header-language-mobile-back-label' )
+)
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
 const selectedLanguageCodeLabel = computed( () => {
@@ -227,6 +244,8 @@ const languageSelection = ref<string | null>( selectedInterfaceLocale.value )
 const languageInputValue = ref<string>( selectedLanguageAutonym.value )
 const isLanguageLookupOpen = ref( false )
 const languageLookupRef = useTemplateRef<{ $el: HTMLElement }>( 'languageLookupRef' )
+const mobileLanguageLookupRef =
+	useTemplateRef<{ $el: HTMLElement }>( 'mobileLanguageLookupRef' )
 
 /**
  * Menu items filtered by the typed term (native name, English name, or code),
@@ -277,7 +296,7 @@ function handleLanguageInput( value: string | number | null ): void {
 
 /**
  * Commits a language choice: updates the model (which drives locale routing),
- * resets the input to the chosen autonym, and closes the compact popover.
+ * resets the input to the chosen autonym, and closes either picker surface.
  *
  * @param value - Selected language code (null when the selection is cleared).
  */
@@ -292,6 +311,7 @@ function handleLanguageSelection( value: string | number | null ): void {
 		getLanguageByCode( nextLocale )?.autonym ?? nextLocale
 	languageSearchTerm.value = ''
 	isLanguageLookupOpen.value = false
+	isMobileLanguageDialogOpen.value = false
 }
 
 /**
@@ -308,6 +328,21 @@ function resetLanguageLookupInput(): void {
 }
 
 /**
+ * Waits for a newly mounted overlay to complete two browser layout frames.
+ *
+ * @returns A promise that resolves after the overlay can be measured reliably.
+ */
+function waitForOverlayLayout(): Promise<void> {
+	return new Promise<void>( ( resolve ) => {
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				resolve()
+			} )
+		} )
+	} )
+}
+
+/**
  * Opens the language popover and focuses the lookup input so the user can type
  * immediately.
  *
@@ -320,13 +355,7 @@ async function openLanguageLookup(): Promise<void> {
 	resetLanguageLookupInput()
 	isLanguageLookupOpen.value = true
 	await nextTick()
-	await new Promise<void>( ( resolve ) => {
-		requestAnimationFrame( () => {
-			requestAnimationFrame( () => {
-				resolve()
-			} )
-		} )
-	} )
+	await waitForOverlayLayout()
 	languageLookupRef.value?.$el.querySelector( 'input' )?.focus()
 }
 
@@ -347,6 +376,54 @@ function toggleLanguageLookup(): void {
 	} else {
 		openLanguageLookup()
 	}
+}
+
+/**
+ * Opens the full-screen compact language selector and focuses its search input.
+ *
+ * Two animation frames let the teleported Codex dialog finish layout before the
+ * Lookup opens its menu and calculates focus.
+ */
+async function openMobileLanguageDialog(): Promise<void> {
+	resetLanguageLookupInput()
+	isMobileLanguageDialogOpen.value = true
+	await nextTick()
+	await waitForOverlayLayout()
+	const inputElement =
+		mobileLanguageLookupRef.value?.$el.querySelector<HTMLInputElement>( 'input' )
+	inputElement?.focus()
+	/*
+	 * CdxDialog's focus trap initially focuses Back after mount, so moving focus to
+	 * Lookup does not consistently run Lookup's normal focus-to-expand path. Delegate
+	 * ArrowDown through its supported keyboard handler to open the existing menu.
+	 */
+	inputElement?.dispatchEvent( new KeyboardEvent( 'keydown', {
+		key: 'ArrowDown',
+		code: 'ArrowDown',
+		bubbles: true,
+		cancelable: true
+	} ) )
+}
+
+/**
+ * Closes the full-screen compact language selector and restores the committed locale.
+ */
+function closeMobileLanguageDialog(): void {
+	isMobileLanguageDialogOpen.value = false
+	resetLanguageLookupInput()
+}
+
+/**
+ * Handles Codex dialog dismissal, including Escape, with the same reset as Back.
+ *
+ * @param isOpen - Next dialog open state emitted by `CdxDialog`.
+ */
+function handleMobileLanguageDialogOpenUpdate( isOpen: boolean ): void {
+	if ( isOpen ) {
+		isMobileLanguageDialogOpen.value = true
+		return
+	}
+	closeMobileLanguageDialog()
 }
 
 /**
@@ -498,6 +575,43 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 				:field-label="colorThemeFieldLabel"
 				:options="colorThemePreferenceOptions"
 			/>
+		</CdxDialog>
+
+		<CdxDialog
+			:open="isMobileLanguageDialogOpen"
+			class="shell-header-utility-actions__mobile-language-dialog"
+			:title="interfaceLanguageLabel"
+			:hide-title="true"
+			:use-close-button="false"
+			@update:open="handleMobileLanguageDialogOpenUpdate"
+		>
+			<div class="shell-header-utility-actions__mobile-language-selector">
+				<div class="shell-header-utility-actions__mobile-language-header">
+					<CdxButton
+						weight="quiet"
+						:aria-label="mobileLanguageBackButtonLabel"
+						@click="closeMobileLanguageDialog"
+					>
+						<CdxIcon :icon="cdxIconArrowPrevious" />
+					</CdxButton>
+					<CdxLookup
+						ref="mobileLanguageLookupRef"
+						:key="`mobile-${ direction }`"
+						v-model:selected="languageSelection"
+						v-model:input-value="languageInputValue"
+						class="shell-header-utility-actions__mobile-language-lookup"
+						dir="auto"
+						:menu-items="languageMenuItems"
+						:menu-config="MOBILE_LANGUAGE_LOOKUP_MENU_CONFIG"
+						:start-icon="cdxIconLanguage"
+						clearable
+						:aria-label="interfaceLanguageLabel"
+						:placeholder="interfaceLanguageLabel"
+						@input="handleLanguageInput"
+						@update:selected="handleLanguageSelection"
+					/>
+				</div>
+			</div>
 		</CdxDialog>
 
 		<div

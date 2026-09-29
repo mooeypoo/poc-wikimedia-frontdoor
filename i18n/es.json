@@ -190,6 +190,7 @@
   "header-account-label": "Tu panel",
   "header-auth-link-aria": "$1, panel de cuenta",
   "header-language-menu-item-label": "Idioma ($1)",
+  "header-language-mobile-back-label": "Atrás",
   "header-logged-in-as": "Sesión iniciada como {{bidi:$1}}",
   "header-login-label": "Iniciar sesion",
   "header-logout-label": "Cerrar sesión",

@@ -190,6 +190,7 @@
   "header-account-label": "לוח הבקרה שלך",
   "header-auth-link-aria": "$1, לוח בקרה של החשבון",
   "header-language-menu-item-label": "שפה ($1)",
+  "header-language-mobile-back-label": "חזרה",
   "header-logged-in-as": "מחוברים בתור {{bidi:$1}}",
   "header-login-label": "כניסה לחשבון",
   "header-logout-label": "יציאה מהחשבון",

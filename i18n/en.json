@@ -201,6 +201,7 @@
   "header-account-label": "Your dashboard",
   "header-auth-link-aria": "$1, account dashboard",
   "header-language-menu-item-label": "Language ($1)",
+  "header-language-mobile-back-label": "Back",
   "header-logged-in-as": "Logged in as {{bidi:$1}}",
   "header-login-label": "Log in",
   "header-logout-label": "Log out",
