@@ -205,6 +205,7 @@
   "header-logout-label": "Text for the Log out link in the header, shown when a user is logged in.",
   "header-preferences-label": "Label for the preferences item in the collapsed header utility menu.",
   "header-search-button-label": "Accessible label for the collapsed header search icon button.",
+  "header-search-mobile-back-label": "Accessible label for the icon-only Back button in the full-screen compact search.",
   "header-search-placeholder": "Placeholder text for the header search field prototype.",
   "header-settings-dialog-close-label": "Accessible label for the close (X) button in the header settings dialog.",
   "header-settings-label": "Label for the expanded header settings trigger and settings dialog title.",

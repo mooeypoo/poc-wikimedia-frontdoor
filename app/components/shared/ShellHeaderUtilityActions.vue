@@ -49,7 +49,9 @@ import {
  * `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark / System default). The
  * expanded settings gear opens a `CdxPopover`; collapsed-menu Preferences opens
  * a content-height `CdxDialog`. Compact Language opens a full-screen `CdxDialog`
- * with a back button, Lookup input, and shadowless full-height menu.
+ * with a back button, Lookup input, and shadowless full-height menu. Compact
+ * Search uses the same dialog layout while retaining the existing search input,
+ * result rendering, and selection behavior.
  * Utility options use `--spacing-50`
  * (8px) `column-gap`, with search → preferences at `--spacing-100` (16px)
  * via an extra search-wrap `margin-inline-end`; share a vertical centerline
@@ -105,6 +107,7 @@ const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
 const searchQuery = ref( '' )
 const isSearchPanelOpen = ref( false )
+const isMobileSearchDialogOpen = ref( false )
 
 const {
 	localeResults,
@@ -179,6 +182,9 @@ watch( isUtilityCollapsed, ( nextIsUtilityCollapsed ) => {
 	} else if ( isMobileLanguageDialogOpen.value ) {
 		closeMobileLanguageDialog()
 	}
+	if ( !nextIsUtilityCollapsed && isMobileSearchDialogOpen.value ) {
+		closeMobileSearchDialog()
+	}
 } )
 
 /**
@@ -213,6 +219,9 @@ const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-
 const mobileLanguageBackButtonLabel = computed( () =>
 	$bananaI18n( 'header-language-mobile-back-label' )
 )
+const mobileSearchBackButtonLabel = computed( () =>
+	$bananaI18n( 'header-search-mobile-back-label' )
+)
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
 const selectedLanguageCodeLabel = computed( () => {
@@ -246,6 +255,8 @@ const isLanguageLookupOpen = ref( false )
 const languageLookupRef = useTemplateRef<{ $el: HTMLElement }>( 'languageLookupRef' )
 const mobileLanguageLookupRef =
 	useTemplateRef<{ $el: HTMLElement }>( 'mobileLanguageLookupRef' )
+const mobileSearchInputRef =
+	useTemplateRef<{ $el: HTMLElement }>( 'mobileSearchInputRef' )
 
 /**
  * Menu items filtered by the typed term (native name, English name, or code),
@@ -427,6 +438,36 @@ function handleMobileLanguageDialogOpenUpdate( isOpen: boolean ): void {
 }
 
 /**
+ * Opens the full-screen compact search and focuses the existing search input.
+ */
+async function openMobileSearchDialog(): Promise<void> {
+	isMobileSearchDialogOpen.value = true
+	await nextTick()
+	await waitForOverlayLayout()
+	mobileSearchInputRef.value?.$el.querySelector<HTMLInputElement>( 'input' )?.focus()
+}
+
+/**
+ * Closes the full-screen compact search without changing the current query.
+ */
+function closeMobileSearchDialog(): void {
+	isMobileSearchDialogOpen.value = false
+}
+
+/**
+ * Handles compact-search dialog dismissal, including Escape.
+ *
+ * @param isOpen - Next dialog open state emitted by `CdxDialog`.
+ */
+function handleMobileSearchDialogOpenUpdate( isOpen: boolean ): void {
+	if ( isOpen ) {
+		isMobileSearchDialogOpen.value = true
+		return
+	}
+	closeMobileSearchDialog()
+}
+
+/**
  * Closes the language popover when focus leaves its container (an outside
  * click or tab-away); selecting a menu item keeps focus within and does not
  * trigger this.
@@ -464,20 +505,19 @@ function handleSearchAreaFocusOut( event: FocusEvent ): void {
 /**
  * Clears the query and closes the search panel after a result is chosen.
  *
- * @param _resultId - Selected search result id (navigation deferred in prototype).
+ * @param _resultId - Selected result id; the result's `NuxtLink` owns navigation.
  */
 function handleResultSelect( _resultId: string ): void {
 	searchQuery.value = ''
 	isSearchPanelOpen.value = false
+	isMobileSearchDialogOpen.value = false
 }
 
 /**
- * Placeholder for collapsed search icon activation — behaviour deferred.
- *
- * @param event - Click event on the collapsed search button.
+ * Opens the compact search surface from the collapsed search button.
  */
-function handleCollapsedSearchClick( event: MouseEvent ): void {
-	event.preventDefault()
+function handleCollapsedSearchClick(): void {
+	void openMobileSearchDialog()
 }
 </script>
 
@@ -531,6 +571,54 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
+		<CdxDialog
+			:open="isMobileSearchDialogOpen"
+			class="shell-header-utility-actions__mobile-dialog shell-header-utility-actions__mobile-search-dialog"
+			:title="searchButtonLabel"
+			:hide-title="true"
+			:use-close-button="false"
+			@update:open="handleMobileSearchDialogOpenUpdate"
+		>
+			<div
+				class="shell-header-utility-actions__mobile-selector shell-header-utility-actions__mobile-search-selector"
+			>
+				<div
+					class="shell-header-utility-actions__mobile-selector-header shell-header-utility-actions__mobile-search-header"
+				>
+					<CdxButton
+						weight="quiet"
+						:aria-label="mobileSearchBackButtonLabel"
+						@click="closeMobileSearchDialog"
+					>
+						<CdxIcon :icon="cdxIconArrowPrevious" />
+					</CdxButton>
+					<CdxSearchInput
+						ref="mobileSearchInputRef"
+						v-model="searchQuery"
+						class="shell-header-utility-actions__mobile-selector-control shell-header-utility-actions__mobile-search-input"
+						dir="auto"
+						:use-button="false"
+						:placeholder="searchPlaceholderLabel"
+					/>
+				</div>
+				<div
+					v-if="hasQuery"
+					class="shell-header-utility-actions__mobile-search-results"
+				>
+					<SharedSearchResults
+						:locale-results="localeResults"
+						:fallback-results="fallbackResults"
+						:all-locale-result-groups="allLocaleResultGroups"
+						:is-all-locales-mode="isAllLocalesMode"
+						:active-locale="$interfaceLocale"
+						:search-query="searchQuery"
+						@result-select="handleResultSelect"
+						@activate-all-locales="activateAllLocalesSearch"
+					/>
+				</div>
+			</div>
+		</CdxDialog>
+
 		<span
 			v-show="!isUtilityCollapsed"
 			ref="settingsControlRef"
@@ -579,14 +667,18 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<CdxDialog
 			:open="isMobileLanguageDialogOpen"
-			class="shell-header-utility-actions__mobile-language-dialog"
+			class="shell-header-utility-actions__mobile-dialog shell-header-utility-actions__mobile-language-dialog"
 			:title="interfaceLanguageLabel"
 			:hide-title="true"
 			:use-close-button="false"
 			@update:open="handleMobileLanguageDialogOpenUpdate"
 		>
-			<div class="shell-header-utility-actions__mobile-language-selector">
-				<div class="shell-header-utility-actions__mobile-language-header">
+			<div
+				class="shell-header-utility-actions__mobile-selector shell-header-utility-actions__mobile-language-selector"
+			>
+				<div
+					class="shell-header-utility-actions__mobile-selector-header shell-header-utility-actions__mobile-language-header"
+				>
 					<CdxButton
 						weight="quiet"
 						:aria-label="mobileLanguageBackButtonLabel"
@@ -599,7 +691,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 						:key="`mobile-${ direction }`"
 						v-model:selected="languageSelection"
 						v-model:input-value="languageInputValue"
-						class="shell-header-utility-actions__mobile-language-lookup"
+						class="shell-header-utility-actions__mobile-selector-control shell-header-utility-actions__mobile-language-lookup"
 						dir="auto"
 						:menu-items="languageMenuItems"
 						:menu-config="MOBILE_LANGUAGE_LOOKUP_MENU_CONFIG"
