@@ -574,9 +574,9 @@ useHead( {
 }
 
 /*
- * Standard content pages use the 14-column / 792px measure from the responsive
- * shell specification. Landing sections and Scalar Explorer retain their
- * dedicated wider measures.
+ * Standard content pages use a 792px measure nested in the responsive shell's
+ * centre region. Landing sections and Scalar Explorer retain their dedicated
+ * wider measures.
  */
 .frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__content,
 .frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__main {
@@ -679,14 +679,14 @@ useHead( {
 }
 
 /*
- * Reserve the end-panel track at the wide TOC breakpoint even when a page has
- * too few headings to render a TOC. Keeping the grid geometry independent of
- * TOC presence prevents the 792px content column from shifting between pages.
+ * Reserve the end-panel track once the shell can fit both navigation allocations,
+ * both 40px gaps, and the 640px minimum content measure. Keeping the grid geometry
+ * independent of TOC presence prevents content from shifting between pages.
  *
- * The 1354px literal mirrors ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX in
+ * The 1202px literal mirrors ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX in
  * config/onThisPageNav.ts; CSS custom properties cannot be used in media queries.
  */
-@media screen and ( min-width: 1354px ) {
+@media screen and ( min-width: 1202px ) {
 	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ):not( .frontdoor-shell--nav-collapsed ):not( .frontdoor-shell--sidebar-hidden ) .frontdoor-shell__body-columns {
 		grid-template-columns:
 			minmax( var( --fd-layout-navigation-content-min-gap ), 1fr )
@@ -698,12 +698,26 @@ useHead( {
 
 @media screen and ( min-width: 1440px ) {
 	/*
-	 * Lock standard shell geometry at 1440px; viewport growth becomes exterior
-	 * margin while navigation-to-content spacing stays unchanged.
+	 * Constrain standard shell geometry to the active Codex grid width. Its
+	 * desktop-wide values scale through 1680px, then viewport growth becomes
+	 * exterior margin.
 	 */
 	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {
 		max-inline-size: var( --fd-layout-body-columns-max-inline-size );
 		transition: none;
+	}
+
+	/*
+	 * Direct Codex 4 | 16 | 4 outer grid: the body contains the first gutter,
+	 * the 16-column centre region, the second gutter, and the four-column end
+	 * panel. The 792px `.frontdoor-shell__content` centres inside column 2.
+	 */
+	.frontdoor-shell:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ):not( .frontdoor-shell--nav-collapsed ):not( .frontdoor-shell--sidebar-hidden ) .frontdoor-shell__body-columns {
+		grid-template-columns:
+			var( --fd-layout-grid-gutter )
+			minmax( 0, 1fr )
+			var( --fd-layout-grid-gutter )
+			var( --fd-layout-end-panel-inline-size );
 	}
 
 	.frontdoor-shell--nav-drawer-expanding:not( .frontdoor-shell--landing ):not( .frontdoor-shell--explorer ) .frontdoor-shell__body-columns {

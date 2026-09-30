@@ -35,7 +35,7 @@ The design branch extends Experiment 1 (Scalar multi-spec explorer) with a **pro
 - Learn, Enterprise, Community, Contribute, and Get help pages are **empty Markdown stubs**
 - Opt-in filters gate **module** visibility in **API to explore** (beta prefixes; `*-internal` path segments); per-**endpoint** filtering inside a selected OpenAPI spec is not wired yet
 - Full reload when crossing `/explorer` boundary (UX trade-off for reliability; see `ARCHITECTURE.md`)
-- **Shell chrome layout** (`design-responsive-improvements` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; standard content capped at **792px**; start column **always mounted** (empty panel when no section links); each navigation allocation is **241px including its exterior page margin**; **transparent** panel with **`border-inline-end`** on the scrollport panel (`--border-color-muted`, hidden when collapsed); **0** start grid track when nav is collapsed below **961px** (or when translated nav labels need more room); **single start-nav scrollport** + thin overlay-style thumb + **`::after` scroll-end spacer** (`shell-start-nav-scroll.css`); **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (`padding-block-end`; symmetric with start nav / overlay scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
+- **Shell chrome layout** (`design-responsive-improvements` branch): full-viewport header band; **mark + Montserrat banana wordmark** header brand; standard content capped at **792px**; start column **always mounted** (empty panel when no section links); capacity-driven **241px** navigation allocations through 1439px, then Codex **4 | 16 | 4** outer-grid scaling to the 1512px desktop-wide cap; **transparent** panel with **`border-inline-end`** on the scrollport panel (`--border-color-muted`, hidden when collapsed); **0** start grid track when nav is collapsed below **961px** (or when translated nav labels need more room); **single start-nav scrollport** + thin overlay-style thumb + **`::after` scroll-end spacer** (`shell-start-nav-scroll.css`); **drawer expand** (`shell-start-nav-reveal.css`); **static site footer** (`ShellSiteFooter`) inside main content column with **32px** bottom inset (`padding-block-end`; symmetric with start nav / overlay scroll-end); **independent column scroll** (start nav + main band) when content exceeds the viewport body
 
 ---
 
@@ -90,8 +90,8 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 | Viewport | Placement |
 |----------|-----------|
-| **≥ 1354px** | End-column quiet list (`ShellOnThisPageNav` in `.frontdoor-shell__on-this-page-end`; Figma [responsive specification 1495:28797](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1495-28797)). **CSS sticky** at the end-column top (`inset-block-start: 0`) — not explorer `useEndPanelNavAlign` (resize remeasure caused flicker). End column stretched via `:has(.frontdoor-shell__on-this-page-end)` so sticky has a full-height containing block. The threshold is the first width that fits **241 + 40 + 792 + 40 + 241px**. |
-| **≤ 1353px** | Quiet neutral **`CdxMenuButton`** in the primary-nav row, **`margin-inline-start: auto`** + **`margin-block-end: var(--spacing-75)` (12px)** so the trigger aligns with quiet-tab label padding (Figma [Off-wiki 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)). When primary nav is collapsed, the MenuButton stays on the **end** of that row. |
+| **≥ 1202px** | End-column quiet list (`ShellOnThisPageNav` in `.frontdoor-shell__on-this-page-end`; Figma [responsive specification 1495:28797](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1495-28797)). **CSS sticky** at the end-column top (`inset-block-start: 0`) — not explorer `useEndPanelNavAlign` (resize remeasure caused flicker). End column stretched via `:has(.frontdoor-shell__on-this-page-end)` so sticky has a full-height containing block. The threshold is the first width that fits **241 + 40 + 640 + 40 + 241px**. |
+| **≤ 1201px** | Quiet neutral **`CdxMenuButton`** in the primary-nav row, **`margin-inline-start: auto`** + **`margin-block-end: var(--spacing-75)` (12px)** so the trigger aligns with quiet-tab label padding (Figma [Off-wiki 50:2563](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2563)). When primary nav is collapsed, the MenuButton stays on the **end** of that row. |
 
 **Scrollspy:** The heading currently in view uses **`--color-progressive`** (Codex progressive / `#36c` in light theme). Hover matches progressive. Resting links use **`--color-subtle`**. Programmatic TOC jumps suspend scrollspy until `scrollend` (with timeout fallback) so the clicked item stays active; near scroll-end activates the last heading when it cannot reach the activation band.
 
@@ -101,7 +101,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 **Config:** `config/onThisPageNav.ts` (`ON_THIS_PAGE_NAV_MIN_H2_COUNT`, `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`).
 
-**Stable main-content alignment:** At ≥1354px, standard documentation layouts reserve the full end-navigation track even when a page has fewer than three `h2`s and no TOC is rendered. The panel itself stays hidden, but the **792px** main track remains in the same horizontal position when navigating between pages with and without a TOC.
+**Stable main-content alignment:** At ≥1202px, main content keeps the same horizontal position whether or not “On this page” is shown. An ineligible page leaves the reserved end track empty.
 
 **Source:** `useOnThisPageNav`, `ShellOnThisPageNav.vue`, `ShellOnThisPageMenuButton.vue`, `app/layouts/default.vue`. See `ARCHITECTURE.md` → On-this-page navigation.
 
@@ -115,7 +115,7 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 - **Full-height panel (tablet+):** the start column track is **viewport-height constrained** below the chrome band; when section nav content is taller than that area, **`.frontdoor-shell__side-panel--start`** scrolls independently (`shell-start-nav-scroll.css`: `overflow-block: auto`, `flex-shrink: 1`, `min-block-size: 0`; inline size from `--fd-layout-start-panel-inline-size`). The grid track clips drawer motion (`overflow: hidden` on `.fd-page-grid__start`) and must not scroll alongside the panel.
 - **Scroll-end inset (32px):** **`::after` block spacer** (`block-size: --spacing-200`) on the breakpoint scrollport — tablet+ **`.frontdoor-shell__side-panel--start`**, mobile **`.fd-page-grid__start`** — in `shell-start-nav-scroll.css`. Not `padding-block-end` on the inner panel wrapper. Collapsed overlay panel uses the same pattern in **`ShellCollapsedNavMenuOverlay.vue`**. Symmetric with site footer (`padding-block-end` on `.shell-site-footer`).
 - **Start nav scrollbar:** **`shell-start-nav-scroll.css`** — one scrollport per breakpoint; transparent track + thin thumb only (no permanent gutter beside the panel border). WebKit scrollbar pseudos use physical `width` (API exception).
-- **Navigation allocation:** **241px total**, including the breakpoint’s exterior start margin. The in-grid drawer panel/track uses `--fd-layout-start-panel-inline-size = 241px − --fd-layout-page-margin` (**217px** at 24px tablet margins; **209px** at 32px desktop margins). The grid track uses **`min-inline-size: 0`** and becomes **0** when collapsed.
+- **Navigation sizing:** through 1439px, **241px total** including the breakpoint’s exterior start margin. The in-grid drawer panel/track uses `--fd-layout-start-panel-inline-size = 241px − --fd-layout-page-margin` (**217px** at 24px tablet margins; **209px** at 32px desktop margins). From 1440px, the panel follows Codex’s four-column side track and grows from **209px** to **232px** by 1680px. The grid track uses **`min-inline-size: 0`** and becomes **0** when collapsed.
 - **Responsive collapse:** below **961px**, `useShellNavigationCollapse` always collapses header tabs into hamburger + breadcrumbs and hides the start track; **961px** is the first width that preserves **241px navigation + 40px gap + 640px content + 40px page-end space**. At wider widths, intrinsic tab measurement + hysteresis may still collapse for translated labels or other wide content (see **Shell chrome** → Primary nav + section menu collapse).
 - **Item hover:** non-selected menu item labels turn **`--color-progressive`** on hover (custom CSS — see **Codex exceptions** below).
 - **Explorer / APIs section links:** The **APIs** primary section (catalog `/apis` overview + `/apis/…` + explorer) uses `config/explorerSideNav.js`. Items with a **`mode`** navigate to `/explorer` sub-routes (`pathForExplorerMode` in `usePageSectionNav`); items with **`href`** navigate to content pages (e.g. `/apis/attribution`). **`ShellSidePanelNav`** calls `navigateTo` on click. Active state follows `explorerModeFromPath()` or locale-agnostic `href` match. Items with **`enabled: false`** are hidden.
@@ -148,11 +148,11 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 ## Layout system
 
-Layout follows the **Codex responsive grid** and the **2-panel desktop layout** pattern so the shell can host section navigation and reserved end-column space beside a bounded content measure. Standard documentation content uses the Figma responsive specification’s **4 | 14 | 4** distribution with a **792px maximum**. Community Explorer remains a deliberate wide-layout exception and uses Scalar’s native sidebar for endpoints (PR #40).
+Layout follows the **Codex responsive grid** and the **2-panel desktop layout** pattern so the shell can host section navigation and reserved end-column space beside a bounded content measure. At wide sizes, the outer shell uses Codex’s **4 | 16 | 4** distribution; standard documentation content remains a centred **792px maximum** nested inside the 16-column centre region. Community Explorer remains a deliberate wide-layout exception and uses Scalar’s native sidebar for endpoints (PR #40).
 
 **Design reference:** [Codex — 2-panel desktop layout (Figma)](https://www.figma.com/design/KoDuJMadWBXtsOtzGS4134/Codex?m=auto&node-id=29258-10335&t=J1XPwW1kabNcWMB6-1)
 
-**Responsive exploration reference:** [Developer Portal v2 — responsive specification 1495:28797](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1495-28797), including the [14-column content measure 1601:23837](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1601-23837).
+**Responsive exploration reference:** [Developer Portal v2 — responsive specification 1495:28797](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1495-28797), including the [792px content measure 1601:23837](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1601-23837).
 
 ### Responsive breakpoints (design specification)
 
@@ -161,35 +161,36 @@ Layout follows the **Codex responsive grid** and the **2-panel desktop layout** 
 | **Mobile** | 320px–639px | **4 columns** | 16px | 16px | Fluid; local navigation collapsed |
 | **Tablet** | 640px–1119px | **8 columns** | 24px | 24px | Fluid up to **792px**; local navigation collapsed through 960px and available from 961px |
 | **Desktop** | 1120px–1439px | **24 columns** | Responsive shell gaps | 32px | Standard content capped at **792px** |
-| **Locked desktop** | ≥ 1440px | **24-column 4 \| 14 \| 4 shell** | **83px** navigation/content gaps | **Grow with viewport** | Internal geometry fixed at 1440px; extra width becomes exterior margin |
+| **Desktop scaling** | 1440px–1679px | **24-column 4 \| 16 \| 4 outer grid** | 24px | Grow from 32px to 84px | Outer grid scales from 1376px toward 1512px; nested content stays **792px** |
+| **Desktop-wide** | ≥1680px | **24-column 4 \| 16 \| 4 outer grid** | 24px | Grow with viewport | Outer grid fixed at **1512px**; nested content stays **792px** |
 
 **Header chrome width (project-specific):** The header **band** spans the full viewport. Inner content (`.frontdoor-shell__chrome-inner`) uses symmetric **`--fd-layout-page-margin-inline-start`** on both inline edges. At tablet+, primary navigation uses the same start-panel/body tracks as `PageGrid`; the start track is the in-grid portion of the **241px navigation allocation**. The utility row spans the full grid: brand may extend beyond the start track, and utilities align to the header inline-end while preserving the 24px inter-group gap.
 
-**Locked desktop behaviour:** At viewports wider than **1440px**, the shell keeps its 1440px internal geometry—**241px start allocation + 83px gap + 792px content + 83px gap + 241px end allocation**. Only the exterior start/end margins grow. Navigation-to-content spacing does not increase.
+**Wide-grid behaviour:** At **1440px**, the 1376px active grid is **209 | 24 | 910 | 24 | 209px**, with the 792px standard-content measure centred inside the 910px centre region. The outer grid scales through 1679px. At **1680px**, the 1512px Codex desktop-wide grid is **232 | 24 | 1000 | 24 | 232px**, again with the 792px measure centred. Above 1680px, only exterior margins grow; at 1920px they are 204px.
 
 **Rationale:** Aligns with Codex layout tokens and Wikimedia portal conventions; wide screens avoid over-long line lengths in the main column.
 
 ### Shell column distribution (desktop)
 
-At the full two-panel breakpoint (≥1354px), the standard documentation shell uses:
+At the full two-panel breakpoint (≥1202px), the standard documentation shell uses:
 
 | Area | Width | Role |
 |------|-------|------|
-| **Start** | **241px allocation**, including exterior start margin | Section navigation (`ShellSidePanelNav`) when the route has sections; actual panel = allocation minus page margin |
-| **Main** | **792px maximum** (14-column content measure) | Page slot + site footer; standard documentation only |
-| **End** | **241px allocation**, including exterior end margin | Documentation TOC at ≥1354px; track reserved-empty when the page has no qualifying TOC |
+| **Start** | Through 1439px: **241px allocation** including exterior margin; ≥1440px: Codex four-column side track (**209→232px**) | Section navigation (`ShellSidePanelNav`) when the route has sections |
+| **Main** | **640px minimum at rail collapse; 792px maximum** nested content measure | Page slot + site footer; standard documentation only |
+| **End** | Through 1439px: **241px allocation** including exterior margin; ≥1440px: Codex four-column side track (**209→232px**) | Documentation TOC at ≥1202px; track reserved-empty when the page has no qualifying TOC |
 
-**Navigation/content gaps:** At the minimum full layout width (**1354px**), both gaps are **40px** (`--spacing-250`). They grow symmetrically to **83px** at 1440px, then stay fixed while exterior margins grow.
+**Navigation/content gaps:** At the minimum full layout width (**1202px**), both gaps are **40px** (`--spacing-250`) and content is **640px**. Content grows to its **792px** maximum at 1354px; the gaps then grow symmetrically to **83px** at 1440px. From 1440px, Codex grid scaling grows the side tracks and centre region while the content remains centred at 792px.
 
-**Stable page-to-page alignment:** The end allocation is reserved on every standard documentation page at ≥1354px, whether or not the TOC is visible. This keeps the 792px main column at the same horizontal position and prevents route-navigation jumps.
+**Stable page-to-page alignment:** At ≥1202px, main content keeps the same horizontal position whether or not “On this page” is shown; without a TOC, the end track remains empty.
 
-**Below the full two-panel breakpoint:** From 961px through 1353px, the expanded start allocation and a 40px content gap remain; the end-panel TOC is represented by the header MenuButton. Below 961px, local navigation collapses into the header and the main content is centred in the freed width.
+**Below the full two-panel breakpoint:** From 961px through 1201px, the expanded start allocation and a 40px content gap remain; the end-panel TOC is represented by the header MenuButton. Below 961px, local navigation collapses into the header and the main content is centred in the freed width.
 
-**Note:** The standard shell now follows the Figma **4 \| 14 \| 4** model. Landing remains full-bleed with a 1000px inner measure. Explorer retains its wider reference-panel geometry.
+**Note:** At wide sizes, the standard shell follows Codex’s outer **4 | 16 | 4** model with a nested 792px standard-content measure. Landing remains full-bleed with a 1000px inner measure. Explorer retains its wider reference-panel geometry.
 
 **Source (prototype):** `app/assets/css/page-grid.css`, `app/components/shared/PageGrid.vue`.
 
-**Breakpoints:** The shell keeps Codex’s 640px tablet and 1120px desktop breakpoints, with project-specific capacity thresholds at 961px, 1354px, and 1440px. CSS media queries use equivalent px literals because custom properties are unreliable in `@media`; JavaScript thresholds live in `config/`.
+**Breakpoints:** The shell keeps Codex’s 640px tablet, 1120px desktop, and 1680px desktop-wide references, with project-specific capacity thresholds at 961px and 1202px and a grid-transition point at 1440px. CSS media queries use equivalent px literals because custom properties are unreliable in `@media`; JavaScript thresholds live in `config/`.
 
 ### Implementation status
 
@@ -197,18 +198,18 @@ At the full two-panel breakpoint (≥1354px), the standard documentation shell u
 |-------------|--------|------------------|
 | Mobile 320px–639px (4-col tokens, 16px gutter/margins, stacked) | **Implemented** | `page-grid.css` — `--spacing-100` page margin and gutter |
 | Standard content maximum 792px | **Implemented** | `default.vue` + `page-grid.css` — `--fd-layout-main-content-max-inline-size` |
-| Navigation allocations 241px including exterior margin | **Implemented** | `--fd-layout-navigation-region-inline-size`; actual start/end panel subtracts `--fd-layout-page-margin` |
+| Navigation tracks | **Implemented** | Through 1439px: 241px allocations including exterior margins; ≥1440px: Codex four-column side tracks |
 | Local navigation: expanded at 961px / collapsed below | **Implemented** | `SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX`; 241 + 40 + 640 + 40 geometry; intrinsic nav-width measurement still applies above the floor |
-| End-panel TOC: ≥1354px / header through 1353px | **Implemented** | `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`; 241 + 40 + 792 + 40 + 241 geometry |
-| Stable content alignment without TOC | **Implemented** | `default.vue` reserves the end track at ≥1354px even when the TOC panel is hidden |
-| Locked shell geometry ≥1440px | **Implemented** | `page-grid.css` / `default.vue`; 83px internal gaps fixed, exterior margins grow |
+| End-panel TOC: ≥1202px / header through 1201px | **Implemented** | `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`; 241 + 40 + 640 + 40 + 241 geometry |
+| Stable content alignment without TOC | **Implemented** | `default.vue` reserves the end track at ≥1202px even when the TOC panel is hidden |
+| Codex outer-grid scaling 1440px–1679px | **Implemented** | `page-grid.css` / `default.vue`; active grid 1376→1512px, side tracks 209→232px, centre region 910→1000px |
 | Header chrome fluid width (&lt; 1440px viewport) | **Implemented** | `default.vue` — full-bleed band; centred inner wrapper |
 | Header / start nav inline-start alignment | **Implemented** | `default.vue` — shared `--fd-layout-page-margin-inline-start` + start-panel grid column + `--spacing-75` content inset |
-| Header/shell width lock (≥ 1440px viewport) | **Implemented** | `page-grid.css` — `--fd-layout-page-margin-inline-start` grows with viewport |
+| Desktop-wide 1512px grid cap (≥1680px) | **Implemented** | `page-grid.css` — active grid caps and `--fd-layout-page-margin-inline-start` grows with viewport |
 | Section nav below header | **Implemented** | Start column in `PageGrid`; header outside grid in `.frontdoor-shell__chrome-band` |
 | Start column inline-end border | **Implemented** | `default.vue` — `border-inline-end` with `--border-color-muted` on `.frontdoor-shell__side-panel--start`; dividers in `ShellSidePanelNav` |
 | Start nav scrollbar (single scrollport) | **Implemented** | `shell-start-nav-scroll.css` — transparent track + thin thumb; panel scroll tablet+, track scroll mobile |
-| Start navigation allocation 241px | **Implemented** | `page-grid.css` — `--fd-layout-navigation-region-inline-size`; in-grid panel is 241px minus page margin |
+| Start navigation sizing | **Implemented** | `page-grid.css` — capacity allocation through 1439px, Codex side-track scaling from 1440px |
 | Section nav item hover (`--color-progressive`) | **Implemented** | `ShellSidePanelNav.vue` — custom `:hover` CSS; **Codex exception** (see Start column section navigation) |
 | Static site footer (Figma 393:4639) | **Implemented** | `ShellSiteFooter.vue`, `config/siteFooter.ts`, inside `frontdoor-shell__content` |
 | Footer legal copy (3 sentences) | **Implemented** | banana `footer-attribution-sentence-*` keys; one line per sentence |
@@ -225,7 +226,7 @@ At the full two-panel breakpoint (≥1354px), the standard documentation shell u
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 | Explorer side nav mode links | **Implemented** | `usePageSectionNav` + `ShellSidePanelNav` + `explorerRoute.ts`; Overview items still placeholders |
-| On-this-page TOC (≥3 `h2`, `h3` nest) | **Implemented** | `useOnThisPageNav` — CSS-sticky end column ≥1354px (`--font-size-small`); quiet MenuButton ≤1353px (`--spacing-75` block-end); scrollspy `--color-progressive`; not `useEndPanelNavAlign` |
+| On-this-page TOC (≥3 `h2`, `h3` nest) | **Implemented** | `useOnThisPageNav` — CSS-sticky end column ≥1202px (`--font-size-small`); quiet MenuButton ≤1201px (`--spacing-75` block-end); scrollspy `--color-progressive`; not `useEndPanelNavAlign` |
 
 **Responsive behaviour summary:**
 
@@ -233,11 +234,13 @@ At the full two-panel breakpoint (≥1354px), the standard documentation shell u
 |----------|----------------|
 | **&lt; 640px** | Header band + collapsed local navigation; standard main content fluid inside 16px margins; footer inside main band |
 | **640px–960px** | Local navigation remains collapsed; standard main content is centred and capped at 792px |
-| **961px–1353px** | Expanded 241px start allocation + at least 40px content gap; content fluid up to 792px; TOC uses the header MenuButton |
+| **961px–1201px** | Expanded 241px start allocation + at least 40px content gap; content fluid up to 792px; TOC uses the header MenuButton |
+| **1202px–1353px** | Both 241px navigation allocations + two 40px gaps; content grows from 640px to 791px; end track reserved even without a TOC |
 | **1354px–1439px** | Full 241px \| gap \| 792px \| gap \| 241px layout; gaps grow symmetrically from 40px; end track reserved even without a TOC |
-| **≥ 1440px** | Internal geometry locks at 241 \| 83 \| 792 \| 83 \| 241px; exterior margins absorb all additional width |
+| **1440px–1679px** | Codex 4 \| 16 \| 4 outer grid scales from 1376px toward 1512px; 792px content remains centred in the centre region |
+| **≥1680px** | Outer grid remains fixed at the Codex desktop-wide 1512px cap; exterior margins absorb additional width |
 
-**Note:** `@media` conditions in `page-grid.css` and `default.vue` use **px literals** for Codex breakpoints (`640px`, `1120px`) and project responsive thresholds (`1354px`, `1440px`), because custom properties are unreliable in media query conditions.
+**Note:** `@media` conditions in `page-grid.css` and `default.vue` use **px literals** for Codex breakpoints (`640px`, `1120px`) and project responsive thresholds (`1202px`, `1440px`), because custom properties are unreliable in media query conditions. The 1680px grid cap is encoded in clamped layout tokens rather than a separate media query.
 
 ### Explorer layout (Scalar sidebar and reference panel)
 
@@ -299,7 +302,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | **Utility (row 1)** | **Brand lockup** (`ShellHeaderBrand`: mark + wordmark + label-only **Prototype** warning chip), search (`CdxSearchInput`, flexes up to **640px**), settings (`CdxButton` + configure icon, **quiet** — opens color-theme preferences popover), interface language (`CdxLookup`, searchable), **Log in** link — or, when OAuth-authenticated, **username only** as a progressive `NuxtLink` to `/account`; when search collapses, every non-search action moves into the ellipsis menu |
 | **Primary nav (row 2)** | Codex **quiet** tabs (`ShellPrimaryNav`), including the **APIs** tab → `/apis` (catalog); explorer keeps the tab selected |
 
-**Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid’s in-grid start panel (`241px − page margin`) plus fluid body.
+**Width:** The outer band is **full viewport width**. `.frontdoor-shell__chrome-inner` is full width with the same **`--fd-layout-page-margin-inline-start`** as `PageGrid`. At tablet+, `.frontdoor-shell__chrome` mirrors the page grid’s computed start panel (capacity-based through 1439px; Codex four-column side track from 1440px) plus fluid body.
 
 **Grid placement:** Header lives **above** `PageGrid`. The utility row spans the full chrome width as one flex formatting context so its 24px gap is between the actual brand and utility groups; the translatable brand + Prototype chip is not constrained to the start-panel track. Brand keeps **`--spacing-75`** inline-start padding when nav is expanded and removes it when collapsed (aligns with the hamburger row). Primary nav / collapsed breadcrumbs occupy the full chrome width on row 2 **without** that inset.
 
@@ -321,7 +324,7 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Primary nav + section menu collapse (Figma [Off-wiki page templates 50:2731](https://www.figma.com/design/zaMJ5QqulosJKuoHE2gCKK/Off-wiki-page-templates?node-id=50-2731)):** `useShellNavigationCollapse` observes `.frontdoor-shell__primary-nav-row` and `.frontdoor-shell__primary-nav-expanded__content` with **`ResizeObserver`**. Below **961px**, collapse is forced so local navigation never compromises the 40px content gap or the 640px minimum expanded content measure. At ≥961px, intrinsic-width + **hysteresis** still protects translated labels (`scrollWidth + 24px` to collapse, `scrollWidth + 48px` to expand). When collapsed, **`ShellCollapsedNavigation`** replaces quiet tabs; its breadcrumb is rendered only for an active primary navigation item. Landing, account, and other routes outside the primary IA show the hamburger without a location label—never a fallback to the first item (“Get started”). **`page-grid.css`** sets **`grid-template-columns: 0 minmax(0, 1fr)`** and **`column-gap: 0`** so the body band fills the freed space and the ≤792px main content centres. Start panel **`border-inline-end-width: 0`**. Brand **`--spacing-75`** inline-start padding removed.
 
-**Start drawer (expand only):** **`shell-start-nav-reveal.css`** — gated by **`.frontdoor-shell--nav-drawer-expanding`** (set only for viewport collapsed → expanded via `useShellNavigationCollapse` / `SHELL_NAV_DRAWER_EXPAND_DURATION_MS`). The grid track grows from **0 → `--fd-layout-start-panel-inline-size`** (**241px minus the active exterior margin**), pushing main content; the same-width panel slides in from inline-start inside a clipping track (`transform: translate3d(±100%, 0, 0)`; RTL mirrored). Codex **transition** tokens: **`--transition-duration-medium`** (250ms), **`--transition-timing-function-user`** (`ease-out`). Collapse is **instant**. Navigating to/from **landing** (or any `sidebar: false` page) must also be **instant** — those routes share a zero-width start track but must not animate the content shift. Section nav stays mounted when collapsed (`inert`, `aria-hidden`). **`prefers-reduced-motion: reduce`** disables transitions.
+**Start drawer (expand only):** **`shell-start-nav-reveal.css`** — gated by **`.frontdoor-shell--nav-drawer-expanding`** (set only for viewport collapsed → expanded via `useShellNavigationCollapse` / `SHELL_NAV_DRAWER_EXPAND_DURATION_MS`). The grid track grows from **0 → `--fd-layout-start-panel-inline-size`** (the active capacity/Codex side track), pushing main content; the same-width panel slides in from inline-start inside a clipping track (`transform: translate3d(±100%, 0, 0)`; RTL mirrored). Codex **transition** tokens: **`--transition-duration-medium`** (250ms), **`--transition-timing-function-user`** (`ease-out`). Collapse is **instant**. Navigating to/from **landing** (or any `sidebar: false` page) must also be **instant** — those routes share a zero-width start track but must not animate the content shift. Section nav stays mounted when collapsed (`inert`, `aria-hidden`). **`prefers-reduced-motion: reduce`** disables transitions.
 
 **Start nav scroll (drawer-compatible):** Tablet+ scrollport is **`.frontdoor-shell__side-panel--start`** — must **`flex-shrink: 1`** with **`min-block-size: 0`** so `overflow-block: auto` activates inside the flex-column grid track (`shell-start-nav-scroll.css`). Mobile scrollport is **`.fd-page-grid__start`** (`max-block-size: 40dvh`, `overflow-y: auto` from `page-grid.css`); inner panel **`overflow: visible`** so only one scrollbar appears. Drawer CSS uses **`overflow-inline: hidden`** only when expanded (not blanket `overflow: hidden`, which had broken vertical scroll).
 
@@ -490,7 +493,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 | **Document (`body`)** | — | `overflow: hidden` — shell owns vertical scroll |
 | **Shell** | `.frontdoor-shell` | `block-size: 100dvh`; `overflow: hidden` |
 | **Start column** | `.frontdoor-shell__side-panel--start` (tablet+) / `.fd-page-grid__start` (mobile) | `overflow-y: auto` when section nav exceeds visible body; **`::after` scroll-end spacer (`--spacing-200`)** on the scrollport (`shell-start-nav-scroll.css`) |
-| **Main + end body band** | `.frontdoor-shell__body-scroll` | `overflow-y: auto`; track extends to **viewport inline-end**; standard `body-columns` lock at ≥1440px keeps internal geometry aligned; empty margin zone scrolls central content ([Discord docs](https://docs.discord.com/developers/bots/overview)) |
+| **Main + end body band** | `.frontdoor-shell__body-scroll` | `overflow-y: auto`; track extends to **viewport inline-end**; standard `body-columns` follow the active Codex grid and cap at 1512px; empty margin zone scrolls central content ([Discord docs](https://docs.discord.com/developers/bots/overview)) |
 | **Main content width** | `.frontdoor-shell__content` inside body sub-grid | Footer and page slot remain **main-track width only** — not full body band |
 
 **Scrollbar styling:** Body band (`.frontdoor-shell__body-scroll`) — browser default. **Start nav scrollport** — transparent track + thin thumb + **`::after` scroll-end spacer** in **`shell-start-nav-scroll.css`** (overlay panel spacer in **`ShellCollapsedNavMenuOverlay.vue`**; WebKit physical `width` exception documented in file header).
@@ -864,7 +867,7 @@ Content-page **type** tokens are scoped under `.fd-content-page` in `app/assets/
 | Title logo | Optional MDC `title-logo` (`gerrit` / `github` / `gitlab`) — monochrome brand SVG in the title position at **`--size-icon-medium`**, colour **`--color-base`** via `currentColor` (dark mode via tokens). Sources: [Gerrit](https://gerrit.wikimedia.org/r/static/wikimedia-codereview-logo.cache.svg), [GitHub](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg), [GitLab](https://upload.wikimedia.org/wikipedia/commons/3/35/GitLab_icon.svg). Demos: Browse repositories on `/get-started/by-language` and `/contribute/search` |
 | Supporting text | Optional `supportingText` / `#supporting-text`; with `url`, prop text is a [Codex Link](https://doc.wikimedia.org/codex/latest/components/mixins/link.html) to the same destination (`--color-link` / `--color-link--hover` / visited / active / focus-visible — **platform home suppresses visited**); external icon when off-platform (`color: inherit`) unless `hide-external-icon`; **bottom-aligned** in equal-height grid cards (`margin-block-start: auto`) so links share a baseline; **min `--spacing-50` (8px)** from description (`padding-block-start` on `.navigation-card__supporting-text`) |
 | Click target | Stretched link over the card when `url` is set (whole-card click); supporting-text and description may include their own links |
-| Grid | `:::navigation-card-grid` — **3** columns ≥ 1120px, **2** ≥ 640px, **1** on mobile; row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
+| Grid | `:::navigation-card-grid` — defaults to **2** columns ≥640px and **1** below; `columns="3"` opts into **3** columns ≥1120px (but still uses two tracks when it contains exactly two cards); row height = tallest card; content top-aligned; **`--spacing-100` (16px)** block margin above **and** below the card row (adjacent `p`/`ul`/`ol` margins zeroed under `.fd-content-page` so the gap does not collapse) |
 
 **Get started overview / Build for communities:** title + description only (no icons, chips, or supporting-text). Cards grouped in `navigation-card-grid` (overview: per `h2`; build-for-communities: page intro then one grid).
 
@@ -898,7 +901,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Responsive shell geometry | Standard content **792px** max; **241px** navigation allocations; local nav floor **961px**; TOC end-panel threshold **1354px**; reserve empty end track for stable page alignment; lock internal geometry at **1440px** and grow exterior margins |
+| *(uncommitted)* | Responsive shell geometry | Standard content **640px rail-collapse minimum / 792px max**; local nav floor **961px**; TOC threshold **1202px** with stable absent-TOC alignment; 241px capacity allocations through 1439px; Codex **4 \| 16 \| 4** grid scales from 1440px to the 1512px desktop-wide cap at 1680px |
 | *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
 | *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
@@ -974,7 +977,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 1. **Wire content section navigation** to real content routes (replace `href="#"` placeholders and prototype active map on non-explorer pages).
 2. **Search overlay** — wire collapsed utility search icon to open search UI.
-3. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
+3. **Synchronize responsive Figma frames** with the implemented Codex outer-grid scaling (1440px–1680px) and nested 792px standard-content measure.
 4. **Wire explorer side nav** to real doc routes or in-page anchors.
 5. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
 6. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.

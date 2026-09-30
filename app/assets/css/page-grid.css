@@ -1,10 +1,12 @@
 /**
  * page-grid.css — Codex-aligned responsive page layout for the Front Door shell.
  *
- * Desktop (≥ 1120px): 241px start navigation allocation (209px panel + 32px
- * outer margin) + body band. Standard content uses a centred 792px maximum with
- * the same 241px allocation at inline-end. Tablet (≥ 640px): fixed navigation
- * allocation + fluid body. Mobile: stacked.
+ * Desktop (≥ 1120px): standard content has a 640px rail-collapse minimum and a
+ * centred 792px maximum. Through 1439px, each expanded navigation allocation is
+ * 241px including the 32px exterior margin. From 1440px, the outer shell follows
+ * Codex's 4 | 16 | 4 grid while the 792px content measure remains nested in its
+ * centre region. Tablet (≥ 640px): fixed navigation allocation + fluid body.
+ * Mobile: stacked.
  *
  * Footer width: `ShellSiteFooter` is rendered inside `frontdoor-shell__content` in
  * `default.vue` (main column only — matches central page content, not main + end).
@@ -13,9 +15,6 @@
  * scroll-end `::after` spacers in `shell-start-nav-scroll.css`); main + end share `.frontdoor-shell__body-scroll` with
  * the scrollbar at the **viewport inline-end** (body track is full-bleed inline-end;
  * content stays aligned). See DESIGN_REQUIREMENTS.md.
- *
- * Below desktop: interim layout (side-panel responsive behaviour is deferred to a
- * future commit). The start column width is locked until collapse-into-header work.
  *
  * @media uses px literals matching Codex breakpoint tokens — CSS variables are unreliable
  * inside media query conditions in many browsers.
@@ -28,9 +27,9 @@
  * Header brand/tabs share the start-panel grid column (tablet+); inner chrome and
  * start-column panels must not repeat viewport insets.
  *
- * Header chrome width lock: --fd-layout-chrome-lock-viewport-inline-size (1440px) is a
- * project-specific breakpoint (Figma shell chrome), not a Codex token. Above that
- * width the shell geometry stays fixed and exterior margins grow.
+ * Header chrome follows the Codex desktop-wide grid from 1440px through the
+ * 1680px desktop-wide breakpoint. Above that width the 1512px grid stays fixed
+ * and exterior margins grow.
  *
  * Start panel background: --fd-layout-start-panel-background-color (#F3F3F3) is a
  * legacy exploratory value — superseded by transparent panel + inline-end border.
@@ -41,8 +40,11 @@
  */
 
 :root {
-	/* Desktop shell locks at 1440px; wider viewports add exterior margin. */
-	--fd-layout-grid-max-inline-size: 90rem; /* 1440px */
+	/* Codex desktop-wide grid: 24 × 40px columns + 23 × 24px gutters. */
+	--fd-layout-grid-max-inline-size: 94.5rem; /* 1512px */
+	--fd-layout-active-grid-inline-size: calc(
+		90rem - ( 2 * var( --spacing-200 ) )
+	); /* 1376px at the 1440px desktop reference */
 
 	/*
 	 * Each navigation allocation is 241px including its 32px desktop outer
@@ -56,31 +58,14 @@
 	);
 	--fd-layout-end-panel-inline-size: var( --fd-layout-start-panel-inline-size );
 
-	/* Column spans on the 24-column desktop grid: 4 | 14 | 4. */
-	--fd-layout-grid-columns: 24;
-	--fd-layout-side-span: 4;
-	--fd-layout-main-span: 14;
+	/* Standard documentation content nested within Codex's outer centre region. */
 	--fd-layout-main-content-max-inline-size: 49.5rem; /* 792px */
 	--fd-layout-navigation-content-min-gap: var( --spacing-250 ); /* 40px */
-
-	/* Tablet 8-column split: 2 + 6 */
-	--fd-layout-tablet-columns: 8;
-	--fd-layout-tablet-side-span: 2;
-	--fd-layout-tablet-main-span: 6;
-
-	/* Desktop wide: fixed Codex column width */
-	--fd-layout-desktop-wide-column-width: 2.5rem; /* 40px */
 
 	/* Mobile defaults */
 	--fd-layout-page-margin: var( --spacing-100 );
 	--fd-layout-page-margin-inline-start: var( --fd-layout-page-margin );
 	--fd-layout-grid-gutter: var( --spacing-100 );
-
-	/*
-	 * Header chrome locks at this viewport width; wider viewports grow outer margins only.
-	 * Not a Codex breakpoint — Figma shell chrome specification.
-	 */
-	--fd-layout-chrome-lock-viewport-inline-size: 90rem; /* 1440px */
 
 	/*
 	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
@@ -95,25 +80,6 @@
 	 * ResizeObserver in useHeaderUtilityCollapse.
 	 */
 	--fd-header-search-input-min-inline-size: 16rem;
-
-	/*
-	 * Full shell inner width at the chrome lock viewport (start + gutter + main + end),
-	 * using desktop page margins. Used by the full-bleed header band inner wrapper.
-	 */
-	--fd-layout-grid-content-max-inline-size: calc(
-		var( --fd-layout-chrome-lock-viewport-inline-size )
-		- ( 2 * var( --spacing-200 ) )
-	);
-
-	/*
-	 * Legacy: content-band chrome max (main + end only, excluding start panel).
-	 * Superseded by full-width header + --fd-layout-grid-content-max-inline-size.
-	 */
-	--fd-layout-chrome-max-inline-size: calc(
-		var( --fd-layout-chrome-lock-viewport-inline-size )
-		- ( 2 * var( --spacing-200 ) )
-		- var( --fd-layout-start-panel-inline-size )
-	);
 
 	/*
 	 * Fallback sticky offset for the explorer module rail (project controls block).
@@ -156,9 +122,9 @@
 	);
 
 	/*
-	 * Max inline size of the standard-page body sub-grid at desktop wide. This is
-	 * the 1440px shell measure minus both 32px outer margins and the 209px start
-	 * panel; it contains 83 + 792 + 83 + 209.
+	 * Max inline size of the standard-page body sub-grid. At 1440px it contains
+	 * the 16-column centre region, a 24px gutter, and the four-column end track;
+	 * it scales with the active Codex grid through 1680px.
 	 */
 	--fd-layout-body-columns-max-inline-size: calc(
 		var( --fd-layout-grid-max-inline-size )
@@ -167,13 +133,11 @@
 	);
 
 	/*
-	 * Desktop-wide cap when the start panel is collapsed — main band uses the freed
-	 * start-panel track and gutter (see `.frontdoor-shell--nav-collapsed`).
+	 * Wide-layout cap when the start panel is collapsed — main band uses the full
+	 * active Codex grid width (see `.frontdoor-shell--nav-collapsed`).
 	 */
-	--fd-layout-body-columns-collapsed-max-inline-size: calc(
-		var( --fd-layout-grid-max-inline-size )
-		- ( 2 * var( --spacing-200 ) )
-	);
+	--fd-layout-body-columns-collapsed-max-inline-size:
+		var( --fd-layout-active-grid-inline-size );
 
 	/*
 	 * Explorer keeps its wide reference-panel measure at desktop wide instead of
@@ -314,7 +278,7 @@
 	}
 }
 
-/* --- Desktop (≥ 1120px): standard pages use the 4 | 14 | 4 shell in default.vue --- */
+/* --- Desktop (≥ 1120px): standard pages use the responsive shell in default.vue --- */
 @media screen and ( min-width: 1120px ) {
 	:root {
 		--fd-layout-page-margin: var( --spacing-200 );
@@ -322,15 +286,37 @@
 	}
 }
 
-/* Above 1440px: grow exterior margins while the desktop shell geometry stays fixed. */
+/*
+ * Scale Codex's 4 | 16 | 4 grid from the 1440px desktop reference to the
+ * 1680px desktop-wide breakpoint. At 1680px the grid reaches 1512px: 232px
+ * navigation tracks, 24px gutters, and a 1000px central region. Standard
+ * documentation content remains a centred 792px nested measure. Beyond that
+ * point only the exterior margins grow.
+ */
 @media screen and ( min-width: 1440px ) {
 	:root {
+		--fd-layout-active-grid-inline-size: clamp(
+			86rem,
+			calc( 56.666667vw + 35rem ),
+			var( --fd-layout-grid-max-inline-size )
+		);
+		--fd-layout-start-panel-inline-size: clamp(
+			13.0625rem,
+			calc( 9.583333vw + 4.4375rem ),
+			14.5rem
+		);
+		--fd-layout-end-panel-inline-size: var( --fd-layout-start-panel-inline-size );
 		--fd-layout-page-margin-inline-start: max(
 			var( --fd-layout-page-margin ),
 			calc(
-				( 100vw - var( --fd-layout-grid-max-inline-size ) ) / 2
-				+ var( --fd-layout-page-margin )
+				( 100vw - var( --fd-layout-active-grid-inline-size ) ) / 2
 			)
 		);
+		--fd-layout-body-columns-max-inline-size: calc(
+			var( --fd-layout-active-grid-inline-size )
+			- var( --fd-layout-start-panel-inline-size )
+		);
+		--fd-layout-body-columns-collapsed-max-inline-size:
+			var( --fd-layout-active-grid-inline-size );
 	}
 }
