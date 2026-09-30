@@ -20,7 +20,7 @@ import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInter
  * plus the two-panel page grid below. The shell locks to the viewport; the start
  * column and main content band each scroll independently when content overflows.
  * The start column panel is always mounted (empty when a route has no section links).
- * Documentation on-this-page TOC mounts in the end column (≥1280px, CSS sticky) or
+ * Documentation on-this-page TOC mounts in the end column (≥1202px, CSS sticky) or
  * as a header MenuButton below that width — see `ARCHITECTURE.md` → On-this-page navigation.
  *
  * See `ARCHITECTURE.md` → Shell layout and chrome, `DESIGN_REQUIREMENTS.md`.
@@ -499,14 +499,16 @@ useHead( {
 }
 
 /*
- * Row 1 (mobile): brand and utility actions on one flex row. Tablet+: `display: contents`
- * so brand and utilities land in the same grid columns as start panel / body band.
+ * Row 1 (mobile): brand and utility actions on one flex row with a 16px minimum
+ * gap. The brand wordmark may wrap at natural whitespace when preserving that gap
+ * requires it. Tablet+: `display: contents` so brand and utilities land in the
+ * same grid columns as start panel / body band.
  */
 .frontdoor-shell__chrome-utility-band {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: var( --spacing-150 );
+	gap: var( --spacing-100 );
 	min-inline-size: 0;
 }
 
@@ -538,6 +540,16 @@ useHead( {
 	min-inline-size: 0;
 }
 
+/*
+ * Once utility measurement selects compact mode, preserve both icon controls'
+ * intrinsic minimum so they cannot overflow back into the brand. Keep the track
+ * flexible: `useHeaderUtilityCollapse` still needs its full allocation to detect
+ * when the expanded controls fit again.
+ */
+.frontdoor-shell__chrome-main:has( .shell-header-utility-actions--collapsed ) {
+	min-inline-size: max-content;
+}
+
 @media screen and ( min-width: 640px ) {
 	.frontdoor-shell__chrome {
 		display: grid;
@@ -548,7 +560,7 @@ useHead( {
 
 	.frontdoor-shell__chrome-utility-band {
 		/*
-		 * Keep the first row as one flex formatting context so the 24px gap is
+		 * Keep the first row as one flex formatting context so the 16px minimum gap is
 		 * measured between the actual brand group and utility actions. The brand
 		 * can be wider than the fixed start panel in some locales.
 		 */
@@ -801,6 +813,15 @@ useHead( {
 .frontdoor-shell__on-this-page-menu {
 	margin-inline-start: auto;
 	margin-block-end: var( --spacing-75 );
+}
+
+/*
+ * Collapsed navigation reserves 16px below its 32px controls (spacing-25 +
+ * spacing-75). Match that offset so the hamburger and TOC trigger share the
+ * same block position; expanded quiet tabs retain the 12px alignment above.
+ */
+.frontdoor-shell--nav-collapsed .frontdoor-shell__on-this-page-menu {
+	margin-block-end: calc( var( --spacing-25 ) + var( --spacing-75 ) );
 }
 
 /*
