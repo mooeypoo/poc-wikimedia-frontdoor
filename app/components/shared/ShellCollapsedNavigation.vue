@@ -3,11 +3,12 @@ import { CdxButton, CdxIcon } from '@wikimedia/codex'
 import { cdxIconMenu, cdxIconNext } from '@wikimedia/codex-icons'
 
 /**
- * Collapsed shell navigation — hamburger control plus primary / section breadcrumbs.
+ * Collapsed shell navigation — hamburger control plus optional primary / section breadcrumbs.
  *
  * Shown when `useShellNavigationCollapse` collapses the quiet tabs and start-column
  * section menu. The menu button toggles `ShellCollapsedNavMenuOverlay` (Figma Off-wiki
- * page templates nodes 50:2731, 25:1929).
+ * page templates nodes 50:2731, 25:1929). Routes outside the primary information
+ * architecture, including the landing page, show only the hamburger.
  */
 defineProps<{
 	/** Accessible name for the collapsed navigation region. */
@@ -44,7 +45,10 @@ const emit = defineEmits<{
 		>
 			<CdxIcon :icon="cdxIconMenu" />
 		</CdxButton>
-		<div class="shell-collapsed-navigation__breadcrumbs">
+		<div
+			v-if="primaryNavigationLabel"
+			class="shell-collapsed-navigation__breadcrumbs"
+		>
 			<span class="shell-collapsed-navigation__crumb">
 				{{ primaryNavigationLabel }}
 			</span>
