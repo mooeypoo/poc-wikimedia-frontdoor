@@ -80,9 +80,9 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 **Focus / active chrome:** The brand `NuxtLink` has **no** `:focus` / `:focus-visible` / `:active` / router-active **outline** (quiet lockup). Accessible name remains via `aria-label`. Documented in `ARCHITECTURE.md` → Codex exceptions (shell chrome) #6 — do not reintroduce a focus ring without revisiting this decision.
 
-**Footer (separate):** **14px mark** + single-line wordmark from the same banana keys as the header (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in **Montserrat** — not the Figma **227×14px** horizontal lockup asset yet.
+**Footer (separate):** **14px mark** + wordmark from the same banana keys as the header (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in **Montserrat**. The complete title stays on one line beside the mark while it fits; when it does not, the full title wraps below the mark, then **developer portal** wraps under Wikimedia. Longer locales wrap that second line at natural whitespace if it would still overflow. Not the Figma **227×14px** horizontal lockup asset yet.
 
-**Source:** `app/components/shared/ShellHeaderBrand.vue`, `config/brandTypography.ts`, `nuxt.config.ts` (`app.head` font preloads + `buildBrandWordmarkFontCss()`), `public/fonts/montserrat/`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`, `brand-prototype-chip-label`, `brand-prototype-chip-tooltip`).
+**Source:** `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellSiteFooter.vue`, `config/brandTypography.ts`, `nuxt.config.ts` (`app.head` font preloads + `buildBrandWordmarkFontCss()`), `public/fonts/montserrat/`, `app/composables/useMainNavigationLinks.ts`, `i18n/*` (`brand-wordmark-*`, `brand-prototype-chip-label`, `brand-prototype-chip-tooltip`).
 
 ### On-this-page navigation
 
@@ -436,7 +436,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 - **Long pages:** Footer follows content in normal document flow.
 - **No `margin-block-end`** on the footer — **32px** bottom spacing is **`padding-block-end: var(--spacing-200)`** inside `.shell-site-footer` only (symmetric with start nav / overlay **`::after` scroll-end spacers**).
 
-**Content (row 1):** Centred brand row — **14px** inlined Wikimedia mark (`WikimediaLogoMark`, `currentColor` / `--color-subtle`) + single-line wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links.
+**Content (row 1):** Centred brand row — **14px** inlined Wikimedia mark (`WikimediaLogoMark`, `currentColor` / `--color-subtle`) + wrapping wordmark (`brand-wordmark-wikimedia` + `brand-wordmark-developer-portal`, Montserrat) + **Privacy policy** and **Terms of use** links. Wrap order: complete title beside the mark → complete title below the mark → **developer portal** under Wikimedia; that second line wraps at natural whitespace only if it would still overflow.
 
 **Content (row 2):** Centred legal attribution — **three sentences** (one per line) with an inline **Creative Commons Attribution-ShareAlike** link on the middle line.
 
@@ -455,7 +455,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Placement history (reverted):** See `ARCHITECTURE.md` → Site footer → Placement history. Current: footer inside `.frontdoor-shell__content` only; short-page pin via flex column inside `.frontdoor-shell__body-scroll`.
 
-**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`.
+**Source:** `app/components/shared/ShellSiteFooter.vue`, `config/siteFooter.ts`, `app/layouts/default.vue` (`.frontdoor-shell__content`, `.frontdoor-shell__body-scroll`), `app/assets/css/page-grid.css`, `i18n/*` (`footer-*`, `brand-wordmark-*`).
 
 ### Main content padding
 
@@ -901,6 +901,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Footer brand wrap | Complete title stays beside the 14px mark while it fits, then wraps below the mark; **developer portal** wraps under Wikimedia (Spanish / French at 320px); second line wraps at natural whitespace only if it would still overflow |
 | *(uncommitted)* | Responsive API catalog project filter | Keep the non-shrinking 256px combobox inline while label + control fit; wrap the combobox below **Filter by project** before the pair overflows |
 | *(uncommitted)* | Responsive shell geometry | Standard content **640px rail-collapse minimum / 792px max**; local nav floor **961px**; TOC threshold **1202px** with stable absent-TOC alignment; 241px capacity allocations through 1439px; Codex **4 \| 16 \| 4** grid scales from 1440px to the 1512px desktop-wide cap at 1680px |
 | *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
