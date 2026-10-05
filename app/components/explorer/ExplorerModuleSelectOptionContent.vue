@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CdxInfoChip } from '@wikimedia/codex'
-import { EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES } from '../../../config/explorerModuleDescriptions'
 import type { ExplorerModuleSelectOptionDisplay } from '../../composables/useExplorerModuleSelect'
 
 /**
@@ -11,24 +10,18 @@ import type { ExplorerModuleSelectOptionDisplay } from '../../composables/useExp
  * version in parentheses. Chips are **label-only** — Codex forces status icons on
  * `warning` and ignores a null `icon` prop, so icons are hidden in CSS (same
  * pattern as NavigationCard catalog chips). Used from `ExplorerProjectControls`
- * via the `CdxCombobox` `#menu-item` slot. Descriptions clamp to
- * {@link EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES} wrapped lines.
+ * via the `CdxCombobox` `#menu-item` slot.
  */
 defineProps<{
 	menuItem: ExplorerModuleSelectOptionDisplay
 	betaChipLabel: string
 	internalChipLabel: string
 }>()
-
-const descriptionMaxLines = EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES
 </script>
 
 <template>
 	<span
 		class="cdx-menu-item__content explorer-module-select-option explorer-module-select-option--menu"
-		:style="{
-			'--fd-explorer-module-select-description-max-lines': descriptionMaxLines
-		}"
 	>
 		<span class="cdx-menu-item__text">
 			<span class="explorer-module-select-option__title">
@@ -52,7 +45,7 @@ const descriptionMaxLines = EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES
 			</span>
 			<span
 				v-if="menuItem.description"
-				class="cdx-menu-item__text__description explorer-module-select-option__description"
+				class="cdx-menu-item__text__description"
 			>
 				<bdi>{{ menuItem.description }}</bdi>
 			</span>
@@ -85,14 +78,7 @@ const descriptionMaxLines = EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES
 	display: none;
 }
 
-/*
- * Cap OpenAPI menu descriptions at the configured line count (default 5) so long
- * specs stay in a readable band; shorter copy still shows fully.
- */
-.explorer-module-select-option__description {
-	display: -webkit-box;
-	overflow: hidden;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: var( --fd-explorer-module-select-description-max-lines, 5 );
+.explorer-module-select-option--menu .cdx-menu-item__text__description {
+	display: block;
 }
 </style>

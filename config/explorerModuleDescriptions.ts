@@ -15,12 +15,22 @@
  */
 
 /**
- * Maximum wrapped lines for REST API module descriptions in the API Combobox menu.
+ * Soft character budget for REST API module Combobox menu descriptions.
  *
- * Keeps OpenAPI `info.description` summaries in a readable 3–5 line band in the
- * floating menu (CSS line-clamp in `ExplorerModuleSelectOptionContent`).
+ * Roughly 3–5 wrapped lines in the floating menu. Normalization shortens longer
+ * OpenAPI `info.description` text at a sentence boundary (no ellipsis).
  */
-export const EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES = 5 as const
+export const EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_CHARS = 280 as const
+
+/**
+ * Trailing OpenAPI description boilerplate removed for every module after
+ * markdown normalization (sandbox cautions, rate-limit sections, license tails).
+ */
+export const EXPLORER_MODULE_DESCRIPTION_OPENAPI_COMMON_STRIP_PATTERNS: readonly RegExp[] = [
+	/\s*Caution:\s*The REST Sandbox\b[\s\S]*$/i,
+	/\s*(?:#{1,6}\s*)?Global Rules\b[\s\S]*$/i,
+	/\s*Data provided by this API is available under\b[\s\S]*$/i
+]
 
 export const EXPLORER_MODULE_DESCRIPTION_MESSAGE_KEYS: Record<string, string> = {
 	'readinglists/v0': 'explorer-module-description-readinglists-v0'
