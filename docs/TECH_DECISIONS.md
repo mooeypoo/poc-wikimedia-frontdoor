@@ -58,15 +58,15 @@ These two surfaces have different rules and must not be conflated.
 
 ### API to explore audience chips
 
-**Decision:** Show beta and internal as **label-only** warning **`CdxInfoChip`**s beside the module name in the **API to explore** Combobox menu and minimized settings summary. Keep **version** as Codex MenuItem `supportingText` only (strip trailing `-beta` / `-internal` from the version string). Do not show Codex status icons on these chips.
+**Decision:** Show beta and internal as **label-only** warning **`CdxInfoChip`**s beside the module name in the **API to explore** Combobox menu, closed Combobox mirror, and minimized settings summary. Show **version in parentheses** beside the title (`Title (v1)` via `formatExplorerModuleSelectDisplayValue`; strip trailing `-beta` / `-internal`). Combobox `selected` uses that human display string — never raw discovery module names (e.g. `-`). Do not show Codex status icons on these chips.
 
-**Implementation:** Custom `CdxCombobox` `#menu-item` slot (`ExplorerModuleSelectOptionContent`) — Codex exception #14. Hide `.cdx-info-chip__icon--vue` in CSS (Codex forces icons on `warning` and ignores null `icon`; same pattern as NavigationCard). Interaction states and selected TextInput chrome stay native Codex.
+**Implementation:** Custom `CdxCombobox` `#menu-item` slot (`ExplorerModuleSelectOptionContent`) — Codex exception #14. Hide `.cdx-info-chip__icon--vue` in CSS (Codex forces icons on `warning` and ignores null `icon`; same pattern as NavigationCard). Closed-state mirror in `ExplorerProjectControls` overlays the display value + chips inside the input when not focused/filtering. Interaction states stay native Codex.
 
 **Source of truth:** `ARCHITECTURE.md` → Codex exceptions #14 and REST API module combobox; `DESIGN_REQUIREMENTS.md` → REST API module combobox + opt-in; `AGENTS.md` InfoChip label-only exception + RTL checklist.
 
 ### Opt-in module visibility (community explorer)
 
-**Decision:** Gate which discovery modules appear in **API to explore** (and therefore which spec Scalar loads) with the Include checkboxes. Defaults: beta **on**, internal **off** (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`). Bootstrap still fetches all modules; filtering is client-side.
+**Decision:** Gate which discovery modules appear in **API to explore** (and therefore which spec Scalar loads) with the Include MenuButton. Defaults: beta **on**, internal **off** (`DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS`). Bootstrap still fetches all modules; filtering is client-side. Persist Include selections in app-scoped Nuxt **`useState`** on `explorer/[...view].vue` so deep-link URL remounts after API/project/language changes do not reset them (same pattern as `isProjectSettingsExpanded`).
 
 **Rules** (in `config/explorerOptIn.ts`):
 - **Beta** — configured name prefixes (`attribution/` today) via `isExplorerBetaOptInModule()`

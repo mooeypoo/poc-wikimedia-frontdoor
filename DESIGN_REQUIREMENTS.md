@@ -614,9 +614,9 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 ### Minimized state
 
-The summary identifies the resolved **Wikimedia project** and selected **API**. API chrome includes the module title, a subtle version `CdxInfoChip` when available, and label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`. A small progressive quiet **Adjust settings** button with `cdxIconEdit` stays at the block-start / inline-end as the summary wraps, matching the expanded **Close** placement (top-right in LTR, top-left in RTL).
+The summary identifies the resolved **Wikimedia project** and selected **API**. API chrome shows the same human display string as the Combobox (`Title (v1)` via `selectedModuleDisplay.value`) plus label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`. A small progressive quiet **Adjust settings** button with `cdxIconEdit` stays at the block-start / inline-end as the summary wraps, matching the expanded **Close** placement (top-right in LTR, top-left in RTL).
 
-Summary module chrome reuses `selectedModuleDisplay` from `useExplorerModuleSelect()` so its label, version, and audience flags match the Combobox menu.
+Summary module chrome reuses `selectedModuleDisplay` from `useExplorerModuleSelect()` so its display value and audience flags match the Combobox menu.
 
 ### Expanded state
 
@@ -631,7 +631,7 @@ Header: **Select an API to explore** plus inline-end small progressive quiet **C
 
 **Resolution:** Project + language map to one wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`; Meta-Wiki → `metawiki`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()`; the page stores **instance id** only.
 
-**State ownership:** `explorer/[...view].vue` owns `isProjectSettingsExpanded` as Nuxt `useState`, because the controls unmount while project/language bootstrap runs and URL canonicalization can remount the page. Changing those fields therefore keeps settings expanded when the controls return. `CdxMenuButton` owns the Include menu’s open/close interaction.
+**State ownership:** `explorer/[...view].vue` owns `isProjectSettingsExpanded`, `includeBetaEndpoints`, and `includeInternalEndpoints` as Nuxt `useState`, because the controls unmount while project/language bootstrap runs and URL canonicalization can remount the page (including after an API selection). Changing those fields therefore keeps settings expanded and Include selections intact when the controls return. `CdxMenuButton` owns the Include menu’s open/close interaction.
 
 **Responsive layout:** Project or wiki, Language, and API use wrapping flex layout with `--spacing-100` (16px) column and row gaps. The three actual inputs distribute available width equally, with a 256px minimum (`--size-1600`) and 640px maximum (`--size-4000`). API’s allocation additionally reserves its fixed 8px gap (`--spacing-50`) and 32px medium icon-only MenuButton (`--size-200`), so its Combobox remains equal in width to the other inputs. API wraps to a second line when all three minimum allocations no longer fit; Language wraps too when Project + Language cannot both remain 256px. At ≤351px viewport only API’s minimum relaxes—including the Combobox root and nested Codex TextInput minimum—keeping its Combobox and MenuButton on one row at 320px without overlap (264px available after mobile page margin + surface padding). Close stays at the header’s inline end.
 
@@ -639,14 +639,14 @@ Header: **Select an API to explore** plus inline-end small progressive quiet **C
 
 | Control | Pattern |
 |---------|---------|
-| **API module** | `CdxCombobox` — short field label banana `explorer-api-label` (“API”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; `placeholder` from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap). Input filters labels, versions, and descriptions; `#no-results` uses banana `explorer-module-no-results`. Unmatched committed text restores the active module. The TextInput uses `dir="auto"`. **Do not** override Codex MenuItem interaction states |
-| **Menu supporting text** | Codex MenuItem **`supportingText`** — **version only** (`versionChipLabel`, e.g. `v0.1.0`) via `formatExplorerModuleSelectSupportingText()`; trailing `-beta` / `-internal` stripped. Omitted when no version |
-| **Menu audience chips** | **Label-only** warning **`CdxInfoChip`** (**beta** / **internal**) beside the module name — Codex exception #14 (`ExplorerModuleSelectOptionContent` in the Combobox `#menu-item` slot). Banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`. Status icons hidden (Codex forces them on `warning`). Do **not** put audience markers in `supportingText` |
+| **API module** | `CdxCombobox` — short field label banana `explorer-api-label` (“API”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; Combobox **`selected` / menu `value`** are human display strings (`Title (v1)` via `formatExplorerModuleSelectDisplayValue`); discovery **`moduleName`** drives `selectModule` / audience chips; `placeholder` from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap). Input filters labels, versions, and descriptions; `#no-results` uses banana `explorer-module-no-results`. Unmatched committed text restores the active module. The TextInput uses `dir="auto"`. **Do not** override Codex MenuItem interaction states |
+| **Menu version** | Parenthetical beside the title (`versionParenthetical`, e.g. `(v1)`); trailing `-beta` / `-internal` stripped. Omitted when no version |
+| **Menu audience chips** | **Label-only** warning **`CdxInfoChip`** (**beta** / **internal**) beside the module name — Codex exception #14 (`ExplorerModuleSelectOptionContent` in the Combobox `#menu-item` slot). Same chips in the minimized summary and closed Combobox mirror (when not focused/filtering). Banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`. Status icons hidden (Codex forces them on `warning`) |
 | **Menu description** | Codex MenuItem **`description`** — OpenAPI **`info.description`** (bootstrap) with config fallbacks; shortened at bootstrap to roughly **3–5 wrapped lines** (`EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_CHARS` in `config/explorerModuleDescriptions.ts`, sentence boundary, **no ellipsis**); shared sandbox / Global Rules / license tails stripped. External text uses `isolatePickerLabel()` |
 
 **Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the combobox and Scalar spec stay aligned.
 
-**Module switching:** Selecting an exact current module value calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes. Arbitrary typed Combobox text is ignored by the selection bridge and cannot load an invalid Scalar spec.
+**Module switching:** Selecting a display value that maps to a current healthy module calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes. Arbitrary typed Combobox text is ignored by the selection bridge and cannot load an invalid Scalar spec.
 
 ### Include settings menu
 
@@ -656,7 +656,7 @@ Header: **Select an API to explore** plus inline-end small progressive quiet **C
 | Beta | Native multiselect MenuItem — **Beta APIs and endpoints**; description: “For test purposes, subject to change, and intentionally short-lived.” |
 | Internal | Native multiselect MenuItem — **Internal APIs and endpoints**; description: “Only intended for use by Wikimedia Foundation staff and services. Stability is not guaranteed.” |
 
-**Defaults:** Beta **on**, Internal **off**.
+**Defaults:** Beta **on**, Internal **off**. Owned as Nuxt **`useState`** on `explorer/[...view].vue` (`explorer-include-beta-endpoints` / `explorer-include-internal-endpoints`) so selections survive deep-link URL remounts after API/project/language changes.
 
 Do not override Codex Menu/MenuItem selection, hover, keyboard-highlight, spacing, or typography styles. Multiselect behavior comes solely from passing the selected values as an array to `CdxMenuButton`.
 
@@ -664,9 +664,9 @@ Do not override Codex Menu/MenuItem selection, hover, keyboard-highlight, spacin
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. **Internal** opt-in gates discovery modules whose version path segment ends with `-internal` (for example **Discord Preview API** / `discord/v0-internal`); default **off** so they stay out of **API to explore** until checked.
 
-**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Configured suffix strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (for example Site API `site/v1` access footnotes; Attribution API `attribution/v0-beta` docs / framework / beta-talk links, leaving the one-line product summary). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
+**Module descriptions:** Sourced from upstream OpenAPI `info.description` at bootstrap (`normalizeOpenApiModuleDescription()`). Shared and per-module strips in `config/explorerModuleDescriptions.ts` remove trailing boilerplate (sandbox caution, Global Rules, license tails; Site API `site/v1` access footnotes; Attribution API docs / framework / beta-talk links). Remaining copy is sentence-shortened to **`EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_CHARS`** (**280**, no ellipsis). Add curated fallbacks in the same config when a module spec omits a description (currently `readinglists/v0` only).
 
-**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): its custom Combobox `#menu-item` slot inserts **label-only** warning audience chips (icons hidden) while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (start-column section nav) follow separate documented shell exceptions.
+**Codex interaction:** Explorer **`CdxSelect`** and **`CdxCombobox`** menus use Codex’s internal `CdxMenu` — hover, keyboard highlight, and selected styling are **not** customised in first-party CSS. `app/assets/css/main.css` under `.explorer-page` only raises floating-menu z-index and normalises list markers. **API to explore** is the documented exception for **content** only (#14): its custom Combobox `#menu-item` slot inserts **label-only** warning audience chips (icons hidden) and parenthetical version while keeping Codex MenuItem state classes. Standalone **`CdxMenuItem`** rows (start-column section nav) follow separate documented shell exceptions.
 
 ---
 
@@ -912,7 +912,9 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |
 | *(superseded)* | Test Request modal shell fit (pre natural-height) | Was: freeze shell scroll only, keep page body scrollable — superseded by natural-height row above |
-| *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); version-only supporting text (Codex exception #14) |
+| *(uncommitted)* | API Combobox display + Include persistence | Combobox `selected` shows `Title (v1)` (not discovery names); version in parentheses; closed-field audience chips; Include beta/internal via page `useState` across deep-link remounts |
+| *(uncommitted)* | API Combobox description length | Bootstrap sentence-shorten to ~280 chars (3–5 lines, no ellipsis); strip sandbox / Global Rules / license boilerplate |
+| *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); parenthetical version (Codex exception #14) |
 | *(uncommitted)* | Internal opt-in module gate | Hide `*-internal` discovery modules (e.g. Discord Preview / `discord/v0-internal`) from **API to explore** until Internal checkbox is on |
 | *(uncommitted)* | API catalog analytics card titles | Device / Editor / Media file / Page view analytics API (singular product titles in `config/apiCatalogWikimedia.ts`) |
 | *(uncommitted)* | API catalog Math + Wikimedia REST cards | `config/apiCatalogWikimedia.ts` — Math API (before Wikifunctions) + Wikimedia REST APIs → `/explorer`; All projects / Stable; `universal` |

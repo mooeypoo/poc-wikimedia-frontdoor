@@ -102,8 +102,14 @@ useExplorerDeepLinkSync( {
 	selectModule
 } )
 
-const includeBetaEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints )
-const includeInternalEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints )
+const includeBetaEndpoints = useState<boolean>(
+	'explorer-include-beta-endpoints',
+	() => DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints
+)
+const includeInternalEndpoints = useState<boolean>(
+	'explorer-include-internal-endpoints',
+	() => DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints
+)
 // App-scoped state survives both bootstrap unmounts and deep-link URL page remounts.
 const isProjectSettingsExpanded = useState<boolean>(
 	'explorer-project-settings-expanded',

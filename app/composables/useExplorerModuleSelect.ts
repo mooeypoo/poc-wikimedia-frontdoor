@@ -47,11 +47,13 @@ const EXPLORER_MODULE_SELECT_MENU_CONFIG: MenuConfig = {
  * Builds REST API module combobox state for explorer project controls.
  *
  * Menu order matches bootstrap discovery order after opt-in filtering (same order as the module rail’s parent module list).
- * The combobox stores discovery module names; labels use parsed `headingTitle` values.
- * Descriptions come from OpenAPI `info.description` (bootstrap) with config fallbacks; Codex wraps long text in the menu.
- * Audience markers use warning InfoChips in a custom Combobox `menu-item` slot; version
- * is shown in parentheses beside the title. Combobox `selected` uses the same plain
- * display string as project/language pickers (not discovery module names).
+ * Combobox `selected` / menu `value` use human display strings (`Title (v1)` via
+ * {@link formatExplorerModuleSelectDisplayValue}); discovery module names stay on
+ * `moduleName` for selection and audience-chip lookup.
+ * Descriptions come from OpenAPI `info.description` (bootstrap) with config fallbacks
+ * and sentence-shortening; Codex wraps the shortened copy in the menu.
+ * Audience markers use warning InfoChips in a custom Combobox `menu-item` slot and in
+ * the closed Combobox / minimized summary when applicable.
  *
  * @param visibleModules - Opt-in-filtered modules in discovery order.
  * @param selectedModuleName - Active module name from {@link useExplorerBootstrap}.

@@ -107,10 +107,12 @@ export function formatModuleRailHeadingAriaLabel(
 }
 
 /**
- * Builds version-only supporting text for REST API module select menu items.
+ * Builds version-only supporting text for REST API module chrome that still uses
+ * Codex MenuItem `supportingText` (legacy helper; the API Combobox menu now shows
+ * version in parentheses via {@link formatExplorerModuleSelectDisplayValue}).
  *
  * Audience markers (beta / internal) are rendered as warning `CdxInfoChip`s in the
- * custom Select `menu-item` slot — not as Codex `supportingText`.
+ * custom Combobox `menu-item` slot — not as Codex `supportingText`.
  *
  * @param versionChipLabel - Optional isolated version label for display.
  * @returns Supporting text, or an empty string when no version applies.
