@@ -547,8 +547,8 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 Top to bottom:
 
-1. **Page header** — community mode `h1` (**Wikimedia APIs**, message key `explorer-side-nav-wikimedia-api-modules`) + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, **API to explore** select, Include opt-in checkboxes) when instance bootstrap is ready
+1. **Page header** — community mode `h1` (**Wikimedia APIs Explorer**, message key `explorer-title`) using the standard content-page Codex Heading 1 tokens + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
+2. **Project controls stack** — minimized-by-default **`ExplorerProjectControls`** summary; **Adjust settings** reveals Project or wiki, Language, API, and the Include settings MenuButton when instance bootstrap is ready
 3. **Reference panel** — Scalar shell with **native endpoint sidebar** (no separate module title / chip header above the shell; no custom module rail)
 
 **Spacing:** `.explorer-page__intro` uses `--spacing-100` between its internal sections. The gap from the intro’s final project-controls stack to the Scalar reference is **`--spacing-100` (16px) below 640px** and **`--spacing-150` (24px) from 640px upward**. The project-controls stack itself does not add a trailing gap; the parent `.explorer-page` owns this responsive spacing.
@@ -610,57 +610,57 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 ## Project controls block
 
-**Decision:** Two-row column layout inside a neutral subtle background container (`--spacing-75` padding, rounded border). Community mode only (hidden in enterprise modes).
+**Decision:** Neutral-subtle surface with `--spacing-75` (12px) padding and the shared Explorer surface radius. Community mode only (hidden in enterprise modes). It is **minimized by default**.
 
-### Wikimedia project fieldset (row 1)
+### Minimized state
 
-**Decision:** `CdxField` **fieldset** titled **`explorer-wikimedia-project-title`** (“Wikimedia project”) via the `#label` slot — not a description/helper line.
+The summary identifies the resolved **Wikimedia project** and selected **API**. API chrome includes the module title, a subtle version `CdxInfoChip` when available, and label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`. A small progressive quiet **Adjust settings** button with `cdxIconEdit` sits at the inline end.
 
-| Control | Pattern |
-|---------|---------|
-| **Project** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**, **Meta-Wiki**; labels from banana-i18n (`explorer-project-*`) |
-| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons, Wikidata or Meta-Wiki (English-only projects) |
+Summary module chrome reuses `selectedModuleDisplay` from `useExplorerModuleSelect()` so its label, version, and audience flags match the Select.
 
-**Resolution:** Project + language map to a single wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`; Meta-Wiki → `metawiki`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()` (BiDi); the page model stores **instance id** only.
+### Expanded state
 
-**Spacing (Figma-aligned):**
-
-| Gap | Token | Value |
-|-----|-------|-------|
-| Fieldset title → first field row | `--spacing-75` | 12px |
-| Between stacked control rows | `--spacing-100` | 16px (`gap` on `.explorer-project-controls`) |
-| Between side-by-side fields within a row | `--spacing-150` | 24px (`column-gap` on field rows) |
-
-**Layout:** Wikimedia project fieldset flexes up to **40rem** max; nested project + language fields sit in a wrapping row inside the fieldset.
-
-### REST API module select + opt-in (row 2)
-
-**Decision:** Second row: **`CdxSelect`** for the active REST module, with the **Opt-in** fieldset to its **inline-end** (`column-gap: var(--spacing-150)` / 24px between side-by-side fields; `row-gap: var(--spacing-100)` when wrapped).
+Header: **Select an API to explore** plus inline-end small progressive quiet **Close** with `cdxIconClose` at the logical start, using the same `CdxButton` component and visual variant as **Adjust settings**. Both small buttons set their `CdxIcon` to the Codex small size and use `--min-size-icon-small` (14px) for the compact design glyph. Selections apply immediately; Close only collapses the surface.
 
 | Control | Pattern |
 |---------|---------|
-| **API module** | `CdxSelect` — field label banana `explorer-rest-api-module-label` (“API to explore”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap to multiple lines). **Do not** override Codex MenuItem hover / highlighted / selected CSS on the explorer page — interaction states are owned by Codex |
+| **Project or wiki** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**, **Meta-Wiki**; labels from banana-i18n (`explorer-project-*`) |
+| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons, Wikidata or Meta-Wiki |
+| **API** | `CdxSelect` using the module behavior below |
+| **Include settings** | Icon-only quiet neutral `CdxMenuButton` with `cdxIconSettings`, block-end aligned with the API `CdxSelect`; native Codex multiselect array model and MenuItem styling; `MenuGroupData` renders an **Include** heading above Beta/Internal options and supporting descriptions |
+
+**Resolution:** Project + language map to one wiki instance id via `config/explorerProjectPicker.ts` and `useExplorerProjectLanguagePicker()` — Wikipedia + language → `enwiki` / `eswiki` / `hewiki` / `fawiki`; Commons → `commonswiki`; Wikidata → `wikidata`; Meta-Wiki → `metawiki`. Instance metadata (`baseUrl`, `dir`) comes from `config/instances.ts`. Combobox menu labels use `isolatePickerLabel()`; the page stores **instance id** only.
+
+**State ownership:** `explorer/[...view].vue` owns `isProjectSettingsExpanded` as Nuxt `useState`, because the controls unmount while project/language bootstrap runs and URL canonicalization can remount the page. Changing those fields therefore keeps settings expanded when the controls return. `CdxMenuButton` owns the Include menu’s open/close interaction.
+
+**Responsive layout:** Below 640px, Project or wiki, Language, and API stack; Close stays at the header’s inline end. At 640px and above they use a single `1fr / 1fr / 2fr` grid row with `--spacing-150` (24px) column gaps. The settings trigger remains adjacent to the API Select.
+
+### REST API module select
+
+| Control | Pattern |
+|---------|---------|
+| **API module** | `CdxSelect` — short field label banana `explorer-api-label` (“API”); options from opt-in-filtered bootstrap modules in **discovery order**; labels use parsed **`headingTitle`** via `isolatePickerLabel()`; values are discovery **module names**; **`default-label`** from `explorer-module-placeholder`; **`menu-config`**: `boldLabel: true`, `hideDescriptionOverflow: false` (descriptions wrap). **Do not** override Codex MenuItem interaction states |
 | **Menu supporting text** | Codex MenuItem **`supportingText`** — **version only** (`versionChipLabel`, e.g. `v0.1.0`) via `formatExplorerModuleSelectSupportingText()`; trailing `-beta` / `-internal` stripped. Omitted when no version |
 | **Menu audience chips** | **Label-only** warning **`CdxInfoChip`** (**beta** / **internal**) beside the module name — Codex exception #14 (`ExplorerModuleSelectOptionContent` in Select `#menu-item` / `#label` slots). Banana `explorer-module-beta-chip-label` / `explorer-module-internal-chip-label`. Status icons hidden (Codex forces them on `warning`). Do **not** put audience markers in `supportingText` |
 | **Menu description** | Codex MenuItem **`description`** — full summary per module; wraps when long. Primary source: OpenAPI **`info.description`** from each spec at bootstrap (`normalizeOpenApiModuleDescription()` in `explorerModuleDescription.ts`). Fallback banana keys in `config/explorerModuleDescriptions.ts` when the spec omits a description. External text uses `isolatePickerLabel()` |
-| **Description** | `explorer-rest-api-module-description`: “Select the REST API that you’d like to test on this project” |
 
 **Default selection:** The first **healthy** module (no spec fetch error) in **discovery order** after the opt-in filter — `resolveFirstExplorerRailModule()` in `app/utils/explorerModuleOptInFilter.ts` with `DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS` from `config/explorerOptIn.ts` (beta **on**, internal **off** on load). Bootstrap and opt-in fallback both use this helper so the select and Scalar spec stay aligned.
 
 **Module switching:** Changing the select calls `useExplorerBootstrap.selectModule(..., { source: 'module-select' })`, triggering Scalar spec reload when the module name changes.
 
-### Opt-in fieldset
+### Include settings menu
 
 | Control | Pattern |
 |---------|---------|
-| Opt-in | Fieldset with two `CdxCheckbox` options: **Beta APIs and endpoints**, **Internal APIs and endpoints** |
-| Opt-in help | Quiet info `CdxButton` + `CdxPopover` (teleported, titled **Opt-in modules and endpoints**, close button) beside the Opt-in legend |
+| Heading | Native Codex `MenuGroupData` label — **Include** |
+| Beta | Native multiselect MenuItem — **Beta APIs and endpoints**; description: “For test purposes, subject to change, and intentionally short-lived.” |
+| Internal | Native multiselect MenuItem — **Internal APIs and endpoints**; description: “Only intended for use by Wikimedia Foundation staff and services. Stability is not guaranteed.” |
 
 **Defaults:** Beta **on**, Internal **off**.
 
-**Layout:** Opt-in group sits beside the **API to explore** select with **no** extra `margin-block-start` (overrides Codex field default).
+Do not override Codex Menu/MenuItem selection, hover, keyboard-highlight, spacing, or typography styles. Multiselect behavior comes solely from passing the selected values as an array to `CdxMenuButton`.
 
-**Source:** `ExplorerProjectControls.vue`, `ExplorerModuleSelectOptionContent.vue` (Codex exception #14), `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInCheckboxGroup.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only), `i18n/*` (`explorer-module-*-chip-label`).
+**Source:** `explorer/[...view].vue`, `ExplorerProjectControls.vue`, `ExplorerModuleSelectOptionContent.vue` (Codex exception #14), `useExplorerProjectLanguagePicker.ts`, `useExplorerModuleSelect.ts`, `config/explorerProjectPicker.ts`, `useExplorerOptInMenu.ts`, `config/explorerOptIn.ts`, `config/explorerModuleDescriptions.ts`, `app/utils/explorerModuleOptInFilter.ts`, `app/utils/explorerModuleRailHeading.ts`, `app/utils/explorerModuleDescription.ts`, `server/api/explorer-bootstrap.get.ts`, `app/assets/css/main.css` (picker menu stacking only), `i18n/*`.
 
 **Status:** **Beta** opt-in gates beta discovery modules client-side (for example **Attribution API** / `attribution/*`) via `useExplorerOptInFilteredModules`. **Internal** opt-in gates discovery modules whose version path segment ends with `-internal` (for example **Discord Preview API** / `discord/v0-internal`); default **off** so they stay out of **API to explore** until checked.
 
@@ -918,7 +918,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | API catalog Math + Wikimedia REST cards | `config/apiCatalogWikimedia.ts` — Math API (before Wikifunctions) + Wikimedia REST APIs → `/explorer`; All projects / Stable; `universal` |
 | *(uncommitted)* | API catalog filter combobox min size | Combobox `inline-size` / `min-inline-size: var(--size-1600)` (256px) + `flex: 0 0 auto`; avoid `min(…, 100%)` flex collapse |
 | *(uncommitted)* | API catalog filter visibility refinements | `excludeProjectIds` on Attribution / Lift Wing / GrowthExperiments; ReadingLists / CampaignEvents / Device analytics scope → **All projects** |
-| *(uncommitted)* | Preferences popover arrow seam | Shared `fd-cdx-popover--arrow-seam-fix` in `shell-codex-overrides.css` (`top: -8px`); also on explorer opt-in help |
+| *(uncommitted)* | Preferences popover arrow seam | Shared `fd-cdx-popover--arrow-seam-fix` in `shell-codex-overrides.css` (`top: -8px`) |
 | *(uncommitted)* | Language trigger Codex Button with icon | Remove custom gap/color/type on globe+code; use native quiet `CdxButton` + `CdxIcon` |
 | *(uncommitted)* | Header utility row polish | Quiet preferences; **16px** search→preferences / **8px** other options; runtime collapse minimum from rendered controls + 256px search; compact mode is search icon + ellipsis with all other actions in the menu; vertical center |
 | *(uncommitted)* | Header color theme preferences | Expanded Settings → preferences `CdxPopover`; collapsed-menu **Preferences** → content-height `CdxDialog`; shared Color theme radios (`COLOR_THEME_PREFERENCE_OPTIONS` / `useColorMode`); immediate selection; remove toggle group |

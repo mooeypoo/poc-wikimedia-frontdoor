@@ -48,7 +48,8 @@ const EXPLORER_MODULE_SELECT_MENU_CONFIG: MenuConfig = {
  * @param selectedModuleName - Active module name from {@link useExplorerBootstrap}.
  * @param selectModule - Bootstrap module selection action.
  * @param isDisabled - Whether the select is disabled (bootstrapping or no modules).
- * @returns Menu items, Codex menu config, default label, chip labels, option resolver, v-model bridge, and disabled state for `CdxSelect`.
+ * @returns Menu items, Codex menu config, default label, chip labels, option resolver,
+ * selected-option display data, v-model bridge, and disabled state for `CdxSelect`.
  */
 export function useExplorerModuleSelect(
 	visibleModules: Ref<ExplorerBootstrapModule[]>,
@@ -67,6 +68,7 @@ export function useExplorerModuleSelect(
 	resolveModuleSelectOptionDisplay: (
 		menuItem: { value?: string | number } | null | undefined
 	) => ExplorerModuleSelectOptionDisplay | null
+	selectedModuleDisplay: ComputedRef<ExplorerModuleSelectOptionDisplay | null>
 	selectedModuleValue: ComputedRef<string>
 	isModuleSelectDisabled: ComputedRef<boolean>
 } {
@@ -155,6 +157,12 @@ export function useExplorerModuleSelect(
 		}
 	}
 
+	const selectedModuleDisplay = computed( () => {
+		return resolveModuleSelectOptionDisplay( {
+			value: selectedModuleName.value
+		} )
+	} )
+
 	const selectedModuleValue = computed( {
 		get(): string {
 			return selectedModuleName.value
@@ -179,6 +187,7 @@ export function useExplorerModuleSelect(
 		moduleSelectBetaChipLabel,
 		moduleSelectInternalChipLabel,
 		resolveModuleSelectOptionDisplay,
+		selectedModuleDisplay,
 		selectedModuleValue,
 		isModuleSelectDisabled
 	}

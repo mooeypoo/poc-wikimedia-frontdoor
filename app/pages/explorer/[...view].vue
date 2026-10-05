@@ -104,6 +104,11 @@ useExplorerDeepLinkSync( {
 
 const includeBetaEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints )
 const includeInternalEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints )
+// App-scoped state survives both bootstrap unmounts and deep-link URL page remounts.
+const isProjectSettingsExpanded = useState<boolean>(
+	'explorer-project-settings-expanded',
+	() => false
+)
 
 const {
 	visibleModules,
@@ -270,8 +275,8 @@ watch( scalarReferenceKey, () => {
 	scalarInterface.value = null
 } )
 
-// Title matches the side-nav label for the active mode (same wording,
-// already translated in every locale).
+// Enterprise titles match their side-nav labels. Community uses the dedicated
+// page title because its H1 is intentionally more descriptive than the nav item.
 const explorerTitle = computed( () => {
 	switch ( explorerMode.value ) {
 		case 'enterprise-full':
@@ -280,7 +285,7 @@ const explorerTitle = computed( () => {
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis-custom' )
 		case 'community':
 		default:
-			return $bananaI18n( 'explorer-side-nav-wikimedia-api-modules' )
+			return $bananaI18n( 'explorer-title' )
 	}
 } )
 
@@ -399,6 +404,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			>
 				<ExplorerProjectControls
 					v-if="!isInstanceBootstrapping"
+					v-model:is-expanded="isProjectSettingsExpanded"
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
 					v-model:selected-module-name="selectedModuleName"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
@@ -567,6 +573,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__header h1 {
 	margin: 0;
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xxx-large );
 }
 
 .explorer-page__header p {

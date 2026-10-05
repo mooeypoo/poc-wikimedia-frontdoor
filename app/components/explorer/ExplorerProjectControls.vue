@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
-import { CdxButton, CdxCheckbox, CdxCombobox, CdxField, CdxIcon, CdxPopover, CdxSelect } from '@wikimedia/codex'
-import { cdxIconInfo } from '@wikimedia/codex-icons'
+import {
+	CdxButton,
+	CdxCombobox,
+	CdxField,
+	CdxIcon,
+	CdxInfoChip,
+	CdxMenuButton,
+	CdxSelect
+} from '@wikimedia/codex'
+import { cdxIconClose, cdxIconEdit, cdxIconSettings } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule } from '../../composables/useExplorerBootstrap'
 import { useExplorerModuleSelect } from '../../composables/useExplorerModuleSelect'
-import { useExplorerOptInCheckboxGroup } from '../../composables/useExplorerOptInCheckboxGroup'
+import { useExplorerOptInMenu } from '../../composables/useExplorerOptInMenu'
 import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
 import ExplorerModuleSelectOptionContent from './ExplorerModuleSelectOptionContent.vue'
 
@@ -32,6 +39,10 @@ const props = defineProps<{
 }>()
 
 const selectedWikiInstanceId = defineModel<string>( 'selectedWikiInstanceId', {
+	required: true
+} )
+
+const isExpanded = defineModel<boolean>( 'isExpanded', {
 	required: true
 } )
 
@@ -68,6 +79,7 @@ const {
 	moduleSelectBetaChipLabel,
 	moduleSelectInternalChipLabel,
 	resolveModuleSelectOptionDisplay,
+	selectedModuleDisplay,
 	selectedModuleValue,
 	isModuleSelectDisabled
 } = useExplorerModuleSelect(
@@ -77,56 +89,126 @@ const {
 	isModuleSelectDisabledRef
 )
 
-const projectLabel = computed( () => $bananaI18n( 'explorer-project-label' ) )
+const projectOrWikiLabel = computed( () => $bananaI18n( 'explorer-project-or-wiki-label' ) )
 const languageLabel = computed( () => $bananaI18n( 'explorer-project-language-label' ) )
-const wikimediaProjectTitle = computed( () => $bananaI18n( 'explorer-wikimedia-project-title' ) )
-const restApiModuleLabel = computed( () => $bananaI18n( 'explorer-rest-api-module-label' ) )
-const restApiModuleDescription = computed( () => $bananaI18n( 'explorer-rest-api-module-description' ) )
-const optInLabel = computed( () => $bananaI18n( 'explorer-opt-in-label' ) )
-const optInPopoverTitle = computed( () => $bananaI18n( 'explorer-opt-in-popover-title' ) )
-const optInPopoverTriggerLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-trigger-label' ) )
-const optInPopoverIntro = computed( () => $bananaI18n( 'explorer-opt-in-popover-intro' ) )
-const optInPopoverBetaLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-label' ) )
-const optInPopoverBetaBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-beta-body' ) )
-const optInPopoverInternalLabel = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-label' ) )
-const optInPopoverInternalBody = computed( () => $bananaI18n( 'explorer-opt-in-popover-internal-body' ) )
+const apiLabel = computed( () => $bananaI18n( 'explorer-api-label' ) )
+const settingsTitle = computed( () => $bananaI18n( 'explorer-project-settings-title' ) )
+const settingsAdjustLabel = computed( () => $bananaI18n( 'explorer-project-settings-adjust' ) )
+const settingsCloseLabel = computed( () => $bananaI18n( 'explorer-project-settings-close' ) )
+const summaryProjectLabel = computed( () => {
+	return $bananaI18n( 'explorer-project-settings-summary-project-label' )
+} )
+const summaryApiLabel = computed( () => {
+	return $bananaI18n( 'explorer-project-settings-summary-api-label' )
+} )
+const optInSettingsTriggerLabel = computed( () => {
+	return $bananaI18n( 'explorer-opt-in-settings-trigger-label' )
+} )
 
-const { optInCheckboxOptions, selectedOptInValues } = useExplorerOptInCheckboxGroup(
+const { optInMenuEntries, selectedOptInValues } = useExplorerOptInMenu(
 	includeBetaEndpoints,
 	includeInternalEndpoints
 )
 
-// Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>)
-// to match CdxPopover's own anchor prop type; the specific instance type isn't
-// assignable to it due to Vue's generic component-instance variance.
-const optInPopoverTrigger = ref<ComponentPublicInstance | null>( null )
-const isOptInPopoverOpen = ref( false )
-
 /**
- * Toggles the opt-in help popover open state from the quiet info trigger.
+ * Expands the project settings surface.
  *
  * @returns Nothing.
  */
-function onOptInPopoverTriggerClick(): void {
-	isOptInPopoverOpen.value = !isOptInPopoverOpen.value
+function onExpandSettings(): void {
+	isExpanded.value = true
+}
+
+/**
+ * Collapses project settings.
+ *
+ * @returns Nothing.
+ */
+function onCollapseSettings(): void {
+	isExpanded.value = false
 }
 </script>
 
 <template>
 	<section
 		class="explorer-project-controls"
+		:class="{ 'explorer-project-controls--expanded': isExpanded }"
 	>
-		<CdxField
-			class="explorer-project-controls__project-fieldset"
-			:is-fieldset="true"
-		>
-			<template #label>
-				{{ wikimediaProjectTitle }}
-			</template>
-			<div class="explorer-project-controls__project-fields">
+		<template v-if="!isExpanded">
+			<div class="explorer-project-controls__summary">
+				<div class="explorer-project-controls__summary-item">
+					<strong>{{ summaryProjectLabel }}</strong>
+					<bdi>{{ wikiDisplayName }}</bdi>
+				</div>
+				<div class="explorer-project-controls__summary-item">
+					<strong>{{ summaryApiLabel }}</strong>
+					<template v-if="selectedModuleDisplay">
+						<bdi>{{ selectedModuleDisplay.label }}</bdi>
+						<CdxInfoChip
+							v-if="selectedModuleDisplay.supportingText"
+							status="subtle"
+						>
+							<bdi>{{ selectedModuleDisplay.supportingText }}</bdi>
+						</CdxInfoChip>
+						<CdxInfoChip
+							v-if="selectedModuleDisplay.showBetaChip"
+							class="explorer-project-controls__summary-audience-chip"
+							status="warning"
+						>
+							{{ moduleSelectBetaChipLabel }}
+						</CdxInfoChip>
+						<CdxInfoChip
+							v-if="selectedModuleDisplay.showInternalChip"
+							class="explorer-project-controls__summary-audience-chip"
+							status="warning"
+						>
+							{{ moduleSelectInternalChipLabel }}
+						</CdxInfoChip>
+					</template>
+					<bdi v-else>{{ moduleSelectDefaultLabel }}</bdi>
+				</div>
+			</div>
+			<CdxButton
+				class="explorer-project-controls__toggle"
+				action="progressive"
+				weight="quiet"
+				size="small"
+				type="button"
+				@click="onExpandSettings"
+			>
+				<CdxIcon
+					:icon="cdxIconEdit"
+					size="small"
+				/>
+				{{ settingsAdjustLabel }}
+			</CdxButton>
+		</template>
+
+		<template v-else>
+			<div class="explorer-project-controls__header">
+				<h2 class="explorer-project-controls__title">
+					{{ settingsTitle }}
+				</h2>
+				<CdxButton
+					class="explorer-project-controls__toggle"
+					action="progressive"
+					weight="quiet"
+					size="small"
+					type="button"
+					@click="onCollapseSettings"
+				>
+					<CdxIcon
+						:icon="cdxIconClose"
+						size="small"
+					/>
+					{{ settingsCloseLabel }}
+				</CdxButton>
+			</div>
+
+			<div class="explorer-project-controls__fields">
 				<CdxField class="explorer-project-controls__project-field">
 					<template #label>
-						{{ projectLabel }}
+						{{ projectOrWikiLabel }}
 					</template>
 					<CdxCombobox
 						v-model:selected="projectComboboxSelected"
@@ -145,123 +227,78 @@ function onOptInPopoverTriggerClick(): void {
 						:disabled="isInstanceBootstrapping || isLanguageSelectorDisabled"
 					/>
 				</CdxField>
-			</div>
-		</CdxField>
 
-		<div class="explorer-project-controls__module-row">
-			<CdxField class="explorer-project-controls__module-field">
-				<template #label>
-					{{ restApiModuleLabel }}
-				</template>
-				<template #description>
-					{{ restApiModuleDescription }}
-				</template>
-				<CdxSelect
-					v-model:selected="selectedModuleValue"
-					class="explorer-project-controls__module-select"
-					:menu-items="moduleMenuItems"
-					:menu-config="moduleSelectMenuConfig"
-					:default-label="moduleSelectDefaultLabel"
-					:disabled="isModuleSelectDisabled"
-				>
-					<template #label="{ selectedMenuItem, defaultLabel }">
-						<template
-							v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay( selectedMenuItem ) ]"
-							:key="resolvedMenuItem?.value ?? 'module-select-default'"
-						>
-							<ExplorerModuleSelectOptionContent
-								v-if="resolvedMenuItem"
-								:menu-item="resolvedMenuItem"
-								:beta-chip-label="moduleSelectBetaChipLabel"
-								:internal-chip-label="moduleSelectInternalChipLabel"
-								variant="label"
-							/>
-							<span v-else>{{ defaultLabel }}</span>
-						</template>
+				<CdxField class="explorer-project-controls__module-field">
+					<template #label>
+						{{ apiLabel }}
 					</template>
-					<template #menu-item="{ menuItem }">
-						<template
-							v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay( menuItem ) ]"
-							:key="resolvedMenuItem?.value ?? 'module-select-empty'"
+					<div class="explorer-project-controls__api-settings">
+						<CdxSelect
+							v-model:selected="selectedModuleValue"
+							class="explorer-project-controls__module-select"
+							:menu-items="moduleMenuItems"
+							:menu-config="moduleSelectMenuConfig"
+							:default-label="moduleSelectDefaultLabel"
+							:disabled="isModuleSelectDisabled"
 						>
-							<ExplorerModuleSelectOptionContent
-								v-if="resolvedMenuItem"
-								:menu-item="resolvedMenuItem"
-								:beta-chip-label="moduleSelectBetaChipLabel"
-								:internal-chip-label="moduleSelectInternalChipLabel"
-								variant="menu"
-							/>
-						</template>
-					</template>
-				</CdxSelect>
-			</CdxField>
+							<template #label="{ selectedMenuItem, defaultLabel }">
+								<template
+									v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
+										selectedMenuItem
+									) ]"
+									:key="resolvedMenuItem?.value ?? 'module-select-default'"
+								>
+									<ExplorerModuleSelectOptionContent
+										v-if="resolvedMenuItem"
+										:menu-item="resolvedMenuItem"
+										:beta-chip-label="moduleSelectBetaChipLabel"
+										:internal-chip-label="moduleSelectInternalChipLabel"
+										variant="label"
+									/>
+									<span v-else>{{ defaultLabel }}</span>
+								</template>
+							</template>
+							<template #menu-item="{ menuItem }">
+								<template
+									v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
+										menuItem
+									) ]"
+									:key="resolvedMenuItem?.value ?? 'module-select-empty'"
+								>
+									<ExplorerModuleSelectOptionContent
+										v-if="resolvedMenuItem"
+										:menu-item="resolvedMenuItem"
+										:beta-chip-label="moduleSelectBetaChipLabel"
+										:internal-chip-label="moduleSelectInternalChipLabel"
+										variant="menu"
+									/>
+								</template>
+							</template>
+						</CdxSelect>
 
-			<CdxField
-				class="explorer-project-controls__opt-in"
-				:is-fieldset="true"
-			>
-				<template #label>
-					<span class="explorer-project-controls__opt-in-label">
-						{{ optInLabel }}
-						<CdxButton
-							ref="optInPopoverTrigger"
-							class="explorer-project-controls__opt-in-info-trigger"
+						<CdxMenuButton
+							v-model:selected="selectedOptInValues"
+							class="explorer-project-controls__opt-in-settings-trigger"
+							action="default"
 							weight="quiet"
-							type="button"
-							:aria-label="optInPopoverTriggerLabel"
-							:aria-expanded="isOptInPopoverOpen"
-							@click="onOptInPopoverTriggerClick"
+							:menu-items="optInMenuEntries"
+							:disabled="isInstanceBootstrapping"
+							:aria-label="optInSettingsTriggerLabel"
 						>
-							<CdxIcon :icon="cdxIconInfo" />
-						</CdxButton>
-						<CdxPopover
-							v-model:open="isOptInPopoverOpen"
-							class="explorer-project-controls__opt-in-help-popover fd-cdx-popover--arrow-seam-fix"
-							:anchor="optInPopoverTrigger"
-							:title="optInPopoverTitle"
-							placement="bottom-start"
-							:use-close-button="true"
-						>
-							<div class="explorer-project-controls__opt-in-popover">
-								<p class="explorer-project-controls__opt-in-popover-intro">
-									{{ optInPopoverIntro }}
-								</p>
-								<ul class="explorer-project-controls__opt-in-popover-list">
-									<li>
-										<strong class="explorer-project-controls__opt-in-popover-term">
-											{{ optInPopoverBetaLabel }}
-										</strong>
-										{{ optInPopoverBetaBody }}
-									</li>
-									<li>
-										<strong class="explorer-project-controls__opt-in-popover-term">
-											{{ optInPopoverInternalLabel }}
-										</strong>
-										{{ optInPopoverInternalBody }}
-									</li>
-								</ul>
-							</div>
-						</CdxPopover>
-					</span>
-				</template>
-				<CdxCheckbox
-					v-for="optInOption in optInCheckboxOptions"
-					:key="optInOption.value"
-					v-model="selectedOptInValues"
-					:input-value="optInOption.value"
-					:disabled="isInstanceBootstrapping"
-				>
-					{{ optInOption.label }}
-				</CdxCheckbox>
-			</CdxField>
-		</div>
+							<CdxIcon :icon="cdxIconSettings" />
+						</CdxMenuButton>
+					</div>
+				</CdxField>
+			</div>
+		</template>
 	</section>
 </template>
 
 <style scoped>
 .explorer-project-controls {
 	display: flex;
-	flex-direction: column;
+	flex-wrap: wrap;
+	align-items: center;
 	gap: var( --spacing-100 );
 	padding: var( --spacing-75 );
 	inline-size: 100%;
@@ -271,59 +308,96 @@ function onOptInPopoverTriggerClick(): void {
 	min-inline-size: 0;
 }
 
-.explorer-project-controls__project-fieldset {
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	max-inline-size: min( 40rem, 100% );
-	margin-block-start: 0;
+.explorer-project-controls--expanded {
+	flex-direction: column;
+	flex-wrap: nowrap;
+	align-items: stretch;
 }
 
-.explorer-project-controls__project-fieldset :deep( .cdx-field__label ) {
-	margin-block-end: 0;
-}
-
-.explorer-project-controls__project-fields {
+.explorer-project-controls__summary {
 	display: flex;
+	flex: 1 1 30rem;
 	flex-wrap: wrap;
-	row-gap: var( --spacing-100 );
+	align-items: center;
 	column-gap: var( --spacing-150 );
+	row-gap: var( --spacing-50 );
 	min-inline-size: 0;
-	margin-block-start: var( --spacing-75 );
+}
+
+.explorer-project-controls__summary-item {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.explorer-project-controls__summary-item strong {
+	font-weight: var( --font-weight-bold );
+}
+
+.explorer-project-controls__summary-audience-chip {
+	flex-shrink: 0;
+}
+
+/*
+ * Codex forces warning-chip icons even when no icon is supplied. Project-setting
+ * audience chips are labels only, matching the API Select audience-chip exception.
+ */
+.explorer-project-controls__summary-audience-chip :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
+}
+
+.explorer-project-controls__toggle {
+	flex-shrink: 0;
+	margin-inline-start: auto;
+}
+
+/*
+ * The compact Figma controls use Codex's 14px minimum small-icon token inside
+ * the native 24px small Button.
+ */
+.explorer-project-controls__toggle :deep( .cdx-icon--small ) {
+	inline-size: var( --min-size-icon-small );
+	min-inline-size: var( --min-size-icon-small );
+	block-size: var( --min-size-icon-small );
+	min-block-size: var( --min-size-icon-small );
+}
+
+.explorer-project-controls__header {
+	display: flex;
+	align-items: center;
+	gap: var( --spacing-100 );
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.explorer-project-controls__title {
+	margin: 0;
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-medium );
+	font-weight: var( --font-weight-bold );
+}
+
+.explorer-project-controls__fields {
+	display: grid;
+	grid-template-columns: minmax( 0, 1fr );
+	gap: var( --spacing-100 );
+	inline-size: 100%;
+	min-inline-size: 0;
 }
 
 .explorer-project-controls__project-field,
-.explorer-project-controls__language-field {
-	flex: 1 1 12rem;
-	min-inline-size: 0;
+.explorer-project-controls__language-field,
+.explorer-project-controls__module-field {
 	margin-block-start: 0;
+	min-inline-size: 0;
 }
 
 .explorer-project-controls__project-field :deep( .cdx-combobox ),
 .explorer-project-controls__project-field :deep( .cdx-text-input ),
 .explorer-project-controls__language-field :deep( .cdx-combobox ),
-.explorer-project-controls__language-field :deep( .cdx-text-input ) {
-	inline-size: 100%;
-	max-inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.explorer-project-controls__module-row {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	row-gap: var( --spacing-100 );
-	column-gap: var( --spacing-150 );
-	min-inline-size: 0;
-	inline-size: 100%;
-}
-
-.explorer-project-controls__module-field {
-	flex: 1 1 12rem;
-	min-inline-size: 0;
-	max-inline-size: min( 40rem, 100% );
-	margin-block-start: 0;
-}
-
+.explorer-project-controls__language-field :deep( .cdx-text-input ),
 .explorer-project-controls__module-field :deep( .cdx-select-vue ),
 .explorer-project-controls__module-select {
 	inline-size: 100%;
@@ -331,38 +405,31 @@ function onOptInPopoverTriggerClick(): void {
 	min-inline-size: 0;
 }
 
-.explorer-project-controls__opt-in {
-	flex: 0 1 auto;
+.explorer-project-controls__api-settings {
+	display: flex;
+	align-items: flex-end;
+	gap: var( --spacing-50 );
 	min-inline-size: 0;
-	margin-block-start: 0;
+	inline-size: 100%;
 }
 
-.explorer-project-controls__opt-in-label {
-	display: inline-flex;
-	align-items: center;
-	gap: var( --spacing-25 );
+.explorer-project-controls__module-field {
+	flex: 1 1 auto;
 }
 
-.explorer-project-controls__opt-in-info-trigger {
+.explorer-project-controls__opt-in-settings-trigger {
+	display: flex;
 	flex-shrink: 0;
+	align-self: flex-end;
 }
 
-.explorer-project-controls__opt-in-popover {
-	font-weight: var( --font-weight-normal );
-}
-
-.explorer-project-controls__opt-in-popover-intro {
-	margin: 0;
-	font-weight: var( --font-weight-normal );
-}
-
-.explorer-project-controls__opt-in-popover-list {
-	margin: var( --spacing-50 ) 0 0;
-	padding-inline-start: var( --spacing-125 );
-	font-weight: var( --font-weight-normal );
-}
-
-.explorer-project-controls__opt-in-popover-term {
-	font-weight: var( --font-weight-bold );
+@media screen and ( min-width: 640px ) {
+	.explorer-project-controls__fields {
+		grid-template-columns:
+			minmax( 0, 1fr )
+			minmax( 0, 1fr )
+			minmax( 0, 2fr );
+		column-gap: var( --spacing-150 );
+	}
 }
 </style>
