@@ -90,6 +90,7 @@
   "content-page-nav-label": "Accessible name for the prev/next page navigation landmark at the bottom of content pages. Not the on-this-page TOC (see on-this-page-*).",
   "explorer-api-label": "Short label for the REST API module select in expanded project settings.",
   "explorer-api-modules-title": "Heading for the right-hand API modules navigation panel.",
+  "explorer-back-to-top-label": "Accessible name for the floating explorer Back to top icon-only button that scrolls the page to the start of the explorer content.",
   "explorer-bootstrap-error": "Shown when the aggregated explorer bootstrap request fails for the selected wiki instance.",
   "explorer-browse-api-modules-after": "Text after the wiki project name in the browse modules panel title (includes leading space).",
   "explorer-browse-api-modules-before": "Text before the wiki project name in the browse modules panel title (includes trailing space).",

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { CdxMessage } from '@wikimedia/codex'
+import { CdxButton, CdxIcon, CdxMessage } from '@wikimedia/codex'
+import { cdxIconArrowUp } from '@wikimedia/codex-icons'
 import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
+import { useExplorerBackToTop } from '../../composables/useExplorerBackToTop'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useExplorerDeepLink } from '../../composables/useExplorerDeepLink'
 import { useExplorerDeepLinkSync } from '../../composables/useExplorerDeepLinkSync'
@@ -132,6 +134,13 @@ const {
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+
+const {
+	isBackToTopVisible,
+	backToTopStyle,
+	backToTopLabel,
+	onBackToTop
+} = useExplorerBackToTop( scalarShellRef )
 
 // Sidebar-mode only: bring Scalar's own sidebar entry into view on a deep-link load.
 const { scrollSidebarToActiveOperation } = useExplorerScalarSidebarScroll( scalarShellRef )
@@ -517,6 +526,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 								@interface-ready="onScalarInterfaceReady"
 							/>
 						</div>
+						<CdxButton
+							v-if="isBackToTopVisible"
+							class="explorer-page__back-to-top"
+							:style="backToTopStyle"
+							action="default"
+							weight="normal"
+							type="button"
+							:aria-label="backToTopLabel"
+							@click="onBackToTop"
+						>
+							<CdxIcon :icon="cdxIconArrowUp" />
+						</CdxButton>
 						<template #fallback>
 							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
 								<div class="explorer-page__scalar-loading">
@@ -676,6 +697,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__scalar-shell--loading {
 	display: grid;
 	place-items: center;
+}
+
+/*
+ * Viewport-fixed Back to top (Figma 1696:27981). Inline-end inset is set in JS so
+ * the control stays 16px inside `.explorer-page__scalar-shell` despite the shell’s
+ * transform containing block (cannot use fixed positioning as a shell child).
+ * Block-end inset is Codex `--spacing-200` (32px).
+ */
+.explorer-page__back-to-top {
+	position: fixed;
+	z-index: 5;
 }
 
 .explorer-page__scalar-loading {

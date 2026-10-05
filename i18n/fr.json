@@ -87,6 +87,7 @@
   "content-attribution-adapted-from": "Adapté de",
   "explorer-api-label": "API",
   "explorer-api-modules-title": "Modules API",
+  "explorer-back-to-top-label": "Back to top",
   "explorer-bootstrap-error": "L'initialisation de l'explorateur a echoue pour cette instance wiki.",
   "explorer-browse-api-modules-after": "",
   "explorer-browse-api-modules-before": "Parcourir les modules API de ",

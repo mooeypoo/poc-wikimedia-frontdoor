@@ -693,6 +693,23 @@ Module selection for which spec Scalar loads remains the **API to explore** `Cdx
 
 Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`page-grid.css`**). Border radius is exploratory **4px** — **not** a Codex design token (Codex **`--border-radius-base`** is **2px**) and is under consideration as a **future system default**. Account list-element cards, the Reset success credentials panel, NavigationCard, CodeBlock / CodeTabs, Highlight, and the Explorer **Test Request** dialog consume the same radius variable.
 
+### Back to top
+
+**Decision:** After the user scrolls the explorer body, show a floating Codex **default / normal** icon-only **`CdxButton`** with **`cdxIconArrowUp`** ([Figma 1696:27981](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1696-27981)).
+
+| Property | Value |
+|----------|-------|
+| Variant | `action="default"` `weight="normal"` (neutral), icon-only |
+| Icon | `cdxIconArrowUp` |
+| Viewport block-end inset | **32px** — Codex `--spacing-200` / `EXPLORER_BACK_TO_TOP_VIEWPORT_BLOCK_END_INSET_PX` |
+| Shell inline-end inset | **16px** inside `.explorer-page__scalar-shell` border — Codex `--spacing-100` / `EXPLORER_BACK_TO_TOP_SHELL_INLINE_END_INSET_PX` |
+| Positioning | `position: fixed` (measured against the shell; not a shell child — shell `transform` would re-contain fixed) |
+| Scroll target | `.frontdoor-shell__body-scroll` → top |
+| Label | banana `explorer-back-to-top-label` (aria-label) |
+| Hidden | Before reveal scroll threshold; while Test Request shell clamp is open; when the shell is off-screen inline |
+
+**Source:** `useExplorerBackToTop.ts`, `explorer/[...view].vue`, `config/explorerSurfaces.ts`.
+
 **Decision (wide):** Rail uses shared class **`frontdoor-end-panel-nav`** in the end column. Vertical alignment with **`.explorer-page__scalar-shell`** uses `useEndPanelNavAlign` (anchor and height cap: scalar shell) setting `--frontdoor-end-panel-nav-flow-offset`, `--frontdoor-end-panel-nav-sticky-inset`, and **`--frontdoor-end-panel-nav-max-block-size`**. The rail’s default block size follows its content; it only reaches the Scalar shell height when content requires it. Fallback: `--fd-explorer-rail-offset` in `page-grid.css`. **Documentation on-this-page TOC** does **not** use this class/composable — it uses CSS sticky on `.frontdoor-shell__on-this-page-end` (resize remeasure + `--fd-explorer-rail-offset` fallback caused flicker; see **On-this-page navigation**).
 ### Legacy custom module rail
 
@@ -912,6 +929,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
 | *(uncommitted)* | Account per-section Meta CTAs + OAuth gap + intro paragraph | Personal **Create API token** / OAuth **Request new OAuth client** (progressive outlined + external icon → `META_OAUTH2_CONSUMER_REGISTRATION_URL`); Personal → OAuth **`--spacing-250` (40px)**; section description + “Learn more about …” inlined as **one paragraph** |
 | *(superseded)* | Test Request modal shell fit (pre natural-height) | Was: freeze shell scroll only, keep page body scrollable — superseded by natural-height row above |
+| *(uncommitted)* | Explorer Back to top | Floating Codex default/normal icon-only `cdxIconArrowUp`; **32px** viewport block-end + **16px** inside Scalar shell inline-end (Figma 1696:27981) |
 | *(uncommitted)* | API Combobox display + Include persistence | Combobox `selected` shows `Title (v1)` (not discovery names); version in parentheses; closed-field audience chips; Include beta/internal via page `useState` across deep-link remounts |
 | *(uncommitted)* | API Combobox description length | Bootstrap sentence-shorten to ~280 chars (3–5 lines, no ellipsis); strip sandbox / Global Rules / license boilerplate |
 | *(uncommitted)* | API to explore audience chips | Label-only warning `CdxInfoChip` beta/internal beside module name (icons hidden); parenthetical version (Codex exception #14) |
