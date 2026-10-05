@@ -66,6 +66,7 @@
 	--fd-layout-page-margin: var( --spacing-100 );
 	--fd-layout-page-margin-inline-start: var( --fd-layout-page-margin );
 	--fd-layout-grid-gutter: var( --spacing-100 );
+	--fd-layout-explorer-navigation-content-gap: var( --fd-layout-page-margin );
 
 	/*
 	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
@@ -140,19 +141,18 @@
 		var( --fd-layout-active-grid-inline-size );
 
 	/*
-	 * Explorer keeps its wide reference-panel measure at desktop wide instead of
-	 * adopting the 792px standard-content cap.
+	 * Explorer keeps its wide reference-panel measure instead of adopting the
+	 * 792px standard-content cap. At desktop wide, start navigation + Explorer
+	 * gap + body columns fit inside the 1512px Codex grid; only exterior margins
+	 * grow beyond that point.
 	 */
 	--fd-layout-explorer-body-columns-max-inline-size: calc(
-		var( --max-width-breakpoint-desktop )
-		- ( 2 * var( --spacing-200 ) )
+		var( --fd-layout-grid-max-inline-size )
 		- var( --fd-layout-start-panel-inline-size )
-		- var( --fd-layout-grid-gutter )
+		- var( --fd-layout-explorer-navigation-content-gap )
 	);
-	--fd-layout-explorer-body-columns-collapsed-max-inline-size: calc(
-		var( --max-width-breakpoint-desktop )
-		- ( 2 * var( --spacing-200 ) )
-	);
+	--fd-layout-explorer-body-columns-collapsed-max-inline-size:
+		var( --fd-layout-grid-max-inline-size );
 }
 
 .fd-page-grid {

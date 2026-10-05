@@ -226,6 +226,7 @@ At the full two-panel breakpoint (≥1202px), the standard documentation shell u
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
 | Explorer side nav mode links | **Implemented** | `usePageSectionNav` + `ShellSidePanelNav` + `explorerRoute.ts`; Overview items still placeholders |
+| Explorer responsive body spacing | **Implemented** | `page-grid.css` + `default.vue` — local-nav gap follows 24px tablet / 32px desktop page margins and the wide body stays inside the 1512px grid; `explorer/[...view].vue` — project controls to Scalar is 16px mobile / 24px tablet+ |
 | On-this-page TOC (≥3 `h2`, `h3` nest) | **Implemented** | `useOnThisPageNav` — CSS-sticky end column ≥1202px (`--font-size-small`); quiet MenuButton ≤1201px (12px block-end with tabs / 16px with collapsed navigation); scrollspy `--color-progressive`; not `useEndPanelNavAlign` |
 
 **Responsive behaviour summary:**
@@ -247,6 +248,8 @@ At the full two-panel breakpoint (≥1202px), the standard documentation shell u
 **Decision (PR #40):** On community `/explorer`, endpoint browsing uses **Scalar’s native operation sidebar** (`showSidebar: true` via `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR`). The custom end-column **module rail** is **not** mounted. The shell class **`frontdoor-shell--explorer-internal-sidebar`** collapses the end column so project controls + Scalar stretch across the body width.
 
 **Main column:** Project controls and the Scalar reference panel (sidebar + operation docs). Endpoint selection is owned by Scalar.
+
+**Responsive spacing and cap:** Project controls and Scalar align to the same body edge. When local navigation is expanded, its border-to-content gap matches the breakpoint page margin: **24px** (`--spacing-150`) at tablet widths and **32px** (`--spacing-200`) at desktop widths. With navigation collapsed below 961px, no empty column gap remains; the body uses the normal exterior margin (**16px** mobile, **24px** tablet). The wide Explorer exception fits `start navigation + Explorer gap + Explorer body` inside the **1512px** Codex desktop-wide grid, after which only exterior margins grow.
 
 **Wide explorer:** Reference panel and Scalar shell use **natural height** (page scroll) as documented in **API Explorer page layout** below — not a sticky faux-iframe viewport.
 
@@ -548,7 +551,7 @@ Top to bottom:
 2. **Project controls stack** — **`ExplorerProjectControls`** (Wikimedia project fieldset, **API to explore** select, Include opt-in checkboxes) when instance bootstrap is ready
 3. **Reference panel** — Scalar shell with **native endpoint sidebar** (no separate module title / chip header above the shell; no custom module rail)
 
-**Spacing:** Section gaps use `--spacing-150` / `--spacing-100` grid gaps on `.explorer-page` / `.explorer-page__intro`. The project-controls stack itself does **not** add a `--spacing-100` gap after controls.
+**Spacing:** `.explorer-page__intro` uses `--spacing-100` between its internal sections. The gap from the intro’s final project-controls stack to the Scalar reference is **`--spacing-100` (16px) below 640px** and **`--spacing-150` (24px) from 640px upward**. The project-controls stack itself does not add a trailing gap; the parent `.explorer-page` owns this responsive spacing.
 
 ### Reference panel (natural height)
 

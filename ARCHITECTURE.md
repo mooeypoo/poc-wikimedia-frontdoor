@@ -411,6 +411,8 @@ Scalar native sidebar lists operations for the loaded OpenAPI document
 
 On `/explorer` when the flag is on, the shell adds **`frontdoor-shell--explorer-internal-sidebar`**: the end column is collapsed and the main column (project controls + Scalar reference) takes the full body width (`app/layouts/default.vue`). Enterprise modes already relied on Scalar’s sidebar; community now matches that pattern for endpoints.
 
+**Responsive Explorer geometry.** Project controls and the Scalar reference share the same wide body start. With local navigation expanded, the gap from its inline-end border to the Explorer body equals the Codex page margin: **24px** (`--spacing-150`) at tablet widths and **32px** (`--spacing-200`) at desktop widths. Below the 961px navigation floor, the local menu moves into the header and the body uses the normal exterior inset (**16px** mobile, **24px** tablet) without reserving an empty navigation gap. `--fd-layout-explorer-navigation-content-gap` aliases the active page-margin token so the expanded gap and desktop-wide cap use one value. At the 1512px Codex grid cap, `start navigation + Explorer gap + body columns` stays inside that grid; beyond it only exterior margins grow. The project-controls-to-reference vertical gap is **16px** (`--spacing-100`) below 640px and **24px** (`--spacing-150`) from 640px upward. Implemented in `page-grid.css`, `default.vue`, and `explorer/[...view].vue`.
+
 **Surfaces.** **`ExplorerProjectControls`** uses **`--fd-explorer-controls-surface-background-color`** / **`--fd-explorer-controls-surface-border-radius`** from `config/explorerSurfaces.ts` (shared with account cards, NavigationCard, CodeBlock / CodeTabs, Highlight, Test Request dialog). The former rail no longer shares that surface in the live UI.
 
 **Deep-link / operation focus.** URL and bootstrap deep-links still set a pending operation target; **`useExplorerScalarFocus`** scrolls the Scalar reference panel to the matching operation (same resolution helpers as before). Everyday endpoint navigation is owned by Scalar’s sidebar — not a frontdoor `CdxMenuItem` list.
@@ -501,8 +503,9 @@ The **start column** holds section navigation **below** the header band only. At
 | `--fd-layout-navigation-content-min-gap` | `--spacing-250` (40px) | Minimum navigation-to-content gap |
 | `--fd-layout-start-panel-background-color` | `#f3f3f3` | **Legacy / unused** — superseded by transparent panel + inline-end border; retained for possible revert |
 | `--fd-layout-page-margin-inline-start` | `--fd-layout-page-margin` / centred active-grid margin at ≥1440px | Shared inset: `.frontdoor-shell__chrome-inner` (both edges), `.fd-page-grid` (inline-start) |
-| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Inline-end inset: `.frontdoor-shell__body-scroll` only |
-| `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | Shared shell/Explorer gutter token; standard documentation navigation gaps use the dedicated 40px minimum |
+| `--fd-layout-page-margin` | `--spacing-100` / `--spacing-150` / `--spacing-200` by breakpoint | Exterior body inset and source for the Explorer navigation/content gap |
+| `--fd-layout-grid-gutter` | `--spacing-100` (mobile) / `--spacing-150` (tablet+) | General shell grid gutter; standard documentation navigation gaps and the Explorer navigation gap use dedicated tokens |
+| `--fd-layout-explorer-navigation-content-gap` | `--fd-layout-page-margin` | Expanded local-navigation border to Explorer body: 24px tablet / 32px desktop |
 | `--fd-layout-grid-max-inline-size` | 1512px (`94.5rem`) | Codex desktop-wide grid cap |
 | `--fd-layout-active-grid-inline-size` | 1376px below 1440px; scales to 1512px by 1680px | Active outer-grid width used by standard shell tracks |
 | `--fd-layout-shell-chrome-block-size-estimate` | `11rem` | Chrome height estimate for sticky panel max-heights |
@@ -517,7 +520,8 @@ The **start column** holds section navigation **below** the header band only. At
 | `HEADER_LANGUAGE_MENU_ITEM_RENDER_CAP` | `50` (`config/headerChrome.ts`) | Max language options passed to `CdxLookup` before typing narrows further |
 | `--fd-layout-body-columns-max-inline-size` | `active grid − start panel` | Standard body sub-grid cap at ≥1440px; centre region + gutter + end track |
 | `--fd-layout-body-columns-collapsed-max-inline-size` | Active grid width | Centred standard body cap when start nav is collapsed/sidebar hidden |
-| `--fd-layout-explorer-body-columns-max-inline-size` | Codex desktop cap minus Explorer shell tracks | Explorer-only wide-layout exception |
+| `--fd-layout-explorer-body-columns-max-inline-size` | `1512px − start panel − Explorer gap` | Expanded-nav Explorer body cap; keeps the full Explorer shell inside the Codex desktop-wide grid |
+| `--fd-layout-explorer-body-columns-collapsed-max-inline-size` | 1512px | Explorer body cap when local navigation is collapsed or absent |
 
 **Page grid slots:** `PageGrid` exposes **`start`** and default **`body`** slots only (no `end` or `footer` grid tracks). The end panel and site footer are composed inside the **body** slot in `default.vue` (`.frontdoor-shell__body-scroll` → `.frontdoor-shell__body-columns`).
 

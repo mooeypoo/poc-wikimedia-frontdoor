@@ -428,6 +428,16 @@ useHead( {
 		align-items: stretch;
 	}
 
+	/*
+	 * Explorer content follows Codex page margins beside the expanded local nav:
+	 * 24px at tablet and 32px at desktop. Collapsed navigation keeps the body
+	 * aligned to the page edge inset instead of reserving an empty column gap.
+	 */
+	.frontdoor-shell--explorer:not( .frontdoor-shell--nav-collapsed )
+		.frontdoor-shell__page-grid {
+		column-gap: var( --fd-layout-explorer-navigation-content-gap );
+	}
+
 .frontdoor-shell--nav-drawer-expanding .frontdoor-shell__side-panel--start {
 		transition: border-inline-end-width var( --transition-duration-medium ) var( --transition-timing-function-user );
 	}

@@ -543,9 +543,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page {
 	position: relative;
 	display: grid;
-	gap: var( --spacing-150 );
+	gap: var( --spacing-100 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
+}
+
+@media screen and ( min-width: 640px ) {
+	.explorer-page {
+		gap: var( --spacing-150 );
+	}
 }
 
 .explorer-page__intro {
