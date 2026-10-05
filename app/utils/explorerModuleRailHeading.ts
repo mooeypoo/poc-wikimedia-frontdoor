@@ -107,10 +107,12 @@ export function formatModuleRailHeadingAriaLabel(
 }
 
 /**
- * Builds version-only supporting text for REST API module select menu items.
+ * Builds version-only supporting text for REST API module chrome that still uses
+ * Codex MenuItem `supportingText` (legacy helper; the API Combobox menu now shows
+ * version in parentheses via {@link formatExplorerModuleSelectDisplayValue}).
  *
  * Audience markers (beta / internal) are rendered as warning `CdxInfoChip`s in the
- * custom Select `menu-item` slot — not as Codex `supportingText`.
+ * custom Combobox `menu-item` slot — not as Codex `supportingText`.
  *
  * @param versionChipLabel - Optional isolated version label for display.
  * @returns Supporting text, or an empty string when no version applies.
@@ -119,4 +121,32 @@ export function formatExplorerModuleSelectSupportingText(
 	versionChipLabel?: string
 ): string {
 	return versionChipLabel?.trim() ?? ''
+}
+
+/**
+ * Builds the closed Combobox / summary line for a REST API module option.
+ *
+ * Discovery module names (for example `-`) are not shown; the human title and
+ * optional version chip label are combined as `Title (v1)`.
+ *
+ * @param headingTitle - Parsed module title for display.
+ * @param versionChipLabel - Optional formatted version label (includes leading `v`).
+ * @returns Plain display string for Combobox `selected` / input text.
+ */
+export function formatExplorerModuleSelectDisplayValue(
+	headingTitle: string,
+	versionChipLabel?: string
+): string {
+	const trimmedTitle = headingTitle.trim()
+	const trimmedVersion = versionChipLabel?.trim()
+
+	if ( !trimmedTitle ) {
+		return trimmedVersion ?? ''
+	}
+
+	if ( !trimmedVersion ) {
+		return trimmedTitle
+	}
+
+	return `${ trimmedTitle } (${ trimmedVersion })`
 }

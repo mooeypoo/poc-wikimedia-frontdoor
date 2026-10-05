@@ -1,11 +1,25 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { normalizeOpenApiModuleDescription } from '../app/utils/explorerModuleDescription.ts'
+import { EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_CHARS } from '../config/explorerModuleDescriptions.ts'
 
 test( 'normalizeOpenApiModuleDescription preserves full text when short', () => {
 	const normalized = normalizeOpenApiModuleDescription(
 		'Experimental editing suggestions and editor feedback regarding such suggestions.'
 	)
+
+	assert.equal(
+		normalized,
+		'Experimental editing suggestions and editor feedback regarding such suggestions.'
+	)
+} )
+
+test( 'normalizeOpenApiModuleDescription strips sandbox caution boilerplate', () => {
+	const normalized = normalizeOpenApiModuleDescription( [
+		'Experimental editing suggestions and editor feedback regarding such suggestions.',
+		'Caution: The REST Sandbox executes calls against the production database by default.',
+		'To avoid unintended edits to live content, select the sandbox server.'
+	].join( ' ' ) )
 
 	assert.equal(
 		normalized,
@@ -24,12 +38,23 @@ test( 'normalizeOpenApiModuleDescription strips markdown links and URLs but keep
 	)
 } )
 
-test( 'normalizeOpenApiModuleDescription does not truncate long text', () => {
-	const longDescription = 'Provides information about Wikimedia project sites including sitemaps and other structured site metadata used by clients that need to discover project endpoints and capabilities across the federation'
+test( 'normalizeOpenApiModuleDescription shortens long text at a sentence boundary without ellipsis', () => {
+	const longDescription = [
+		'This API provides cacheable and straightforward access to Wikimedia content and data, in machine-readable formats.',
+		'Clients can request articles, media, and related metadata for tools and research.',
+		'Additional guidance covers caching headers, pagination, and content negotiation for multilingual projects.',
+		'Further notes describe authentication options and stability guarantees for write endpoints.'
+	].join( ' ' )
 	const normalized = normalizeOpenApiModuleDescription( longDescription )
 
-	assert.equal( normalized, longDescription )
+	assert.ok( normalized )
+	assert.ok( normalized.length <= EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_CHARS )
 	assert.doesNotMatch( normalized, /…$/ )
+	assert.match( normalized, /\.$/ )
+	assert.equal(
+		normalized,
+		'This API provides cacheable and straightforward access to Wikimedia content and data, in machine-readable formats. Clients can request articles, media, and related metadata for tools and research.'
+	)
 } )
 
 test( 'normalizeOpenApiModuleDescription strips Site API access boilerplate suffix', () => {
@@ -64,5 +89,18 @@ test( 'normalizeOpenApiModuleDescription keeps Attribution API one-line summary'
 	assert.equal(
 		normalized,
 		'The Attribution API provides well-structured attribution data for content across Wikimedia projects.'
+	)
+} )
+
+test( 'normalizeOpenApiModuleDescription drops Global Rules sections', () => {
+	const normalized = normalizeOpenApiModuleDescription( [
+		'This API provides support for rendering mathematical formulae.',
+		'### Global Rules',
+		'- Limit your clients to no more than 200 requests/s to this API.'
+	].join( '\n' ) )
+
+	assert.equal(
+		normalized,
+		'This API provides support for rendering mathematical formulae.'
 	)
 } )
