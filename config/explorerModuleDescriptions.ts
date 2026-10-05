@@ -13,6 +13,15 @@
  * Descriptions with full OpenAPI metadata are extracted at bootstrap time and do
  * not need fallback keys unless suffix stripping is configured here.
  */
+
+/**
+ * Maximum wrapped lines for REST API module descriptions in the API Combobox menu.
+ *
+ * Keeps OpenAPI `info.description` summaries in a readable 3–5 line band in the
+ * floating menu (CSS line-clamp in `ExplorerModuleSelectOptionContent`).
+ */
+export const EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES = 5 as const
+
 export const EXPLORER_MODULE_DESCRIPTION_MESSAGE_KEYS: Record<string, string> = {
 	'readinglists/v0': 'explorer-module-description-readinglists-v0'
 }

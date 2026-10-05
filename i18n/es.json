@@ -117,6 +117,7 @@
   "explorer-module-internal-chip-label": "interna",
   "explorer-module-description-readinglists-v0": "Almacena y recupera listas privadas de paginas, por ejemplo para marcadores o una lista de lectura pendiente.",
   "explorer-module-label": "Modulo REST",
+  "explorer-module-no-results": "No hay APIs coincidentes",
   "explorer-module-placeholder": "Selecciona un modulo",
   "explorer-module-rail-collapse-endpoints-label": "Contraer la lista de endpoints",
   "explorer-module-rail-description": "Explora cada modulo descubierto y expandelo para inspeccionar sus endpoints antes de cargarlo en la vista de referencia.",

@@ -120,3 +120,31 @@ export function formatExplorerModuleSelectSupportingText(
 ): string {
 	return versionChipLabel?.trim() ?? ''
 }
+
+/**
+ * Builds the closed Combobox / summary line for a REST API module option.
+ *
+ * Discovery module names (for example `-`) are not shown; the human title and
+ * optional version chip label are combined as `Title (v1)`.
+ *
+ * @param headingTitle - Parsed module title for display.
+ * @param versionChipLabel - Optional formatted version label (includes leading `v`).
+ * @returns Plain display string for Combobox `selected` / input text.
+ */
+export function formatExplorerModuleSelectDisplayValue(
+	headingTitle: string,
+	versionChipLabel?: string
+): string {
+	const trimmedTitle = headingTitle.trim()
+	const trimmedVersion = versionChipLabel?.trim()
+
+	if ( !trimmedTitle ) {
+		return trimmedVersion ?? ''
+	}
+
+	if ( !trimmedVersion ) {
+		return trimmedTitle
+	}
+
+	return `${ trimmedTitle } (${ trimmedVersion })`
+}

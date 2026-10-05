@@ -115,6 +115,7 @@
   "explorer-module-internal-chip-label": "داخلی",
   "explorer-module-description-readinglists-v0": "فهرست‌های خصوصی صفحات را ذخیره و بازیابی می‌کند؛ مثلاً برای نشانک یا «بعداً بخوان».",
   "explorer-module-label": "ماژول REST",
+  "explorer-module-no-results": "هیچ API منطبقی وجود ندارد",
   "explorer-module-placeholder": "یک ماژول انتخاب کنید",
   "explorer-module-rail-collapse-endpoints-label": "جمع‌کردن فهرست نقطه‌های پایانی",
   "explorer-module-rail-description": "هر ماژول کشف‌شده را مرور کنید، سپس آن را باز کنید تا پیش از بارگذاری در نمای مرجع، نقطه‌های پایانی را بررسی کنید.",

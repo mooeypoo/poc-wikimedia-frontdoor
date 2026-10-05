@@ -1,55 +1,39 @@
 <script setup lang="ts">
 import { CdxInfoChip } from '@wikimedia/codex'
+import { EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES } from '../../../config/explorerModuleDescriptions'
 import type { ExplorerModuleSelectOptionDisplay } from '../../composables/useExplorerModuleSelect'
 
 /**
- * Custom API-to-explore Select option / handle content with audience warning chips.
+ * Custom API-to-explore Combobox option content with audience warning chips.
  *
  * **Codex exception #14:** Replaces default Codex MenuItem text layout so beta and
- * internal markers can sit beside the module name as warning `CdxInfoChip`s while
- * version remains subtle supporting text. Chips are **label-only** — Codex forces
- * status icons on `warning` and ignores a null `icon` prop, so icons are hidden in
- * CSS (same pattern as NavigationCard catalog chips). Used from
- * `ExplorerProjectControls` via `CdxSelect` `#menu-item` and `#label` slots.
+ * internal markers can sit beside the module name as warning `CdxInfoChip`s, with
+ * version in parentheses. Chips are **label-only** — Codex forces status icons on
+ * `warning` and ignores a null `icon` prop, so icons are hidden in CSS (same
+ * pattern as NavigationCard catalog chips). Used from `ExplorerProjectControls`
+ * via the `CdxCombobox` `#menu-item` slot. Descriptions clamp to
+ * {@link EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES} wrapped lines.
  */
 defineProps<{
 	menuItem: ExplorerModuleSelectOptionDisplay
 	betaChipLabel: string
 	internalChipLabel: string
-	/** `menu` recreates MenuItem content; `label` is the closed Select handle. */
-	variant: 'menu' | 'label'
 }>()
+
+const descriptionMaxLines = EXPLORER_MODULE_SELECT_DESCRIPTION_MAX_LINES
 </script>
 
 <template>
 	<span
-		v-if="variant === 'label'"
-		class="explorer-module-select-option explorer-module-select-option--label"
-	>
-		<bdi>{{ menuItem.label }}</bdi>
-		<CdxInfoChip
-			v-if="menuItem.showBetaChip"
-			class="explorer-module-select-option__audience-chip"
-			status="warning"
-		>
-			{{ betaChipLabel }}
-		</CdxInfoChip>
-		<CdxInfoChip
-			v-if="menuItem.showInternalChip"
-			class="explorer-module-select-option__audience-chip"
-			status="warning"
-		>
-			{{ internalChipLabel }}
-		</CdxInfoChip>
-	</span>
-	<span
-		v-else
 		class="cdx-menu-item__content explorer-module-select-option explorer-module-select-option--menu"
+		:style="{
+			'--fd-explorer-module-select-description-max-lines': descriptionMaxLines
+		}"
 	>
 		<span class="cdx-menu-item__text">
 			<span class="explorer-module-select-option__title">
 				<span class="cdx-menu-item__text__label">
-					<bdi>{{ menuItem.label }}</bdi>
+					<bdi>{{ menuItem.label }}</bdi><template v-if="menuItem.versionParenthetical"> (<bdi>{{ menuItem.versionParenthetical }}</bdi>)</template>
 				</span>
 				<CdxInfoChip
 					v-if="menuItem.showBetaChip"
@@ -65,16 +49,10 @@ defineProps<{
 				>
 					{{ internalChipLabel }}
 				</CdxInfoChip>
-				<span
-					v-if="menuItem.supportingText"
-					class="cdx-menu-item__text__supporting-text"
-				>
-					<bdi>{{ menuItem.supportingText }}</bdi>
-				</span>
 			</span>
 			<span
 				v-if="menuItem.description"
-				class="cdx-menu-item__text__description"
+				class="cdx-menu-item__text__description explorer-module-select-option__description"
 			>
 				<bdi>{{ menuItem.description }}</bdi>
 			</span>
@@ -83,10 +61,9 @@ defineProps<{
 </template>
 
 <!--
-	Unscoped: CdxSelect menus teleport to <body>, so scoped parent styles would not apply.
+	Unscoped: CdxCombobox menus teleport to <body>, so scoped parent styles would not apply.
 -->
 <style>
-.explorer-module-select-option--label,
 .explorer-module-select-option__title {
 	display: inline-flex;
 	flex-wrap: wrap;
@@ -108,7 +85,14 @@ defineProps<{
 	display: none;
 }
 
-.explorer-module-select-option--menu .cdx-menu-item__text__description {
-	display: block;
+/*
+ * Cap OpenAPI menu descriptions at the configured line count (default 5) so long
+ * specs stay in a readable band; shorter copy still shows fully.
+ */
+.explorer-module-select-option__description {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: var( --fd-explorer-module-select-description-max-lines, 5 );
 }
 </style>

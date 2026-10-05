@@ -5,8 +5,7 @@ import {
 	CdxField,
 	CdxIcon,
 	CdxInfoChip,
-	CdxMenuButton,
-	CdxSelect
+	CdxMenuButton
 } from '@wikimedia/codex'
 import { cdxIconClose, cdxIconEdit, cdxIconSettings } from '@wikimedia/codex-icons'
 import type { ExplorerBootstrapModule } from '../../composables/useExplorerBootstrap'
@@ -21,9 +20,11 @@ import ExplorerModuleSelectOptionContent from './ExplorerModuleSelectOptionConte
  * Presentational only; selection state is owned by the explorer page via `defineModel`.
  * Project and language resolve to a wiki instance id for bootstrap.
  *
- * **Codex exception #14:** API to explore uses a custom `CdxSelect` `#menu-item` (and `#label`)
- * slot so beta / internal audience markers render as **label-only** warning `CdxInfoChip`s
- * beside the module name (status icons hidden); version stays Codex `supportingText`.
+ * **Codex exception #14:** API to explore uses a custom `CdxCombobox` `#menu-item`
+ * slot so beta / internal audience markers render as **label-only** warning
+ * `CdxInfoChip`s beside the module name (status icons hidden); version is
+ * shown in parentheses. Combobox `selected` uses the human title string, not
+ * discovery module names (for example `-`).
  * See `ARCHITECTURE.md` → Codex exceptions #14.
  */
 const props = defineProps<{
@@ -78,10 +79,14 @@ const {
 	moduleSelectDefaultLabel,
 	moduleSelectBetaChipLabel,
 	moduleSelectInternalChipLabel,
+	moduleSelectNoResultsLabel,
 	resolveModuleSelectOptionDisplay,
 	selectedModuleDisplay,
 	selectedModuleValue,
-	isModuleSelectDisabled
+	isModuleSelectDisabled,
+	isModuleComboboxFiltering,
+	onModuleComboboxInput,
+	onModuleComboboxChange
 } = useExplorerModuleSelect(
 	visibleModulesRef,
 	selectedModuleName,
@@ -109,6 +114,42 @@ const { optInMenuEntries, selectedOptInValues } = useExplorerOptInMenu(
 	includeBetaEndpoints,
 	includeInternalEndpoints
 )
+
+const isModuleComboboxFocused = ref( false )
+
+/**
+ * Whether the Combobox shows a closed rich label (value + audience chips)
+ * instead of the native input text alone.
+ */
+const shouldShowModuleComboboxAudienceDisplay = computed( () => {
+	return Boolean(
+		selectedModuleDisplay.value
+		&& !isModuleComboboxFiltering.value
+		&& !isModuleComboboxFocused.value
+		&& (
+			selectedModuleDisplay.value.showBetaChip
+			|| selectedModuleDisplay.value.showInternalChip
+		)
+	)
+} )
+
+/**
+ * Marks the API Combobox as focused so the rich closed display can hide.
+ *
+ * @returns Nothing.
+ */
+function onModuleComboboxFocus(): void {
+	isModuleComboboxFocused.value = true
+}
+
+/**
+ * Restores the rich closed display when the Combobox blurs.
+ *
+ * @returns Nothing.
+ */
+function onModuleComboboxBlur(): void {
+	isModuleComboboxFocused.value = false
+}
 
 /**
  * Expands the project settings surface.
@@ -143,13 +184,7 @@ function onCollapseSettings(): void {
 				<div class="explorer-project-controls__summary-item">
 					<strong>{{ summaryApiLabel }}</strong>
 					<template v-if="selectedModuleDisplay">
-						<bdi>{{ selectedModuleDisplay.label }}</bdi>
-						<CdxInfoChip
-							v-if="selectedModuleDisplay.supportingText"
-							status="subtle"
-						>
-							<bdi>{{ selectedModuleDisplay.supportingText }}</bdi>
-						</CdxInfoChip>
+						<bdi>{{ selectedModuleDisplay.value }}</bdi>
 						<CdxInfoChip
 							v-if="selectedModuleDisplay.showBetaChip"
 							class="explorer-project-controls__summary-audience-chip"
@@ -233,48 +268,69 @@ function onCollapseSettings(): void {
 						{{ apiLabel }}
 					</template>
 					<div class="explorer-project-controls__api-settings">
-						<CdxSelect
-							v-model:selected="selectedModuleValue"
-							class="explorer-project-controls__module-select"
-							:menu-items="moduleMenuItems"
-							:menu-config="moduleSelectMenuConfig"
-							:default-label="moduleSelectDefaultLabel"
-							:disabled="isModuleSelectDisabled"
+						<div
+							class="explorer-project-controls__module-combobox-shell"
+							:class="{
+								'explorer-project-controls__module-combobox-shell--audience-display':
+									shouldShowModuleComboboxAudienceDisplay
+							}"
 						>
-							<template #label="{ selectedMenuItem, defaultLabel }">
-								<template
-									v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
-										selectedMenuItem
-									) ]"
-									:key="resolvedMenuItem?.value ?? 'module-select-default'"
-								>
-									<ExplorerModuleSelectOptionContent
-										v-if="resolvedMenuItem"
-										:menu-item="resolvedMenuItem"
-										:beta-chip-label="moduleSelectBetaChipLabel"
-										:internal-chip-label="moduleSelectInternalChipLabel"
-										variant="label"
-									/>
-									<span v-else>{{ defaultLabel }}</span>
+							<CdxCombobox
+								v-model:selected="selectedModuleValue"
+								class="explorer-project-controls__module-combobox"
+								:menu-items="moduleMenuItems"
+								:menu-config="moduleSelectMenuConfig"
+								:placeholder="moduleSelectDefaultLabel"
+								:disabled="isModuleSelectDisabled"
+								dir="auto"
+								@input="onModuleComboboxInput"
+								@change="onModuleComboboxChange"
+								@focus="onModuleComboboxFocus"
+								@blur="onModuleComboboxBlur"
+							>
+								<template #menu-item="{ menuItem }">
+									<template
+										v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
+											menuItem
+										) ]"
+										:key="resolvedMenuItem?.value ?? 'module-select-empty'"
+									>
+										<ExplorerModuleSelectOptionContent
+											v-if="resolvedMenuItem"
+											:menu-item="resolvedMenuItem"
+											:beta-chip-label="moduleSelectBetaChipLabel"
+											:internal-chip-label="moduleSelectInternalChipLabel"
+										/>
+									</template>
 								</template>
-							</template>
-							<template #menu-item="{ menuItem }">
-								<template
-									v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
-										menuItem
-									) ]"
-									:key="resolvedMenuItem?.value ?? 'module-select-empty'"
-								>
-									<ExplorerModuleSelectOptionContent
-										v-if="resolvedMenuItem"
-										:menu-item="resolvedMenuItem"
-										:beta-chip-label="moduleSelectBetaChipLabel"
-										:internal-chip-label="moduleSelectInternalChipLabel"
-										variant="menu"
-									/>
+								<template #no-results>
+									{{ moduleSelectNoResultsLabel }}
 								</template>
-							</template>
-						</CdxSelect>
+							</CdxCombobox>
+							<div
+								v-if="shouldShowModuleComboboxAudienceDisplay && selectedModuleDisplay"
+								class="explorer-project-controls__module-combobox-audience"
+								aria-hidden="true"
+							>
+								<span class="explorer-project-controls__module-combobox-audience-value">
+									<bdi>{{ selectedModuleDisplay.value }}</bdi>
+								</span>
+								<CdxInfoChip
+									v-if="selectedModuleDisplay.showBetaChip"
+									class="explorer-project-controls__module-combobox-audience-chip"
+									status="warning"
+								>
+									{{ moduleSelectBetaChipLabel }}
+								</CdxInfoChip>
+								<CdxInfoChip
+									v-if="selectedModuleDisplay.showInternalChip"
+									class="explorer-project-controls__module-combobox-audience-chip"
+									status="warning"
+								>
+									{{ moduleSelectInternalChipLabel }}
+								</CdxInfoChip>
+							</div>
+						</div>
 
 						<CdxMenuButton
 							v-model:selected="selectedOptInValues"
@@ -306,6 +362,11 @@ function onCollapseSettings(): void {
 	border-radius: var( --fd-explorer-controls-surface-border-radius );
 	background-color: var( --fd-explorer-controls-surface-background-color );
 	min-inline-size: 0;
+}
+
+.explorer-project-controls:not( .explorer-project-controls--expanded ) {
+	flex-wrap: nowrap;
+	align-items: flex-start;
 }
 
 .explorer-project-controls--expanded {
@@ -380,26 +441,40 @@ function onCollapseSettings(): void {
 }
 
 .explorer-project-controls__fields {
-	display: grid;
-	grid-template-columns: minmax( 0, 1fr );
-	gap: var( --spacing-100 );
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: var( --spacing-100 );
+	row-gap: var( --spacing-100 );
 	inline-size: 100%;
 	min-inline-size: 0;
 }
 
 .explorer-project-controls__project-field,
-.explorer-project-controls__language-field,
-.explorer-project-controls__module-field {
+.explorer-project-controls__language-field {
+	flex: 1 1 var( --size-1600 );
+	min-inline-size: var( --size-1600 );
+	max-inline-size: var( --size-4000 );
 	margin-block-start: 0;
-	min-inline-size: 0;
+}
+
+.explorer-project-controls__module-field {
+	/*
+	 * Reserve the API Combobox's 256px minimum plus its fixed 8px gap and
+	 * 32px MenuButton. This keeps all three actual inputs equally flexible.
+	 */
+	flex: 1 1 calc( var( --size-1600 ) + var( --spacing-50 ) + var( --size-200 ) );
+	min-inline-size: calc( var( --size-1600 ) + var( --spacing-50 ) + var( --size-200 ) );
+	max-inline-size: calc( var( --size-4000 ) + var( --spacing-50 ) + var( --size-200 ) );
+	margin-block-start: 0;
 }
 
 .explorer-project-controls__project-field :deep( .cdx-combobox ),
 .explorer-project-controls__project-field :deep( .cdx-text-input ),
 .explorer-project-controls__language-field :deep( .cdx-combobox ),
 .explorer-project-controls__language-field :deep( .cdx-text-input ),
-.explorer-project-controls__module-field :deep( .cdx-select-vue ),
-.explorer-project-controls__module-select {
+.explorer-project-controls__module-field :deep( .cdx-combobox ),
+.explorer-project-controls__module-field :deep( .cdx-text-input ),
+.explorer-project-controls__module-combobox {
 	inline-size: 100%;
 	max-inline-size: 100%;
 	min-inline-size: 0;
@@ -413,8 +488,62 @@ function onCollapseSettings(): void {
 	inline-size: 100%;
 }
 
-.explorer-project-controls__module-field {
-	flex: 1 1 auto;
+.explorer-project-controls__module-combobox-shell {
+	position: relative;
+	flex: 1 1 var( --size-1600 );
+	min-inline-size: var( --size-1600 );
+	max-inline-size: var( --size-4000 );
+}
+
+.explorer-project-controls__module-combobox {
+	inline-size: 100%;
+	min-inline-size: 0;
+	max-inline-size: none;
+}
+
+/*
+ * Closed Combobox display: mirror the selected value + audience chips inside the
+ * input chrome (before the expand button). Native input text is transparent so
+ * the mirror sits “next to” the value; focus / filter restores the real input.
+ */
+.explorer-project-controls__module-combobox-shell--audience-display :deep(
+	.cdx-combobox__input .cdx-text-input__input
+) {
+	color: transparent;
+	caret-color: var( --color-base );
+}
+
+.explorer-project-controls__module-combobox-audience {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	/* Leave the Codex expand control clickable. */
+	inset-inline-end: var( --size-200 );
+	z-index: 1;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	column-gap: var( --spacing-50 );
+	padding-inline: var( --spacing-50 );
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.explorer-project-controls__module-combobox-audience-value {
+	overflow: hidden;
+	font: inherit;
+	line-height: var( --line-height-medium );
+	color: var( --color-base );
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.explorer-project-controls__module-combobox-audience-chip {
+	flex-shrink: 0;
+}
+
+.explorer-project-controls__module-combobox-audience-chip :deep( .cdx-info-chip__icon--vue ) {
+	display: none;
 }
 
 .explorer-project-controls__opt-in-settings-trigger {
@@ -423,13 +552,16 @@ function onCollapseSettings(): void {
 	align-self: flex-end;
 }
 
-@media screen and ( min-width: 640px ) {
-	.explorer-project-controls__fields {
-		grid-template-columns:
-			minmax( 0, 1fr )
-			minmax( 0, 1fr )
-			minmax( 0, 2fr );
-		column-gap: var( --spacing-150 );
+/*
+ * At a 320px viewport, mobile page margins and surface padding leave 264px.
+ * Let only the API Combobox relax below 256px so it can remain beside the
+ * native 32px MenuButton with the fixed 8px gap.
+ */
+@media screen and ( max-width: 351px ) {
+	.explorer-project-controls__module-field,
+	.explorer-project-controls__module-combobox-shell,
+	.explorer-project-controls__module-combobox {
+		min-inline-size: 0;
 	}
 }
 </style>

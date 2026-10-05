@@ -117,6 +117,7 @@
   "explorer-module-internal-chip-label": "פנימי",
   "explorer-module-description-readinglists-v0": "אחסון ושליפה של רשימות פרטיות של דפים, למשל לסימניות או לרשימת \"לקרוא מאוחר יותר\".",
   "explorer-module-label": "מודול REST",
+  "explorer-module-no-results": "אין ממשקי API תואמים",
   "explorer-module-placeholder": "בחרו מודול",
   "explorer-module-rail-collapse-endpoints-label": "כיווץ רשימת נקודות הקצה",
   "explorer-module-rail-description": "עיינו בכל מודול שהתגלה, ואז הרחיבו אותו כדי לבדוק את נקודות הקצה לפני טעינתו בתצוגת הייחוס.",
