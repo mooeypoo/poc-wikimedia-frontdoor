@@ -5,7 +5,7 @@ status: 0 draft
 # APIs
 
 ::highlight
-Wikimedia’s APIs provide access to projects’ content and data. To learn more, [**go to the Quick start →**](/get-started/quick-start)
+Wikimedia’s APIs provide access to projects’ content and data. To learn more, [**go to the Quick start →**](/apis/quickstart)
 ::
 
 ::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
@@ -47,15 +47,15 @@ Still supported and powerful, but not recommended for most new integrations.
 Before you build, understand how Wikimedia APIs work and what's expected of developers.
 
 ::highlight
-[**Attribution →**](/apis/attribution)
+[**Make requests →**](/apis/requests)
 
-Understand how to fairly credit Wikimedia projects and enrich reused content with credibility metadata
+Learn best practices for making requests to Wikimedia APIs.
 ::
 
 ::highlight
-[**Authentication →**](/apis/authentication)
+[**Authenticate →**](/apis/auth)
 
-Learn how to request and manage API tokens, OAuth 1.0a, and OAuth 2.0 credentials.
+Learn how to request and manage personal access tokens and OAuth clients.
 ::
 
 ::highlight
