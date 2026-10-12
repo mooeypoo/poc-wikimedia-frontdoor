@@ -548,7 +548,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 Top to bottom:
 
 1. **Page header** — community mode `h1` (**Wikimedia APIs Explorer**, message key `explorer-title`) using the standard content-page Codex Heading 1 tokens + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls stack** — minimized-by-default **`ExplorerProjectControls`** summary; **Adjust selection** reveals Project or wiki, Language, API, and the Include settings MenuButton when instance bootstrap is ready
+2. **Project controls stack** — minimized-by-default **`ExplorerProjectControls`** summary; **Adjust selection** reveals Project, Project language, API, and the Include settings MenuButton when instance bootstrap is ready
 3. **Reference panel** — Scalar shell with **native endpoint sidebar** (no separate module title / chip header above the shell; no custom module rail)
 
 **Spacing:** `.explorer-page__intro` uses `--spacing-100` between its internal sections. The gap from the intro’s final project-controls stack to the Scalar reference is **`--spacing-100` (16px) below 640px** and **`--spacing-150` (24px) from 640px upward**. The project-controls stack itself does not add a trailing gap; the parent `.explorer-page` owns this responsive spacing.
@@ -616,7 +616,7 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 Header row (Codex **UI Text Regular**, `--color-subtle`): **Selected project and API** (`explorer-project-settings-summary-heading`) with inline-end small progressive quiet **Adjust selection** (`cdxIconEdit`). The action stays vertically aligned with this header — not with the summary values below.
 
-Below the header, the summary identifies the resolved **Wikimedia project** and selected **API**. API chrome shows the same human display string as the Combobox (`Title (v1)` via `selectedModuleDisplay.value`) plus label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`.
+Below the header, the summary identifies the resolved **Project** and selected **API**. API chrome shows the same human display string as the Combobox (`Title (v1)` via `selectedModuleDisplay.value`) plus label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`.
 
 Summary module chrome reuses `selectedModuleDisplay` from `useExplorerModuleSelect()` so its display value and audience flags match the Combobox menu.
 
@@ -626,8 +626,8 @@ Same header row pattern: **Select an API to explore** (`explorer-project-setting
 
 | Control | Pattern |
 |---------|---------|
-| **Project or wiki** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**, **Meta-Wiki**; labels from banana-i18n (`explorer-project-*`) |
-| **Language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons, Wikidata or Meta-Wiki |
+| **Project** | `CdxCombobox` — **Wikipedia** (default), **Wikimedia Commons**, **Wikidata**, **Meta-Wiki**; labels from banana-i18n (`explorer-project-*`) |
+| **Project language** | `CdxCombobox` — **English** (default), **Spanish**, **Hebrew**, **Farsi**; labels from banana-i18n (`explorer-project-language-*`); **disabled** when Project is Commons, Wikidata or Meta-Wiki |
 | **API** | `CdxCombobox` using the module behavior below |
 | **Include settings** | Icon-only quiet neutral `CdxMenuButton` with `cdxIconSettings`, block-end aligned with the API `CdxCombobox`; native Codex multiselect array model and MenuItem styling; `MenuGroupData` renders an **Include** heading above Beta/Internal options and supporting descriptions |
 
@@ -635,7 +635,7 @@ Same header row pattern: **Select an API to explore** (`explorer-project-setting
 
 **State ownership:** `explorer/[...view].vue` owns `isProjectSettingsExpanded`, `includeBetaEndpoints`, and `includeInternalEndpoints` as Nuxt `useState`, because the controls unmount while project/language bootstrap runs and URL canonicalization can remount the page (including after an API selection). Changing those fields therefore keeps settings expanded and Include selections intact when the controls return. `CdxMenuButton` owns the Include menu’s open/close interaction.
 
-**Responsive layout:** Project or wiki, Language, and API use wrapping flex layout with `--spacing-100` (16px) column and row gaps. The three actual inputs distribute available width equally, with a 256px minimum (`--size-1600`) and 640px maximum (`--size-4000`). API’s allocation additionally reserves its fixed 8px gap (`--spacing-50`) and 32px medium icon-only MenuButton (`--size-200`), so its Combobox remains equal in width to the other inputs. API wraps to a second line when all three minimum allocations no longer fit; Language wraps too when Project + Language cannot both remain 256px. At ≤351px viewport only API’s minimum relaxes—including the Combobox root and nested Codex TextInput minimum—keeping its Combobox and MenuButton on one row at 320px without overlap (264px available after mobile page margin + surface padding). Close stays at the header’s inline end.
+**Responsive layout:** Project, Project language, and API use wrapping flex layout with `--spacing-100` (16px) column and row gaps. The three actual inputs distribute available width equally, with a 256px minimum (`--size-1600`) and 640px maximum (`--size-4000`). API’s allocation additionally reserves its fixed 8px gap (`--spacing-50`) and 32px medium icon-only MenuButton (`--size-200`), so its Combobox remains equal in width to the other inputs. API wraps to a second line when all three minimum allocations no longer fit; Project language wraps too when Project + Project language cannot both remain 256px. At ≤351px viewport only API’s minimum relaxes—including the Combobox root and nested Codex TextInput minimum—keeping its Combobox and MenuButton on one row at 320px without overlap (264px available after mobile page margin + surface padding). Close stays at the header’s inline end.
 
 ### REST API module combobox
 
