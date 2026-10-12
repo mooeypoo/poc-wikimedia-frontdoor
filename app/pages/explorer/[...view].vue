@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { CdxMessage } from '@wikimedia/codex'
+import { CdxButton, CdxIcon, CdxMessage } from '@wikimedia/codex'
+import { cdxIconArrowUp } from '@wikimedia/codex-icons'
 import { computed, nextTick, watch } from 'vue'
 import type { ExplorerModuleOperation } from '../../composables/useExplorerBootstrap'
 import { useDirection } from '../../composables/useDirection'
+import { useExplorerBackToTop } from '../../composables/useExplorerBackToTop'
 import { useExplorerBootstrap } from '../../composables/useExplorerBootstrap'
 import { useExplorerDeepLink } from '../../composables/useExplorerDeepLink'
 import { useExplorerDeepLinkSync } from '../../composables/useExplorerDeepLinkSync'
@@ -102,8 +104,19 @@ useExplorerDeepLinkSync( {
 	selectModule
 } )
 
-const includeBetaEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints )
-const includeInternalEndpoints = ref( DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints )
+const includeBetaEndpoints = useState<boolean>(
+	'explorer-include-beta-endpoints',
+	() => DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeBetaEndpoints
+)
+const includeInternalEndpoints = useState<boolean>(
+	'explorer-include-internal-endpoints',
+	() => DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS.includeInternalEndpoints
+)
+// App-scoped state survives both bootstrap unmounts and deep-link URL page remounts.
+const isProjectSettingsExpanded = useState<boolean>(
+	'explorer-project-settings-expanded',
+	() => false
+)
 
 const {
 	visibleModules,
@@ -121,6 +134,13 @@ const {
 
 const scalarInterface = ref<ScalarInterfaceHandle | null>( null )
 const scalarShellRef = ref<HTMLElement | null>( null )
+
+const {
+	isBackToTopVisible,
+	backToTopStyle,
+	backToTopLabel,
+	onBackToTop
+} = useExplorerBackToTop( scalarShellRef )
 
 // Sidebar-mode only: bring Scalar's own sidebar entry into view on a deep-link load.
 const { scrollSidebarToActiveOperation } = useExplorerScalarSidebarScroll( scalarShellRef )
@@ -270,8 +290,8 @@ watch( scalarReferenceKey, () => {
 	scalarInterface.value = null
 } )
 
-// Title matches the side-nav label for the active mode (same wording,
-// already translated in every locale).
+// Enterprise titles match their side-nav labels. Community uses the dedicated
+// page title because its H1 is intentionally more descriptive than the nav item.
 const explorerTitle = computed( () => {
 	switch ( explorerMode.value ) {
 		case 'enterprise-full':
@@ -280,7 +300,7 @@ const explorerTitle = computed( () => {
 			return $bananaI18n( 'explorer-side-nav-enterprise-apis-custom' )
 		case 'community':
 		default:
-			return $bananaI18n( 'explorer-side-nav-wikimedia-api-modules' )
+			return $bananaI18n( 'explorer-title' )
 	}
 } )
 
@@ -399,6 +419,7 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 			>
 				<ExplorerProjectControls
 					v-if="!isInstanceBootstrapping"
+					v-model:is-expanded="isProjectSettingsExpanded"
 					v-model:selected-wiki-instance-id="selectedWikiInstanceId"
 					v-model:selected-module-name="selectedModuleName"
 					v-model:include-beta-endpoints="includeBetaEndpoints"
@@ -505,6 +526,18 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 								@interface-ready="onScalarInterfaceReady"
 							/>
 						</div>
+						<CdxButton
+							v-if="isBackToTopVisible"
+							class="explorer-page__back-to-top"
+							:style="backToTopStyle"
+							action="default"
+							weight="normal"
+							type="button"
+							:aria-label="backToTopLabel"
+							@click="onBackToTop"
+						>
+							<CdxIcon :icon="cdxIconArrowUp" />
+						</CdxButton>
 						<template #fallback>
 							<div class="explorer-page__scalar-shell explorer-page__scalar-shell--loading">
 								<div class="explorer-page__scalar-loading">
@@ -543,9 +576,15 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page {
 	position: relative;
 	display: grid;
-	gap: var( --spacing-150 );
+	gap: var( --spacing-100 );
 	min-inline-size: 0;
 	max-inline-size: 100%;
+}
+
+@media screen and ( min-width: 640px ) {
+	.explorer-page {
+		gap: var( --spacing-150 );
+	}
 }
 
 .explorer-page__intro {
@@ -561,6 +600,10 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 
 .explorer-page__header h1 {
 	margin: 0;
+	font-family: var( --font-family-serif );
+	font-size: var( --font-size-xxx-large );
+	font-weight: var( --font-weight-normal );
+	line-height: var( --line-height-xxx-large );
 }
 
 .explorer-page__header p {
@@ -654,6 +697,17 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 .explorer-page__scalar-shell--loading {
 	display: grid;
 	place-items: center;
+}
+
+/*
+ * Viewport-fixed Back to top (Figma 1696:27981). Inline-end inset is set in JS so
+ * the control stays 16px inside `.explorer-page__scalar-shell` despite the shell’s
+ * transform containing block (cannot use fixed positioning as a shell child).
+ * Block-end inset is Codex `--spacing-200` (32px).
+ */
+.explorer-page__back-to-top {
+	position: fixed;
+	z-index: 5;
 }
 
 .explorer-page__scalar-loading {

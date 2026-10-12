@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import {
 	SHELL_NAV_COLLAPSE_PADDING_PX,
 	SHELL_NAV_DRAWER_EXPAND_DURATION_MS,
+	SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX,
 	SHELL_NAV_EXPAND_PADDING_PX
 } from '../../config/shellNavigation'
 
@@ -80,6 +81,16 @@ export function useShellNavigationCollapse(
 		const expandedNavContentElement = expandedNavContentRef.value
 
 		if ( navRowInlineSize === 0 || expandedNavContentElement === null ) {
+			return
+		}
+
+		/*
+		 * Local navigation collapses when the shell can no longer preserve its
+		 * 40px content gap and 640px minimum content measure. Keep this capacity
+		 * check independent of the post-collapse layout to avoid oscillation.
+		 */
+		if ( window.innerWidth < SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX ) {
+			isNavigationCollapsed.value = true
 			return
 		}
 

@@ -21,6 +21,10 @@
  * `--fd-explorer-test-request-modal-padding` in `explorer-codex-overrides.css`
  * and `useScalarClientModalBackgroundScrollLock` — keep gutter in sync with
  * Codex **`--spacing-250`**.
+ *
+ * Back-to-top insets (`EXPLORER_BACK_TO_TOP_*`) match Figma 1696:27981 —
+ * viewport block-end **32px** (`--spacing-200`) and Scalar-shell inline-end
+ * **16px** (`--spacing-100`).
  */
 export const EXPLORER_CONTROLS_SURFACE_BACKGROUND_COLOR = 'var(--background-color-neutral-subtle)'
 
@@ -38,3 +42,20 @@ export const EXPLORER_TEST_REQUEST_MODAL_GUTTER_PX = 40
  * Prevents ResizeObserver + subpixel layout from chasing ~1px/s.
  */
 export const EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX = 2
+
+/**
+ * Distance from the viewport block-end to the explorer “Back to top” button (px).
+ * Matches Codex `--spacing-200` (32px) — Figma 1696:27981.
+ */
+export const EXPLORER_BACK_TO_TOP_VIEWPORT_BLOCK_END_INSET_PX = 32
+
+/**
+ * Distance from the Scalar shell’s inline-end border to the “Back to top” button (px).
+ * Matches Codex `--spacing-100` (16px) — Figma 1696:27981.
+ */
+export const EXPLORER_BACK_TO_TOP_SHELL_INLINE_END_INSET_PX = 16
+
+/**
+ * Body-scroll offset (px) before the “Back to top” control is shown.
+ */
+export const EXPLORER_BACK_TO_TOP_REVEAL_SCROLL_PX = 320

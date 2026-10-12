@@ -81,7 +81,7 @@ function fakeContentRoot( headings ) {
 
 test( 'on-this-page config thresholds match product decisions', () => {
 	assert.equal( ON_THIS_PAGE_NAV_MIN_H2_COUNT, 3 )
-	assert.equal( ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX, 1280 )
+	assert.equal( ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX, 1202 )
 	assert.equal(
 		ON_THIS_PAGE_NAV_HEADER_MAX_VIEWPORT_PX,
 		ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX - 1
