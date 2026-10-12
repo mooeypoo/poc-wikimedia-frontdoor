@@ -548,7 +548,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 Top to bottom:
 
 1. **Page header** — community mode `h1` (**Wikimedia APIs Explorer**, message key `explorer-title`) using the standard content-page Codex Heading 1 tokens + description **`explorer-description`**: “Discover APIs and test requests against Wikimedia projects” (max **60ch** width on subtitle)
-2. **Project controls stack** — minimized-by-default **`ExplorerProjectControls`** summary; **Adjust settings** reveals Project or wiki, Language, API, and the Include settings MenuButton when instance bootstrap is ready
+2. **Project controls stack** — minimized-by-default **`ExplorerProjectControls`** summary; **Adjust selection** reveals Project or wiki, Language, API, and the Include settings MenuButton when instance bootstrap is ready
 3. **Reference panel** — Scalar shell with **native endpoint sidebar** (no separate module title / chip header above the shell; no custom module rail)
 
 **Spacing:** `.explorer-page__intro` uses `--spacing-100` between its internal sections. The gap from the intro’s final project-controls stack to the Scalar reference is **`--spacing-100` (16px) below 640px** and **`--spacing-150` (24px) from 640px upward**. The project-controls stack itself does not add a trailing gap; the parent `.explorer-page` owns this responsive spacing.
@@ -614,13 +614,15 @@ Implementation: scroll shell into view on open; `--client-modal-open` overlay in
 
 ### Minimized state
 
-The summary identifies the resolved **Wikimedia project** and selected **API**. API chrome shows the same human display string as the Combobox (`Title (v1)` via `selectedModuleDisplay.value`) plus label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`. A small progressive quiet **Adjust settings** button with `cdxIconEdit` stays at the block-start / inline-end as the summary wraps, matching the expanded **Close** placement (top-right in LTR, top-left in RTL).
+Header row (Codex **UI Text Regular**, `--color-subtle`): **Selected project and API** (`explorer-project-settings-summary-heading`) with inline-end small progressive quiet **Adjust selection** (`cdxIconEdit`). The action stays vertically aligned with this header — not with the summary values below.
+
+Below the header, the summary identifies the resolved **Wikimedia project** and selected **API**. API chrome shows the same human display string as the Combobox (`Title (v1)` via `selectedModuleDisplay.value`) plus label-only warning beta/internal chips when applicable. External project/module/version strings use `<bdi>`.
 
 Summary module chrome reuses `selectedModuleDisplay` from `useExplorerModuleSelect()` so its display value and audience flags match the Combobox menu.
 
 ### Expanded state
 
-Header: **Select an API to explore** plus inline-end small progressive quiet **Close** with `cdxIconClose` at the logical start, using the same `CdxButton` component and visual variant as **Adjust settings**. Both small buttons set their `CdxIcon` to the Codex small size and use `--min-size-icon-small` (14px) for the compact design glyph. Selections apply immediately; Close only collapses the surface.
+Same header row pattern: **Select an API to explore** (`explorer-project-settings-title`, UI Text Regular + `--color-subtle`) plus inline-end small progressive quiet **Close** with `cdxIconClose` at the logical start, using the same `CdxButton` component and visual variant as **Adjust selection**. Both small buttons set their `CdxIcon` to the Codex small size and use `--min-size-icon-small` (14px) for the compact design glyph. Selections apply immediately; Close only collapses the surface.
 
 | Control | Pattern |
 |---------|---------|

@@ -98,6 +98,12 @@ const projectOrWikiLabel = computed( () => $bananaI18n( 'explorer-project-or-wik
 const languageLabel = computed( () => $bananaI18n( 'explorer-project-language-label' ) )
 const apiLabel = computed( () => $bananaI18n( 'explorer-api-label' ) )
 const settingsTitle = computed( () => $bananaI18n( 'explorer-project-settings-title' ) )
+const settingsSummaryHeading = computed( () => {
+	return $bananaI18n( 'explorer-project-settings-summary-heading' )
+} )
+const settingsHeaderLabel = computed( () => {
+	return isExpanded.value ? settingsTitle.value : settingsSummaryHeading.value
+} )
 const settingsAdjustLabel = computed( () => $bananaI18n( 'explorer-project-settings-adjust' ) )
 const settingsCloseLabel = computed( () => $bananaI18n( 'explorer-project-settings-close' ) )
 const summaryProjectLabel = computed( () => {
@@ -175,35 +181,19 @@ function onCollapseSettings(): void {
 		class="explorer-project-controls"
 		:class="{ 'explorer-project-controls--expanded': isExpanded }"
 	>
-		<template v-if="!isExpanded">
-			<div class="explorer-project-controls__summary">
-				<div class="explorer-project-controls__summary-item">
-					<strong>{{ summaryProjectLabel }}</strong>
-					<bdi>{{ wikiDisplayName }}</bdi>
-				</div>
-				<div class="explorer-project-controls__summary-item">
-					<strong>{{ summaryApiLabel }}</strong>
-					<template v-if="selectedModuleDisplay">
-						<bdi>{{ selectedModuleDisplay.value }}</bdi>
-						<CdxInfoChip
-							v-if="selectedModuleDisplay.showBetaChip"
-							class="explorer-project-controls__summary-audience-chip"
-							status="warning"
-						>
-							{{ moduleSelectBetaChipLabel }}
-						</CdxInfoChip>
-						<CdxInfoChip
-							v-if="selectedModuleDisplay.showInternalChip"
-							class="explorer-project-controls__summary-audience-chip"
-							status="warning"
-						>
-							{{ moduleSelectInternalChipLabel }}
-						</CdxInfoChip>
-					</template>
-					<bdi v-else>{{ moduleSelectDefaultLabel }}</bdi>
-				</div>
-			</div>
+		<div class="explorer-project-controls__header">
+			<!--
+				Expanded uses h2 for the settings form heading; collapsed uses p
+				so the summary label does not become a document-outline heading.
+			-->
+			<component
+				:is="isExpanded ? 'h2' : 'p'"
+				class="explorer-project-controls__title"
+			>
+				{{ settingsHeaderLabel }}
+			</component>
 			<CdxButton
+				v-if="!isExpanded"
 				class="explorer-project-controls__toggle"
 				action="progressive"
 				weight="quiet"
@@ -217,145 +207,174 @@ function onCollapseSettings(): void {
 				/>
 				{{ settingsAdjustLabel }}
 			</CdxButton>
-		</template>
-
-		<template v-else>
-			<div class="explorer-project-controls__header">
-				<h2 class="explorer-project-controls__title">
-					{{ settingsTitle }}
-				</h2>
-				<CdxButton
-					class="explorer-project-controls__toggle"
-					action="progressive"
-					weight="quiet"
+			<CdxButton
+				v-else
+				class="explorer-project-controls__toggle"
+				action="progressive"
+				weight="quiet"
+				size="small"
+				type="button"
+				@click="onCollapseSettings"
+			>
+				<CdxIcon
+					:icon="cdxIconClose"
 					size="small"
-					type="button"
-					@click="onCollapseSettings"
-				>
-					<CdxIcon
-						:icon="cdxIconClose"
-						size="small"
-					/>
-					{{ settingsCloseLabel }}
-				</CdxButton>
+				/>
+				{{ settingsCloseLabel }}
+			</CdxButton>
+		</div>
+
+		<div
+			v-if="!isExpanded"
+			class="explorer-project-controls__summary"
+		>
+			<div class="explorer-project-controls__summary-item">
+				<strong>{{ summaryProjectLabel }}</strong>
+				<bdi>{{ wikiDisplayName }}</bdi>
 			</div>
+			<div class="explorer-project-controls__summary-item">
+				<strong>{{ summaryApiLabel }}</strong>
+				<template v-if="selectedModuleDisplay">
+					<bdi>{{ selectedModuleDisplay.value }}</bdi>
+					<CdxInfoChip
+						v-if="selectedModuleDisplay.showBetaChip"
+						class="explorer-project-controls__summary-audience-chip"
+						status="warning"
+					>
+						{{ moduleSelectBetaChipLabel }}
+					</CdxInfoChip>
+					<CdxInfoChip
+						v-if="selectedModuleDisplay.showInternalChip"
+						class="explorer-project-controls__summary-audience-chip"
+						status="warning"
+					>
+						{{ moduleSelectInternalChipLabel }}
+					</CdxInfoChip>
+				</template>
+				<bdi v-else>{{ moduleSelectDefaultLabel }}</bdi>
+			</div>
+		</div>
 
-			<div class="explorer-project-controls__fields">
-				<CdxField class="explorer-project-controls__project-field">
-					<template #label>
-						{{ projectOrWikiLabel }}
-					</template>
-					<CdxCombobox
-						v-model:selected="projectComboboxSelected"
-						:menu-items="projectMenuItems"
-						:disabled="isInstanceBootstrapping"
-					/>
-				</CdxField>
+		<div
+			v-else
+			class="explorer-project-controls__fields"
+		>
+			<CdxField class="explorer-project-controls__project-field">
+				<template #label>
+					{{ projectOrWikiLabel }}
+				</template>
+				<CdxCombobox
+					v-model:selected="projectComboboxSelected"
+					:menu-items="projectMenuItems"
+					:disabled="isInstanceBootstrapping"
+				/>
+			</CdxField>
 
-				<CdxField class="explorer-project-controls__language-field">
-					<template #label>
-						{{ languageLabel }}
-					</template>
-					<CdxCombobox
-						v-model:selected="languageComboboxSelected"
-						:menu-items="languageMenuItems"
-						:disabled="isInstanceBootstrapping || isLanguageSelectorDisabled"
-					/>
-				</CdxField>
+			<CdxField class="explorer-project-controls__language-field">
+				<template #label>
+					{{ languageLabel }}
+				</template>
+				<CdxCombobox
+					v-model:selected="languageComboboxSelected"
+					:menu-items="languageMenuItems"
+					:disabled="isInstanceBootstrapping || isLanguageSelectorDisabled"
+				/>
+			</CdxField>
 
-				<CdxField class="explorer-project-controls__module-field">
-					<template #label>
-						{{ apiLabel }}
-					</template>
-					<div class="explorer-project-controls__api-settings">
+			<CdxField class="explorer-project-controls__module-field">
+				<template #label>
+					{{ apiLabel }}
+				</template>
+				<div class="explorer-project-controls__api-settings">
+					<div
+						class="explorer-project-controls__module-combobox-shell"
+						:class="{
+							'explorer-project-controls__module-combobox-shell--audience-display':
+								shouldShowModuleComboboxAudienceDisplay
+						}"
+					>
+						<CdxCombobox
+							v-model:selected="selectedModuleValue"
+							class="explorer-project-controls__module-combobox"
+							:menu-items="moduleMenuItems"
+							:menu-config="moduleSelectMenuConfig"
+							:placeholder="moduleSelectDefaultLabel"
+							:disabled="isModuleSelectDisabled"
+							dir="auto"
+							@input="onModuleComboboxInput"
+							@change="onModuleComboboxChange"
+							@focus="onModuleComboboxFocus"
+							@blur="onModuleComboboxBlur"
+						>
+							<template #menu-item="{ menuItem }">
+								<template
+									v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
+										menuItem
+									) ]"
+									:key="resolvedMenuItem?.value ?? 'module-select-empty'"
+								>
+									<ExplorerModuleSelectOptionContent
+										v-if="resolvedMenuItem"
+										:menu-item="resolvedMenuItem"
+										:beta-chip-label="moduleSelectBetaChipLabel"
+										:internal-chip-label="moduleSelectInternalChipLabel"
+									/>
+								</template>
+							</template>
+							<template #no-results>
+								{{ moduleSelectNoResultsLabel }}
+							</template>
+						</CdxCombobox>
 						<div
-							class="explorer-project-controls__module-combobox-shell"
-							:class="{
-								'explorer-project-controls__module-combobox-shell--audience-display':
-									shouldShowModuleComboboxAudienceDisplay
-							}"
+							v-if="shouldShowModuleComboboxAudienceDisplay && selectedModuleDisplay"
+							class="explorer-project-controls__module-combobox-audience"
+							aria-hidden="true"
 						>
-							<CdxCombobox
-								v-model:selected="selectedModuleValue"
-								class="explorer-project-controls__module-combobox"
-								:menu-items="moduleMenuItems"
-								:menu-config="moduleSelectMenuConfig"
-								:placeholder="moduleSelectDefaultLabel"
-								:disabled="isModuleSelectDisabled"
-								dir="auto"
-								@input="onModuleComboboxInput"
-								@change="onModuleComboboxChange"
-								@focus="onModuleComboboxFocus"
-								@blur="onModuleComboboxBlur"
+							<span class="explorer-project-controls__module-combobox-audience-value">
+								<bdi>{{ selectedModuleDisplay.value }}</bdi>
+							</span>
+							<CdxInfoChip
+								v-if="selectedModuleDisplay.showBetaChip"
+								class="explorer-project-controls__module-combobox-audience-chip"
+								status="warning"
 							>
-								<template #menu-item="{ menuItem }">
-									<template
-										v-for="resolvedMenuItem in [ resolveModuleSelectOptionDisplay(
-											menuItem
-										) ]"
-										:key="resolvedMenuItem?.value ?? 'module-select-empty'"
-									>
-										<ExplorerModuleSelectOptionContent
-											v-if="resolvedMenuItem"
-											:menu-item="resolvedMenuItem"
-											:beta-chip-label="moduleSelectBetaChipLabel"
-											:internal-chip-label="moduleSelectInternalChipLabel"
-										/>
-									</template>
-								</template>
-								<template #no-results>
-									{{ moduleSelectNoResultsLabel }}
-								</template>
-							</CdxCombobox>
-							<div
-								v-if="shouldShowModuleComboboxAudienceDisplay && selectedModuleDisplay"
-								class="explorer-project-controls__module-combobox-audience"
-								aria-hidden="true"
+								{{ moduleSelectBetaChipLabel }}
+							</CdxInfoChip>
+							<CdxInfoChip
+								v-if="selectedModuleDisplay.showInternalChip"
+								class="explorer-project-controls__module-combobox-audience-chip"
+								status="warning"
 							>
-								<span class="explorer-project-controls__module-combobox-audience-value">
-									<bdi>{{ selectedModuleDisplay.value }}</bdi>
-								</span>
-								<CdxInfoChip
-									v-if="selectedModuleDisplay.showBetaChip"
-									class="explorer-project-controls__module-combobox-audience-chip"
-									status="warning"
-								>
-									{{ moduleSelectBetaChipLabel }}
-								</CdxInfoChip>
-								<CdxInfoChip
-									v-if="selectedModuleDisplay.showInternalChip"
-									class="explorer-project-controls__module-combobox-audience-chip"
-									status="warning"
-								>
-									{{ moduleSelectInternalChipLabel }}
-								</CdxInfoChip>
-							</div>
+								{{ moduleSelectInternalChipLabel }}
+							</CdxInfoChip>
 						</div>
-
-						<CdxMenuButton
-							v-model:selected="selectedOptInValues"
-							class="explorer-project-controls__opt-in-settings-trigger"
-							action="default"
-							weight="quiet"
-							:menu-items="optInMenuEntries"
-							:disabled="isInstanceBootstrapping"
-							:aria-label="optInSettingsTriggerLabel"
-						>
-							<CdxIcon :icon="cdxIconSettings" />
-						</CdxMenuButton>
 					</div>
-				</CdxField>
-			</div>
-		</template>
+
+					<CdxMenuButton
+						v-model:selected="selectedOptInValues"
+						class="explorer-project-controls__opt-in-settings-trigger"
+						action="default"
+						weight="quiet"
+						:menu-items="optInMenuEntries"
+						:disabled="isInstanceBootstrapping"
+						:aria-label="optInSettingsTriggerLabel"
+					>
+						<CdxIcon :icon="cdxIconSettings" />
+					</CdxMenuButton>
+				</div>
+			</CdxField>
+		</div>
 	</section>
 </template>
 
 <style scoped>
 .explorer-project-controls {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var( --spacing-100 );
+	flex-direction: column;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	/* Collapsed: tight gap under the header row (Figma --spacing-25). */
+	gap: var( --spacing-25 );
 	padding: var( --spacing-75 );
 	inline-size: 100%;
 	box-sizing: border-box;
@@ -364,23 +383,16 @@ function onCollapseSettings(): void {
 	min-inline-size: 0;
 }
 
-.explorer-project-controls:not( .explorer-project-controls--expanded ) {
-	flex-wrap: nowrap;
-	align-items: flex-start;
-}
-
 .explorer-project-controls--expanded {
-	flex-direction: column;
-	flex-wrap: nowrap;
-	align-items: stretch;
+	/* Expanded: keep field stack separation from the header. */
+	gap: var( --spacing-100 );
 }
 
 .explorer-project-controls__summary {
 	display: flex;
-	flex: 1 1 30rem;
 	flex-wrap: wrap;
 	align-items: center;
-	column-gap: var( --spacing-150 );
+	column-gap: var( --spacing-100 );
 	row-gap: var( --spacing-50 );
 	min-inline-size: 0;
 }
@@ -389,7 +401,7 @@ function onCollapseSettings(): void {
 	display: inline-flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var( --spacing-50 );
+	gap: var( --spacing-25 );
 	min-inline-size: 0;
 }
 
@@ -428,16 +440,23 @@ function onCollapseSettings(): void {
 .explorer-project-controls__header {
 	display: flex;
 	align-items: center;
-	gap: var( --spacing-100 );
+	gap: var( --spacing-25 );
 	inline-size: 100%;
 	min-inline-size: 0;
 }
 
+/*
+ * Codex UI Text Regular + subtle — same header style collapsed and expanded
+ * (Figma 1538:23495).
+ */
 .explorer-project-controls__title {
 	margin: 0;
+	flex: 1 1 auto;
+	min-inline-size: 0;
 	font-size: var( --font-size-medium );
-	line-height: var( --line-height-medium );
-	font-weight: var( --font-weight-bold );
+	line-height: var( --line-height-small );
+	font-weight: var( --font-weight-normal );
+	color: var( --color-subtle );
 }
 
 .explorer-project-controls__fields {
