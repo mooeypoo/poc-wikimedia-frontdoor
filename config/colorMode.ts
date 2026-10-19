@@ -12,10 +12,11 @@ export const COLOR_MODES = [ 'light', 'auto', 'dark' ] as const
 export type ColorMode = typeof COLOR_MODES[ number ]
 
 /**
- * Preferences popover radio order and banana label keys (Figma 49:2029).
+ * Header preferences radio order and banana label keys (Figma 49:2029).
  *
  * Display order is Light → Dark → System default — distinct from `COLOR_MODES`
- * (storage / class enumeration order: light, auto, dark).
+ * (storage / class enumeration order: light, auto, dark). The expanded header
+ * uses a popover; the collapsed utility menu opens a content-height Codex dialog.
  */
 export const COLOR_THEME_PREFERENCE_OPTIONS = [
 	{ mode: 'light', labelMessageKey: 'color-mode-light-label' },

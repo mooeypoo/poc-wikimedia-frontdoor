@@ -1,10 +1,16 @@
+import type { Ref } from 'vue'
 import type { MenuButtonItemData, MenuItemValue } from '@wikimedia/codex'
-import { cdxIconConfigure, cdxIconUserAvatar } from '@wikimedia/codex-icons'
+import {
+	cdxIconConfigure,
+	cdxIconLanguage,
+	cdxIconUserAvatar
+} from '@wikimedia/codex-icons'
 import { isolatePickerLabel } from '../utils/bidiLabel'
 import { useShellAuthNavigation } from './useShellAuthNavigation'
 
 const UTILITY_MENU_VALUE = {
 	settings: 'settings',
+	language: 'language',
 	account: 'account',
 	login: 'login',
 	logout: 'logout'
@@ -14,17 +20,18 @@ const UTILITY_MENU_VALUE = {
 export const SHELL_HEADER_UTILITY_MENU_VALUE = UTILITY_MENU_VALUE
 
 /**
- * Builds collapsed utility-row overflow menu items (settings, account, log in/out).
+ * Builds collapsed utility-row overflow menu items.
  *
- * Interface language remains a compact control beside the collapsed search icon;
- * it is not included in this menu. Settings opens the color-theme preferences
- * popover in `ShellHeaderUtilityActions` (handled by the parent selection
- * wrapper). When logged in, the menu includes a link to the account dashboard
- * (username label) plus log out.
+ * Preferences and interface language move into the same ellipsis menu as account
+ * and session actions whenever the search field collapses. The parent component
+ * owns Preferences and Language selection behavior (Language opens the full-screen
+ * compact selector). When logged in, the menu includes a link to the account
+ * dashboard (username label) plus log out.
  *
+ * @param selectedInterfaceLocale - Reactive active interface-locale code.
  * @returns Reactive menu state and handlers for `CdxMenuButton`.
  */
-export function useShellHeaderUtilityMenu() {
+export function useShellHeaderUtilityMenu( selectedInterfaceLocale: Ref<string> ) {
 	const { $bananaI18n } = useNuxtApp()
 	const {
 		isLoggedIn,
@@ -38,9 +45,16 @@ export function useShellHeaderUtilityMenu() {
 	const menuItems = computed( (): MenuButtonItemData[] => {
 		const items: MenuButtonItemData[] = [
 			{
-				label: $bananaI18n( 'header-settings-label' ),
+				label: $bananaI18n( 'header-preferences-label' ),
 				value: UTILITY_MENU_VALUE.settings,
 				icon: cdxIconConfigure
+			},
+			{
+				label: $bananaI18n( 'header-language-menu-item-label', {
+					$1: isolatePickerLabel( selectedInterfaceLocale.value.toUpperCase() )
+				} ),
+				value: UTILITY_MENU_VALUE.language,
+				icon: cdxIconLanguage
 			}
 		]
 
