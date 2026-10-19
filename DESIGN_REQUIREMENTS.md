@@ -461,7 +461,7 @@ This is the **product end decision** (not a temporary experiment): manually open
 
 **Decision:** Main slot (`.frontdoor-shell__main`) uses **`padding-block: var(--spacing-200)`** (32px) only — no inline-start padding. Standard content is capped at **792px**. Horizontal placement comes from the responsive body sub-grid: a minimum **40px** gap after expanded local navigation, balanced start/end gaps once the end allocation appears, and centred tracks after local navigation collapses.
 
-**Note:** Page titles (`h1`) have **no extra top margin**; vertical rhythm comes from main padding only (aligned with explorer page title).
+**Note:** Page titles (`h1`) have **no extra top margin**; vertical rhythm comes from main padding only (aligned with explorer page title). Below **640px**, when local navigation is collapsed, the mobile page-grid flex column also clears **`row-gap`** so a zero-height start track cannot add a gutter above the H1 (`page-grid.css`).
 
 **Source:** `app/layouts/default.vue`, `app/assets/css/main.css`.
 
