@@ -245,10 +245,20 @@
 /*
  * Start nav collapsed (`.frontdoor-shell--nav-collapsed` on shell): zero-width
  * grid track; body fills the row. Drawer expand is in `shell-start-nav-reveal.css`.
+ *
+ * Mobile is a flex column: the start track stays in flow at `max-block-size: 0`
+ * (`shell-start-nav-reveal.css`), so the flex `gap` would still sit above the
+ * body / H1 — clear it when collapsed. Tablet+ already zeros `column-gap`.
  */
 .frontdoor-shell--nav-collapsed .fd-page-grid__start {
 	border-inline-end-width: 0;
 	pointer-events: none;
+}
+
+@media screen and ( max-width: 639px ) {
+	.frontdoor-shell--nav-collapsed .fd-page-grid {
+		row-gap: 0;
+	}
 }
 
 @media screen and ( min-width: 640px ) {
