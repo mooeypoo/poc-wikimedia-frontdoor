@@ -59,3 +59,14 @@ export const EXPLORER_BACK_TO_TOP_SHELL_INLINE_END_INSET_PX = 16
  * Body-scroll offset (px) before the “Back to top” control is shown.
  */
 export const EXPLORER_BACK_TO_TOP_REVEAL_SCROLL_PX = 320
+
+/**
+ * Minimum inline gap (px) between the collapsed project-settings header title
+ * (“Selected project and API”) and the labeled **Adjust selection** button.
+ *
+ * Matches Codex `--spacing-100` (16px), same as other shell / explorer control
+ * gaps. When the single-line title + this gap + the labeled button no longer
+ * fit the header track, the Adjust control becomes a medium progressive quiet
+ * icon-only button (`useExplorerProjectSettingsAdjustCompact`).
+ */
+export const EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX = 16

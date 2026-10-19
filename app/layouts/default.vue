@@ -12,6 +12,10 @@ import { useShellCollapsedNavMenu } from '../composables/useShellCollapsedNavMen
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 import { isLandingRoutePath } from '../utils/landingRoute'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../config/explorerInternalSidebarExperiment'
+import {
+	SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX,
+	SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX
+} from '../../config/shellNavigation'
 
 /**
  * Default layout — the Front Door application shell.
@@ -135,9 +139,22 @@ const contentRootElement = computed( () => {
 	return pageSlotRef.value?.querySelector<HTMLElement>( '.fd-content-page' ) ?? pageSlotRef.value
 } )
 
+/**
+ * Explorer keeps local navigation collapsed through Codex tablet
+ * (`--max-width-breakpoint-tablet` / below desktop 1120px) so Scalar’s native
+ * endpoint sidebar has body width. See
+ * `SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX`.
+ */
+const expandedLayoutMinViewportPx = computed( () => {
+	return isExplorerRoute.value
+		? SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX
+		: SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX
+} )
+
 const { isNavigationCollapsed, isNavDrawerExpanding } = useShellNavigationCollapse(
 	primaryNavRowRef,
-	expandedNavContentRef
+	expandedNavContentRef,
+	expandedLayoutMinViewportPx
 )
 
 const {

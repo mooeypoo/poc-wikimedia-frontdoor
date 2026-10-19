@@ -103,6 +103,20 @@ Codex components and banana-i18n work inside plugins natively — no bridge patt
 
 **Source of truth:** `ARCHITECTURE.md` → Scalar Test Request modal (natural height); `DESIGN_REQUIREMENTS.md` → Scalar shell containment → Test Request UI exploration; `AGENTS.md` RTL checklist / config rule 6 (`config/explorerSurfaces.ts`).
 
+### Local navigation collapse floors (content vs explorer)
+
+**Decision:** Documentation / content pages keep the standard expanded-layout floor at **961px** (`SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX` = 241 + 40 + 640 + 40). Explorer routes use a higher floor at **1120px** (`SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX` = Codex `--min-width-breakpoint-desktop`) so local navigation stays collapsed through Codex `--max-width-breakpoint-tablet` (`calc( 1120px - 1px )`). The shell layout passes the active floor into `useShellNavigationCollapse` via `isExplorerRoute` — not a site-wide raise of the content floor.
+
+**Rationale:** Scalar’s native endpoint sidebar switches at viewport **1000px** (`lg`). Keeping the start column expanded through tablet squeezes that sidebar against the 241px allocation; collapsing explorer local nav through tablet frees body width without changing documentation geometry.
+
+**Source of truth:** `ARCHITECTURE.md` → Responsive navigation collapse / Responsive Explorer geometry; `DESIGN_REQUIREMENTS.md` → Responsive collapse / API Explorer responsive spacing; `config/shellNavigation.ts`, `app/layouts/default.vue`.
+
+### Project-settings Adjust compact (narrow header)
+
+**Decision:** When the collapsed project-settings header cannot fit the single-line **Selected project and API** title + **16px** gap (`--spacing-100` / `EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX`) + labeled **Adjust selection**, replace Adjust with a **medium** progressive quiet **icon-only** `CdxButton` (`cdxIconEdit`; `aria-label` from banana `explorer-project-settings-adjust`). Restore the labeled small control when width allows. Measure intrinsic widths from fixed nowrap replicas — never the live flex title’s `scrollWidth` after icon-only (that box grows and would prevent labeled Adjust from returning). Header CSS `gap` stays `--spacing-100` in sync with the config constant.
+
+**Source of truth:** `ARCHITECTURE.md` → Project-settings disclosure; `DESIGN_REQUIREMENTS.md` → Project settings collapsed header; `AGENTS.md` RTL checklist / config rule 6 (`config/explorerSurfaces.ts`); `useExplorerProjectSettingsAdjustCompact`, `ExplorerProjectControls.vue`.
+
 ---
 
 ## Discovery and spec resolution

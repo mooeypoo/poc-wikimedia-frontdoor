@@ -24,8 +24,25 @@ export const SHELL_NAV_EXPAND_PADDING_PX =
  * Minimum viewport width (px) that can show the local navigation while preserving
  * the responsive shell's 40px content gap and 640px minimum content measure:
  * 241px navigation + 40px gap + 640px content + 40px page-end space.
+ *
+ * Used for standard documentation / content pages. Explorer uses a higher floor —
+ * see {@link SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX}.
  */
 export const SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX = 961
+
+/**
+ * Explorer-only minimum viewport width (px) before local navigation may expand.
+ *
+ * Equals Codex `--min-width-breakpoint-desktop` (**1120px**). Local navigation
+ * is forced collapsed while the viewport matches Codex
+ * `--max-width-breakpoint-tablet` (`calc( 1120px - 1px )` / **1119px**), so the
+ * start column does not compete with Scalar’s native endpoint sidebar through
+ * the full tablet band. Distinct from the standard-content **961px** floor.
+ *
+ * @see https://doc.wikimedia.org/codex/latest/design-tokens/breakpoint.html
+ * @see DESIGN_REQUIREMENTS.md → API Explorer → Responsive spacing and cap
+ */
+export const SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_EXPLORER_PX = 1120
 
 /**
  * Start-drawer expand duration (ms) — matches Codex `--transition-duration-medium`

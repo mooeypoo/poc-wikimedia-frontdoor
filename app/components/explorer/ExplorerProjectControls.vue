@@ -12,6 +12,7 @@ import type { ExplorerBootstrapModule } from '../../composables/useExplorerBoots
 import { useExplorerModuleSelect } from '../../composables/useExplorerModuleSelect'
 import { useExplorerOptInMenu } from '../../composables/useExplorerOptInMenu'
 import { useExplorerProjectLanguagePicker } from '../../composables/useExplorerProjectLanguagePicker'
+import { useExplorerProjectSettingsAdjustCompact } from '../../composables/useExplorerProjectSettingsAdjustCompact'
 import ExplorerModuleSelectOptionContent from './ExplorerModuleSelectOptionContent.vue'
 
 /**
@@ -174,6 +175,19 @@ function onExpandSettings(): void {
 function onCollapseSettings(): void {
 	isExpanded.value = false
 }
+
+const headerRef = useTemplateRef<HTMLElement>( 'headerRef' )
+const titleMeasureRef = useTemplateRef<HTMLElement>( 'titleMeasureRef' )
+const adjustMeasureRef = useTemplateRef<HTMLElement>( 'adjustMeasureRef' )
+
+const { isAdjustIconOnly } = useExplorerProjectSettingsAdjustCompact(
+	headerRef,
+	titleMeasureRef,
+	adjustMeasureRef,
+	isExpanded,
+	settingsHeaderLabel,
+	settingsAdjustLabel
+)
 </script>
 
 <template>
@@ -181,7 +195,10 @@ function onCollapseSettings(): void {
 		class="explorer-project-controls"
 		:class="{ 'explorer-project-controls--expanded': isExpanded }"
 	>
-		<div class="explorer-project-controls__header">
+		<div
+			ref="headerRef"
+			class="explorer-project-controls__header"
+		>
 			<!--
 				Expanded uses h2 for the settings form heading; collapsed uses p
 				so the summary label does not become a document-outline heading.
@@ -192,20 +209,61 @@ function onCollapseSettings(): void {
 			>
 				{{ settingsHeaderLabel }}
 			</component>
+			<!--
+				Intrinsic-width replicas for compact-fit measurement. The live
+				title flex item must not be measured — after icon-only it grows
+				and scrollWidth equals the box, so the labeled control never returns.
+			-->
+			<span
+				ref="titleMeasureRef"
+				class="explorer-project-controls__title-measure"
+				aria-hidden="true"
+			>
+				{{ settingsHeaderLabel }}
+			</span>
+			<span
+				ref="adjustMeasureRef"
+				class="explorer-project-controls__adjust-measure"
+				aria-hidden="true"
+			>
+				<CdxButton
+					action="progressive"
+					weight="quiet"
+					size="small"
+					type="button"
+					tabindex="-1"
+				>
+					<CdxIcon
+						:icon="cdxIconEdit"
+						size="small"
+					/>
+					{{ settingsAdjustLabel }}
+				</CdxButton>
+			</span>
 			<CdxButton
 				v-if="!isExpanded"
 				class="explorer-project-controls__toggle"
+				:class="{
+					'explorer-project-controls__toggle--icon-only': isAdjustIconOnly
+				}"
 				action="progressive"
 				weight="quiet"
-				size="small"
+				:size="isAdjustIconOnly ? 'medium' : 'small'"
 				type="button"
+				:aria-label="isAdjustIconOnly ? settingsAdjustLabel : undefined"
 				@click="onExpandSettings"
 			>
 				<CdxIcon
+					v-if="isAdjustIconOnly"
 					:icon="cdxIconEdit"
-					size="small"
 				/>
-				{{ settingsAdjustLabel }}
+				<template v-else>
+					<CdxIcon
+						:icon="cdxIconEdit"
+						size="small"
+					/>
+					{{ settingsAdjustLabel }}
+				</template>
 			</CdxButton>
 			<CdxButton
 				v-else
@@ -428,9 +486,11 @@ function onCollapseSettings(): void {
 
 /*
  * The compact Figma controls use Codex's 14px minimum small-icon token inside
- * the native 24px small Button.
+ * the native 24px small Button. Icon-only Adjust uses medium Button + default
+ * icon size — do not force the small glyph there.
  */
-.explorer-project-controls__toggle :deep( .cdx-icon--small ) {
+.explorer-project-controls__toggle:not( .explorer-project-controls__toggle--icon-only )
+	:deep( .cdx-icon--small ) {
 	inline-size: var( --min-size-icon-small );
 	min-inline-size: var( --min-size-icon-small );
 	block-size: var( --min-size-icon-small );
@@ -440,9 +500,33 @@ function onCollapseSettings(): void {
 .explorer-project-controls__header {
 	display: flex;
 	align-items: center;
-	gap: var( --spacing-25 );
+	/* Keep in sync with EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX. */
+	gap: var( --spacing-100 );
 	inline-size: 100%;
 	min-inline-size: 0;
+}
+
+/*
+ * Intrinsic measure hosts — fixed + max-content so widths stay independent of
+ * the live flex title / toggle (including after icon-only expands the title).
+ */
+.explorer-project-controls__title-measure,
+.explorer-project-controls__adjust-measure {
+	position: fixed;
+	visibility: hidden;
+	pointer-events: none;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inline-size: max-content;
+	max-inline-size: none;
+	white-space: nowrap;
+}
+
+.explorer-project-controls__title-measure {
+	margin: 0;
+	font-size: var( --font-size-medium );
+	line-height: var( --line-height-small );
+	font-weight: var( --font-weight-normal );
 }
 
 /*
