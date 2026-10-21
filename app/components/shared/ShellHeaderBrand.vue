@@ -3,7 +3,7 @@ import { CdxInfoChip, CdxTooltip } from '@wikimedia/codex'
 import { useMainNavigationLinks } from '../../composables/useMainNavigationLinks'
 
 /**
- * Compact header brand lockup — Wikimedia mark (32px SVG) plus two-line wordmark,
+ * Compact header brand lockup — Wikimedia mark (32px SVG) plus responsive wordmark,
  * with a label-only warning “Prototype” InfoChip after the lockup (Figma 1238:24310).
  *
  * Rendered in the shell header utility row per Figma Header node 284:11443.
@@ -71,21 +71,28 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 </template>
 
 <style scoped>
-/* Mark + wordmark + Prototype chip — gap --spacing-50 (8px) per Figma 1238:24310. */
+/*
+ * Mark + wordmark + Prototype chip — gap --spacing-50 (8px) per Figma 1238:24310.
+ * The group may shrink and wrap the non-production chip independently so it never
+ * determines when the translated production wordmark wraps.
+ */
 .shell-header-brand-group {
 	display: inline-flex;
+	flex-wrap: wrap;
 	align-items: flex-end;
 	gap: var( --spacing-50 );
-	flex: 0 0 auto;
+	flex: 1 1 auto;
 	min-inline-size: 0;
+	max-inline-size: max-content;
 }
 
 .shell-header-brand {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	flex: 0 0 auto;
+	flex: 1 1 auto;
 	min-inline-size: 0;
+	max-inline-size: max-content;
 	color: var( --color-base );
 	text-decoration: none;
 }
@@ -116,7 +123,6 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 	flex-direction: column;
 	gap: 2px;
 	min-inline-size: 0;
-	white-space: nowrap;
 	font-family: var( --font-family-brand-wordmark );
 }
 
@@ -132,6 +138,14 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 	font-weight: 800;
 	line-height: 1rem;
 	letter-spacing: 0.01em;
+	/*
+	 * Preserve complete translated words. When the header cannot keep the 16px
+	 * brand/actions gap, the line wraps at its natural whitespace (English:
+	 * “PORTAL” moves below “DEVELOPER”).
+	 */
+	white-space: normal;
+	overflow-wrap: normal;
+	word-break: normal;
 }
 
 .shell-header-brand-group__prototype-chip-host {

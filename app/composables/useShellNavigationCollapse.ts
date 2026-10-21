@@ -2,6 +2,7 @@ import type { Ref } from 'vue'
 import {
 	SHELL_NAV_COLLAPSE_PADDING_PX,
 	SHELL_NAV_DRAWER_EXPAND_DURATION_MS,
+	SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX,
 	SHELL_NAV_EXPAND_PADDING_PX
 } from '../../config/shellNavigation'
 
@@ -16,6 +17,10 @@ import {
  * - **Collapse** (expanded): `scrollWidth + COLLAPSE_PADDING > clientWidth`
  * - **Expand** (collapsed): `scrollWidth + EXPAND_PADDING <= clientWidth`
  *
+ * Below `expandedLayoutMinViewportPx` (standard **961px**, explorer **1120px** /
+ * Codex desktop), collapse is forced regardless of measurement so page
+ * typologies keep distinct geometry floors — see `config/shellNavigation.ts`.
+ *
  * Also exposes `isNavDrawerExpanding`: true only while the start drawer
  * animates open after a **viewport** expand (hamburger → tabs). Landing /
  * `sidebar: false` route changes must stay instant — they share the same
@@ -23,11 +28,14 @@ import {
  *
  * @param navRowRef - Root of `.frontdoor-shell__primary-nav-row`.
  * @param expandedNavContentRef - Intrinsic-width measure target (`.frontdoor-shell__primary-nav-expanded__content`).
+ * @param expandedLayoutMinViewportPx - Reactive viewport floor below which local
+ *   navigation is always collapsed (standard vs explorer).
  * @returns Reactive collapse + drawer-expanding flags for template bindings.
  */
 export function useShellNavigationCollapse(
 	navRowRef: Ref<HTMLElement | null>,
-	expandedNavContentRef: Ref<HTMLElement | null>
+	expandedNavContentRef: Ref<HTMLElement | null>,
+	expandedLayoutMinViewportPx: Ref<number> = ref( SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX )
 ) {
 	const isNavigationCollapsed = ref( false )
 	const isNavDrawerExpanding = ref( false )
@@ -83,6 +91,17 @@ export function useShellNavigationCollapse(
 			return
 		}
 
+		/*
+		 * Local navigation collapses when the shell can no longer preserve the
+		 * active typology’s expanded-layout floor (standard content vs explorer).
+		 * Keep this capacity check independent of the post-collapse layout to
+		 * avoid oscillation.
+		 */
+		if ( window.innerWidth < expandedLayoutMinViewportPx.value ) {
+			isNavigationCollapsed.value = true
+			return
+		}
+
 		if ( isNavigationCollapsed.value ) {
 			const requiredInlineSizeToExpand = measureRequiredExpandedInlineSize(
 				SHELL_NAV_EXPAND_PADDING_PX
@@ -123,6 +142,14 @@ export function useShellNavigationCollapse(
 		}
 
 		isNavDrawerExpanding.value = false
+	} )
+
+	/*
+	 * Re-evaluate when the typology floor changes (e.g. navigating between a
+	 * documentation page and /explorer at the same viewport width).
+	 */
+	watch( expandedLayoutMinViewportPx, () => {
+		updateCollapseState()
 	} )
 
 	onMounted( () => {
