@@ -662,12 +662,13 @@ const { isIncludeIconOnly } = useExplorerProjectSettingsIncludeCompact(
 }
 
 /*
- * Prefer wrapping the Project name before breaking the API value. Project
- * takes remaining space and may wrap; API stays a nowrap unit (moves to the
- * next line as a whole; ellipsis only if that line is still too narrow).
+ * Prefer wrapping the Project name before breaking the API value. Do not
+ * `flex-grow` Project — that stretched the segment and blew past the 8px
+ * (`--spacing-50`) column-gap to API. Shrink/wrap Project; API stays a
+ * nowrap unit (next line as a whole; ellipsis only if still too narrow).
  */
 .explorer-project-controls__collapsed-title-segment--project {
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	flex-wrap: wrap;
 	min-inline-size: 0;
 }
