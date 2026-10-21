@@ -61,12 +61,23 @@ export const EXPLORER_BACK_TO_TOP_SHELL_INLINE_END_INSET_PX = 16
 export const EXPLORER_BACK_TO_TOP_REVEAL_SCROLL_PX = 320
 
 /**
- * Minimum inline gap (px) between the collapsed project-settings header title
- * (“Selected project and API”) and the labeled **Adjust selection** button.
+ * Minimum inline gap (px) between the collapsed project-settings Accordion
+ * title (“Exploring: Project: … API: …”) and the labeled **Adjust selection**
+ * button, and between the API Combobox minimum and the labeled **Include**
+ * MenuButton when settings are expanded.
  *
  * Matches Codex `--spacing-100` (16px), same as other shell / explorer control
- * gaps. When the single-line title + this gap + the labeled button no longer
- * fit the header track, the Adjust control becomes a medium progressive quiet
- * icon-only button (`useExplorerProjectSettingsAdjustCompact`).
+ * gaps. When the single-line title + this gap + the labeled Adjust no longer
+ * fit the header track, Adjust becomes a medium progressive quiet icon-only
+ * button (`useExplorerProjectSettingsAdjustCompact`). When the API row cannot
+ * keep Combobox min + this gap + labeled Include, Include becomes icon-only
+ * (`useExplorerProjectSettingsIncludeCompact`).
  */
 export const EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX = 16
+
+/**
+ * Preferred minimum inline size (px) for the explorer API Combobox — Codex
+ * `--size-1600` (16rem / 256px). Used by Include compact-fit measurement; do
+ * **not** `parseFloat` the CSS custom property (that yields `16` from `16rem`).
+ */
+export const EXPLORER_MODULE_COMBOBOX_MIN_INLINE_SIZE_PX = 256

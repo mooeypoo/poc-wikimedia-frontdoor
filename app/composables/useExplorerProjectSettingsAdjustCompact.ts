@@ -1,31 +1,35 @@
-import type { Ref } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import { EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX } from '../../config/explorerSurfaces'
+
+/** Readable element ref (plain or computed) for compact-fit measurement. */
+type ElementRef = Ref<HTMLElement | null> | ComputedRef<HTMLElement | null>
 
 /**
  * Collapses the project-settings **Adjust selection** control to a medium
- * progressive quiet icon-only button when the collapsed header cannot keep the
- * configured minimum gap between a single-line title and the labeled button.
+ * progressive quiet icon-only button when the collapsed Accordion header cannot
+ * keep the configured minimum gap between a single-line title and the labeled
+ * button.
  *
  * Measures intrinsic widths from visually hidden nowrap replicas (title text +
  * labeled Adjust), not the live flex title — a live `scrollWidth` after icon-only
  * expands the title box equals the box width when the text fits, so the labeled
  * control would never return. The required gap is **16px** (`--spacing-100`).
- * Only applies while settings are collapsed.
+ * Only applies while settings are collapsed (Adjust is hidden when expanded).
  * Resize observation and label watchers cover viewport and locale changes.
  * Scheduled animation frames and observers are cleaned up on unmount.
  *
- * @param headerRef - Collapsed/expanded header row element.
+ * @param headerRef - Collapsed Accordion header / summary track element.
  * @param titleMeasureRef - Hidden nowrap title measure host.
  * @param adjustMeasureRef - Hidden labeled Adjust button measure host.
  * @param isExpanded - Whether project settings are expanded.
- * @param titleLabel - Reactive title string (locale-aware).
+ * @param titleLabel - Reactive collapsed-title fingerprint (locale-aware).
  * @param adjustLabel - Reactive Adjust label (locale-aware).
  * @returns Whether Adjust should render as icon-only.
  */
 export function useExplorerProjectSettingsAdjustCompact(
-	headerRef: Ref<HTMLElement | null>,
-	titleMeasureRef: Ref<HTMLElement | null>,
-	adjustMeasureRef: Ref<HTMLElement | null>,
+	headerRef: ElementRef,
+	titleMeasureRef: ElementRef,
+	adjustMeasureRef: ElementRef,
 	isExpanded: Ref<boolean>,
 	titleLabel: Ref<string>,
 	adjustLabel: Ref<string>
@@ -113,22 +117,25 @@ export function useExplorerProjectSettingsAdjustCompact(
 		} )
 	}
 
-	watch(
-		[ isExpanded, titleLabel, adjustLabel ],
-		() => {
-			scheduleAdjustCompactMeasurement()
-		}
-	)
-
-	onMounted( () => {
+	/**
+	 * (Re)attaches resize observation. The Accordion summary ref can resolve
+	 * after mount when host markup lands, so observation must follow `headerRef`.
+	 *
+	 * @returns Nothing.
+	 */
+	function observeCompactSources(): void {
 		if ( typeof ResizeObserver === 'undefined' ) {
 			scheduleAdjustCompactMeasurement()
 			return
 		}
 
-		resizeObserver = new ResizeObserver( () => {
-			scheduleAdjustCompactMeasurement()
-		} )
+		if ( resizeObserver === null ) {
+			resizeObserver = new ResizeObserver( () => {
+				scheduleAdjustCompactMeasurement()
+			} )
+		} else {
+			resizeObserver.disconnect()
+		}
 
 		const headerElement = headerRef.value
 		if ( headerElement !== null ) {
@@ -146,6 +153,17 @@ export function useExplorerProjectSettingsAdjustCompact(
 		}
 
 		scheduleAdjustCompactMeasurement()
+	}
+
+	watch(
+		[ isExpanded, titleLabel, adjustLabel, headerRef ],
+		() => {
+			observeCompactSources()
+		}
+	)
+
+	onMounted( () => {
+		observeCompactSources()
 	} )
 
 	onBeforeUnmount( () => {

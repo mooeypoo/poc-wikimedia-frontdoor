@@ -115,7 +115,7 @@ const includeInternalEndpoints = useState<boolean>(
 // App-scoped state survives both bootstrap unmounts and deep-link URL page remounts.
 const isProjectSettingsExpanded = useState<boolean>(
 	'explorer-project-settings-expanded',
-	() => false
+	() => true
 )
 
 const {
