@@ -27,6 +27,7 @@ import { DEFAULT_EXPLORER_OPT_IN_FILTER_OPTIONS } from '../../../config/explorer
 import { SCALAR_DEFAULT_CONFIGURATION } from '../../../config/scalar'
 import { ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER } from '../../../config/enterpriseExplorer'
 import { buildScalarLocalization } from '../../scalar/scalarLocalization'
+import { shouldLocalizeOpenApiDocumentForInterfaceLocale } from '../../../config/explorerOpenApiInterfaceLocale'
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from '../../../config/explorerInternalSidebarExperiment'
 import { SCALAR_CLIENT_WRITE_REQUEST_CONFIRM_DIALOG_ENABLED } from '../../../config/scalarClientWriteWarnings'
 
@@ -37,6 +38,15 @@ definePageMeta( {
 
 const route = useRoute()
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
+
+/**
+ * When the interface locale overlays OpenAPI prose (Hebrew design fixture),
+ * Scalar keeps an LTR shell but document prose blocks get `direction: rtl`
+ * via `.explorer-page--openapi-document-rtl-prose`.
+ */
+const usesOpenApiDocumentRtlProse = computed( () =>
+	shouldLocalizeOpenApiDocumentForInterfaceLocale( $interfaceLocale.value )
+)
 
 /** Whether this page is still the active route (disables teleports on exit). */
 const isActiveExplorerRoute = computed( () => isExplorerRoutePath( route.path ) )
@@ -248,8 +258,9 @@ const activeScalarConfiguration = computed<Record<string, unknown>>( () =>
  * stuck client-only mount (documented in ARCHITECTURE.md → API explorer).
  *
  * Keyed on `route.path` (not `route.fullPath`) so that writing the operation hash
- * for deep-linking does not remount Scalar — only path, instance, module, mode, or
- * spec-URL changes do. See docs/adr-explorer-deep-linking.md §2, §7.
+ * for deep-linking does not remount Scalar — only path, instance, module, mode,
+ * spec-URL, or interface-locale (OpenAPI document overlay) changes do. See
+ * docs/adr-explorer-deep-linking.md §2, §7 and config/explorerOpenApiInterfaceLocale.ts.
  */
 const scalarReferenceKey = computed( () => {
 	return [
@@ -257,7 +268,10 @@ const scalarReferenceKey = computed( () => {
 		selectedWikiInstanceId.value,
 		selectedModuleName.value,
 		explorerMode.value,
-		( isCommunityMode.value ? visibleOpenApiSpecUrl.value : enterpriseSpecUrl.value ) ?? ''
+		( isCommunityMode.value ? visibleOpenApiSpecUrl.value : enterpriseSpecUrl.value ) ?? '',
+		// Document prose overlay (Hebrew fixture) requires a remount; chrome-only
+		// locales still remount harmlessly when switching language.
+		$interfaceLocale.value
 	].join( ':' )
 } )
 
@@ -367,7 +381,12 @@ function onEndpointClick( moduleName: string, operation: ExplorerModuleOperation
 </script>
 
 <template>
-	<section class="explorer-page">
+	<section
+		class="explorer-page"
+		:class="{
+			'explorer-page--openapi-document-rtl-prose': usesOpenApiDocumentRtlProse
+		}"
+	>
 		<div class="explorer-page__intro">
 			<header class="explorer-page__header">
 				<h1>

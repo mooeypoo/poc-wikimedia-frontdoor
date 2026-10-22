@@ -178,6 +178,56 @@
 }
 
 /*
+ * Design fixture (`design-scalar-mirroring`): Hebrew OpenAPI prose inside a
+ * pinned-LTR Scalar embed. FSI/PDI fix inline character order only; block
+ * alignment still follows the LTR root. Set `direction: rtl` on document prose
+ * so `text-align: start` is the inline-end (reading) edge without flipping
+ * Scalar chrome (sidebar, cards, code samples). Gated by
+ * `.explorer-page--openapi-document-rtl-prose` from the explorer page when
+ * `shouldLocalizeOpenApiDocumentForInterfaceLocale` is true.
+ *
+ * FRAGILITY: class names are Scalar-internal; re-verify on @scalar/api-reference upgrades.
+ */
+.explorer-page--openapi-document-rtl-prose .scalar-app :where(
+	.markdown,
+	.introduction-description,
+	.operation-description,
+	.operation-title,
+	.parameter-item-description,
+	.parameter-item-description-summary,
+	.property-description,
+	.property-enum-value-description,
+	.response-description,
+	.response-description-markdown,
+	.request-body-description,
+	.tag-description,
+	.schema-card-description,
+	.section-accordion-description,
+	.section-header-label,
+	.channel-description,
+	.message-description
+) {
+	direction: rtl;
+	text-align: start;
+}
+
+/* Keep inherently LTR samples readable inside RTL prose wrappers. */
+.explorer-page--openapi-document-rtl-prose .scalar-app :where(
+	.markdown pre,
+	.markdown code,
+	.markdown .language-json,
+	.markdown .language-bash,
+	.markdown .language-shell,
+	pre,
+	code
+) {
+	direction: ltr;
+	text-align: start;
+	/* Isolate so surrounding RTL prose does not reorder code punctuation. */
+	unicode-bidi: isolate;
+}
+
+/*
  * @hack Hide Scalar's built-in Authentication panel unconditionally.
  *
  * Rationale (docs/adr-wikimedia-oauth-authentication.md §5.9): the auth panel

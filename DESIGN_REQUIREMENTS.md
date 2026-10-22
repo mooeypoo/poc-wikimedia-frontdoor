@@ -342,6 +342,24 @@ Focus is not trapped and not restored on close, matching the collapsed nav overl
 
 **Source:** `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `i18n/*` (`shell-collapsed-search-overlay-*`).
 
+### Global search design prototype (`design-global-search`)
+
+**Branch:** `design-global-search`, stacked on PR [#66](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/66) (`search-api-modules`). Do **not** push design commits onto #66.
+
+**Engine (owned by #66 — leave alone):** per-locale Nuxt Content FTS, MiniSearch endpoint index, deep links into explorer, `useContentSearch` / `useEndpointSearch`.
+
+**Presentation surface (this branch):** flip knobs in `config/searchPrototype.ts`. `SearchResults.vue` reads them; ranking and indexing stay unchanged.
+
+| Knob | Default (PR #66 behaviour) | What to try |
+|------|----------------------------|-------------|
+| `SEARCH_PROTOTYPE_ENDPOINT_GROUP_PLACEMENT` | `before-content` | `after-content` — docs-first panel |
+| `SEARCH_PROTOTYPE_RESULT_DENSITY` | `comfortable` | `compact` — denser rows |
+| `SEARCH_PROTOTYPE_SHOW_ENDPOINT_METHOD` | `true` | hide method tags |
+| `SEARCH_PROTOTYPE_SHOW_ENDPOINT_PATH` | `true` | hide path line |
+| `SEARCH_PROTOTYPE_COLLAPSED_CHROME` | `teleport-overlay` | reserved `full-screen-dialog` (not wired yet) |
+
+**Open design questions (from #66 ADR §10):** endpoint group leading the panel; empty/expand-all CTA when only endpoints match; collapsed chrome vs Figma compact search dialog.
+
 **Utility row alignment:** Utility controls are grouped at the **inline-end** in `ShellHeaderUtilityActions`. Expanded spacing: **16px** search→preferences; **8px** between preferences, language, and Login/account. Brand and utilities are vertically centered.
 
 | Element | Behaviour |
@@ -745,6 +763,10 @@ Source of truth: **`config/explorerSurfaces.ts`** (must stay in sync with **`pag
 
 **Decision:** Scalar content is not globally direction-flipped; portal maps link colours only. See `ARCHITECTURE.md` → RTL and BiDi.
 
+**Decision (Scalar chrome language):** Interface language (`interfaceLocale`) drives Scalar’s `localization` table via banana (`i18n/explorer-scalar/`). Project / wiki language pickers do **not** affect Scalar chrome language. Layout stays pinned **`ltr`**; RTL chrome strings are BiDi-isolated (FSI/PDI) at injection.
+
+**Design fixture (`design-scalar-mirroring`) — Hebrew OpenAPI prose:** When UI language is **`he`**, community Scalar is fed localized **`content`** (fetched English spec + en→he prose map for `summary` / `description` / `title`) instead of `url`, so endpoint docs can be reviewed as Hebrew RTL text inside the LTR embed. Map: [`config/fixtures/openApiDocumentLocaleMap.he.json`](config/fixtures/openApiDocumentLocaleMap.he.json) (MediaWiki REST API coverage; other modules keep unmapped English). Policy: [`config/explorerOpenApiInterfaceLocale.ts`](config/explorerOpenApiInterfaceLocale.ts). Prose blocks get a targeted override (`.explorer-page--openapi-document-rtl-prose` → `direction: rtl; text-align: start` on Scalar markdown/description classes; code/`pre` stay `dir`-LTR) — does **not** flip Scalar chrome. Not translator-reviewed. Hand-authored Scalar chrome: [`i18n/explorer-scalar/he.json`](i18n/explorer-scalar/he.json). Partial shell [`i18n/ar.json`](i18n/ar.json) remains for Arabic chrome review.
+
 **Decision (interface locale switch):** When the user changes interface language between LTR and RTL (or back), shell `dir` updates immediately. Codex component chrome uses **`codex.style-bidi.css`** (`[dir=ltr]` / `[dir=rtl]`). Header `CdxLookup` remounts via `:key="direction"`. **Note:** `codex.style-bidi.css` is marked experimental by Codex; revisit if upstream direction loading changes.
 
 **Supported interface locales in shell:** en, es, fr, he, fa (banana + content routing).
@@ -899,6 +921,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
+| *(uncommitted)* | Global search design prototype | `design-global-search` on PR #66: `config/searchPrototype.ts` presentation knobs wired in `SearchResults` (placement, density, method/path); collapsed dialog chrome reserved |
 | *(uncommitted)* | Collapsed header search overlay | Search icon below the **560px** collapse threshold opens `ShellHeaderSearchOverlay` (teleported, backdrop-light, block-start panel) instead of doing nothing; autofocused field + `cdxIconClose` close button; reuses `SharedSearchResults` |
 | *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
 | *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
@@ -975,7 +998,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 1. **Wire content section navigation** to real content routes (replace `href="#"` placeholders and prototype active map on non-explorer pages).
 2. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
 3. **Wire explorer side nav** to real doc routes or in-page anchors.
-4. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
+4. **Global search IA / chrome** — on `design-global-search` (stacked on PR #66): endpoint vs docs group order, result density, collapsed overlay vs full-screen dialog (Figma 1621:28300). Flip `config/searchPrototype.ts`; do not edit `search-api-modules`. Engine work remains in #66.
 5. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
 6. **Mobile explorer** — endpoint list is Scalar’s native sidebar inside the reference panel; remaining mobile polish may still evolve.
 7. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
@@ -1009,6 +1032,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
 | Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/composables/useOverlayDismissal.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/components/shared/SearchResults.vue` |
+| Global search design prototype | `config/searchPrototype.ts`, `app/components/shared/SearchResults.vue` (presentation knobs; stacked on PR #66) |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |
 | Codex direction CSS | `nuxt.config.ts` (`codex.style-bidi.css`) — see `ARCHITECTURE.md` → RTL and BiDi |
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |

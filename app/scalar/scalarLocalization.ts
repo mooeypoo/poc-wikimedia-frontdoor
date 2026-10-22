@@ -6,6 +6,7 @@ import messagesChineseSimplified from '../../i18n/explorer-scalar/zh-cn.json'
 import messagesEnglish from '../../i18n/explorer-scalar/en.json'
 import messagesFrench from '../../i18n/explorer-scalar/fr.json'
 import messagesGerman from '../../i18n/explorer-scalar/de.json'
+import messagesHebrew from '../../i18n/explorer-scalar/he.json'
 import messagesPortuguese from '../../i18n/explorer-scalar/pt.json'
 import messagesRussian from '../../i18n/explorer-scalar/ru.json'
 import messagesSpanish from '../../i18n/explorer-scalar/es.json'
@@ -55,9 +56,10 @@ function stripMetadata( catalogue: Record<string, unknown> ): MessageMap {
  * deliberately not derived from `config/languages.ts`: the catalog governs
  * which languages exist, not which have been translated.
  *
- * `he` and `fa` are the notable absences — Scalar ships no built-in to seed
- * them from, so they need hand-authored catalogues, and they are the portal's
- * two right-to-left interface locales.
+ * `fa` remains absent — Scalar ships no built-in to seed it from.
+ * `he` is a hand-authored design fixture on `design-scalar-mirroring`
+ * (`i18n/explorer-scalar/he.json`) so UI-language Hebrew can visualize
+ * isolated RTL chrome inside the pinned-LTR embed.
  */
 const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
 	ar: stripMetadata( messagesArabic ),
@@ -65,6 +67,7 @@ const MESSAGES_BY_LOCALE: Record<string, MessageMap> = {
 	en: stripMetadata( messagesEnglish ),
 	es: stripMetadata( messagesSpanish ),
 	fr: stripMetadata( messagesFrench ),
+	he: stripMetadata( messagesHebrew ),
 	pt: stripMetadata( messagesPortuguese ),
 	ru: stripMetadata( messagesRussian ),
 	'zh-cn': stripMetadata( messagesChineseSimplified )
