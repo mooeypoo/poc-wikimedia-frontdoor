@@ -1,11 +1,13 @@
 import { EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR } from './explorerInternalSidebarExperiment'
+import { SCALAR_DOCUMENT_SLUG } from './scalarDocument'
 
 /**
- * Stable Scalar document slug used for operation navigation ids.
- *
- * Must match the `slug` passed in {@link SCALAR_DEFAULT_CONFIGURATION}.
+ * Stable Scalar document slug used for operation navigation ids. Defined in the
+ * self-contained `config/scalarDocument.ts` so the endpoint search index
+ * generator can load it from Node; re-exported here so app code keeps importing
+ * it from `config/scalar` as before.
  */
-export const SCALAR_DOCUMENT_SLUG = 'front-door-api-explorer'
+export { SCALAR_DOCUMENT_SLUG }
 
 /**
  * Scalar defaults shared by the explorer page.

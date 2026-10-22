@@ -31,7 +31,7 @@ export const SCALAR_LOCALIZATION_KEY_PREFIX = 'explorer-scalar-ui-'
  * `auto` is also inference, which AGENTS.md rule 7 forbids outright.
  *
  * Right-to-left labels rendered inside this left-to-right container are
- * isolated at injection time instead — see `app/composables/useScalarLocalization.ts`.
+ * isolated at injection time instead — see `app/scalar/scalarLocalization.ts`.
  */
 export const SCALAR_LOCALIZATION_DIRECTION = 'ltr' as const
 

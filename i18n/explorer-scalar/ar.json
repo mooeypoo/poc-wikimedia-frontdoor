@@ -4,7 +4,7 @@
 		"seededFrom": "@scalar/api-reference@1.65.1 (MIT)",
 		"note": "SEEDED FROM UPSTREAM — not reviewed by a Wikimedia translator. Copied from Scalar's own community translation as a starting point; revise toward Wikimedia terminology and remove this marker once reviewed."
 	},
-	"explorer-scalar-ui-actions-copy-endpoint-url": "نسخ رابط endpoint",
+	"explorer-scalar-ui-actions-copy-endpoint-url": "نسخ رابط نقطة النهاية",
 	"explorer-scalar-ui-actions-copy-link": "نسخ الرابط",
 	"explorer-scalar-ui-actions-copy-link-to": "نسخ الرابط إلى $1",
 	"explorer-scalar-ui-actions-copy-to-clipboard": "نسخ الرابط إلى الحافظة",
@@ -38,7 +38,7 @@
 	"explorer-scalar-ui-common-min": "الحد الأدنى",
 	"explorer-scalar-ui-common-min-length": "أدنى طول",
 	"explorer-scalar-ui-common-multiple-of": "مضاعف لـ",
-	"explorer-scalar-ui-common-nullable": "يقبل null",
+	"explorer-scalar-ui-common-nullable": "يقبل قيمة فارغة",
 	"explorer-scalar-ui-common-path": "المسار",
 	"explorer-scalar-ui-common-pattern": "النمط",
 	"explorer-scalar-ui-common-property-names": "أسماء الخصائص",

@@ -93,12 +93,12 @@ The following is an illustrative example of what a few catalog entries might loo
     "dir": "ltr",
     "autonym": "català",
     "name": "Catalan",
-    "fallbackChain": ["ca", "es", "en"]
+    "fallbackChain": ["ca", "oc", "en"]
   }
 ]
 ```
 
-A few things worth noting in this structure. The `dir` field is explicit on every entry rather than derived at runtime – this is intentional, because direction cannot always be reliably inferred from a language code alone. The `autonym` is the native name used in the language picker; displaying it requires correct BiDi handling since it may be in a different script and direction from the surrounding interface. The `fallbackChain` is an ordered list of language codes to try if content or interface strings are unavailable in the requested language. It begins with the language itself and always ends with English as the guaranteed terminal – so English's own chain is just `["en"]`, since it is its own terminal. A language like Catalan falling back through Spanish before English is a meaningful distinction: a Catalan-speaking user is more likely to read Spanish than English, so the fallback chain reflects that.
+A few things worth noting in this structure. The `dir` field is explicit on every entry rather than derived at runtime – this is intentional, because direction cannot always be reliably inferred from a language code alone. The `autonym` is the native name used in the language picker; displaying it requires correct BiDi handling since it may be in a different script and direction from the surrounding interface. The `fallbackChain` is an ordered list of language codes to try if content or interface strings are unavailable in the requested language. It begins with the language itself and always ends with English as the guaranteed terminal – so English's own chain is just `["en"]`, since it is its own terminal. The middle of the chain is MediaWiki's own answer, not ours: the generator asks `languageinfo` for each language's `fallbacks` and keeps them in the order production returns them. Catalan falling back through Occitan before English is a meaningful distinction, and it is production's distinction to make – a Catalan speaker is likelier to read a closely related language than English. Do not hand-edit a chain to something that reads more plausibly; if a chain looks wrong, it is wrong upstream in MediaWiki, and `LANGUAGE_OVERRIDES` in `config/languages.ts` is the only sanctioned place to deviate.
 
 This data is not hand-maintained. It is fetched from Wikimedia APIs and committed as a generated file. Any component or composable that needs to know a language's direction, its display name, or its fallback behavior reads from this catalog.
 

@@ -114,7 +114,7 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 ## Code Tabs
 
 **Custom components** — `CodeTabs.vue` + `CodeTab.vue` wrap Codex **`CdxTabs`** with the **`framed`** prop and **`CdxTab`** panels (framed tabs are for bordered modules; quiet tabs are used in shell navigation). The module uses `--border-color-muted` and exploratory **4px** radius; each code block has 12px (`--spacing-75`) padding inside the panel — matching **Code block**.
-All tab panels remain in the DOM (`v-show`), so Ctrl+F searches all tabs regardless of which is active.
+Inactive panels stay in the DOM, but Codex hides them with `display: none`, so find-in-page only reaches the active tab.
 
 ::::code-tabs
 :::code-tab{label="JavaScript"}

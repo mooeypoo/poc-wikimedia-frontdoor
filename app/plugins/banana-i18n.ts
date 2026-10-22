@@ -1,6 +1,7 @@
 import Banana from 'banana-i18n'
 import type { Ref } from 'vue'
 import { getLanguageByCode } from '../../config/languages'
+import messagesArabic from '../../i18n/ar.json'
 import messagesEnglish from '../../i18n/en.json'
 import messagesSpanish from '../../i18n/es.json'
 import messagesFrench from '../../i18n/fr.json'
@@ -9,15 +10,40 @@ import messagesPersian from '../../i18n/fa.json'
 
 type MessageMap = Record<string, string>
 
+/**
+ * Drops `@metadata` (and any other non-string values) from a catalogue.
+ *
+ * @param catalogue - Parsed locale JSON.
+ * @returns String-only message map.
+ */
+function stringMessages( catalogue: Record<string, unknown> ): MessageMap {
+	const messages: MessageMap = {}
+	for ( const [ key, value ] of Object.entries( catalogue ) ) {
+		if ( typeof value === 'string' ) {
+			messages[ key ] = value
+		}
+	}
+	return messages
+}
+
+const englishMessages = stringMessages( messagesEnglish as Record<string, unknown> )
+
 // The `en` intersection member keeps the English fallback a guaranteed entry
 // (not routed through the index signature), since every call site below relies
 // on it always resolving.
+//
+// Arabic is a partial design fixture (design-scalar-mirroring): merge over
+// English so untranslated keys stay English instead of rendering raw keys.
 const MESSAGES_BY_LOCALE: Record<string, MessageMap> & { en: MessageMap } = {
-	en: messagesEnglish as MessageMap,
-	es: messagesSpanish as MessageMap,
-	fr: messagesFrench as MessageMap,
-	he: messagesHebrew as MessageMap,
-	fa: messagesPersian as MessageMap
+	en: englishMessages,
+	ar: {
+		...englishMessages,
+		...stringMessages( messagesArabic as Record<string, unknown> )
+	},
+	es: stringMessages( messagesSpanish as Record<string, unknown> ),
+	fr: stringMessages( messagesFrench as Record<string, unknown> ),
+	he: stringMessages( messagesHebrew as Record<string, unknown> ),
+	fa: stringMessages( messagesPersian as Record<string, unknown> )
 }
 
 // One Banana instance per locale, created on first use and reused thereafter.

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { CdxTab, CdxTabs } from '@wikimedia/codex'
-import type { PropType, VNode } from 'vue'
+import { CdxTab, CdxTabs, useSlotContents } from '@wikimedia/codex'
+import GitHubSlugger from 'github-slugger'
+import type { VNode } from 'vue'
 
 /**
- * Registration payload from a child {@link CodeTab} for one framed panel.
+ * One framed panel, derived from a `:::code-tab` child.
  */
-interface CodeTabRegistration {
+interface CodeTabEntry {
 	name: string
 	label: string
 	content: () => VNode[]
@@ -13,99 +14,97 @@ interface CodeTabRegistration {
 
 /**
  * Markdown tabbed code module: Codex {@link CdxTabs} with `framed`, fed by
- * nested `:::code-tab` children via provide/inject (MDC cannot nest `CdxTab`
- * as direct slot children of `CdxTabs`).
+ * nested `:::code-tab` children (MDC cannot nest `CdxTab` as direct slot
+ * children of `CdxTabs`).
  *
  * @see ARCHITECTURE.md → Markdown content pages → Code tabs
  * @see docs/TECH_DECISIONS.md → Framed code tabs
  */
-const tabs = ref<CodeTabRegistration[]>( [] )
+const slots = useSlots()
 
 /**
- * Derives a stable, URL-safe tab `name` from a visible label.
+ * Reads the panel render function off a `:::code-tab` vnode.
  *
- * @param {string} label - Visible tab label from Markdown
- * @returns {string} Base tab name for {@link CdxTab}
+ * @param {VNode} vnode - A flattened slot child
+ * @returns {?Function} Default-slot render function, or null for other children
  */
-function deriveTabName( label: string ): string {
-	const slug = label
-		.trim()
-		.toLowerCase()
-		.replace( /[^a-z0-9]+/g, '-' )
-		.replace( /^-+|-+$/g, '' )
+function readTabContent( vnode: VNode ): ( () => VNode[] ) | null {
+	const content = ( vnode.children as { default?: () => VNode[] } | null )?.default
 
-	return slug.length > 0 ? slug : 'tab'
+	return typeof content === 'function' ? content : null
 }
 
 /**
- * Registers a code tab panel from a child {@link CodeTab}.
+ * Derives one framed panel per `:::code-tab` child, in source order.
  *
- * @param {{ label: string, content: () => VNode[] }} registration - Tab label and panel render function
+ * Read off our own slot vnodes rather than letting the children register
+ * themselves: a registry fills only when the children mount, which on the
+ * client is after this render has run, so the server sent tabs, the client's
+ * first render had none, and hydration threw the server's markup away. Matched
+ * by shape (a `label` prop over a default slot) rather than by component
+ * identity, because MDCRenderer re-wraps what it resolves
+ * (MDCRenderer.vue:297-315) and Codex keeps `isComponentVNode` internal.
+ *
+ * Not a computed, which is how CdxTabs reads its own slot: MDC hands us a raw
+ * object slot with no compiled-slot flag, and `updateSlots` mutates those in
+ * place without a reactive trigger, so a computed would memoise whichever body
+ * this instance saw first.
+ *
+ * @returns {CodeTabEntry[]} Framed panels for {@link CdxTabs}
  */
-function registerTab( registration: {
-	label: string
-	content: () => VNode[]
-} ) {
-	if ( tabs.value.some( ( existingTab ) => existingTab.label === registration.label ) ) {
-		return
-	}
+function codeTabs(): CodeTabEntry[] {
+	const slugger = new GitHubSlugger()
+	const entries: CodeTabEntry[] = []
 
-	const baseName = deriveTabName( registration.label )
-	let name = baseName
-	let suffix = 2
-
-	while ( tabs.value.some( ( existingTab ) => existingTab.name === name ) ) {
-		name = `${ baseName }-${ suffix }`
-		suffix += 1
-	}
-
-	tabs.value.push( {
-		name,
-		label: registration.label,
-		content: registration.content
-	} )
-}
-
-/**
- * Renders slot content captured from a {@link CodeTab} child inside a {@link CdxTab} panel.
- */
-const CodeTabPanel = defineComponent( {
-	name: 'CodeTabPanel',
-	props: {
-		render: {
-			type: Function as PropType<() => VNode[]>,
-			required: true
+	for ( const node of useSlotContents( slots.default ) ) {
+		if ( typeof node === 'string' ) {
+			continue
 		}
-	},
-	setup( props ) {
-		return () => props.render()
-	}
-} )
 
-provide( 'code-tabs:register', registerTab )
+		const label = node.props?.label
+		const content = readTabContent( node )
+
+		if ( typeof label !== 'string' || !content ) {
+			continue
+		}
+
+		// An all-punctuation label slugs to '', which CdxTabs drops as a falsy name.
+		entries.push( { name: slugger.slug( label ) || slugger.slug( 'tab' ), label, content } )
+	}
+
+	// Usual causes: a `:::code-tab` with no label, no body, or one colon too few.
+	if ( entries.length === 0 && import.meta.dev ) {
+		console.warn( '[CodeTabs] no :::code-tab children matched — nothing rendered' )
+	}
+
+	return entries
+}
 </script>
 
 <template>
 	<div class="code-tabs">
-		<!-- Mount CodeTab children so they register during setup (SSR-safe). -->
-		<div
-			class="code-tabs__registry"
-			hidden
-		>
-			<slot />
-		</div>
 		<CdxTabs
-			v-if="tabs.length > 0"
+			v-if="codeTabs().length > 0"
 			framed
 			class="code-tabs__tabs"
 		>
 			<CdxTab
-				v-for="tab in tabs"
+				v-for="tab in codeTabs()"
 				:key="tab.name"
 				:name="tab.name"
 				:label="tab.label"
 			>
-				<CodeTabPanel :render="tab.content" />
+				<!--
+					Triggers Vue's "Slot invoked outside of the render function" warning on
+					every hydration. MDCRenderer builds its slot closures by hand
+					(@nuxtjs/mdc MDCRenderer.vue's _renderSlots) without setting `_ctx`, so
+					Vue's normalizeSlot wraps them with ctx=undefined instead of the null it
+					needs to recognize a safely-scoped slot. No invocation style from here
+					avoids the check; it's baked into the closure MDC hands us. Harmless for
+					this static markdown content (nothing reactive inside a panel to lose
+					tracking on).
+				-->
+				<component :is="tab.content" />
 			</CdxTab>
 		</CdxTabs>
 	</div>

@@ -232,8 +232,12 @@
   "oauth-callback-completing-label": "Completing login…",
   "oauth-callback-error-label": "Login failed. Please try logging in again.",
   "search-all-languages-cta": "Search all languages",
+  "search-content-in-progress": "Searching pages",
+  "search-content-unavailable": "Page search is unavailable right now. Try again in a moment.",
   "search-no-locale-results": "No results in {{bidi:$1}} for {{bidi:$2}}.",
   "search-no-results-any-language": "No results found for {{bidi:$1}} in any language.",
+  "search-results-endpoint-deprecated": "Deprecated",
+  "search-results-endpoints-heading": "API endpoints",
   "search-results-locale-heading": "Results in {{bidi:$1}}",
   "section-nav-about-label": "About sections",
   "section-nav-about-title": "About",
@@ -322,5 +326,7 @@
   "shell-collapsed-nav-label": "Collapsed site navigation",
   "shell-collapsed-nav-menu-back-button-label": "Back to site navigation",
   "shell-collapsed-nav-menu-button-label": "Open site navigation menu",
-  "shell-collapsed-nav-menu-overlay-label": "Site navigation menu"
+  "shell-collapsed-nav-menu-overlay-label": "Site navigation menu",
+  "shell-collapsed-search-overlay-close-button-label": "Close search",
+  "shell-collapsed-search-overlay-label": "Site search"
 }

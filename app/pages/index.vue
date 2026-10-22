@@ -5,6 +5,7 @@ import {
 	LANDING_CONTENT_MAX_INLINE_SIZE
 } from '../../config/landingSurfaces'
 import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
+import { provideResolvedContentLocaleFromPage } from '../utils/contentLocaleContext'
 
 /**
  * Renders the platform home / landing page from Nuxt Content.
@@ -30,12 +31,11 @@ const { locale } = useI18n()
 
 const localizedHomePageDataKey = computed( () => `page-home-${ locale.value }` )
 
-const { data: page } = await useAsyncData( localizedHomePageDataKey, async () => {
-	const localizedPageResult = await useLocalizedContentPage( locale.value, '' )
-	return localizedPageResult?.page ?? null
-}, {
-	watch: [ locale ]
-} )
+const { data: page } = await useAsyncData(
+	localizedHomePageDataKey,
+	() => useLocalizedContentPage( locale.value, '' ),
+	{ watch: [ locale ] }
+)
 
 if ( !page.value ) {
 	throw createError( {
@@ -44,6 +44,11 @@ if ( !page.value ) {
 		fatal: true
 	} )
 }
+
+// The fallback chain in useLocalizedContentPage can resolve to a locale other
+// than the interface one; a relative ::include in the page needs the actual
+// resolved locale, not the reader's, so descendants (Include.vue) inject it.
+provideResolvedContentLocaleFromPage( page, locale )
 
 /**
  * Sets landing CSS custom properties from config (AGENTS.md → config/).
