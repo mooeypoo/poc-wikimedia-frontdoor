@@ -329,18 +329,46 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 
 **Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).
 
-**Collapsed search overlay:** The collapsed utility row has room for a search icon but not the 256px field, so the icon opens a full-viewport overlay (`ShellHeaderSearchOverlay`, teleported to `<body>`, **`z-index: 20`** alongside the nav overlay). Mask: **`--background-color-backdrop-light`**. The panel is anchored to the **block-start** edge at full inline size with **`--spacing-100`** padding and **`--background-color-base`**, so a short result list leaves backdrop below and a long one scrolls inside the panel. It holds the `CdxSearchInput` and a quiet **`cdxIconClose`** button on one row, then reuses **`SharedSearchResults`** unchanged. Scroll lock: none, for the reasons given for the nav overlay above.
+**Collapsed search overlay:** The collapsed utility row has room for a search icon but not the 256px field, so the icon opens a full-viewport overlay (`ShellHeaderSearchOverlay`, teleported to `<body>`, **`z-index: 20`** alongside the nav overlay). Mask: **`--background-color-backdrop-light`**. The panel is anchored to the **block-start** edge at full inline size with **`--spacing-100`** padding and **`--background-color-base`**, so a short result list leaves backdrop below and a long one scrolls inside the panel. It mounts **`ShellHeaderGlobalSearch`** (`variant="overlay"`) with a quiet **`cdxIconClose`** on the field row. Scroll lock: none, for the reasons given for the nav overlay above.
 
 | Overlay element | Token / behaviour |
 |-----------------|-------------------|
 | Field | Autofocused on open, so the keyboard is ready without a second tap; placeholder reuses `header-search-placeholder` |
 | Close control | Quiet `CdxButton` + **`cdxIconClose`**; `aria-label` from `shell-collapsed-search-overlay-close-button-label`. Present because a full-viewport panel can cover the backdrop entirely, and a phone keyboard has no Escape |
 | Dismiss | Close button, backdrop click, **Escape**, route change, or the utility row expanding past the collapse threshold |
-| Results | `SharedSearchResults` with the same content and endpoint groups the expanded dropdown shows; result links navigate and close the overlay |
+| Results | Same `ShellHeaderGlobalSearch` (`variant="overlay"`) as expanded search — category chips + scroll disclosure |
 
 Focus is not trapped and not restored on close, matching the collapsed nav overlay; see **Accessibility (AA)** under Open questions.
 
 **Source:** `app/composables/useShellCollapsedSearchOverlay.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `i18n/*` (`shell-collapsed-search-overlay-*`).
+
+### Global search design prototype (`design-global-search`)
+
+**Branch:** `design-global-search`, stacked on PR [#66](https://github.com/mooeypoo/poc-wikimedia-frontdoor/pull/66). Do **not** push design commits onto #66.
+
+**Sources:** primary PDF *Developer Portal Global Search Requirements (v1 Draft)*; Pure Claude sections from the Consolidated Requirements PDF; Figma [1925:51940](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Developer-Portal-v2?node-id=1925-51940).
+
+**Engine (#66):** `useContentSearch` / `useEndpointSearch`. **Presentation:** `ShellHeaderGlobalSearch`, `GlobalSearchCategoryChips`, knobs in `config/searchPrototype.ts`.
+
+| Behaviour | Prototype choice |
+|-----------|------------------|
+| Component | Composed **`CdxSearchInput` + chips sibling + `CdxMenu`** (`renderInPlace`). `CdxTypeaheadSearch` / `CdxMenu` have **no header slot** for chips (UI-01 / OQ23) — chips sit above the Menu inside our panel. Codex exception #15 (`ARCHITECTURE.md`): Menu root **`position: static`** so the panel body keeps height |
+| Keyboard | ArrowUp/Down/Home/End/Enter/Escape via **`menu.delegateKeyNavigation()`** (Codex input-with-menu pattern); Space stays in the query |
+| Chips | All results / API endpoints / Documentation with counts; **accessible names always include “results”** (`search-category-*-accessible` for short visible labels) |
+| Chips scroll edge | On list scroll, chips get **`border-block-end`** (`--border-color-subtle`). Listener is on Codex **`.cdx-menu__listbox`** (Menu owns overflow when `visibleItemLimit` is set — scroll does not bubble to the panel body) |
+| Search field name | Placeholder and `aria-label` share **`header-search-placeholder`** (“Search the developer portal”) so VoiceOver does not concatenate two different strings |
+| Results panel | **`role="region"`** named **`search-results-panel-label`** (“Results”) — **not** `role="dialog"` (panel is non-modal; dialog caused “Dialog with two items”) |
+| Result rows | Codex **`CdxMenu` / `CdxMenuItem`** (`toCodexMenuEntries`); English fallback as a **Menu group** label; no plain `url` on items (SPA `navigateTo`); endpoint HTTP method via `supportingText` + Menu default slot (method before title — stock Codex order is after) |
+| English group label | **Uppercase** via CSS on `.cdx-menu__group__label` (Figma). Banana source must keep diacritics (`interface-language-en` es → **Inglés**) so display is **RESULTADOS EN INGLÉS**, not unaccented caps |
+| All view | Endpoints + UI-locale docs **mixed by normalised relevance**; English docs after divider |
+| Languages | UI language + English fallback divider (“Results in English”); divider always peeks into the first disclosure window when English-only hits exist; all-languages CTA hidden |
+| Disclosure | 7 visible rows, load-more chunks of 7 (tier-aware; reserves ≥1 English row when fallbacks exist; Menu `load-more` when the slice can scroll) |
+| After activate | Client navigation focuses the hash heading or page `h1` (`focusNavigationTarget` via `router.options.ts`) so focus does not stay in header chrome |
+| Snippets | Plain text (~120); no `v-html` |
+| Empty category | Category-aware banana copy: Documentation / All include **interface language** (“No documentation results for '{query}' in {language}.”); query bold + `<bdi>`; endpoints omit language (English-only index). Keys `search-no-results-{all,documentation,endpoints}` |
+| Endpoint URLs | PR #66 deep links (sticky project deferred — T440630) |
+
+**Accessibility (global search):** Chip `aria-label`s must keep the word “results”. Field name must not duplicate placeholder. Results chrome is a **region**, not a dialog. Combobox ARIA on the input (`aria-controls` / `aria-expanded` / `aria-activedescendant`) tracks `CdxMenu` highlight. Activating a result must move focus to the destination title/section (router scroll + focus helper). **Open question:** Explorer endpoint hits — focusing Scalar’s operation heading is DOM-fragile; today focus falls back to the explorer page `h1` when there is no content heading id.
 
 **Utility row alignment:** Utility controls are grouped at the **inline-end** in `ShellHeaderUtilityActions`. Expanded spacing: **16px** search→preferences; **8px** between preferences, language, and Login/account. Brand and utilities are vertically centered.
 
@@ -899,7 +927,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 
 | Commit | Summary | Design area |
 |--------|---------|-------------|
-| *(uncommitted)* | Collapsed header search overlay | Search icon below the **560px** collapse threshold opens `ShellHeaderSearchOverlay` (teleported, backdrop-light, block-start panel) instead of doing nothing; autofocused field + `cdxIconClose` close button; reuses `SharedSearchResults` |
+| *(uncommitted)* | Collapsed header search overlay | Search icon below the **560px** collapse threshold opens `ShellHeaderSearchOverlay` (teleported, backdrop-light, block-start panel) instead of doing nothing; autofocused field + `cdxIconClose` close button; mounts `ShellHeaderGlobalSearch` (`variant="overlay"`) |
 | *(uncommitted)* | Explorer Meta-Wiki project option | Fourth Project combobox option (`explorer-project-meta` → `metawiki`); Language combobox greyed out as for Commons / Wikidata; no test wiki mapped → caution write-request warning |
 | *(uncommitted)* | Explorer natural-height Scalar + Test Request UI exploration | Remove sticky faux-iframe shell; page scroll scrolls specs; Test Request: full-shell exit, 40px gutter, close control in gutter, exploratory **4px** dialog radius; shell clamp to dialog `scrollHeight` + gutter (scoped clip; `height: auto` overlay) so scroll cannot continue into specs |
 | *(uncommitted)* | Header Prototype InfoChip | Label-only warning `CdxInfoChip` after brand lockup (`brand-prototype-chip-label`; `--spacing-50`; icon hidden; Figma 1238:24310) + `v-tooltip` (`brand-prototype-chip-tooltip`) |
@@ -975,7 +1003,7 @@ Mapping of notable commits to design areas (newest first among design-only work)
 1. **Wire content section navigation** to real content routes (replace `href="#"` placeholders and prototype active map on non-explorer pages).
 2. **Align body content width with header lock** — confirm whether main/end columns should also lock at 1440px or stay fluid until Codex desktop-wide.
 3. **Wire explorer side nav** to real doc routes or in-page anchors.
-4. **Implement search** in header (Nuxt Content FTS5 per `ARCHITECTURE.md`).
+4. **Global search IA / chrome** — `design-global-search` on PR #66: composed SearchInput + chips + Menu (Typeahead has no chip header); All-view ordering / section-level FTS / sticky project (T440630) / no-JS still open. See prototype section above.
 5. **Opt-in filters (remaining):** **Module** visibility for beta prefixes and `*-internal` path segments is wired (`useExplorerOptInFilteredModules`). Still open: filter individual **endpoints** inside a selected OpenAPI spec when beta/internal checkboxes change.
 6. **Mobile explorer** — endpoint list is Scalar’s native sidebar inside the reference panel; remaining mobile polish may still evolve.
 7. **Reduce full reload** at explorer boundary if Nuxt/Scalar SPA transitions become stable without DOM bleed.
@@ -1008,7 +1036,8 @@ Mapping of notable commits to design areas (newest first among design-only work)
 | Header brand | `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/WikimediaLogoMark.vue`, `public/images/developer-portal-logo-mark.svg`, `config/brandTypography.ts`, `public/fonts/montserrat/`, `nuxt.config.ts` (`app.head` brand font inject) |
 | Header chrome | `app/layouts/default.vue`, `app/components/shared/ShellHeaderBrand.vue`, `app/components/shared/ShellHeaderUtilityActions.vue`, `app/components/shared/ShellPrimaryNav.vue`, `config/headerChrome.ts` |
 | Header utility collapse | `config/headerChrome.ts`, `app/composables/useHeaderUtilityCollapse.ts`, `app/composables/useShellHeaderUtilityMenu.ts` |
-| Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/composables/useOverlayDismissal.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue`, `app/components/shared/SearchResults.vue` |
+| Collapsed search overlay | `app/composables/useShellCollapsedSearchOverlay.ts`, `app/composables/useOverlayDismissal.ts`, `app/components/shared/ShellHeaderSearchOverlay.vue` |
+| Global search prototype | `config/searchPrototype.ts`, `app/composables/useGlobalSearchPanel.ts`, `app/utils/globalSearchPanel.ts` (`toCodexMenuEntries`), `ShellHeaderGlobalSearch.vue` (`CdxSearchInput` + chips + `CdxMenu`; Codex exception #15), `GlobalSearchCategoryChips.vue`, `app/utils/focusNavigationTarget.ts` (post-nav focus), `i18n/*` (`search-*`, `interface-language-*` with diacritics), `tests/globalSearchPanel.test.mjs`, `tests/focusNavigationTarget.test.mjs` |
 | Header Codex overrides | `app/assets/css/shell-primary-nav-overrides.css` |
 | Codex direction CSS | `nuxt.config.ts` (`codex.style-bidi.css`) — see `ARCHITECTURE.md` → RTL and BiDi |
 | i18n (section nav) | `i18n/en.json`, `i18n/qqq.json` (`section-nav-*`, `section-nav-site-label`) |

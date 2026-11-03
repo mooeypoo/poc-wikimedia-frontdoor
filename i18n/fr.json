@@ -299,5 +299,18 @@
   "shell-collapsed-nav-label": "Navigation du site reduite",
   "shell-collapsed-nav-menu-back-button-label": "Retour a la navigation du site",
   "shell-collapsed-nav-menu-button-label": "Ouvrir le menu de navigation du site",
-  "shell-collapsed-nav-menu-overlay-label": "Menu de navigation du site"
+  "shell-collapsed-nav-menu-overlay-label": "Menu de navigation du site",
+  "search-category-all": "Tous les résultats ($1)",
+  "search-category-documentation": "Documentation ($1)",
+  "search-category-documentation-accessible": "Résultats de documentation ($1)",
+  "search-category-endpoints": "Points de terminaison de l'API ($1)",
+  "search-category-endpoints-accessible": "Résultats de points de terminaison de l'API ($1)",
+  "search-category-group-label": "Catégories de résultats",
+  "search-input-accessible-label": "Rechercher dans le portail des developpeurs",
+  "search-no-results-all": "Aucun résultat pour « $1 » en $2.",
+  "search-no-results-documentation": "Aucun résultat de documentation pour « $1 » en $2.",
+  "search-no-results-endpoints": "Aucun résultat d’endpoint d’API pour « $1 ».",
+  "search-no-results-for-query": "Aucun résultat pour « $1 » en $2.",
+  "search-results-panel-label": "Résultats",
+  "search-retry-label": "Réessayer"
 }

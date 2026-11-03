@@ -1,9 +1,15 @@
 import type { Ref } from 'vue'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../config/languages'
 import { contentCollectionForLocale } from '../../config/contentCollections'
-import { dropDuplicateChainDocuments, resolveContentLocaleChain } from '../utils/contentLocalePaths'
+import {
+	contentIdToUrl,
+	dropDuplicateChainDocuments,
+	resolveContentLocaleChain
+} from '../utils/contentLocalePaths'
 import { escapeFtsSnippetMarkup } from '../utils/searchSnippetMarkup'
 import { CONTENT_LOCALES } from '#build/content-locales'
+
+export { contentIdToUrl }
 
 /**
  * Mirrors the shape of a Nuxt Content FTS5 search result.
@@ -14,6 +20,11 @@ export interface ContentSearchResult {
 	id: string
 	title: string
 	content: string
+	/**
+	 * FTS5 BM25 rank from Nuxt Content (`ORDER BY rank`). Smaller is more
+	 * relevant. Optional because older callers may omit it; missing ranks sort last.
+	 */
+	rank?: number
 	snippets?: {
 		content?: string
 	}
@@ -30,32 +41,6 @@ export interface LocaleResultGroup {
 
 /** Minimum query length before a search is issued. */
 const MIN_QUERY_LENGTH = 2
-
-/**
- * Maps a Nuxt Content FTS result id to a navigable URL path.
- *
- * With @nuxtjs/i18n prefix_except_default strategy the default locale ('en')
- * has no URL prefix. All other locales keep their prefix.
- *
- * @param resultId      - FTS id such as '/en/about' or '/fr/about#section'.
- * @param defaultLocale - The locale whose URL has no prefix (default: 'en').
- * @returns URL path such as '/about' or '/fr/about#section'.
- */
-export function contentIdToUrl( resultId: string, defaultLocale: string = 'en' ): string {
-	const [ pathPart = '', hashPart ] = resultId.split( '#' )
-	const hash = hashPart !== undefined ? `#${ hashPart }` : ''
-	const cleanPath = pathPart.startsWith( '/' ) ? pathPart.slice( 1 ) : pathPart
-	const slashIndex = cleanPath.indexOf( '/' )
-
-	if ( slashIndex === -1 ) {
-		// Root page for a locale, e.g. '/en' → '/' or '/fr' → '/fr'
-		return cleanPath === defaultLocale ? `/${ hash }` : `/${ cleanPath }${ hash }`
-	}
-
-	const localeCode = cleanPath.slice( 0, slashIndex )
-	const rest = cleanPath.slice( slashIndex ) // includes leading slash
-	return localeCode === defaultLocale ? `${ rest }${ hash }` : `/${ localeCode }${ rest }${ hash }`
-}
 
 /**
  * Performs full-text search over per-locale Nuxt Content collections

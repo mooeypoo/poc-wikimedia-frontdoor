@@ -1,7 +1,9 @@
 /**
  * Escaping for the two snippet strings the search panel renders as HTML.
  *
- * Both reach `v-html` in `SearchResults.vue`, and both carry text this project
+ * Legacy `SearchResults.vue` rendered these via `v-html`; the composed global
+ * search panel (`ShellHeaderGlobalSearch`) strips tags to plain text instead.
+ * Escaping still matters wherever markup is kept. Both builders carry text this project
  * does not author: page content imported from wiki sources, and operation
  * descriptions from upstream OpenAPI specs. Neither arrives escaped, so it
  * happens here.

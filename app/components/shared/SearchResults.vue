@@ -2,6 +2,12 @@
 import { CdxButton, CdxMessage, CdxProgressBar } from '@wikimedia/codex'
 import { getLanguageByCode } from '../../../config/languages'
 import {
+	SEARCH_PROTOTYPE_ENDPOINT_GROUP_PLACEMENT,
+	SEARCH_PROTOTYPE_RESULT_DENSITY,
+	SEARCH_PROTOTYPE_SHOW_ENDPOINT_METHOD,
+	SEARCH_PROTOTYPE_SHOW_ENDPOINT_PATH
+} from '../../../config/searchPrototype'
+import {
 	contentIdToUrl,
 	type LocaleResultGroup
 } from '~/composables/useContentSearch'
@@ -24,13 +30,13 @@ import type { EndpointSearchResult } from '~/utils/endpointSearch'
  * still in flight gets a progress bar and a failed one gets an error message,
  * so neither is reported as a search that found nothing.
  *
- * Above all of them, when the query matches any REST API operations, an
- * "API endpoints" group from useEndpointSearch — each result a deep link into
- * the community API Explorer at that exact operation. It leads because it is
- * capped and high-precision (every query token must match), so it never floods
- * the panel, and because a query that matches an endpoint is usually an explicit
- * API intent. Endpoint text is English-only and locale-independent, so it sits
- * outside the locale partitioning and renders once in every mode.
+ * When the query matches any REST API operations, an "API endpoints" group from
+ * useEndpointSearch renders as a separate labelled block — each result a deep
+ * link into the community API Explorer at that exact operation. Endpoint text
+ * is English-only and locale-independent, so it sits outside locale partitioning
+ * and renders once in every mode. Placement relative to documentation results
+ * is a design-prototype knob (`config/searchPrototype.ts`); PR #66 defaults to
+ * leading the panel because the group is capped and high-precision.
  *
  * Emits result-select when the user activates a result link so the parent can
  * close the search panel. Emits activate-all-locales from the no-locale CTA.
@@ -166,167 +172,228 @@ const shouldShowNoLocaleResults = computed(
 const shouldShowNoResultsAnyLanguage = computed(
 	() => props.allLocaleResultGroups.length === 0 && !hasEndpointResults.value && isContentSearchSettled.value
 )
+
+// Design-prototype presentation knobs — flip in config/searchPrototype.ts.
+const endpointGroupPlacement = SEARCH_PROTOTYPE_ENDPOINT_GROUP_PLACEMENT
+const showEndpointMethod = SEARCH_PROTOTYPE_SHOW_ENDPOINT_METHOD
+const showEndpointPath = SEARCH_PROTOTYPE_SHOW_ENDPOINT_PATH
+const panelClass = computed( () => ( {
+	'fd-search-results-panel--endpoints-before': endpointGroupPlacement === 'before-content',
+	'fd-search-results-panel--endpoints-after': endpointGroupPlacement === 'after-content',
+	'fd-search-results-panel--compact': SEARCH_PROTOTYPE_RESULT_DENSITY === 'compact'
+} ) )
 </script>
 
 <template>
-	<!--
-		API endpoints — locale-independent, so it renders identically in both modes
-		and is hoisted above them. Paths and summaries come from upstream OpenAPI
-		specs: external text, hence dir="ltr" on the list and <bdi> on every value.
-	-->
-	<section
-		v-if="hasEndpointResults"
-		class="fd-search-results__endpoints"
-	>
-		<h3 class="fd-search-results__locale-heading">
-			{{ endpointsHeading }}
-		</h3>
-		<ul
-			class="fd-search-results__list"
-			dir="ltr"
-		>
-			<li
-				v-for="endpointResult in endpointResults"
-				:key="endpointResult.record.deepLink"
-				class="fd-search-results__item"
-			>
-				<!--
-					Any of these scrolling into view queues the explorer bundle, 884 kB
-					for a route nobody picked. Keep the binding: prefetch is Boolean, so
-					a bare prefetch="false" arrives truthy and does nothing.
-				-->
-				<NuxtLink
-					:to="endpointResult.record.deepLink"
-					:prefetch="false"
-					class="fd-search-results__link fd-search-results__link--endpoint"
-					@click="emit( 'result-select', endpointResult.record.deepLink )"
-				>
-					<span class="fd-search-results__endpoint-heading">
-						<bdi class="fd-search-results__endpoint-method">{{ endpointResult.record.method }}</bdi>
-						<bdi class="fd-search-results__title">{{ endpointResultTitle( endpointResult.record ) }}</bdi>
-						<span
-							v-if="endpointResult.record.isDeprecated"
-							class="fd-search-results__endpoint-deprecated"
-						>{{ deprecatedLabel }}</span>
-					</span>
-					<bdi class="fd-search-results__endpoint-path">{{ endpointResult.record.path }}</bdi>
-					<!--
-						Escaped in buildEndpointSnippet, which emits only its own <mark>
-						pairs; the content snippets below are escaped in useContentSearch.
-						Neither source is ours, so neither is trusted at the render site.
-						Operations with no description fall back to the module title this
-						line used to carry.
-					-->
-					<!-- eslint-disable-next-line vue/no-v-html -->
-					<bdi
-						class="fd-search-results__snippet"
-						v-html="endpointResult.snippet"
-					/>
-				</NuxtLink>
-			</li>
-		</ul>
-	</section>
-
-	<!--
-		The first search of a session waits on the whole index build, so without
-		this the panel sits visibly empty for seconds.
-	-->
 	<div
-		v-if="isSearching"
-		class="fd-search-results__searching"
+		class="fd-search-results-panel"
+		:class="panelClass"
 	>
-		<CdxProgressBar :aria-label="searchingLabel" />
-	</div>
-
-	<!--
-		Content search failed, so the panel says so rather than showing an empty
-		result set it never got. Sits outside both modes: what failed is the index,
-		which neither locale partitioning nor the all-languages view changes.
-	-->
-	<CdxMessage
-		v-if="hasSearchError"
-		class="fd-search-results__error"
-		type="error"
-		:inline="true"
-	>
-		{{ searchErrorMessage }}
-	</CdxMessage>
-
-	<div class="fd-search-results">
-		<p
-			v-if="isAllLocalesMode && shouldShowNoResultsAnyLanguage"
-			class="fd-search-results__no-any-language"
-		>
-			{{ noResultsAnyLanguageMessage }}
-		</p>
-
 		<!--
-			Ahead of the groups, not after them: when the active locale found
-			nothing, the groups below are all fallbacks, and this is what explains
-			why the reader is looking at another language.
+			API endpoints — locale-independent. Placement relative to documentation
+			results is controlled by SEARCH_PROTOTYPE_ENDPOINT_GROUP_PLACEMENT (flex
+			order). Paths and summaries come from upstream OpenAPI specs: external
+			text, hence dir="ltr" on the list and <bdi> on every value.
 		-->
-		<div
-			v-if="!isAllLocalesMode && shouldShowExpandLocalesCta"
-			class="fd-search-results__no-locale"
-		>
-			<p
-				v-if="shouldShowNoLocaleResults"
-				class="fd-search-results__no-locale-message"
-			>
-				{{ noLocaleResultsMessage }}
-			</p>
-			<!-- No v-if: the wrapper above is already gated on this CTA's own condition. -->
-			<CdxButton
-				class="fd-search-results__cta"
-				weight="quiet"
-				@click="emit( 'activate-all-locales' )"
-			>
-				{{ allLanguagesCta }}
-			</CdxButton>
-		</div>
-
 		<section
-			v-for="group in displayedGroups"
-			:key="group.locale"
-			class="fd-search-results__locale-group"
+			v-if="hasEndpointResults"
+			class="fd-search-results__endpoints"
 		>
-			<h3
-				v-if="showGroupHeadings"
-				class="fd-search-results__locale-heading"
-			>
-				{{ localeHeading( group.locale ) }}
+			<h3 class="fd-search-results__locale-heading">
+				{{ endpointsHeading }}
 			</h3>
 			<ul
 				class="fd-search-results__list"
-				:dir="group.dir"
+				dir="ltr"
 			>
 				<li
-					v-for="result in group.results"
-					:key="result.id"
+					v-for="endpointResult in endpointResults"
+					:key="endpointResult.record.deepLink"
 					class="fd-search-results__item"
 				>
+					<!--
+						Any of these scrolling into view queues the explorer bundle, 884 kB
+						for a route nobody picked. Keep the binding: prefetch is Boolean, so
+						a bare prefetch="false" arrives truthy and does nothing.
+					-->
 					<NuxtLink
-						:to="contentIdToUrl( result.id )"
-						class="fd-search-results__link"
-						@click="emit( 'result-select', result.id )"
+						:to="endpointResult.record.deepLink"
+						:prefetch="false"
+						class="fd-search-results__link fd-search-results__link--endpoint"
+						@click="emit( 'result-select', endpointResult.record.deepLink )"
 					>
-						<bdi class="fd-search-results__title">{{ result.title }}</bdi>
+						<span class="fd-search-results__endpoint-heading">
+							<bdi
+								v-if="showEndpointMethod"
+								class="fd-search-results__endpoint-method"
+							>{{ endpointResult.record.method }}</bdi>
+							<bdi class="fd-search-results__title">{{ endpointResultTitle( endpointResult.record ) }}</bdi>
+							<span
+								v-if="endpointResult.record.isDeprecated"
+								class="fd-search-results__endpoint-deprecated"
+							>{{ deprecatedLabel }}</span>
+						</span>
+						<bdi
+							v-if="showEndpointPath"
+							class="fd-search-results__endpoint-path"
+						>{{ endpointResult.record.path }}</bdi>
+						<!--
+							Escaped in buildEndpointSnippet, which emits only its own <mark>
+							pairs; the content snippets below are escaped in useContentSearch.
+							Neither source is ours, so neither is trusted at the render site.
+							Operations with no description fall back to the module title this
+							line used to carry.
+						-->
 						<!-- eslint-disable-next-line vue/no-v-html -->
 						<bdi
-							v-if="result.snippets?.content"
 							class="fd-search-results__snippet"
-							v-html="result.snippets.content"
+							v-html="endpointResult.snippet"
 						/>
 					</NuxtLink>
 				</li>
 			</ul>
 		</section>
+
+		<!--
+			Status + documentation groups share one flex item so endpoint placement
+			moves the whole content block without splitting progress/error from pages.
+		-->
+		<div class="fd-search-results__content-column">
+			<!--
+				The first search of a session waits on the whole index build, so without
+				this the panel sits visibly empty for seconds.
+			-->
+			<div
+				v-if="isSearching"
+				class="fd-search-results__searching"
+			>
+				<CdxProgressBar :aria-label="searchingLabel" />
+			</div>
+
+			<!--
+				Content search failed, so the panel says so rather than showing an empty
+				result set it never got. Sits outside both modes: what failed is the index,
+				which neither locale partitioning nor the all-languages view changes.
+			-->
+			<CdxMessage
+				v-if="hasSearchError"
+				class="fd-search-results__error"
+				type="error"
+				:inline="true"
+			>
+				{{ searchErrorMessage }}
+			</CdxMessage>
+
+			<div class="fd-search-results">
+				<p
+					v-if="isAllLocalesMode && shouldShowNoResultsAnyLanguage"
+					class="fd-search-results__no-any-language"
+				>
+					{{ noResultsAnyLanguageMessage }}
+				</p>
+
+				<!--
+					Ahead of the groups, not after them: when the active locale found
+					nothing, the groups below are all fallbacks, and this is what explains
+					why the reader is looking at another language.
+				-->
+				<div
+					v-if="!isAllLocalesMode && shouldShowExpandLocalesCta"
+					class="fd-search-results__no-locale"
+				>
+					<p
+						v-if="shouldShowNoLocaleResults"
+						class="fd-search-results__no-locale-message"
+					>
+						{{ noLocaleResultsMessage }}
+					</p>
+					<!-- No v-if: the wrapper above is already gated on this CTA's own condition. -->
+					<CdxButton
+						class="fd-search-results__cta"
+						weight="quiet"
+						@click="emit( 'activate-all-locales' )"
+					>
+						{{ allLanguagesCta }}
+					</CdxButton>
+				</div>
+
+				<section
+					v-for="group in displayedGroups"
+					:key="group.locale"
+					class="fd-search-results__locale-group"
+				>
+					<h3
+						v-if="showGroupHeadings"
+						class="fd-search-results__locale-heading"
+					>
+						{{ localeHeading( group.locale ) }}
+					</h3>
+					<ul
+						class="fd-search-results__list"
+						:dir="group.dir"
+					>
+						<li
+							v-for="result in group.results"
+							:key="result.id"
+							class="fd-search-results__item"
+						>
+							<NuxtLink
+								:to="contentIdToUrl( result.id )"
+								class="fd-search-results__link"
+								@click="emit( 'result-select', result.id )"
+							>
+								<bdi class="fd-search-results__title">{{ result.title }}</bdi>
+								<!-- eslint-disable-next-line vue/no-v-html -->
+								<bdi
+									v-if="result.snippets?.content"
+									class="fd-search-results__snippet"
+									v-html="result.snippets.content"
+								/>
+							</NuxtLink>
+						</li>
+					</ul>
+				</section>
+			</div>
+		</div>
 	</div>
 </template>
 
 <style scoped>
+.fd-search-results-panel {
+	display: flex;
+	flex-direction: column;
+}
+
+.fd-search-results-panel--endpoints-before .fd-search-results__endpoints {
+	order: 0;
+}
+
+.fd-search-results-panel--endpoints-before .fd-search-results__content-column {
+	order: 1;
+}
+
+.fd-search-results-panel--endpoints-after .fd-search-results__endpoints {
+	order: 1;
+}
+
+.fd-search-results-panel--endpoints-after .fd-search-results__content-column {
+	order: 0;
+}
+
 .fd-search-results {
 	padding-block: var( --spacing-75 );
+}
+
+.fd-search-results-panel--compact .fd-search-results {
+	padding-block: var( --spacing-50 );
+}
+
+.fd-search-results-panel--compact .fd-search-results__link {
+	padding-block: var( --spacing-25 );
+}
+
+.fd-search-results-panel--compact .fd-search-results__item + .fd-search-results__item {
+	margin-block-start: 0;
 }
 
 .fd-search-results__locale-group + .fd-search-results__locale-group,
@@ -337,14 +404,27 @@ const shouldShowNoResultsAnyLanguage = computed(
 }
 
 /*
- * The endpoints section is a sibling of the results wrapper (not inside it), so
- * it carries its own block padding and the separator that divides it from the
- * content results below.
+ * Endpoint section padding + separator flip with placement so the hairline always
+ * sits between endpoints and documentation, not on the panel edge.
  */
-.fd-search-results__endpoints {
+.fd-search-results-panel--endpoints-before .fd-search-results__endpoints {
 	padding-block-start: var( --spacing-75 );
 	padding-block-end: var( --spacing-150 );
 	border-block-end: 1px solid var( --border-color-subtle );
+}
+
+.fd-search-results-panel--endpoints-after .fd-search-results__endpoints {
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: var( --spacing-75 );
+	border-block-start: 1px solid var( --border-color-subtle );
+}
+
+.fd-search-results-panel--compact.fd-search-results-panel--endpoints-before .fd-search-results__endpoints {
+	padding-block-end: var( --spacing-100 );
+}
+
+.fd-search-results-panel--compact.fd-search-results-panel--endpoints-after .fd-search-results__endpoints {
+	padding-block-start: var( --spacing-100 );
 }
 
 .fd-search-results__link--endpoint {

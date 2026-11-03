@@ -295,5 +295,18 @@
   "shell-collapsed-nav-label": "ناوبری جمع‌شده سایت",
   "shell-collapsed-nav-menu-back-button-label": "بازگشت به ناوبری سایت",
   "shell-collapsed-nav-menu-button-label": "باز کردن منوی ناوبری سایت",
-  "shell-collapsed-nav-menu-overlay-label": "منوی ناوبری سایت"
+  "shell-collapsed-nav-menu-overlay-label": "منوی ناوبری سایت",
+  "search-category-all": "همه نتایج ($1)",
+  "search-category-documentation": "مستندات ($1)",
+  "search-category-documentation-accessible": "نتایج مستندات ($1)",
+  "search-category-endpoints": "نقاط پایانی API ($1)",
+  "search-category-endpoints-accessible": "نتایج نقاط پایانی API ($1)",
+  "search-category-group-label": "دسته‌های نتیجه",
+  "search-input-accessible-label": "جستجو در پورتال توسعه‌دهندگان",
+  "search-no-results-all": "نتیجه‌ای برای '$1' در $2 یافت نشد.",
+  "search-no-results-documentation": "نتیجهٔ مستنداتی برای '$1' در $2 یافت نشد.",
+  "search-no-results-endpoints": "نتیجهٔ نقطهٔ پایانی API برای '$1' یافت نشد.",
+  "search-no-results-for-query": "نتیجه‌ای برای '$1' در $2 یافت نشد.",
+  "search-results-panel-label": "نتایج",
+  "search-retry-label": "تلاش دوباره"
 }

@@ -1,5 +1,9 @@
 import type { RouterConfig } from 'nuxt/schema'
 import { computeHeadingScrollTop } from './utils/computeHeadingScrollTop'
+import {
+	focusNavigationTarget,
+	resolveNavigationFocusTarget
+} from './utils/focusNavigationTarget'
 
 const HASH_TARGET_WAIT_TIMEOUT_MS = 2000
 
@@ -67,12 +71,28 @@ export default {
 			return savedPosition
 		}
 
+		const scrollRoot = document.querySelector<HTMLElement>( '.frontdoor-shell__body-scroll' )
+
 		if ( !to.hash ) {
-			return { left: 0, top: 0 }
+			/*
+			 * No section hash: scroll to top, then move focus to the page title so
+			 * activating a global-search (or other in-app) link does not leave the
+			 * caret in the header chrome. Skipped on savedPosition (Back/Forward).
+			 */
+			if ( scrollRoot ) {
+				scrollRoot.scrollTo( { left: 0, top: 0 } )
+			}
+
+			const pageTitle = await waitForFocusTarget( null )
+			if ( pageTitle ) {
+				focusNavigationTarget( pageTitle )
+			}
+
+			return false
 		}
 
-		const scrollRoot = document.querySelector<HTMLElement>( '.frontdoor-shell__body-scroll' )
-		const headingElement = await waitForHashTarget( decodeHashTarget( to.hash ) )
+		const headingId = decodeHashTarget( to.hash )
+		const headingElement = await waitForHashTarget( headingId )
 
 		if ( !scrollRoot || !headingElement ) {
 			return false
@@ -83,6 +103,41 @@ export default {
 			behavior: to.path === from.path ? 'auto' : 'smooth'
 		} )
 
+		// Match scroll: land keyboard / SR focus on the section heading, not chrome.
+		focusNavigationTarget( headingElement )
+
 		return false
 	}
 } satisfies RouterConfig
+
+/**
+ * Waits for a focus target after navigation (hash heading or page `h1`).
+ *
+ * Mirrors {@link waitForHashTarget}: content may paint after the first frame.
+ *
+ * @param headingId - Decoded hash id, or `null` for the page title fallback.
+ * @returns The element to focus, or `null` if nothing appears in time.
+ */
+function waitForFocusTarget( headingId: string | null ): Promise<HTMLElement | null> {
+	return new Promise( ( resolve ) => {
+		const deadline = Date.now() + HASH_TARGET_WAIT_TIMEOUT_MS
+
+		const poll = () => {
+			const target = resolveNavigationFocusTarget( headingId )
+
+			if ( target ) {
+				resolve( target )
+				return
+			}
+
+			if ( Date.now() >= deadline ) {
+				resolve( null )
+				return
+			}
+
+			requestAnimationFrame( poll )
+		}
+
+		poll()
+	} )
+}

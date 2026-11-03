@@ -2,7 +2,10 @@ import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import { buildEndpointSearcher, searchEndpoints } from '../utils/endpointSearch'
 import type { EndpointSearcher, EndpointSearchResult } from '../utils/endpointSearch'
-import { ENDPOINT_SEARCH_MIN_QUERY_LENGTH } from '../../config/endpointSearch'
+import {
+	ENDPOINT_SEARCH_MIN_QUERY_LENGTH,
+	ENDPOINT_SEARCH_RESULT_LIMIT
+} from '../../config/endpointSearch'
 
 /**
  * Keyword search over the Wikimedia REST API endpoints, for the site-wide
@@ -21,9 +24,14 @@ import { ENDPOINT_SEARCH_MIN_QUERY_LENGTH } from '../../config/endpointSearch'
  * failed load degrades to "no endpoint results" rather than breaking the panel.
  *
  * @param query - Reactive search query. Results clear when it is shorter than the minimum length.
+ * @param resultLimit - Max hits to return (defaults to `ENDPOINT_SEARCH_RESULT_LIMIT`).
+ *   The global-search prototype passes a larger pool for scroll disclosure.
  * @returns Endpoint results for the current query, and whether the index is currently loading.
  */
-export function useEndpointSearch( query: Ref<string> ) {
+export function useEndpointSearch(
+	query: Ref<string>,
+	resultLimit: number = ENDPOINT_SEARCH_RESULT_LIMIT
+) {
 	const endpointResults = ref<EndpointSearchResult[]>( [] )
 	const isEndpointIndexLoading = ref( false )
 
@@ -83,7 +91,7 @@ export function useEndpointSearch( query: Ref<string> ) {
 			}
 		}
 
-		endpointResults.value = searchEndpoints( searcher, trimmedQuery )
+		endpointResults.value = searchEndpoints( searcher, trimmedQuery, resultLimit )
 	} )
 
 	return {

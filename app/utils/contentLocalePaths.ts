@@ -62,6 +62,32 @@ export function localeFromContentPath( contentPath: string, fallbackLocaleCode: 
 }
 
 /**
+ * Maps a Nuxt Content FTS result id to a navigable URL path.
+ *
+ * With @nuxtjs/i18n prefix_except_default strategy the default locale ('en')
+ * has no URL prefix. All other locales keep their prefix.
+ *
+ * @param resultId - FTS id such as '/en/about' or '/fr/about#section'.
+ * @param defaultLocale - The locale whose URL has no prefix (default: 'en').
+ * @returns URL path such as '/about' or '/fr/about#section'.
+ */
+export function contentIdToUrl( resultId: string, defaultLocale: string = 'en' ): string {
+	const [ pathPart = '', hashPart ] = resultId.split( '#' )
+	const hash = hashPart !== undefined ? `#${ hashPart }` : ''
+	const cleanPath = pathPart.startsWith( '/' ) ? pathPart.slice( 1 ) : pathPart
+	const slashIndex = cleanPath.indexOf( '/' )
+
+	if ( slashIndex === -1 ) {
+		// Root page for a locale, e.g. '/en' → '/' or '/fr' → '/fr'
+		return cleanPath === defaultLocale ? `/${ hash }` : `/${ cleanPath }${ hash }`
+	}
+
+	const localeCode = cleanPath.slice( 0, slashIndex )
+	const rest = cleanPath.slice( slashIndex ) // includes leading slash
+	return localeCode === defaultLocale ? `${ rest }${ hash }` : `/${ localeCode }${ rest }${ hash }`
+}
+
+/**
  * Locale-independent identity of a content search result.
  *
  * Nuxt Content's FTS ids are locale-prefixed paths (`/en/about`,

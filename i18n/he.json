@@ -299,5 +299,18 @@
   "shell-collapsed-nav-label": "ניווט באתר מכווץ",
   "shell-collapsed-nav-menu-back-button-label": "חזרה לניווט באתר",
   "shell-collapsed-nav-menu-button-label": "פתיחת תפריט הניווט באתר",
-  "shell-collapsed-nav-menu-overlay-label": "תפריט ניווט באתר"
+  "shell-collapsed-nav-menu-overlay-label": "תפריט ניווט באתר",
+  "search-category-all": "כל התוצאות ($1)",
+  "search-category-documentation": "תיעוד ($1)",
+  "search-category-documentation-accessible": "תוצאות תיעוד ($1)",
+  "search-category-endpoints": "נקודות קצה של ה־API ($1)",
+  "search-category-endpoints-accessible": "תוצאות נקודות קצה של ה־API ($1)",
+  "search-category-group-label": "קטגוריות תוצאות",
+  "search-input-accessible-label": "חיפוש בפורטל המפתחים",
+  "search-no-results-all": "אין תוצאות עבור '$1' ב$2.",
+  "search-no-results-documentation": "אין תוצאות תיעוד עבור '$1' ב$2.",
+  "search-no-results-endpoints": "אין תוצאות נקודות קצה של API עבור '$1'.",
+  "search-no-results-for-query": "אין תוצאות עבור '$1' ב$2.",
+  "search-results-panel-label": "תוצאות",
+  "search-retry-label": "ניסיון חוזר"
 }
