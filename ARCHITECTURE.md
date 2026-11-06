@@ -1183,7 +1183,7 @@ Presentation lives in `ShellHeaderGlobalSearch` / `GlobalSearchCategoryChips` on
 
 **Composition (not TypeaheadSearch).** `CdxTypeaheadSearch` and `CdxMenu` expose **no header slot** for category chips — only a selectable `footer` item, `pending` / `no-results` slots, and optional **menu groups** (text label + items). The prototype therefore composes:
 
-1. `CdxSearchInput` (combobox ARIA: `aria-controls` / `aria-expanded` / `aria-activedescendant`; `dir="auto"`)
+1. `CdxSearchInput` (`clearable`; combobox ARIA: `aria-controls` / `aria-expanded` / `aria-activedescendant`; `dir="auto"`; placeholder / `aria-label` = banana `header-search-placeholder` — “Search”)
 2. A panel `role="region"` labeled `search-results-panel-label` (“Results”)
 3. Category chips as a **sibling above** the menu (not inside it) — `GlobalSearchCategoryChips` radiogroup
 4. In-place `CdxMenu` (`renderInPlace: true`) with floating chrome stripped so the panel owns border/shadow (**Codex exception #15**)

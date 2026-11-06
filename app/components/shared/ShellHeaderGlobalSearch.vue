@@ -467,6 +467,7 @@ function handleLoadMore(): void {
 			class="shell-header-global-search__input"
 			dir="auto"
 			:use-button="false"
+			:clearable="true"
 			:placeholder="searchFieldLabel"
 			:aria-label="searchFieldLabel"
 			role="combobox"

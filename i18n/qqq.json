@@ -202,7 +202,7 @@
   "header-login-label": "Text for the Log in link in the header. Starts the Wikimedia OAuth login flow.",
   "header-logout-label": "Text for the Log out link in the header, shown when a user is logged in.",
   "header-search-button-label": "Accessible label for the collapsed header search icon button.",
-  "header-search-placeholder": "Placeholder and accessible name for the header global search field. Must match what screen readers announce — do not pair a different aria-label (VoiceOver concatenates both).",
+  "header-search-placeholder": "Placeholder and accessible name for the header global search field (short “Search” / locale equivalent). Must match what screen readers announce — do not pair a different aria-label (VoiceOver concatenates both).",
   "header-settings-label": "Accessible label for the header settings button prototype.",
   "header-utility-menu-label": "Accessible label for the collapsed header utility menu button (settings, language, log in).",
   "interface-language-en": "Name of the English language, used in search result headings (including the uppercase “Results in …” Menu group). Keep correct diacritics (e.g. Spanish Inglés) — CSS text-transform: uppercase must not be “helped” by stripping accents. Locales without this message fall back to the language catalog autonym.",

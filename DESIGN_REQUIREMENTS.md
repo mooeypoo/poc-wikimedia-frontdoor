@@ -356,7 +356,7 @@ Focus is not trapped and not restored on close, matching the collapsed nav overl
 | Keyboard | ArrowUp/Down/Home/End/Enter/Escape via **`menu.delegateKeyNavigation()`** (Codex input-with-menu pattern); Space stays in the query |
 | Chips | All results / API endpoints / Documentation with counts; **accessible names always include “results”** (`search-category-*-accessible` for short visible labels) |
 | Chips scroll edge | On list scroll, chips get **`border-block-end`** (`--border-color-subtle`). Listener is on Codex **`.cdx-menu__listbox`** (Menu owns overflow when `visibleItemLimit` is set — scroll does not bubble to the panel body) |
-| Search field name | Placeholder and `aria-label` share **`header-search-placeholder`** (“Search the developer portal”) so VoiceOver does not concatenate two different strings |
+| Search field name | Placeholder and `aria-label` share **`header-search-placeholder`** (“Search”) so VoiceOver does not concatenate two different strings; **`clearable`** on `CdxSearchInput` |
 | Results panel | **`role="region"`** named **`search-results-panel-label`** (“Results”) — **not** `role="dialog"` (panel is non-modal; dialog caused “Dialog with two items”) |
 | Result rows | Codex **`CdxMenu` / `CdxMenuItem`** (`toCodexMenuEntries`); English fallback as a **Menu group** label; no plain `url` on items (SPA `navigateTo`); endpoint HTTP method via `supportingText` + Menu default slot (method before title — stock Codex order is after) |
 | English group label | **Uppercase** via CSS on `.cdx-menu__group__label` (Figma). Banana source must keep diacritics (`interface-language-en` es → **Inglés**) so display is **RESULTADOS EN INGLÉS**, not unaccented caps |
