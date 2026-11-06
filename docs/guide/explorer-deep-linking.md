@@ -21,11 +21,22 @@ For the community Explorer, meaningful state consists of:
 
 All of this state should be expressible in the URL. A shared link should reconstruct the full view for the recipient without requiring them to make any selections.
 
-## The hash is ours to use
+## Who owns the hash
 
-One important early decision: the Explorer does not use Scalar's native hash routing. Scalar has its own mechanism for encoding the focused operation in the URL hash, but it has known reliability issues (it can drop the hash during scroll events). The Explorer instead scrolls imperatively via a focus engine that translates an operation identifier to Scalar's internal navigation id at runtime.
+One important early decision: the Explorer did not use Scalar's native hash routing. Scalar has its own mechanism for encoding the focused operation in the URL hash, but it has known reliability issues (it can drop the hash during scroll events). The Explorer instead scrolled imperatively via a focus engine that translates an operation identifier to Scalar's internal navigation id at runtime.
 
-This means the URL hash on the Explorer route is **not** claimed by Scalar and is free for the application to own. The operation anchor lives in the hash; everything else lives in the path. The two concerns do not conflict.
+**This changed when Scalar's own sidebar became the product UX.** With `EXPLORER_USE_INTERNAL_SCALAR_SIDEBAR` enabled — the shipping build — Scalar's sidebar brings its native hash routing with it: Scalar writes the hash as you scroll and reads it on load to select an operation. Fighting it would mean two writers on one hash, which is the problem the original decision existed to avoid.
+
+So hash ownership is now **mode-dependent**, and the split is worth holding in your head because it is the single most confusing thing about this area:
+
+| | Path (mode, instance, module) | Operation hash |
+|---|---|---|
+| Sidebar on (**shipping**) | ours | Scalar's, in its own format |
+| Sidebar off (module rail) | ours | ours, our slug format |
+
+The path is always ours. In sidebar mode the deep-link composables must never write or strip the operation hash — they preserve it while the path is unchanged and clear it only when the module or instance changes. Our slug anchor and the imperative focus engine still exist, and still apply, but only in the sidebar-off mode.
+
+The practical consequence lands on endpoint search: generated links must spell the operation the way Scalar spells it. See below.
 
 ## Two kinds of links: verbose and quick
 
@@ -104,11 +115,34 @@ Specific cases to handle:
 
 ## Relationship to endpoint search
 
-Endpoint search depends on deep linking, not the other way around. The search index needs to generate a `deepLink` for each operation at index build time, using the same URL format the Explorer uses for verbose links. If the URL format changes, the search index needs to be regenerated.
+Endpoint search depends on deep linking, not the other way around. The search index generates a `deepLink` for each operation at index build time, using the same verbose URL format the Explorer uses. If the URL format changes, the index has to be regenerated — which is why generation is a phase *inside* `generate-module-source-of-truth` rather than a separate script someone can forget.
 
-The module source of truth contains the per-module OpenAPI specs and instance information needed to build the endpoint search index. The index should be generated as part of the same pipeline that generates the module source of truth, so they cannot drift out of sync.
+The user experience is the closure of the loop that makes deep linking valuable beyond sharing: search for "reading list", see an endpoint result, click it, land in the Explorer with that endpoint focused.
 
-Search results for API endpoints should render as direct links to the relevant operation in the Explorer. The user experience is: search for "get article content", see an endpoint result, click it, land in the Explorer with that endpoint focused. This is the closure of the loop that makes deep linking valuable beyond just sharing.
+### The part that surprises people
+
+Because Scalar owns the hash in the shipping build (see "Who owns the hash"), a generated link cannot use our slug anchor — Scalar would ignore it. It has to carry **Scalar's** hash:
+
+```
+/explorer/direct/enwiki/readinglists/v0#GET/lists
+/explorer/direct/enwiki/site/v1#tag/sitemaps/GET/sitemap/{indexId}
+```
+
+Untagged operations are `#{METHOD}{path}`; tagged ones are prefixed `#tag/{slug}/`. The document slug is stripped because the Explorer mounts a single Scalar document.
+
+That looks like a landmine — a third-party format baked into a committed file — so the generator does not reproduce it. It **calls Scalar's own builders** (`createNavigation`, `makeHrefFromId`) against the committed spec. There is no mirrored implementation to fall out of date, and if a Scalar upgrade changes the format, the regenerated index changes visibly and the drift test in `tests/endpointSearchIndex.test.mjs` fails. If you ever see that test fail after a dependency bump, that is what it is telling you.
+
+Two smaller things that follow from the same source of truth:
+
+- Building from Scalar's **navigation tree** rather than from `spec.paths` means operations Scalar hides (`x-internal`, `x-scalar-ignore`) are never indexed, so a result can never point at an operation Scalar will not render.
+- The landing instance comes from the same `resolvePreferredModuleInstance` policy that `/q/` links use, not from the spec-capture instance — otherwise the same module would resolve to different wikis depending on how you got there.
+
+### What is not searchable
+
+- **Internal-gated modules** (`*-internal`). The Explorer hides them unless the user opts in, and actively re-selects away from them, so a result would bounce the user elsewhere on arrival.
+- **Enterprise endpoints.** Out of scope, as in the rest of this document.
+- **Modules with no captured spec.** Recorded in the index metadata as `modulesWithoutSpec` rather than silently omitted — absence of a spec is not the same as absence of endpoints.
+- **Anything in a language other than English.** Endpoint text comes from upstream OpenAPI specs, which are English-only. Only the group heading is translated.
 
 ## What the URL grammar should express
 

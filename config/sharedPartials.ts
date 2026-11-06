@@ -3,10 +3,14 @@
  * `::partial{name}` MDC component — including from imported wiki pages, where a
  * placeholder is converted to `::partial{name}` at fetch time (ADR §11).
  *
- * This list is a **security boundary**: because a partial name can originate
- * from wiki text, only names registered here resolve to content. There is no
- * path derivation from the name, so a wiki reference cannot select an arbitrary
- * content path or traverse the tree.
+ * This list is a **security boundary** for the `::partial{name}` MDC
+ * component specifically: because a partial name can originate from wiki
+ * text, only names registered here resolve to content. There is no path
+ * derivation from the name, so a wiki reference cannot select an arbitrary
+ * content path or traverse the tree. It does not restrict what
+ * `server/api/content-document.get.ts` can be asked for directly: that
+ * endpoint is unauthenticated by design, same as `content-page.get.ts`, and
+ * @nuxt/content already publishes each collection's full dump publicly.
  *
  * Authored partial files live at `content/_partials/shared/<name>.md`
  * (committed, hand-maintained, never fetched or wiped). They are ordinary
