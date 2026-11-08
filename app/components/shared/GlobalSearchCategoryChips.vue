@@ -30,14 +30,16 @@ const groupLabel = computed( () => $bananaI18n( 'search-category-group-label' ) 
 
 /**
  * Visible chip labels stay Figma-short; accessible names always include the
- * word “results” so VoiceOver announces category purpose consistently
- * (All already says “results”; endpoints / documentation need the SR form).
+ * word “results” so VoiceOver announces category purpose consistently.
+ * Every Figma-short visible label has a separate screen-reader form.
  */
 const chips = computed( () => [
 	{
 		id: 'all' as const,
 		label: $bananaI18n( 'search-category-all', { $1: String( props.allCount ) } ),
-		accessibleLabel: $bananaI18n( 'search-category-all', { $1: String( props.allCount ) } )
+		accessibleLabel: $bananaI18n( 'search-category-all-accessible', {
+			$1: String( props.allCount )
+		} )
 	},
 	{
 		id: 'endpoints' as const,
