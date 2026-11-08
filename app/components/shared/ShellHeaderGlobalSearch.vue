@@ -626,6 +626,15 @@ function handleLoadMore(): void {
 	min-inline-size: var( --fd-header-search-input-min-inline-size );
 }
 
+/*
+ * Open menu sits flush under the field (no gap), matching Codex TypeaheadSearch:
+ * join corners use --border-radius-sharp so input + panel read as one surface.
+ */
+.shell-header-global-search--menu-open .shell-header-global-search__input:deep( .cdx-text-input ) {
+	border-end-start-radius: var( --border-radius-sharp );
+	border-end-end-radius: var( --border-radius-sharp );
+}
+
 .shell-header-global-search__panel {
 	position: absolute;
 	inset-block-start: 100%;
@@ -634,7 +643,7 @@ function handleLoadMore(): void {
 	display: flex;
 	flex-direction: column;
 	max-block-size: min( 70vh, 32rem );
-	margin-block-start: var( --spacing-25 );
+	margin-block-start: 0;
 	border: 1px solid var( --border-color-base );
 	border-radius: var( --border-radius-base );
 	background-color: var( --background-color-base );
@@ -642,12 +651,16 @@ function handleLoadMore(): void {
 	overflow: hidden;
 }
 
+.shell-header-global-search--menu-open .shell-header-global-search__panel {
+	border-start-start-radius: var( --border-radius-sharp );
+	border-start-end-radius: var( --border-radius-sharp );
+}
+
 .shell-header-global-search--overlay .shell-header-global-search__panel {
 	position: relative;
 	inset: auto;
 	max-block-size: none;
 	flex: 1 1 auto;
-	margin-block-start: var( --spacing-75 );
 	box-shadow: none;
 }
 

@@ -353,6 +353,7 @@ Focus is not trapped and not restored on close, matching the collapsed nav overl
 | Behaviour | Prototype choice |
 |-----------|------------------|
 | Component | Composed **`CdxSearchInput` + chips sibling + `CdxMenu`** (`renderInPlace`). `CdxTypeaheadSearch` / `CdxMenu` have **no header slot** for chips (UI-01 / OQ23) — chips sit above the Menu inside our panel. Codex exception #15 (`ARCHITECTURE.md`): Menu root **`position: static`** so the panel body keeps height |
+| Open chrome | **No gap** between field and panel. While open, field **block-end** corners and panel **block-start** corners use **`--border-radius-sharp`** (same join as Codex TypeaheadSearch) |
 | Keyboard | ArrowUp/Down/Home/End/Enter/Escape via **`menu.delegateKeyNavigation()`** (Codex input-with-menu pattern); Space stays in the query |
 | Chips | All results / API endpoints / Documentation with counts; **accessible names always include “results”** (`search-category-*-accessible` for short visible labels) |
 | Chips scroll edge | On list scroll, chips get **`border-block-end`** (`--border-color-subtle`). Listener is on Codex **`.cdx-menu__listbox`** (Menu owns overflow when `visibleItemLimit` is set — scroll does not bubble to the panel body) |
