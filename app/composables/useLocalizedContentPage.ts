@@ -1,41 +1,27 @@
-import { buildLocaleCandidates, buildLocaleContentPaths } from '../utils/contentLocalePaths'
-import { getLanguageByCode } from '../../config/languages'
-
-interface LocalizedPageResult {
-	page: Record<string, unknown>
-	resolvedLocale: string
-}
+import type { LocalizedContentPageResponse } from '../../server/api/content-page.get'
 
 /**
  * Resolves a content page from locale-specific markdown paths with fallback.
  *
+ * The walk it used to run here lives in `server/api/content-page.get.ts` now,
+ * because `queryCollection` in a browser pulls down the SQLite engine and the
+ * whole locale dump to read one page. One request covers the entire fallback
+ * chain, so a Catalan reader pays the same round trip an English one does.
+ *
  * @param requestedLocaleCode - Locale selected by the user.
  * @param slugPath - Route slug path without leading slash.
- * @returns Resolved page document and locale that provided it.
+ * @returns The resolved page document, or null when no locale in the chain has one.
  */
 export async function useLocalizedContentPage(
 	requestedLocaleCode: string,
 	slugPath: string
-): Promise<LocalizedPageResult | null> {
-	const selectedLanguage = getLanguageByCode( requestedLocaleCode )
-	const localeCandidates = buildLocaleCandidates(
-		requestedLocaleCode,
-		selectedLanguage?.fallbackChain ?? [ 'en' ]
-	)
-
-	for ( const localeCandidate of localeCandidates ) {
-		const pathCandidates = buildLocaleContentPaths( localeCandidate, slugPath )
-
-		for ( const pathCandidate of pathCandidates ) {
-			const page = await queryCollection( 'content' ).path( pathCandidate ).first()
-			if ( page ) {
-				return {
-					page: page as unknown as Record<string, unknown>,
-					resolvedLocale: localeCandidate
-				}
-			}
+): Promise<Record<string, unknown> | null> {
+	const resolved = await $fetch<LocalizedContentPageResponse>( '/api/content-page', {
+		query: {
+			locale: requestedLocaleCode,
+			slug: slugPath
 		}
-	}
+	} )
 
-	return null
+	return resolved?.page ?? null
 }

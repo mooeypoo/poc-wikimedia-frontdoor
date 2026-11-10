@@ -17,6 +17,7 @@ import {
 	flattenOnThisPageHeadings,
 	type OnThisPageHeading
 } from '../utils/collectOnThisPageHeadings'
+import { computeHeadingScrollTop } from '../utils/computeHeadingScrollTop'
 import { isOnThisPageNavRoute } from '../utils/isOnThisPageNavRoute'
 
 /** Content-root binding accepted by {@link useOnThisPageNav}. */
@@ -196,11 +197,7 @@ export function useOnThisPageNav(
 			return
 		}
 
-		const scrollDelta =
-			headingElement.getBoundingClientRect().top -
-			scrollRoot.getBoundingClientRect().top -
-			16
-		const nextScrollTop = Math.max( 0, scrollRoot.scrollTop + scrollDelta )
+		const nextScrollTop = computeHeadingScrollTop( headingElement, scrollRoot )
 
 		clearJumpScrollSpySuspension()
 		activeHeadingId.value = headingId

@@ -1,10 +1,10 @@
+import { CONTENT_SIDEBAR_MAP } from '#build/content-sidebar-map'
 import {
 	normalizeSidebarFrontmatter,
-	publishContentPageSidebar,
-	type SidebarFrontmatter
+	publishContentPageSidebar
 } from '../composables/useContentPageSidebar'
-import { useLocalizedContentPage } from '../composables/useLocalizedContentPage'
 import { contentLocaleFromPath, stripContentLocalePrefix } from '../utils/contentRoute'
+import { lookupContentPageSidebar } from '../utils/contentSidebarLookup'
 import { isExplorerRoutePath } from '../utils/explorerRoute'
 
 /**
@@ -17,9 +17,14 @@ import { isExplorerRoutePath } from '../utils/explorerRoute'
  * global route middleware guarantees the preference is in place at layout render
  * time on both SSR and client navigation, so there is no post-hydration flash of
  * a reserved-but-empty column. See `docs/content-authoring-guide.md`.
+ *
+ * The field comes from the map `modules/content-sidebar-map.mjs` builds out of
+ * the frontmatter, not from the content collection: global middleware runs in
+ * the browser too, where any `queryCollection` pulls down the SQLite WASM
+ * runtime and the whole collection dump to read one field.
  */
-export default defineNuxtRouteMiddleware( async ( to ) => {
-	// Explorer resolves its own side nav from the path; skip the content query.
+export default defineNuxtRouteMiddleware( ( to ) => {
+	// Explorer resolves its own side nav from the path; skip the lookup.
 	if ( isExplorerRoutePath( to.path ) ) {
 		return
 	}
@@ -33,18 +38,12 @@ export default defineNuxtRouteMiddleware( async ( to ) => {
 		return
 	}
 
-	const slugPath = contentPath === '/' ? '' : contentPath.replace( /^\/+/, '' )
-	const localeCode = contentLocaleFromPath( to.path )
-
-	let sidebar: SidebarFrontmatter
-	try {
-		const result = await useLocalizedContentPage( localeCode, slugPath )
-		sidebar = normalizeSidebarFrontmatter( result?.page?.sidebar )
-	} catch {
-		// A non-content route (or a failed lookup) leaves the preference undefined,
-		// so the shell falls back to path-based section-nav resolution.
-		sidebar = undefined
-	}
-
-	publishContentPageSidebar( to.path, sidebar )
+	// A non-content route resolves to no preference, so the shell falls back to
+	// path-based section-nav resolution.
+	publishContentPageSidebar(
+		to.path,
+		normalizeSidebarFrontmatter(
+			lookupContentPageSidebar( CONTENT_SIDEBAR_MAP, contentLocaleFromPath( to.path ), contentPath )
+		)
+	)
 } )

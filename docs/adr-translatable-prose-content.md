@@ -386,7 +386,8 @@ hidden assumption about Markdown.
 - Locale fallback moves from an import inside the generator to a resolver
   frontdoor supplies through config. That is what keeps the language catalog on
   frontdoor's side of the boundary while still honouring it — a Catalan reader
-  gets Spanish before English, exactly as before.
+  gets Occitan before English, the chain MediaWiki itself returns, exactly as
+  before.
 - This ADR stays here rather than moving into the package. Frontdoor is the
   primary requirement; the packaging is preparation in case a second consumer
   appears. If one does, the mechanism sections travel with the package and this
