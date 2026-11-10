@@ -626,6 +626,11 @@ function handleLoadMore(): void {
 	min-inline-size: var( --fd-header-search-input-min-inline-size );
 }
 
+/* Collapsed overlay must shrink below Codex’s 256px default between mobile margins. */
+.shell-header-global-search--overlay .shell-header-global-search__input:deep( .cdx-text-input ) {
+	min-inline-size: 0;
+}
+
 /*
  * Open menu sits flush under the field (no gap), matching Codex TypeaheadSearch:
  * join corners use --border-radius-sharp so input + panel read as one surface.

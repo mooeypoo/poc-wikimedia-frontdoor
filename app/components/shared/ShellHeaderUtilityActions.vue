@@ -38,9 +38,10 @@ import {
 /**
  * Header utility row — search, settings (color theme), interface language, and session control.
  *
- * Compact mode when the allocated actions track is narrower than the expanded minimum
- * (256px search + siblings). Search becomes an icon button; settings and log in move
- * into a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
+ * Compact mode when the allocated actions track is narrower than the measured
+ * expanded minimum (256px search + live sibling widths + gaps). Search becomes an
+ * icon button that opens `ShellHeaderSearchOverlay`; settings and log in move into
+ * a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
@@ -77,7 +78,17 @@ const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', 
 } )
 
 const actionsRootRef = useTemplateRef<HTMLElement>( 'actionsRootRef' )
-const { isUtilityCollapsed } = useHeaderUtilityCollapse( actionsRootRef )
+const searchWrapperRef = useTemplateRef<HTMLElement>( 'searchWrapperRef' )
+const settingsControlRef = useTemplateRef<HTMLElement>( 'settingsControlRef' )
+const languageControlRef = useTemplateRef<HTMLElement>( 'languageControlRef' )
+const sessionControlRef = useTemplateRef<HTMLElement>( 'sessionControlRef' )
+const { isUtilityCollapsed } = useHeaderUtilityCollapse( {
+	actionsRootRef,
+	searchWrapperRef,
+	settingsControlRef,
+	languageControlRef,
+	sessionControlRef
+} )
 const {
 	isCollapsedSearchOverlayOpen,
 	openCollapsedSearchOverlay,
@@ -372,6 +383,7 @@ function handleOverlayResultSelect(): void {
 	>
 		<div
 			v-show="!isUtilityCollapsed"
+			ref="searchWrapperRef"
 			class="shell-header-utility-actions__search-wrap"
 		>
 			<SharedShellHeaderGlobalSearch
@@ -402,6 +414,7 @@ function handleOverlayResultSelect(): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="settingsControlRef"
 			class="shell-header-utility-actions__settings"
 		>
 			<CdxButton
@@ -446,6 +459,7 @@ function handleOverlayResultSelect(): void {
 		</CdxPopover>
 
 		<div
+			ref="languageControlRef"
 			class="shell-header-utility-actions__language"
 			@focusout="handleLanguageAreaFocusOut"
 			@keydown.escape="closeLanguageLookup"
@@ -489,6 +503,7 @@ function handleOverlayResultSelect(): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="sessionControlRef"
 			class="shell-header-utility-actions__session"
 		>
 			<NuxtLink
