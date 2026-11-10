@@ -15,7 +15,7 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::::landing-section
 ## What would you like to do?
 
-:::navigation-card-grid
+:::navigation-card-grid{columns="3"}
 ::navigation-card{url="/get-started/build-for-communities" title="Build for Wikimedia communities" description="Fetch wiki content, automate edits, and detect vandalism. Learn about hosting tool and bots using Wikimedia infrastructure." supporting-text="Learn about building tools →" leading-icon="userGroup"}
 ::
 
@@ -49,7 +49,7 @@ curl -X GET "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedi
 
 Tools, bots, and application highlights built by the Wikimedia technical community to support and enhance the projects that power free knowledge.
 
-:::navigation-card-grid
+:::navigation-card-grid{columns="3"}
 ::navigation-card{url="https://lexica-tool.toolforge.org/" title="Lexica" description="Simple and accessible editing of lexicographical data on Wikidata for everyone, everywhere." media="/images/landing/app-lexica.png" chips="award:Coolest Tool Award 2026" hide-external-icon}
 ::
 

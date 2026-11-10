@@ -11,7 +11,7 @@ import type { OnThisPageHeading } from '../../utils/collectOnThisPageHeadings'
 import { isolatePickerLabel } from '../../utils/bidiLabel'
 
 /**
- * Header “On this page” quiet MenuButton for viewports below 1280px
+ * Header “On this page” quiet MenuButton for viewports below 1202px
  * (Figma Off-wiki page templates 50:2563).
  *
  * Neutral quiet trigger with expand icon. Each `h2` is a menu group label; the
