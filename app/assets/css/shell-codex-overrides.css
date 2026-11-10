@@ -58,3 +58,109 @@
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
 }
+
+/*
+ * Compact header search and language selection use CdxDialog for modal focus /
+ * body-scroll handling, but their Figma surfaces fill the viewport rather than
+ * using the standard centred dialog. Global CSS is required because CdxDialog
+ * teleports.
+ *
+ * The fixed menu rules also cancel Lookup's Floating UI coordinates. Keep all
+ * directional placement logical; the ArrowPrevious icon mirrors through Codex.
+ *
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #15
+ */
+.cdx-dialog.shell-header-utility-actions__mobile-dialog {
+	inline-size: 100%;
+	block-size: 100%;
+	max-inline-size: none;
+	max-block-size: none;
+	margin: 0;
+	padding: 0;
+	border-width: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.cdx-dialog.shell-header-utility-actions__mobile-dialog .cdx-dialog__header {
+	display: none;
+}
+
+.cdx-dialog.shell-header-utility-actions__mobile-dialog .cdx-dialog__body {
+	display: block;
+	block-size: 100%;
+	min-block-size: 0;
+	padding: 0;
+	overflow: clip;
+}
+
+.shell-header-utility-actions__mobile-selector {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	block-size: 100%;
+	min-block-size: 0;
+	background-color: var( --background-color-base );
+}
+
+.shell-header-utility-actions__mobile-selector-header {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	column-gap: var( --spacing-50 );
+	padding-block-start: var( --spacing-100 );
+	padding-block-end: var( --spacing-75 );
+	padding-inline: var( --spacing-150 );
+	background-color: var( --background-color-base );
+}
+
+.shell-header-utility-actions__mobile-selector-control {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+
+/* Codex defaults to 256px; allow the field to fit between 24px mobile margins. */
+.shell-header-utility-actions__mobile-selector-control .cdx-text-input {
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.shell-header-utility-actions__mobile-search-results {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	padding-inline: var( --spacing-150 );
+	overflow-block: auto;
+	overscroll-behavior-block: contain;
+}
+
+.shell-header-utility-actions__mobile-language-lookup .cdx-menu {
+	position: fixed !important;
+	inset: auto !important;
+	inset-block-start: calc(
+		var( --spacing-100 )
+		+ var( --min-size-interactive-pointer )
+		+ var( --spacing-75 )
+	) !important;
+	inset-block-end: 0 !important;
+	inset-inline: 0 !important;
+	z-index: 1;
+	transform: none !important;
+	visibility: visible !important;
+	inline-size: 100% !important;
+	max-block-size: none !important;
+	max-height: none !important;
+	padding: 0;
+	border-width: 0;
+	border-block-start: var( --border-width-base ) solid var( --border-color-base );
+	border-radius: 0;
+	box-shadow: none;
+	background-color: var( --background-color-base );
+}
+
+.shell-header-utility-actions__mobile-language-lookup .cdx-menu__listbox {
+	block-size: 100%;
+	max-block-size: none !important;
+	overflow-block: auto;
+	overscroll-behavior-block: contain;
+}
