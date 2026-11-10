@@ -1188,9 +1188,13 @@ Presentation lives in `ShellHeaderGlobalSearch` / `GlobalSearchCategoryChips` on
 3. Category chips as a **sibling above** the menu (not inside it) — `GlobalSearchCategoryChips` radiogroup
 4. In-place `CdxMenu` (`renderInPlace: true`) with floating chrome stripped so the panel owns border/shadow (**Codex exception #15**)
 
+**Open chrome (TypeaheadSearch join).** While `.shell-header-global-search--menu-open`, the field and panel sit **flush** (no `margin-block-start`). Field **block-end** corners and panel **block-start** corners use **`--border-radius-sharp`** so the two surfaces read as one — same expanded join as Codex TypeaheadSearch. Closed field keeps Codex default radii.
+
 Keyboard matches Codex Lookup / Typeahead: the input’s `keydown` calls `menu.delegateKeyNavigation()` (Space left for typing). Selection uses `update:selected` / `menu-item-click` → `navigateTo` (menu items omit `url` so Codex does not wrap a full-page `<a>`). English fallback docs are a **Menu group** whose label is the banana “Results in …” heading (`toCodexMenuEntries`). Endpoint rows put the HTTP method in MenuItem `supportingText` and a **default slot** reorders it before the title (Codex stock layout places supportingText after the label) — method in `<bdi dir="ltr">`, titles/descriptions in `<bdi>`.
 
 **All-view ordering.** Endpoints + UI-locale documentation are interleaved by normalised relevance (`mergeByNormalisedRelevance`); English-fallback documentation stays in the trailing Menu group. Cross-locale page dupes are already removed in `useContentSearch` via `dropDuplicateChainDocuments` (per-page identity — multiple matching **sections** of one page remain separate hits). Disclosure is tier-aware (`sliceVisibleSearchTiers`): when English fallbacks exist, ≥1 English row is reserved in the first window so the group label is never buried; Menu `visibleItemLimit` is kept one below the slice when `hasMoreResults` so Codex `load-more` can fire.
+
+**Category chips.** Visible labels stay short: **All** / **API endpoints** / **Documentation** with counts (`search-category-all` → “All ($1)” and locale equivalents — not “All results”). Every chip has a separate `search-category-*-accessible` name that **includes “results”** for screen readers. Selected category persists while the query changes for the mounted search instance; it resets on remount / reload (not `sessionStorage`).
 
 **Chips scroll divider.** When the result list scrolls, chips gain `border-block-end` (`--border-color-subtle`). Codex Menu with `visibleItemLimit` scrolls **`.cdx-menu__listbox`**, not the panel body — scroll does not bubble — so `ShellHeaderGlobalSearch` binds the listener to that listbox (and rebinds when entries / pending / no-results remount it).
 
@@ -1204,7 +1208,7 @@ Keyboard matches Codex Lookup / Typeahead: the input’s `keydown` calls `menu.d
 
 - **One accessible name for the field.** Placeholder and `aria-label` both use banana `header-search-placeholder`. Never ship divergent copy — VoiceOver concatenates both.
 - **Region, not dialog.** `role="dialog"` was wrong (non-modal; VO said “Dialog with two items” for chips + body).
-- **Category chips include “results” for SRs.** Short visible labels; `aria-label` via `search-category-*-accessible`; visible spans `aria-hidden`.
+- **Category chips include “results” for SRs.** Short visible labels (All / API endpoints / Documentation); `aria-label` via `search-category-*-accessible` (e.g. “All results ($1)”); visible spans `aria-hidden`.
 - **Empty category mentions language.** All / Documentation empty states use `search-no-results-all` / `search-no-results-documentation` with `$1` query (bold + `<bdi>`) and `$2` interface language name (`interface-language-*` / autonym, `<bdi>`). Endpoints use `search-no-results-endpoints` (query only — English-only index). Templates use plain `$1`/`$2` and `getInterfaceMessageTemplate` + split helpers (same pattern as write-request warnings) so bold query does not need `v-html`.
 - **Focus follows navigation.** `router.options.ts` `scrollBehavior` + `focusNavigationTarget` focuses the hash heading or content/`main` `h1`. Back/Forward (`savedPosition`) does not steal focus. **QUESTION:** Explorer operation titles inside Scalar remain fragile — non-hash explorer arrivals get the page `h1` only.
 
