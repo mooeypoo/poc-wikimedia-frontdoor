@@ -1,41 +1,68 @@
 <script setup lang="ts">
-import { CdxButton, CdxIcon } from '@wikimedia/codex'
-import { cdxIconClose } from '@wikimedia/codex-icons'
+import { CdxButton, CdxDialog, CdxIcon } from '@wikimedia/codex'
+import { cdxIconArrowPrevious } from '@wikimedia/codex-icons'
 
 /**
- * Full-viewport collapsed header search overlay — backdrop-light mask with a
- * block-start-anchored panel hosting the global-search prototype control.
+ * Full-viewport collapsed header search — Codex `CdxDialog` (requirements §5.1.7.3).
  *
- * Design prototype (`config/searchPrototype.ts`): category chips and scroll
- * disclosure live in `ShellHeaderGlobalSearch` (`variant="overlay"`). Autofocus
- * starts the content-index build via the field’s `focusin` (no expanded-field
- * focus path exists while the utility row is collapsed).
+ * Quiet **Back** (`cdxIconArrowPrevious`, BiDi-aware) abandons the view; the
+ * clearable composed `ShellHeaderGlobalSearch` (`variant="overlay"`) fills the
+ * remaining viewport (chips + Menu; no 7-row visible limit). Autofocus starts
+ * the content-index build via the field’s `focusin`. Close on Back, Escape,
+ * result selection, or the utility row expanding again.
+ *
+ * Global CSS in `shell-codex-overrides.css` restyles the teleported dialog to a
+ * viewport-filling surface (Minerva-inspired compact search).
+ *
+ * @see DESIGN_REQUIREMENTS.md → Collapsed search overlay
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #7 / #15
  */
 defineProps<{
-	/** Accessible name for the dialog region. */
+	/** Accessible name for the dialog (`CdxDialog` title / aria). */
 	overlayLabel: string
-	/** Accessible label for the close button. */
-	closeButtonLabel: string
+	/** Accessible label for the Back control. */
+	backButtonLabel: string
 }>()
 
 const emit = defineEmits<{
-	/** Emitted when the user dismisses the overlay (backdrop click or close button). */
+	/** Emitted when the user dismisses the dialog (Back, Escape, or Dialog close). */
 	close: []
 	/** Emitted when the user activates a search result. */
 	'result-select': []
 }>()
 
 const searchQuery = defineModel<string>( 'searchQuery', { required: true } )
-const panelRef = useTemplateRef<HTMLElement>( 'panelRef' )
+const dialogBodyRef = useTemplateRef<HTMLElement>( 'dialogBodyRef' )
 
 /**
- * Focuses the overlay search field so the keyboard and index build start immediately.
+ * Focuses the dialog search field after layout so the keyboard and index build start.
+ *
+ * CdxDialog’s focus trap may initially land on Back; move focus to the input once
+ * the body is painted (double rAF matches the language Lookup popover wait).
  */
 async function focusSearchField(): Promise<void> {
 	await nextTick()
-	panelRef.value?.querySelector<HTMLInputElement>(
+	await new Promise<void>( ( resolve ) => {
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				resolve()
+			} )
+		} )
+	} )
+	dialogBodyRef.value?.querySelector<HTMLInputElement>(
 		'.shell-header-global-search__input input'
 	)?.focus()
+}
+
+/**
+ * Forwards Dialog `update:open` — closing emits `close` to the parent overlay host.
+ *
+ * @param isOpen - Next open state from `CdxDialog`.
+ */
+function handleDialogOpenUpdate( isOpen: boolean ): void {
+	if ( !isOpen ) {
+		emit( 'close' )
+	}
 }
 
 onMounted( () => {
@@ -44,88 +71,61 @@ onMounted( () => {
 </script>
 
 <template>
-	<Teleport to="body">
+	<CdxDialog
+		:open="true"
+		class="shell-header-search-overlay-dialog"
+		:title="overlayLabel"
+		:hide-title="true"
+		:use-close-button="false"
+		@update:open="handleDialogOpenUpdate"
+	>
 		<div
-			class="shell-header-search-overlay"
-			@click.self="emit( 'close' )"
+			ref="dialogBodyRef"
+			class="shell-header-search-overlay-dialog__selector"
 		>
-			<div
-				ref="panelRef"
-				class="shell-header-search-overlay__panel"
-				role="dialog"
-				aria-modal="true"
-				:aria-label="overlayLabel"
+			<SharedShellHeaderGlobalSearch
+				v-model:search-query="searchQuery"
+				class="shell-header-search-overlay-dialog__search"
+				variant="overlay"
+				@result-select="emit( 'result-select' )"
+				@close="emit( 'close' )"
 			>
-				<div class="shell-header-search-overlay__header">
-					<SharedShellHeaderGlobalSearch
-						v-model:search-query="searchQuery"
-						class="shell-header-search-overlay__search"
-						variant="overlay"
-						@result-select="emit( 'result-select' )"
-						@close="emit( 'close' )"
-					/>
+				<template #leading>
 					<CdxButton
-						class="shell-header-search-overlay__close-button"
+						class="shell-header-search-overlay-dialog__back"
 						weight="quiet"
-						:aria-label="closeButtonLabel"
+						:aria-label="backButtonLabel"
 						@click="emit( 'close' )"
 					>
-						<CdxIcon :icon="cdxIconClose" />
+						<!-- Codex mirrors ArrowPrevious for RTL. -->
+						<CdxIcon :icon="cdxIconArrowPrevious" />
 					</CdxButton>
-				</div>
-			</div>
+				</template>
+			</SharedShellHeaderGlobalSearch>
 		</div>
-	</Teleport>
+	</CdxDialog>
 </template>
 
 <style scoped>
-.shell-header-search-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: 20;
-	display: flex;
-	align-items: flex-start;
-	background-color: var( --background-color-backdrop-light );
-}
-
-.shell-header-search-overlay__panel {
-	box-sizing: border-box;
+/*
+ * Dialog body chrome lives in `shell-codex-overrides.css` (teleported root).
+ * Scoped rules only style content we own inside the dialog body slot.
+ */
+.shell-header-search-overlay-dialog__selector {
 	display: flex;
 	flex-direction: column;
-	inline-size: 100%;
-	max-block-size: 100%;
+	block-size: 100%;
 	min-block-size: 0;
-	overflow-block: auto;
-	overscroll-behavior: contain;
-	/* Match #73 compact-search margins: 16px block-start / 24px inline. */
-	padding-block-start: var( --spacing-100 );
-	padding-block-end: var( --spacing-100 );
-	padding-inline: var( --spacing-150 );
 	background-color: var( --background-color-base );
 }
 
-.shell-header-search-overlay__header {
-	display: flex;
-	align-items: flex-start;
-	gap: var( --spacing-50 );
-	min-inline-size: 0;
-}
-
-.shell-header-search-overlay__search {
+.shell-header-search-overlay-dialog__search {
 	flex: 1 1 auto;
 	min-inline-size: 0;
+	min-block-size: 0;
 }
 
-/*
- * Codex SearchInput defaults to a 256px min — too wide between 24px mobile
- * margins. Overlay must let the field shrink with the viewport.
- */
-.shell-header-search-overlay__search:deep( .cdx-text-input ) {
-	inline-size: 100%;
-	min-inline-size: 0;
-}
-
-.shell-header-search-overlay__close-button {
+.shell-header-search-overlay-dialog__back {
 	flex: 0 0 auto;
 	margin-block-start: var( --spacing-25 );
 }

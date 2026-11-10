@@ -40,8 +40,9 @@ import {
  *
  * Compact mode when the allocated actions track is narrower than the measured
  * expanded minimum (256px search + live sibling widths + gaps). Search becomes an
- * icon button that opens `ShellHeaderSearchOverlay`; settings and log in move into
- * a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
+ * icon button that opens a full-viewport search `CdxDialog`
+ * (`ShellHeaderSearchOverlay`); settings and log in move into a `CdxMenuButton`;
+ * language stays visible as icon + uppercase locale code.
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
@@ -178,8 +179,8 @@ const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 const collapsedSearchOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-search-overlay-label' ) )
-const collapsedSearchOverlayCloseButtonLabel = computed( () =>
-	$bananaI18n( 'shell-collapsed-search-overlay-close-button-label' )
+const collapsedSearchOverlayBackButtonLabel = computed( () =>
+	$bananaI18n( 'shell-collapsed-search-overlay-back-button-label' )
 )
 
 const selectedLanguageCodeLabel = computed( () => {
@@ -407,7 +408,7 @@ function handleOverlayResultSelect(): void {
 			v-if="isCollapsedSearchOverlayOpen"
 			v-model:search-query="searchQuery"
 			:overlay-label="collapsedSearchOverlayLabel"
-			:close-button-label="collapsedSearchOverlayCloseButtonLabel"
+			:back-button-label="collapsedSearchOverlayBackButtonLabel"
 			@close="closeCollapsedSearchOverlay"
 			@result-select="handleOverlayResultSelect"
 		/>

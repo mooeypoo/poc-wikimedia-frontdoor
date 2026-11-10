@@ -309,5 +309,6 @@
   "search-no-results-endpoints": "نتیجهٔ نقطهٔ پایانی API برای '$1' یافت نشد.",
   "search-no-results-for-query": "نتیجه‌ای برای '$1' در $2 یافت نشد.",
   "search-results-panel-label": "نتایج",
-  "search-retry-label": "تلاش دوباره"
+  "search-retry-label": "تلاش دوباره",
+  "shell-collapsed-search-overlay-back-button-label": "بازگشت"
 }

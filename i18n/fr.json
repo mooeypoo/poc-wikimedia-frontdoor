@@ -313,5 +313,6 @@
   "search-no-results-endpoints": "Aucun résultat d’endpoint d’API pour « $1 ».",
   "search-no-results-for-query": "Aucun résultat pour « $1 » en $2.",
   "search-results-panel-label": "Résultats",
-  "search-retry-label": "Réessayer"
+  "search-retry-label": "Réessayer",
+  "shell-collapsed-search-overlay-back-button-label": "Retour"
 }

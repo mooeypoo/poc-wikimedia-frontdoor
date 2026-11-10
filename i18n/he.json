@@ -313,5 +313,6 @@
   "search-no-results-endpoints": "אין תוצאות נקודות קצה של API עבור '$1'.",
   "search-no-results-for-query": "אין תוצאות עבור '$1' ב$2.",
   "search-results-panel-label": "תוצאות",
-  "search-retry-label": "ניסיון חוזר"
+  "search-retry-label": "ניסיון חוזר",
+  "shell-collapsed-search-overlay-back-button-label": "חזרה"
 }

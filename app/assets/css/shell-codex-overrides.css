@@ -58,3 +58,35 @@
 	font-weight: var( --font-weight-normal );
 	line-height: var( --line-height-medium );
 }
+
+/*
+ * Collapsed / mobile global search — full-viewport Codex Dialog (requirements
+ * §5.1.7.3 / Figma mobile search). CdxDialog teleports, so chrome must live here.
+ * Hide the stock title header; the body hosts Back + SearchInput + chips + Menu.
+ * ArrowPrevious mirrors for RTL via Codex.
+ *
+ * @see ARCHITECTURE.md → Codex exceptions (shell chrome) #7 / #15
+ */
+.cdx-dialog.shell-header-search-overlay-dialog {
+	inline-size: 100%;
+	block-size: 100%;
+	max-inline-size: none;
+	max-block-size: none;
+	margin: 0;
+	padding: 0;
+	border-width: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.cdx-dialog.shell-header-search-overlay-dialog .cdx-dialog__header {
+	display: none;
+}
+
+.cdx-dialog.shell-header-search-overlay-dialog .cdx-dialog__body {
+	display: block;
+	block-size: 100%;
+	min-block-size: 0;
+	padding: 0;
+	overflow: clip;
+}

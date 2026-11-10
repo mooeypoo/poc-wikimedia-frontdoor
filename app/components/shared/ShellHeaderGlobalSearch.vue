@@ -44,7 +44,10 @@ interface GlobalSearchCodexMenu {
 }
 
 const props = withDefaults( defineProps<{
-	/** When true, stretch to fill a collapsed overlay instead of a dropdown. */
+	/**
+	 * `dropdown` — header utility field + floating panel (7-row window).
+	 * `overlay` — full-viewport Dialog body (no 7-row cap; chips wrap).
+	 */
 	variant?: 'dropdown' | 'overlay'
 }>(), {
 	variant: 'dropdown'
@@ -57,7 +60,17 @@ const emit = defineEmits<{
 	close: []
 }>()
 
+/**
+ * Optional leading control in overlay mode (quiet Back beside the field).
+ * Unused in dropdown mode.
+ */
+defineSlots<{
+	leading?: () => unknown
+}>()
+
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
+
+const isOverlayVariant = computed( () => props.variant === 'overlay' )
 
 const {
 	hasQuery,
@@ -77,7 +90,9 @@ const {
 	loadMoreResults,
 	resetPanelChrome,
 	flatOrderedItems
-} = useGlobalSearchPanel( searchQuery, $interfaceLocale )
+} = useGlobalSearchPanel( searchQuery, $interfaceLocale, {
+	unboundedDisclosure: isOverlayVariant
+} )
 
 const isMenuOpen = ref( false )
 const isResultsScrolled = ref( false )
@@ -190,8 +205,14 @@ const menuEntries = computed( () =>
  * Codex only wires `load-more` when item count exceeds `visibleItemLimit`.
  * When more results exist beyond the disclosure window, keep limit one below
  * the current slice so the list scrolls and load-more can fire.
+ *
+ * Overlay / Dialog mode (§5.1.7.3) does not use the 7-row window — `null` lets
+ * the Dialog body scroll the full list.
  */
 const menuVisibleItemLimit = computed( (): number | null => {
+	if ( isOverlayVariant.value ) {
+		return null
+	}
 	const itemCount = visiblePrimaryItems.value.length +
 		visibleEnglishFallbackItems.value.length
 	if ( itemCount === 0 ) {
@@ -202,6 +223,9 @@ const menuVisibleItemLimit = computed( (): number | null => {
 	}
 	return SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
 } )
+
+/** Single-line ellipsis on desktop menu; unrestricted wrap in the Dialog (OQ4 / mobile). */
+const hideDescriptionOverflow = computed( () => !isOverlayVariant.value )
 
 const highlightedOptionId = computed( () => {
 	const highlighted = menuRef.value?.getHighlightedMenuItem() ?? null
@@ -253,17 +277,22 @@ function unbindListboxScroll(): void {
 }
 
 /**
- * Binds scroll tracking to Codex Menu's listbox (the real overflow scrollport).
+ * Binds scroll tracking to the active results scrollport.
+ *
+ * Dropdown mode: Codex Menu's listbox (visibleItemLimit window).
+ * Overlay Dialog: the panel body (full list; no 7-row Menu window).
  */
 function bindListboxScroll(): void {
 	unbindListboxScroll()
-	const listbox = panelBodyRef.value?.querySelector( '.cdx-menu__listbox' )
-	if ( !( listbox instanceof HTMLElement ) ) {
+	const scrollport = isOverlayVariant.value ?
+		panelBodyRef.value :
+		panelBodyRef.value?.querySelector( '.cdx-menu__listbox' )
+	if ( !( scrollport instanceof HTMLElement ) ) {
 		return
 	}
-	listboxScrollport = listbox
-	listbox.addEventListener( 'scroll', handlePanelScroll, { passive: true } )
-	isResultsScrolled.value = listbox.scrollTop > 0
+	listboxScrollport = scrollport
+	listboxScrollport.addEventListener( 'scroll', handlePanelScroll, { passive: true } )
+	isResultsScrolled.value = listboxScrollport.scrollTop > 0
 }
 
 /**
@@ -462,23 +491,26 @@ function handleLoadMore(): void {
 		}"
 		@focusout="handleFocusOut"
 	>
-		<CdxSearchInput
-			v-model="searchQuery"
-			class="shell-header-global-search__input"
-			dir="auto"
-			:use-button="false"
-			:clearable="true"
-			:placeholder="searchFieldLabel"
-			:aria-label="searchFieldLabel"
-			role="combobox"
-			autocomplete="off"
-			aria-autocomplete="list"
-			:aria-controls="menuId"
-			:aria-expanded="showMenu"
-			:aria-activedescendant="highlightedOptionId"
-			@focusin="handleFocusIn"
-			@keydown="handleInputKeydown"
-		/>
+		<div class="shell-header-global-search__toolbar">
+			<slot name="leading" />
+			<CdxSearchInput
+				v-model="searchQuery"
+				class="shell-header-global-search__input"
+				dir="auto"
+				:use-button="false"
+				:clearable="true"
+				:placeholder="searchFieldLabel"
+				:aria-label="searchFieldLabel"
+				role="combobox"
+				autocomplete="off"
+				aria-autocomplete="list"
+				:aria-controls="menuId"
+				:aria-expanded="showMenu"
+				:aria-activedescendant="highlightedOptionId"
+				@focusin="handleFocusIn"
+				@keydown="handleInputKeydown"
+			/>
+		</div>
 
 		<!--
 			Chips sibling above CdxMenu (Menu has no header slot). Region — not
@@ -544,7 +576,7 @@ function handleLoadMore(): void {
 					:show-pending="isPendingVisible"
 					:visible-item-limit="menuVisibleItemLimit"
 					:bold-label="true"
-					:hide-description-overflow="true"
+					:hide-description-overflow="hideDescriptionOverflow"
 					:show-no-results-slot="showNoResults"
 					:aria-label="resultsPanelLabel"
 					@update:selected="handleMenuSelected"
@@ -614,19 +646,31 @@ function handleLoadMore(): void {
 <style scoped>
 .shell-header-global-search {
 	position: relative;
+	display: flex;
+	flex-direction: column;
 	flex: 1 1 auto;
 	min-inline-size: 0;
 }
 
+.shell-header-global-search__toolbar {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: flex-start;
+	column-gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
 .shell-header-global-search__input {
+	flex: 1 1 auto;
 	inline-size: 100%;
+	min-inline-size: 0;
 }
 
 .shell-header-global-search__input:deep( .cdx-text-input ) {
 	min-inline-size: var( --fd-header-search-input-min-inline-size );
 }
 
-/* Collapsed overlay must shrink below Codex’s 256px default between mobile margins. */
+/* Dialog overlay must shrink below Codex’s 256px default between mobile margins. */
 .shell-header-global-search--overlay .shell-header-global-search__input:deep( .cdx-text-input ) {
 	min-inline-size: 0;
 }
@@ -634,8 +678,10 @@ function handleLoadMore(): void {
 /*
  * Open menu sits flush under the field (no gap), matching Codex TypeaheadSearch:
  * join corners use --border-radius-sharp so input + panel read as one surface.
+ * Overlay / Dialog mode keeps squared corners — the Dialog is the surface.
  */
-.shell-header-global-search--menu-open .shell-header-global-search__input:deep( .cdx-text-input ) {
+.shell-header-global-search--menu-open:not( .shell-header-global-search--overlay )
+.shell-header-global-search__input:deep( .cdx-text-input ) {
 	border-end-start-radius: var( --border-radius-sharp );
 	border-end-end-radius: var( --border-radius-sharp );
 }
@@ -656,16 +702,36 @@ function handleLoadMore(): void {
 	overflow: hidden;
 }
 
-.shell-header-global-search--menu-open .shell-header-global-search__panel {
+.shell-header-global-search--menu-open:not( .shell-header-global-search--overlay )
+.shell-header-global-search__panel {
 	border-start-start-radius: var( --border-radius-sharp );
 	border-start-end-radius: var( --border-radius-sharp );
+}
+
+/*
+ * Overlay fills the Dialog body: toolbar (Back + field) then chips + list as the
+ * scrollport. No 7-row Menu window; chips wrap (already flex-wrap on chips).
+ */
+.shell-header-global-search--overlay {
+	block-size: 100%;
+	min-block-size: 0;
+}
+
+.shell-header-global-search--overlay .shell-header-global-search__toolbar {
+	padding-block-start: var( --spacing-100 );
+	padding-block-end: var( --spacing-75 );
+	padding-inline: var( --spacing-150 );
 }
 
 .shell-header-global-search--overlay .shell-header-global-search__panel {
 	position: relative;
 	inset: auto;
-	max-block-size: none;
 	flex: 1 1 auto;
+	max-block-size: none;
+	min-block-size: 0;
+	border-width: 0;
+	border-block-start: var( --border-width-base ) solid var( --border-color-base );
+	border-radius: 0;
 	box-shadow: none;
 }
 

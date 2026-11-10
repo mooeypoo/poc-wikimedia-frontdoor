@@ -290,7 +290,6 @@
   "section-nav-get-started-data-for-research": "Bulk data for research",
   "section-nav-get-started-content-reuse": "Content reuse",
   "section-nav-get-started-data-for-academic-research": "Data for academic research",
-  "section-nav-get-started-data-for-research": "Bulk data for research",
   "section-nav-get-started-embedded-learning": "Embedded learning",
   "section-nav-get-started-explore-featured-apps": "Featured apps",
   "section-nav-get-started-explore-title": "Explore",
@@ -341,6 +340,6 @@
   "shell-collapsed-nav-menu-back-button-label": "Back to site navigation",
   "shell-collapsed-nav-menu-button-label": "Open site navigation menu",
   "shell-collapsed-nav-menu-overlay-label": "Site navigation menu",
-  "shell-collapsed-search-overlay-close-button-label": "Close search",
-  "shell-collapsed-search-overlay-label": "Site search"
+  "shell-collapsed-search-overlay-label": "Site search",
+  "shell-collapsed-search-overlay-back-button-label": "Back"
 }

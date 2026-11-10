@@ -24,12 +24,22 @@ import {
  *
  * @param query - Reactive search query (shared with the header input).
  * @param activeLocale - Reactive interface locale from banana / shell.
+ * @param options - Optional presentation flags.
+ * @param options.unboundedDisclosure - When true (collapsed Dialog search), skip
+ *   the 7-row window and expose every hit; the Dialog body is the scrollport
+ *   (requirements §5.1.7.3).
  * @returns Panel model for `ShellHeaderGlobalSearch`.
  */
 export function useGlobalSearchPanel(
 	query: Ref<string>,
-	activeLocale: Ref<string> | string
+	activeLocale: Ref<string> | string,
+	options: {
+		unboundedDisclosure?: Ref<boolean> | boolean
+	} = {}
 ) {
+	const isUnboundedDisclosure = computed( () =>
+		Boolean( toValue( options.unboundedDisclosure ) )
+	)
 	// Prefer the shell's interface-locale state so English-fallback flagging
 	// tracks the language picker even if a caller passes a non-ref snapshot.
 	const interfaceLocaleState = useState<string>( 'interfaceLocale', () => 'en' )
@@ -55,8 +65,21 @@ export function useGlobalSearchPanel(
 	)
 
 	const selectedCategory = ref<SearchPrototypeCategory>( 'all' )
-	const visibleCount = ref( SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT )
+	const visibleCount = ref(
+		isUnboundedDisclosure.value ?
+			Number.POSITIVE_INFINITY :
+			SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
+	)
 	const isPendingVisible = ref( false )
+
+	/**
+	 * Resets the disclosure window for the current mode.
+	 */
+	function resetVisibleCount(): void {
+		visibleCount.value = isUnboundedDisclosure.value ?
+			Number.POSITIVE_INFINITY :
+			SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
+	}
 
 	let pendingTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -149,8 +172,8 @@ export function useGlobalSearchPanel(
 	)
 
 	// Reset disclosure window when the query or chip changes (RES-15).
-	watch( [ query, selectedCategory ], () => {
-		visibleCount.value = SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
+	watch( [ query, selectedCategory, isUnboundedDisclosure ], () => {
+		resetVisibleCount()
 	} )
 
 	/**
@@ -180,7 +203,7 @@ export function useGlobalSearchPanel(
 	 */
 	function resetPanelChrome(): void {
 		selectedCategory.value = 'all'
-		visibleCount.value = SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
+		resetVisibleCount()
 	}
 
 	return {

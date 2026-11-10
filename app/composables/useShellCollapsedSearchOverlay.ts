@@ -6,8 +6,8 @@ import { useOverlayDismissal } from './useOverlayDismissal.ts'
  * Manages open state for the collapsed header search overlay.
  *
  * The collapsed utility row has room for a search icon but not the field, so the
- * icon opens a full-viewport overlay instead. Closes on route change, viewport
- * expand (utility row uncollapsed), Escape, or explicit
+ * icon opens a full-viewport Codex search Dialog instead. Closes on route change,
+ * viewport expand (utility row uncollapsed — §5.1.7.4), Escape, or explicit
  * `closeCollapsedSearchOverlay`; the first three come from
  * `useOverlayDismissal`, shared with the collapsed nav overlay.
  *
