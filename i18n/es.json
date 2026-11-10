@@ -314,5 +314,15 @@
   "search-no-results-for-query": "No hay resultados para '$1' en $2.",
   "search-results-panel-label": "Resultados",
   "search-retry-label": "Reintentar",
+  "search-option-type-documentation": "Documentación",
+  "search-option-type-endpoint": "Punto de conexión de la API",
+  "search-status-more-loaded": "Se cargaron más resultados.",
+  "search-status-no-results": "No hay resultados para $1 en $2.",
+  "search-status-no-results-endpoints": "No hay resultados para $1.",
+  "search-status-results-all": "{{PLURAL:$1|$1 resultado|$1 resultados}}. {{PLURAL:$2|$2 punto de conexión de la API|$2 puntos de conexión de la API}}, {{PLURAL:$3|$3 de documentación|$3 de documentación}}.",
+  "search-status-searching": "Buscando...",
+  "search-status-showing-documentation": "Mostrando {{PLURAL:$1|$1 resultado de documentación|$1 resultados de documentación}}.",
+  "search-status-showing-endpoints": "Mostrando {{PLURAL:$1|$1 punto de conexión de la API|$1 puntos de conexión de la API}}.",
+  "search-status-unavailable": "La búsqueda no está disponible. Inténtalo de nuevo.",
   "shell-collapsed-search-overlay-back-button-label": "Atrás"
 }

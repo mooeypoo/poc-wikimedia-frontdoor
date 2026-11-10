@@ -7,8 +7,19 @@ import {
 	type MenuItemData,
 	type MenuItemValue
 } from '@wikimedia/codex'
-import { SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT } from '../../../config/searchPrototype'
+import {
+	SEARCH_PROTOTYPE_SLOW_SEARCH_ANNOUNCE_MS,
+	SEARCH_PROTOTYPE_STATUS_ANNOUNCE_DELAY_MS,
+	SEARCH_PROTOTYPE_VISIBLE_ITEM_LIMIT
+} from '../../../config/searchPrototype'
+import { useDirection } from '../../composables/useDirection'
 import { useGlobalSearchPanel } from '../../composables/useGlobalSearchPanel'
+import {
+	computeGlobalSearchOptionPosition,
+	globalSearchOptionTypeMessageKey,
+	resolveGlobalSearchAnnouncement,
+	resolveGlobalSearchInputKeyAction
+} from '../../utils/globalSearchAccessibility'
 import {
 	toCodexMenuEntries,
 	type GlobalSearchPanelItem
@@ -27,20 +38,29 @@ import { getLanguageByCode } from '../../../config/languages'
  * This composes SearchInput with a panel that places chips **above** an in-place
  * `CdxMenu`, and delegates ArrowUp/Down/Enter/Escape to
  * `menu.delegateKeyNavigation()` so keyboard behaviour matches Codex Lookup /
- * TypeaheadSearch. Chips stay outside the listbox (sibling, not a Menu slot).
+ * TypeaheadSearch — except Tab, which must never select (WCAG).
  *
  * Data path: `useContentSearch` + `useEndpointSearch` via `useGlobalSearchPanel`.
  */
 
 /**
  * Minimal Menu instance surface used for keyboard delegation and highlight id.
+ *
+ * Codex’s public `clearActive()` only clears the mousedown “active” state, not
+ * the keyboard highlight. With `expose` disabled upstream, setup also surfaces
+ * `handleMenuItemChange`, which we use to clear highlight on Tab / Esc.
  */
 interface GlobalSearchCodexMenu {
 	delegateKeyNavigation: (
 		event: KeyboardEvent,
 		options?: { prevent?: boolean, characterNavigation?: boolean }
 	) => boolean
-	getHighlightedMenuItem: () => { id: string } | null
+	getHighlightedMenuItem: () => { id: string, value?: string | number } | null
+	clearActive: () => void
+	handleMenuItemChange?: (
+		menuState: string,
+		menuItem: { id: string } | null
+	) => void
 }
 
 const props = withDefaults( defineProps<{
@@ -69,6 +89,8 @@ defineSlots<{
 }>()
 
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
+const { direction } = useDirection()
+const isRtl = computed( () => direction.value === 'rtl' )
 
 const isOverlayVariant = computed( () => props.variant === 'overlay' )
 
@@ -76,6 +98,7 @@ const {
 	hasQuery,
 	hasSearchError,
 	isPendingVisible,
+	isSearchInFlight,
 	loadContentIndex,
 	selectedCategory,
 	selectCategory,
@@ -101,6 +124,17 @@ const menuId = useId()
 const rootRef = useTemplateRef<HTMLElement>( 'rootRef' )
 const menuRef = useTemplateRef<GlobalSearchCodexMenu>( 'menuRef' )
 const panelBodyRef = useTemplateRef<HTMLElement>( 'panelBodyRef' )
+const searchInputHostRef = useTemplateRef<HTMLElement>( 'searchInputHostRef' )
+
+/** Keyboard-highlight option id for `aria-activedescendant` (reactive). */
+const highlightedOptionId = ref<string | undefined>( undefined )
+
+/** Live status / alert text — always mounted; cleared between announcements. */
+const statusAnnouncementText = ref( '' )
+const statusAnnouncementRole = ref<'status' | 'alert'>( 'status' )
+
+let statusAnnounceTimer: ReturnType<typeof setTimeout> | undefined
+let slowSearchAnnounceTimer: ReturnType<typeof setTimeout> | undefined
 
 /*
  * One string for both placeholder and accessible name — VoiceOver concatenates
@@ -227,11 +261,6 @@ const menuVisibleItemLimit = computed( (): number | null => {
 /** Single-line ellipsis on desktop menu; unrestricted wrap in the Dialog (OQ4 / mobile). */
 const hideDescriptionOverflow = computed( () => !isOverlayVariant.value )
 
-const highlightedOptionId = computed( () => {
-	const highlighted = menuRef.value?.getHighlightedMenuItem() ?? null
-	return highlighted?.id
-} )
-
 const itemById = computed( () => {
 	const map = new Map<string, GlobalSearchPanelItem>()
 	for ( const item of flatOrderedItems.value ) {
@@ -240,10 +269,116 @@ const itemById = computed( () => {
 	return map
 } )
 
+const orderedItemIds = computed( () => flatOrderedItems.value.map( ( item ) => item.id ) )
+
 watch( hasQuery, ( nextHasQuery ) => {
 	if ( nextHasQuery ) {
 		isMenuOpen.value = true
 	}
+} )
+
+/**
+ * Clears Codex keyboard highlight. `clearActive()` alone is insufficient —
+ * it only clears the pressed “active” state.
+ */
+function clearMenuHighlight(): void {
+	menuRef.value?.handleMenuItemChange?.( 'highlighted', null )
+	menuRef.value?.clearActive?.()
+	highlightedOptionId.value = undefined
+}
+
+/**
+ * Focuses the search field input (after chip Esc / Shift+Tab / type-back).
+ */
+function focusSearchInput(): void {
+	searchInputHostRef.value?.querySelector<HTMLInputElement>( 'input' )?.focus()
+}
+
+/**
+ * Publishes a live-region announcement after a short clear delay so identical
+ * text is spoken again.
+ *
+ * @param announcement - Resolved announcement, or `null` to clear.
+ */
+function publishStatusAnnouncement(
+	announcement: ReturnType<typeof resolveGlobalSearchAnnouncement>
+): void {
+	if ( statusAnnounceTimer !== undefined ) {
+		clearTimeout( statusAnnounceTimer )
+		statusAnnounceTimer = undefined
+	}
+	statusAnnouncementText.value = ''
+	if ( !announcement ) {
+		return
+	}
+	statusAnnounceTimer = setTimeout( () => {
+		statusAnnouncementRole.value = announcement.role
+		statusAnnouncementText.value = $bananaI18n(
+			announcement.key,
+			announcement.params
+		)
+	}, SEARCH_PROTOTYPE_STATUS_ANNOUNCE_DELAY_MS )
+}
+
+/**
+ * Rebuilds the settled-search announcement from current panel counters.
+ *
+ * @param overrides - Optional one-shot flags (more-loaded / searching).
+ */
+function announceSettledSearch( overrides: {
+	moreResultsLoaded?: boolean
+	announceSearching?: boolean
+} = {} ): void {
+	publishStatusAnnouncement(
+		resolveGlobalSearchAnnouncement( {
+			hasActiveQuery: hasQuery.value,
+			isSearchInFlight: isSearchInFlight.value,
+			hasSearchError: hasSearchError.value,
+			selectedCategory: selectedCategory.value,
+			allCount: allCount.value,
+			endpointCount: endpointCount.value,
+			documentationCount: documentationCount.value,
+			query: searchQuery.value.trim(),
+			languageName: interfaceLanguageDisplayName( $interfaceLocale.value ),
+			moreResultsLoaded: overrides.moreResultsLoaded,
+			announceSearching: overrides.announceSearching
+		} )
+	)
+}
+
+// Announce when results settle or the chip changes (never per keystroke).
+watch(
+	[
+		hasQuery,
+		isSearchInFlight,
+		hasSearchError,
+		selectedCategory,
+		allCount,
+		endpointCount,
+		documentationCount
+	],
+	() => {
+		if ( isSearchInFlight.value ) {
+			return
+		}
+		announceSettledSearch()
+	}
+)
+
+// Slow-search “Searching…” after 1s in flight.
+watch( isSearchInFlight, ( inFlight ) => {
+	if ( slowSearchAnnounceTimer !== undefined ) {
+		clearTimeout( slowSearchAnnounceTimer )
+		slowSearchAnnounceTimer = undefined
+	}
+	if ( !inFlight || !hasQuery.value ) {
+		return
+	}
+	slowSearchAnnounceTimer = setTimeout( () => {
+		if ( isSearchInFlight.value && hasQuery.value ) {
+			announceSettledSearch( { announceSearching: true } )
+		}
+	}, SEARCH_PROTOTYPE_SLOW_SEARCH_ANNOUNCE_MS )
 } )
 
 /**
@@ -308,38 +443,94 @@ function resetResultsScroll(): void {
 	}
 }
 
+/**
+ * Applies `aria-posinset` / `aria-setsize` on Codex option nodes and `lang` on
+ * the English-fallback group heading (Codex does not expose these as props).
+ */
+function annotateOptionSemantics(): void {
+	const listbox = panelBodyRef.value?.querySelector( '.cdx-menu__listbox' )
+	if ( !( listbox instanceof HTMLElement ) ) {
+		return
+	}
+
+	const visibleIds = [
+		...visiblePrimaryItems.value,
+		...visibleEnglishFallbackItems.value
+	].map( ( item ) => item.id )
+
+	const optionElements = listbox.querySelectorAll<HTMLElement>( '[role="option"]' )
+	let visibleIndex = 0
+	optionElements.forEach( ( optionElement ) => {
+		// Skip Codex no-results / pending rows (no matching panel id).
+		if ( optionElement.classList.contains( 'cdx-menu__no-results' ) ||
+			optionElement.classList.contains( 'cdx-menu__pending' ) ) {
+			optionElement.removeAttribute( 'aria-posinset' )
+			optionElement.removeAttribute( 'aria-setsize' )
+			return
+		}
+		const itemId = visibleIds[ visibleIndex ]
+		visibleIndex += 1
+		if ( !itemId ) {
+			return
+		}
+		const position = computeGlobalSearchOptionPosition( itemId, orderedItemIds.value )
+		if ( !position ) {
+			return
+		}
+		optionElement.setAttribute( 'aria-posinset', String( position.posinset ) )
+		optionElement.setAttribute( 'aria-setsize', String( position.setsize ) )
+	} )
+
+	const groupLabel = listbox.querySelector( '.cdx-menu__group__label' )
+	if ( groupLabel instanceof HTMLElement ) {
+		// UI-language heading so `text-transform: uppercase` respects locale (e.g. Turkish).
+		groupLabel.setAttribute( 'lang', $interfaceLocale.value )
+	}
+}
+
 watch( showMenu, ( isOpen ) => {
 	if ( !isOpen ) {
 		unbindListboxScroll()
 		isResultsScrolled.value = false
 		menuSelected.value = null
+		clearMenuHighlight()
 		return
 	}
 	nextTick( () => {
 		bindListboxScroll()
+		annotateOptionSemantics()
 	} )
 } )
 
 watch( [ searchQuery, selectedCategory ], () => {
 	menuSelected.value = null
+	clearMenuHighlight()
 	nextTick( () => {
 		bindListboxScroll()
 		resetResultsScroll()
+		annotateOptionSemantics()
 	} )
 } )
 
-// Listbox can remount when pending / no-results / items swap — rebind.
+// Listbox can remount when pending / no-results / items swap — rebind + annotate.
 watch( [ menuEntries, isPendingVisible, showNoResults ], () => {
 	if ( !showMenu.value ) {
 		return
 	}
 	nextTick( () => {
 		bindListboxScroll()
+		annotateOptionSemantics()
 	} )
 } )
 
 onBeforeUnmount( () => {
 	unbindListboxScroll()
+	if ( statusAnnounceTimer !== undefined ) {
+		clearTimeout( statusAnnounceTimer )
+	}
+	if ( slowSearchAnnounceTimer !== undefined ) {
+		clearTimeout( slowSearchAnnounceTimer )
+	}
 } )
 
 /**
@@ -353,7 +544,10 @@ function handleFocusIn(): void {
 }
 
 /**
- * Closes the dropdown when focus leaves the control (dropdown variant only).
+ * Closes the dropdown when focus leaves the widget (dropdown variant only).
+ *
+ * Overlay relies on `CdxDialog` focus trap + inert; do not close on internal
+ * focus moves (Back ↔ field ↔ chips).
  *
  * @param event - FocusOut event.
  */
@@ -366,34 +560,87 @@ function handleFocusOut( event: FocusEvent ): void {
 		return
 	}
 	isMenuOpen.value = false
+	clearMenuHighlight()
 }
 
 /**
- * Delegates navigation keys to `CdxMenu`; keeps Space for typing.
+ * Routes field keydown: Tab never selects; Enter without highlight is a no-op;
+ * Down when closed reopens; otherwise delegate to Codex Menu.
  *
  * @param event - Keyboard event from the search input.
  */
 function handleInputKeydown( event: KeyboardEvent ): void {
-	// Space must insert a character in the query (Codex input-with-menu pattern).
-	if ( event.key === ' ' ) {
+	const hasHighlight = Boolean(
+		highlightedOptionId.value ?? menuRef.value?.getHighlightedMenuItem()
+	)
+	const action = resolveGlobalSearchInputKeyAction( {
+		key: event.key,
+		altKey: event.altKey,
+		isPanelOpen: showMenu.value,
+		hasHighlight,
+		hasActiveQuery: hasQuery.value
+	} )
+
+	if ( action.type === 'pass' ) {
 		return
 	}
 
-	if ( event.key === 'Escape' && isMenuOpen.value ) {
+	if ( action.type === 'tab' ) {
+		clearMenuHighlight()
+		// Do not preventDefault — browser moves focus (clear button or chips).
+		return
+	}
+
+	if ( action.type === 'enter-noop' ) {
+		event.preventDefault()
+		return
+	}
+
+	if ( action.type === 'reopen-panel' ) {
+		event.preventDefault()
+		isMenuOpen.value = true
+		clearMenuHighlight()
+		return
+	}
+
+	if ( action.type === 'escape-close' ) {
+		event.preventDefault()
+		clearMenuHighlight()
+		if ( props.variant === 'overlay' ) {
+			// Dismiss the Dialog; do not stopPropagation so CdxDialog can close too.
+			resetPanelChrome()
+			emit( 'close' )
+			return
+		}
 		event.stopPropagation()
 		isMenuOpen.value = false
 		resetPanelChrome()
+		// Keep focus in the field; stop browsers clearing type=search on Esc.
+		focusSearchInput()
 		return
 	}
 
-	if ( !showMenu.value || !menuRef.value ) {
-		return
+	if ( action.type === 'delegate' && menuRef.value ) {
+		menuRef.value.delegateKeyNavigation( event, {
+			prevent: true,
+			characterNavigation: false
+		} )
+		nextTick( () => {
+			highlightedOptionId.value =
+				menuRef.value?.getHighlightedMenuItem()?.id ?? undefined
+		} )
 	}
+}
 
-	menuRef.value.delegateKeyNavigation( event, {
-		prevent: true,
-		characterNavigation: false
-	} )
+/**
+ * Tracks keyboard highlight for `aria-activedescendant`.
+ *
+ * @param menuItem - Highlighted Codex menu item, or null.
+ */
+function handleMenuKeyboardNavigation(
+	menuItem: { id: string } | null
+): void {
+	highlightedOptionId.value = menuItem?.id
 }
 
 // Click path emits both `menu-item-click` and `update:selected` — guard so we
@@ -412,6 +659,7 @@ function activateItem( item: GlobalSearchPanelItem ): void {
 	isActivatingResult = true
 	isMenuOpen.value = false
 	menuSelected.value = null
+	clearMenuHighlight()
 	resetPanelChrome()
 	emit( 'result-select', item )
 	void navigateTo( item.url )
@@ -460,6 +708,7 @@ function handleMenuItemClick( menuItem: MenuItemData ): void {
 function handleMenuExpanded( nextExpanded: boolean ): void {
 	if ( !nextExpanded ) {
 		isMenuOpen.value = false
+		clearMenuHighlight()
 	}
 }
 
@@ -476,9 +725,107 @@ function handleRetry(): void {
 function handleLoadMore(): void {
 	if ( hasMoreResults.value ) {
 		loadMoreResults()
+		announceSettledSearch( { moreResultsLoaded: true } )
 	}
 }
 
+/**
+ * Selects a category chip, clears highlight, scrolls to top, announces.
+ *
+ * @param category - Chip id.
+ */
+function handleCategorySelect( category: typeof selectedCategory.value ): void {
+	selectCategory( category )
+	clearMenuHighlight()
+	nextTick( () => {
+		resetResultsScroll()
+	} )
+}
+
+/**
+ * Esc from a chip — close the dropdown panel, or dismiss the overlay Dialog.
+ */
+function handleChipEscape(): void {
+	clearMenuHighlight()
+	resetPanelChrome()
+	if ( props.variant === 'overlay' ) {
+		emit( 'close' )
+		return
+	}
+	isMenuOpen.value = false
+	focusSearchInput()
+}
+
+/**
+ * Returns focus to the search field without closing the panel.
+ */
+function handleChipFocusInput(): void {
+	focusSearchInput()
+}
+
+/**
+ * Moves focus to the field and inserts a character typed on a chip.
+ *
+ * @param character - Single printable character.
+ */
+function handleChipTypeCharacter( character: string ): void {
+	focusSearchInput()
+	searchQuery.value = `${ searchQuery.value }${ character }`
+}
+
+/**
+ * Resolves `lang` / `dir` when option text is not in the UI language.
+ *
+ * @param item - Panel row, or undefined when unknown.
+ * @returns Language attributes for the text wrapper.
+ */
+function optionLanguageAttrs( item: GlobalSearchPanelItem | undefined ): {
+	lang?: string
+	dir?: 'ltr' | 'rtl'
+} {
+	if ( !item ) {
+		return {}
+	}
+	const uiLocale = $interfaceLocale.value
+	if ( item.kind === 'endpoint' ) {
+		if ( uiLocale !== 'en' ) {
+			return { lang: 'en', dir: 'ltr' }
+		}
+		return {}
+	}
+	if ( item.resultLocale && item.resultLocale !== uiLocale ) {
+		return {
+			lang: item.resultLocale,
+			...( item.resultDir ? { dir: item.resultDir } : {} )
+		}
+	}
+	return {}
+}
+
+/**
+ * Visually hidden type prefix for All-view options.
+ *
+ * @param item - Panel row.
+ * @returns Translated type label, or empty when filtered view / unknown.
+ */
+function optionTypeLabel( item: GlobalSearchPanelItem | undefined ): string {
+	if ( !item || selectedCategory.value !== 'all' ) {
+		return ''
+	}
+	return $bananaI18n( globalSearchOptionTypeMessageKey( item.kind ) )
+}
+
+/**
+ * Looks up the panel item for a Codex menu row.
+ *
+ * @param menuItem - Codex default-slot payload.
+ * @returns Panel item, or undefined.
+ */
+function panelItemForMenuItem(
+	menuItem: MenuItemData
+): GlobalSearchPanelItem | undefined {
+	return itemById.value.get( String( menuItem.value ) )
+}
 </script>
 
 <template>
@@ -491,33 +838,51 @@ function handleLoadMore(): void {
 		}"
 		@focusout="handleFocusOut"
 	>
+		<!--
+			Dedicated search live region — always present (not the route announcer).
+			Visually hidden; rewritten after searches settle.
+		-->
+		<div
+			class="shell-header-global-search__status"
+			:role="statusAnnouncementRole"
+			aria-atomic="true"
+		>
+			{{ statusAnnouncementText }}
+		</div>
+
 		<div class="shell-header-global-search__toolbar">
 			<slot name="leading" />
-			<CdxSearchInput
-				v-model="searchQuery"
-				class="shell-header-global-search__input"
-				dir="auto"
-				:use-button="false"
-				:clearable="true"
-				:placeholder="searchFieldLabel"
-				:aria-label="searchFieldLabel"
-				role="combobox"
-				autocomplete="off"
-				aria-autocomplete="list"
-				:aria-controls="menuId"
-				:aria-expanded="showMenu"
-				:aria-activedescendant="highlightedOptionId"
-				@focusin="handleFocusIn"
-				@keydown="handleInputKeydown"
-			/>
+			<div
+				ref="searchInputHostRef"
+				class="shell-header-global-search__input-host"
+			>
+				<CdxSearchInput
+					v-model="searchQuery"
+					class="shell-header-global-search__input"
+					dir="auto"
+					:use-button="false"
+					:clearable="true"
+					:placeholder="searchFieldLabel"
+					:aria-label="searchFieldLabel"
+					role="combobox"
+					autocomplete="off"
+					aria-autocomplete="list"
+					:aria-controls="menuId"
+					:aria-expanded="showMenu"
+					:aria-activedescendant="highlightedOptionId"
+					@focusin="handleFocusIn"
+					@keydown="handleInputKeydown"
+				/>
+			</div>
 		</div>
 
 		<!--
 			Chips sibling above CdxMenu (Menu has no header slot). Region — not
 			dialog — so SRs announce “Results” rather than “Dialog with N items”.
+			`v-if` (not `v-show`) so closed / SSR markup has no radiogroup.
 		-->
 		<div
-			v-show="showMenu"
+			v-if="showMenu"
 			class="shell-header-global-search__panel"
 			role="region"
 			:aria-label="resultsPanelLabel"
@@ -534,7 +899,11 @@ function handleLoadMore(): void {
 					:all-count="allCount"
 					:endpoint-count="endpointCount"
 					:documentation-count="documentationCount"
-					@select="selectCategory"
+					:is-rtl="isRtl"
+					@select="handleCategorySelect"
+					@escape="handleChipEscape"
+					@focus-input="handleChipFocusInput"
+					@type-character="handleChipTypeCharacter"
 				/>
 			</div>
 
@@ -582,6 +951,7 @@ function handleLoadMore(): void {
 					@update:selected="handleMenuSelected"
 					@update:expanded="handleMenuExpanded"
 					@menu-item-click="handleMenuItemClick"
+					@menu-item-keyboard-navigation="handleMenuKeyboardNavigation"
 					@load-more="handleLoadMore"
 				>
 					<template #pending>
@@ -606,10 +976,16 @@ function handleLoadMore(): void {
 					<!--
 						Codex puts supportingText after the label; Figma wants the
 						HTTP method before the title — custom row for endpoints only.
+						Whitespace between method / title / description is required
+						for an honest accessible name.
 					-->
 					<template #default="{ menuItem }">
 						<span class="cdx-menu-item__content">
 							<span class="cdx-menu-item__text">
+								<span
+									v-if="optionTypeLabel( panelItemForMenuItem( menuItem ) )"
+									class="shell-header-global-search__option-type"
+								>{{ optionTypeLabel( panelItemForMenuItem( menuItem ) ) }}, </span>
 								<span
 									v-if="menuItem.supportingText"
 									class="shell-header-global-search__endpoint-row"
@@ -618,7 +994,15 @@ function handleLoadMore(): void {
 										class="shell-header-global-search__method"
 										dir="ltr"
 									>{{ menuItem.supportingText }}</bdi>
-									<bdi class="cdx-menu-item__text__label">{{
+									<!--
+										Flex `gap` is visual only — insert real whitespace for the
+										accessible name so “GET” and the title do not concatenate.
+									-->
+									<span class="shell-header-global-search__name-sep"> </span>
+									<bdi
+										class="cdx-menu-item__text__label"
+										v-bind="optionLanguageAttrs( panelItemForMenuItem( menuItem ) )"
+									>{{
 										menuItem.label ?? menuItem.value
 									}}</bdi>
 								</span>
@@ -626,14 +1010,20 @@ function handleLoadMore(): void {
 									v-else
 									class="cdx-menu-item__text__label"
 								>
-									<bdi>{{ menuItem.label ?? menuItem.value }}</bdi>
+									<bdi
+										v-bind="optionLanguageAttrs( panelItemForMenuItem( menuItem ) )"
+									>{{ menuItem.label ?? menuItem.value }}</bdi>
 								</span>
-								<span
-									v-if="menuItem.description"
-									class="cdx-menu-item__text__description"
-								>
-									<bdi>{{ menuItem.description }}</bdi>
-								</span>
+								<template v-if="menuItem.description">
+									<span class="shell-header-global-search__name-sep"> </span>
+									<span
+										class="cdx-menu-item__text__description"
+									>
+										<bdi
+											v-bind="optionLanguageAttrs( panelItemForMenuItem( menuItem ) )"
+										>{{ menuItem.description }}</bdi>
+									</span>
+								</template>
 							</span>
 						</span>
 					</template>
@@ -652,11 +1042,28 @@ function handleLoadMore(): void {
 	min-inline-size: 0;
 }
 
+.shell-header-global-search__status {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
 .shell-header-global-search__toolbar {
 	display: flex;
 	flex: 0 0 auto;
 	align-items: center;
 	column-gap: var( --spacing-50 );
+	min-inline-size: 0;
+}
+
+.shell-header-global-search__input-host {
+	flex: 1 1 auto;
 	min-inline-size: 0;
 }
 
@@ -804,6 +1211,19 @@ function handleLoadMore(): void {
 	font-size: var( --font-size-medium );
 	font-weight: var( --font-weight-bold );
 	color: var( --color-progressive );
+}
+
+.shell-header-global-search__option-type,
+.shell-header-global-search__name-sep {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
 }
 
 .shell-header-global-search__no-results {

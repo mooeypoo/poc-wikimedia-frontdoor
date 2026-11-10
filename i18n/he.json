@@ -314,5 +314,15 @@
   "search-no-results-for-query": "אין תוצאות עבור '$1' ב$2.",
   "search-results-panel-label": "תוצאות",
   "search-retry-label": "ניסיון חוזר",
+  "search-option-type-documentation": "תיעוד",
+  "search-option-type-endpoint": "נקודת קצה של ה־API",
+  "search-status-more-loaded": "נטענו תוצאות נוספות.",
+  "search-status-no-results": "אין תוצאות עבור $1 ב$2.",
+  "search-status-no-results-endpoints": "אין תוצאות עבור $1.",
+  "search-status-results-all": "{{PLURAL:$1|תוצאה אחת|$1 תוצאות}}. {{PLURAL:$2|נקודת קצה אחת של ה־API|$2 נקודות קצה של ה־API}}, {{PLURAL:$3|תיעוד אחד|$3 תיעוד}}.",
+  "search-status-searching": "מחפש...",
+  "search-status-showing-documentation": "מציג {{PLURAL:$1|תוצאת תיעוד אחת|$1 תוצאות תיעוד}}.",
+  "search-status-showing-endpoints": "מציג {{PLURAL:$1|נקודת קצה אחת של ה־API|$1 נקודות קצה של ה־API}}.",
+  "search-status-unavailable": "החיפוש אינו זמין. נסו שוב.",
   "shell-collapsed-search-overlay-back-button-label": "חזרה"
 }
