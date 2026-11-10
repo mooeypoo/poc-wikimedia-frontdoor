@@ -13,15 +13,10 @@ import {
  * does not extend into the end panel or under the start navigation column.
  *
  * Brand lockup uses the 14px Wikimedia mark ({@link WikimediaLogoMark}, Commons
- * Wikimedia-logo_black.svg with `currentColor`) and a banana wordmark built from
- * `brand-wordmark-wikimedia` + `brand-wordmark-developer-portal` (same translatable
- * keys as the header) in Montserrat. While space permits the title stays on one
- * line beside the mark. When that pair no longer fits, the full title wraps
- * below the mark; if the title still does not fit, `brand-wordmark-developer-portal`
- * wraps under `brand-wordmark-wikimedia` (longer locales such as Spanish
- * “PORTAL DE DESARROLLADORES”). That second line may wrap at natural whitespace
- * only if it still exceeds the footer width (`overflow-wrap` / `word-break:
- * normal`). Not the Figma horizontal 227×14px footer logo asset yet.
+ * Wikimedia-logo_black.svg with `currentColor`) and a single-line banana wordmark
+ * built from `brand-wordmark-wikimedia` + `brand-wordmark-developer-portal` (same
+ * translatable keys as the header) in Montserrat. Not the Figma horizontal
+ * 227×14px footer logo asset yet.
  * Legal copy includes outbound links to Foundation policy pages and the CC BY-SA license
  * deed (`config/siteFooter.ts`).
  *
@@ -63,9 +58,7 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 						aria-hidden="true"
 					>
 						<span class="shell-site-footer__wordmark-part">{{ brandWordmarkTopLabel }}</span>
-						<span
-							class="shell-site-footer__wordmark-part shell-site-footer__wordmark-part--developer-portal"
-						>{{ brandWordmarkBottomLabel }}</span>
+						<span class="shell-site-footer__wordmark-part">{{ brandWordmarkBottomLabel }}</span>
 					</span>
 				</div>
 				<nav
@@ -123,18 +116,12 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 	align-items: center;
 	justify-content: center;
 	gap: var( --spacing-100 );
-	max-inline-size: 100%;
-	min-inline-size: 0;
 }
 
 .shell-site-footer__brand {
-	display: flex;
-	flex-wrap: wrap;
+	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	column-gap: var( --spacing-25 );
-	row-gap: 0;
-	max-inline-size: 100%;
+	gap: var( --spacing-25 );
 	min-inline-size: 0;
 	color: var( --color-subtle );
 }
@@ -148,20 +135,10 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 }
 
 .shell-site-footer__wordmark {
-	display: flex;
+	display: inline-flex;
 	flex-wrap: wrap;
 	align-items: baseline;
-	justify-content: center;
-	column-gap: 0.25em;
-	row-gap: 0;
-	/*
-	 * Size to the remaining footer width, not the combined title. Combined
-	 * `max-content` overflowed longer locales (Spanish “PORTAL DE
-	 * DESARROLLADORES”) instead of wrapping the second banana part.
-	 */
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	max-inline-size: 100%;
+	gap: 0.25em;
 	font-family: var( --font-family-brand-wordmark );
 	font-size: var( --font-size-small );
 	font-weight: var( --font-weight-bold );
@@ -171,22 +148,6 @@ const policyNavLabel = computed( () => $bananaI18n( 'footer-policy-nav-label' ) 
 
 .shell-site-footer__wordmark-part {
 	white-space: nowrap;
-}
-
-.shell-site-footer__wordmark-part--developer-portal {
-	/*
-	 * `flex-basis: max-content` is the full translated line, so it wraps under
-	 * Wikimedia as a unit instead of shrinking beside it. `max-inline-size:
-	 * 100%` + `white-space: normal` then wrap at natural whitespace if that
-	 * line is still wider than the footer (longer locales).
-	 */
-	flex-basis: max-content;
-	max-inline-size: 100%;
-	min-inline-size: 0;
-	white-space: normal;
-	overflow-wrap: normal;
-	word-break: normal;
-	text-align: center;
 }
 
 .shell-site-footer__policy-nav {

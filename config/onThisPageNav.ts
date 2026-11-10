@@ -14,11 +14,9 @@ export const ON_THIS_PAGE_NAV_MIN_H2_COUNT = 3
 
 /**
  * Min viewport width (px) for the end-column TOC.
- * Derived from the expanded shell geometry:
- * 241px start navigation + 40px gap + 640px minimum content
- * + 40px gap + 241px end navigation.
+ * Not a Codex breakpoint — Figma on-this-page chrome (1280).
  */
-export const ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX = 1202
+export const ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX = 1280
 
 /**
  * Max viewport width (px) for the header MenuButton layout

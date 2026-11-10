@@ -19,8 +19,7 @@ import NavigationCardGrid from './NavigationCardGrid.vue'
  * strings (author via MDC props; BiDi via {@link SectionHeading}). Combobox
  * **`inline-size` / `min-inline-size`** use Codex **`--size-1600`** (256px) —
  * a design-token CSS value (not a `config/` constant); the control does not
- * shrink under flex. When the field cannot fit its label and control on one
- * line, the combobox wraps below the label instead of overflowing.
+ * shrink under flex.
  *
  * @see ARCHITECTURE.md → API catalog project filter
  * @see DESIGN_REQUIREMENTS.md → API catalog
@@ -124,8 +123,7 @@ const {
 
 .api-catalog-wikimedia-section__filter {
 	display: flex;
-	/* Preserve the control width by moving it below the label before overflow. */
-	flex-flow: row wrap;
+	flex-flow: row nowrap;
 	align-items: center;
 	gap: var( --spacing-50 );
 	flex: 0 0 auto;
@@ -136,9 +134,8 @@ const {
 
 /*
  * Codex Field stacks the label above the control by default. Figma places
- * “Filter by project” beside the combobox while space permits, vertically
- * centered with it and the section h2. The field wrap above restores a stacked
- * layout when the inline pair no longer fits.
+ * “Filter by project” inline beside the combobox, vertically centered with it
+ * and with the section h2.
  */
 .api-catalog-wikimedia-section__filter :deep( .cdx-label ) {
 	display: flex;

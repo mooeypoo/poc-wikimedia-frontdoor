@@ -2,18 +2,18 @@
 import type { ComponentPublicInstance } from 'vue'
 import {
 	CdxButton,
-	CdxDialog,
+	CdxField,
 	CdxIcon,
 	CdxLookup,
 	CdxMenuButton,
 	CdxPopover,
+	CdxRadio,
 	CdxSearchInput,
 	type MenuConfig,
 	type MenuItemData,
 	type MenuItemValue
 } from '@wikimedia/codex'
 import {
-	cdxIconArrowPrevious,
 	cdxIconConfigure,
 	cdxIconEllipsis,
 	cdxIconLanguage,
@@ -40,22 +40,17 @@ import {
  * Header utility row — search, settings (color theme), interface language, and session control.
  *
  * Compact mode when the allocated actions track is narrower than the expanded minimum
- * (256px search + siblings). Search becomes an icon button; preferences, language,
- * account, and session actions move into a `CdxMenuButton`.
+ * (256px search + siblings). Search becomes an icon button; settings and log in move
+ * into a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
- * Color theme uses `useColorMode` with options from
- * `COLOR_THEME_PREFERENCE_OPTIONS` (Light / Dark / System default). The
- * expanded settings gear opens a `CdxPopover`; collapsed-menu Preferences opens
- * a content-height `CdxDialog`. Compact Language opens a full-screen `CdxDialog`
- * with a back button, Lookup input, and shadowless full-height menu. Compact
- * Search uses the same dialog layout while retaining the existing search input,
- * result rendering, and selection behavior.
- * Utility options use `--spacing-50`
- * (8px) `column-gap`, with search → preferences at `--spacing-100` (16px)
- * via an extra search-wrap `margin-inline-end`; share a vertical centerline
- * with the brand. Figma:
+ * Color theme uses `useColorMode` via a quiet settings `CdxPopover` with
+ * `CdxField` + `CdxRadio` options from `COLOR_THEME_PREFERENCE_OPTIONS`
+ * (Light / Dark / System default). Utility options use `--spacing-50` (8px)
+ * `column-gap`, with search → preferences at `--spacing-100` (16px) via an
+ * extra search-wrap `margin-inline-end`; share a vertical centerline with the
+ * brand. Figma:
  * [Preferences popover 49:2029](https://www.figma.com/design/WT1U0UugpM7CXgc2v8LmK3/Unified-Developer-Front-Door?node-id=49-2029).
  *
  * @see DESIGN_REQUIREMENTS.md → Header (utility row + primary navigation)
@@ -78,36 +73,17 @@ const LANGUAGE_LOOKUP_MENU_CONFIG: MenuConfig = {
 	renderInPlace: true
 }
 
-/**
- * The compact full-screen selector lets its native Codex menu fill all space
- * below the custom dialog header, so it does not use the desktop seven-row cap.
- */
-const MOBILE_LANGUAGE_LOOKUP_MENU_CONFIG: MenuConfig = {
-	renderInPlace: true
-}
-
 const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', {
 	required: true
 } )
 
 const actionsRootRef = useTemplateRef<HTMLElement>( 'actionsRootRef' )
-const searchWrapperRef = useTemplateRef<HTMLElement>( 'searchWrapperRef' )
-const settingsControlRef = useTemplateRef<HTMLElement>( 'settingsControlRef' )
-const languageControlRef = useTemplateRef<HTMLElement>( 'languageControlRef' )
-const sessionControlRef = useTemplateRef<HTMLElement>( 'sessionControlRef' )
-const { isUtilityCollapsed } = useHeaderUtilityCollapse( {
-	actionsRootRef,
-	searchWrapperRef,
-	settingsControlRef,
-	languageControlRef,
-	sessionControlRef
-} )
+const { isUtilityCollapsed } = useHeaderUtilityCollapse( actionsRootRef )
 const { direction } = useDirection()
 const { $bananaI18n, $interfaceLocale } = useNuxtApp()
 
 const searchQuery = ref( '' )
 const isSearchPanelOpen = ref( false )
-const isMobileSearchDialogOpen = ref( false )
 
 const {
 	localeResults,
@@ -125,7 +101,7 @@ watch( hasQuery, ( newHasQuery ) => {
 } )
 
 const { menuSelection, menuItems, handleMenuSelection: handleUtilityMenuSelection } =
-	useShellHeaderUtilityMenu( selectedInterfaceLocale )
+	useShellHeaderUtilityMenu()
 const {
 	isLoggedIn,
 	username,
@@ -136,12 +112,19 @@ const {
 const { mode: colorMode, setMode: setColorMode } = useColorMode()
 
 const isPreferencesPopoverOpen = ref( false )
-const isPreferencesDialogOpen = ref( false )
-const isMobileLanguageDialogOpen = ref( false )
 // Typed as the generic ComponentPublicInstance (not InstanceType<typeof CdxButton>
-// ) to match CdxPopover's own anchor prop type; the specific instance type isn't
-// assignable to it due to Vue's generic component-instance variance.
+// / CdxMenuButton) to match CdxPopover's own anchor prop type; the specific
+// instance types aren't assignable to it due to Vue's generic component-instance
+// variance.
 const settingsButtonRef = ref<ComponentPublicInstance | null>( null )
+const utilityMenuButtonRef = ref<ComponentPublicInstance | null>( null )
+
+/**
+ * Popover anchor: settings gear when expanded; overflow menu when collapsed.
+ */
+const preferencesPopoverAnchor = computed( () => {
+	return isUtilityCollapsed.value ? utilityMenuButtonRef.value : settingsButtonRef.value
+} )
 
 const colorThemeFieldLabel = computed( () => $bananaI18n( 'color-mode-group-label' ) )
 
@@ -174,21 +157,8 @@ function togglePreferencesPopover(): void {
 	isPreferencesPopoverOpen.value = !isPreferencesPopoverOpen.value
 }
 
-watch( isUtilityCollapsed, ( nextIsUtilityCollapsed ) => {
-	if ( nextIsUtilityCollapsed ) {
-		// The expanded controls anchor their overlays; dismiss before hiding them.
-		closeLanguageLookup()
-		isPreferencesPopoverOpen.value = false
-	} else if ( isMobileLanguageDialogOpen.value ) {
-		closeMobileLanguageDialog()
-	}
-	if ( !nextIsUtilityCollapsed && isMobileSearchDialogOpen.value ) {
-		closeMobileSearchDialog()
-	}
-} )
-
 /**
- * Handles collapsed utility menu selection, including opening the preferences dialog.
+ * Handles collapsed utility menu selection, including opening preferences.
  *
  * @param selectedValue - Newly selected menu item value, or null.
  */
@@ -196,13 +166,8 @@ function handleMenuSelection(
 	selectedValue: MenuItemValue | null
 ): void {
 	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.settings ) {
+		isPreferencesPopoverOpen.value = true
 		menuSelection.value = null
-		isPreferencesDialogOpen.value = true
-		return
-	}
-	if ( selectedValue === SHELL_HEADER_UTILITY_MENU_VALUE.language ) {
-		menuSelection.value = null
-		void openMobileLanguageDialog()
 		return
 	}
 	handleUtilityMenuSelection( selectedValue )
@@ -211,17 +176,8 @@ function handleMenuSelection(
 const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
-const settingsDialogCloseLabel = computed( () =>
-	$bananaI18n( 'header-settings-dialog-close-label' )
-)
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
-const mobileLanguageBackButtonLabel = computed( () =>
-	$bananaI18n( 'header-language-mobile-back-label' )
-)
-const mobileSearchBackButtonLabel = computed( () =>
-	$bananaI18n( 'header-search-mobile-back-label' )
-)
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
 
 const selectedLanguageCodeLabel = computed( () => {
@@ -253,10 +209,6 @@ const languageSelection = ref<string | null>( selectedInterfaceLocale.value )
 const languageInputValue = ref<string>( selectedLanguageAutonym.value )
 const isLanguageLookupOpen = ref( false )
 const languageLookupRef = useTemplateRef<{ $el: HTMLElement }>( 'languageLookupRef' )
-const mobileLanguageLookupRef =
-	useTemplateRef<{ $el: HTMLElement }>( 'mobileLanguageLookupRef' )
-const mobileSearchInputRef =
-	useTemplateRef<{ $el: HTMLElement }>( 'mobileSearchInputRef' )
 
 /**
  * Menu items filtered by the typed term (native name, English name, or code),
@@ -307,7 +259,7 @@ function handleLanguageInput( value: string | number | null ): void {
 
 /**
  * Commits a language choice: updates the model (which drives locale routing),
- * resets the input to the chosen autonym, and closes either picker surface.
+ * resets the input to the chosen autonym, and closes the compact popover.
  *
  * @param value - Selected language code (null when the selection is cleared).
  */
@@ -322,7 +274,6 @@ function handleLanguageSelection( value: string | number | null ): void {
 		getLanguageByCode( nextLocale )?.autonym ?? nextLocale
 	languageSearchTerm.value = ''
 	isLanguageLookupOpen.value = false
-	isMobileLanguageDialogOpen.value = false
 }
 
 /**
@@ -339,21 +290,6 @@ function resetLanguageLookupInput(): void {
 }
 
 /**
- * Waits for a newly mounted overlay to complete two browser layout frames.
- *
- * @returns A promise that resolves after the overlay can be measured reliably.
- */
-function waitForOverlayLayout(): Promise<void> {
-	return new Promise<void>( ( resolve ) => {
-		requestAnimationFrame( () => {
-			requestAnimationFrame( () => {
-				resolve()
-			} )
-		} )
-	} )
-}
-
-/**
  * Opens the language popover and focuses the lookup input so the user can type
  * immediately.
  *
@@ -366,7 +302,13 @@ async function openLanguageLookup(): Promise<void> {
 	resetLanguageLookupInput()
 	isLanguageLookupOpen.value = true
 	await nextTick()
-	await waitForOverlayLayout()
+	await new Promise<void>( ( resolve ) => {
+		requestAnimationFrame( () => {
+			requestAnimationFrame( () => {
+				resolve()
+			} )
+		} )
+	} )
 	languageLookupRef.value?.$el.querySelector( 'input' )?.focus()
 }
 
@@ -387,84 +329,6 @@ function toggleLanguageLookup(): void {
 	} else {
 		openLanguageLookup()
 	}
-}
-
-/**
- * Opens the full-screen compact language selector and focuses its search input.
- *
- * Two animation frames let the teleported Codex dialog finish layout before the
- * Lookup opens its menu and calculates focus.
- */
-async function openMobileLanguageDialog(): Promise<void> {
-	resetLanguageLookupInput()
-	isMobileLanguageDialogOpen.value = true
-	await nextTick()
-	await waitForOverlayLayout()
-	const inputElement =
-		mobileLanguageLookupRef.value?.$el.querySelector<HTMLInputElement>( 'input' )
-	inputElement?.focus()
-	/*
-	 * CdxDialog's focus trap initially focuses Back after mount, so moving focus to
-	 * Lookup does not consistently run Lookup's normal focus-to-expand path. Delegate
-	 * ArrowDown through its supported keyboard handler to open the existing menu.
-	 */
-	inputElement?.dispatchEvent( new KeyboardEvent( 'keydown', {
-		key: 'ArrowDown',
-		code: 'ArrowDown',
-		bubbles: true,
-		cancelable: true
-	} ) )
-}
-
-/**
- * Closes the full-screen compact language selector and restores the committed locale.
- */
-function closeMobileLanguageDialog(): void {
-	isMobileLanguageDialogOpen.value = false
-	resetLanguageLookupInput()
-}
-
-/**
- * Handles Codex dialog dismissal, including Escape, with the same reset as Back.
- *
- * @param isOpen - Next dialog open state emitted by `CdxDialog`.
- */
-function handleMobileLanguageDialogOpenUpdate( isOpen: boolean ): void {
-	if ( isOpen ) {
-		isMobileLanguageDialogOpen.value = true
-		return
-	}
-	closeMobileLanguageDialog()
-}
-
-/**
- * Opens the full-screen compact search and focuses the existing search input.
- */
-async function openMobileSearchDialog(): Promise<void> {
-	isMobileSearchDialogOpen.value = true
-	await nextTick()
-	await waitForOverlayLayout()
-	mobileSearchInputRef.value?.$el.querySelector<HTMLInputElement>( 'input' )?.focus()
-}
-
-/**
- * Closes the full-screen compact search without changing the current query.
- */
-function closeMobileSearchDialog(): void {
-	isMobileSearchDialogOpen.value = false
-}
-
-/**
- * Handles compact-search dialog dismissal, including Escape.
- *
- * @param isOpen - Next dialog open state emitted by `CdxDialog`.
- */
-function handleMobileSearchDialogOpenUpdate( isOpen: boolean ): void {
-	if ( isOpen ) {
-		isMobileSearchDialogOpen.value = true
-		return
-	}
-	closeMobileSearchDialog()
 }
 
 /**
@@ -505,19 +369,20 @@ function handleSearchAreaFocusOut( event: FocusEvent ): void {
 /**
  * Clears the query and closes the search panel after a result is chosen.
  *
- * @param _resultId - Selected result id; the result's `NuxtLink` owns navigation.
+ * @param _resultId - Selected search result id (navigation deferred in prototype).
  */
 function handleResultSelect( _resultId: string ): void {
 	searchQuery.value = ''
 	isSearchPanelOpen.value = false
-	isMobileSearchDialogOpen.value = false
 }
 
 /**
- * Opens the compact search surface from the collapsed search button.
+ * Placeholder for collapsed search icon activation — behaviour deferred.
+ *
+ * @param event - Click event on the collapsed search button.
  */
-function handleCollapsedSearchClick(): void {
-	void openMobileSearchDialog()
+function handleCollapsedSearchClick( event: MouseEvent ): void {
+	event.preventDefault()
 }
 </script>
 
@@ -531,7 +396,6 @@ function handleCollapsedSearchClick(): void {
 	>
 		<div
 			v-show="!isUtilityCollapsed"
-			ref="searchWrapperRef"
 			class="shell-header-utility-actions__search-wrap"
 			@focusout="handleSearchAreaFocusOut"
 		>
@@ -571,57 +435,8 @@ function handleCollapsedSearchClick(): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
-		<CdxDialog
-			:open="isMobileSearchDialogOpen"
-			class="shell-header-utility-actions__mobile-dialog shell-header-utility-actions__mobile-search-dialog"
-			:title="searchButtonLabel"
-			:hide-title="true"
-			:use-close-button="false"
-			@update:open="handleMobileSearchDialogOpenUpdate"
-		>
-			<div
-				class="shell-header-utility-actions__mobile-selector shell-header-utility-actions__mobile-search-selector"
-			>
-				<div
-					class="shell-header-utility-actions__mobile-selector-header shell-header-utility-actions__mobile-search-header"
-				>
-					<CdxButton
-						weight="quiet"
-						:aria-label="mobileSearchBackButtonLabel"
-						@click="closeMobileSearchDialog"
-					>
-						<CdxIcon :icon="cdxIconArrowPrevious" />
-					</CdxButton>
-					<CdxSearchInput
-						ref="mobileSearchInputRef"
-						v-model="searchQuery"
-						class="shell-header-utility-actions__mobile-selector-control shell-header-utility-actions__mobile-search-input"
-						dir="auto"
-						:use-button="false"
-						:placeholder="searchPlaceholderLabel"
-					/>
-				</div>
-				<div
-					v-if="hasQuery"
-					class="shell-header-utility-actions__mobile-search-results"
-				>
-					<SharedSearchResults
-						:locale-results="localeResults"
-						:fallback-results="fallbackResults"
-						:all-locale-result-groups="allLocaleResultGroups"
-						:is-all-locales-mode="isAllLocalesMode"
-						:active-locale="$interfaceLocale"
-						:search-query="searchQuery"
-						@result-select="handleResultSelect"
-						@activate-all-locales="activateAllLocalesSearch"
-					/>
-				</div>
-			</div>
-		</CdxDialog>
-
 		<span
 			v-show="!isUtilityCollapsed"
-			ref="settingsControlRef"
 			class="shell-header-utility-actions__settings"
 		>
 			<CdxButton
@@ -636,79 +451,36 @@ function handleCollapsedSearchClick(): void {
 			</CdxButton>
 		</span>
 
-		<!-- Teleport keeps the popover out of the utility-row flex gap. -->
+		<!--
+			Popover stays a sibling so collapsed mode can anchor to the overflow
+			menu; Teleport keeps it out of the flex gap (comment nodes only).
+		-->
 		<CdxPopover
 			v-model:open="isPreferencesPopoverOpen"
 			class="shell-header-utility-actions__preferences-popover fd-cdx-popover--arrow-seam-fix"
-			:anchor="settingsButtonRef"
+			:anchor="preferencesPopoverAnchor"
 			placement="bottom-end"
 		>
-			<SharedShellColorThemePreferences
-				v-model:selected-mode="colorModeSelection"
-				:field-label="colorThemeFieldLabel"
-				:options="colorThemePreferenceOptions"
-			/>
+			<CdxField
+				class="shell-header-utility-actions__color-theme-field"
+				is-fieldset
+			>
+				<template #label>
+					{{ colorThemeFieldLabel }}
+				</template>
+				<CdxRadio
+					v-for="option in colorThemePreferenceOptions"
+					:key="option.mode"
+					v-model="colorModeSelection"
+					name="color-theme-preference"
+					:input-value="option.mode"
+				>
+					{{ option.label }}
+				</CdxRadio>
+			</CdxField>
 		</CdxPopover>
 
-		<!-- Theme selection applies immediately, so a footer action is unnecessary. -->
-		<CdxDialog
-			v-model:open="isPreferencesDialogOpen"
-			class="shell-header-utility-actions__preferences-dialog"
-			:title="settingsButtonLabel"
-			:use-close-button="true"
-			:close-button-label="settingsDialogCloseLabel"
-		>
-			<SharedShellColorThemePreferences
-				v-model:selected-mode="colorModeSelection"
-				:field-label="colorThemeFieldLabel"
-				:options="colorThemePreferenceOptions"
-			/>
-		</CdxDialog>
-
-		<CdxDialog
-			:open="isMobileLanguageDialogOpen"
-			class="shell-header-utility-actions__mobile-dialog shell-header-utility-actions__mobile-language-dialog"
-			:title="interfaceLanguageLabel"
-			:hide-title="true"
-			:use-close-button="false"
-			@update:open="handleMobileLanguageDialogOpenUpdate"
-		>
-			<div
-				class="shell-header-utility-actions__mobile-selector shell-header-utility-actions__mobile-language-selector"
-			>
-				<div
-					class="shell-header-utility-actions__mobile-selector-header shell-header-utility-actions__mobile-language-header"
-				>
-					<CdxButton
-						weight="quiet"
-						:aria-label="mobileLanguageBackButtonLabel"
-						@click="closeMobileLanguageDialog"
-					>
-						<CdxIcon :icon="cdxIconArrowPrevious" />
-					</CdxButton>
-					<CdxLookup
-						ref="mobileLanguageLookupRef"
-						:key="`mobile-${ direction }`"
-						v-model:selected="languageSelection"
-						v-model:input-value="languageInputValue"
-						class="shell-header-utility-actions__mobile-selector-control shell-header-utility-actions__mobile-language-lookup"
-						dir="auto"
-						:menu-items="languageMenuItems"
-						:menu-config="MOBILE_LANGUAGE_LOOKUP_MENU_CONFIG"
-						:start-icon="cdxIconLanguage"
-						clearable
-						:aria-label="interfaceLanguageLabel"
-						:placeholder="interfaceLanguageLabel"
-						@input="handleLanguageInput"
-						@update:selected="handleLanguageSelection"
-					/>
-				</div>
-			</div>
-		</CdxDialog>
-
 		<div
-			v-show="!isUtilityCollapsed"
-			ref="languageControlRef"
 			class="shell-header-utility-actions__language"
 			@focusout="handleLanguageAreaFocusOut"
 			@keydown.escape="closeLanguageLookup"
@@ -752,7 +524,6 @@ function handleCollapsedSearchClick(): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
-			ref="sessionControlRef"
 			class="shell-header-utility-actions__session"
 		>
 			<NuxtLink
@@ -775,6 +546,7 @@ function handleCollapsedSearchClick(): void {
 
 		<CdxMenuButton
 			v-show="isUtilityCollapsed"
+			ref="utilityMenuButtonRef"
 			v-model:selected="menuSelection"
 			class="shell-header-utility-actions__utility-menu"
 			weight="quiet"
@@ -790,7 +562,7 @@ function handleCollapsedSearchClick(): void {
 <style scoped>
 /*
  * Utility options share one flex row: search + settings + language + session
- * (or collapsed search + overflow). Gap is always `--spacing-50`
+ * (or collapsed search + language + overflow). Gap is always `--spacing-50`
  * (8px) between those options; cross-axis center keeps icons/links aligned.
  */
 .shell-header-utility-actions {
@@ -857,9 +629,18 @@ function handleCollapsedSearchClick(): void {
 }
 
 /*
- * Preferences `CdxPopover` and `CdxDialog` are teleported. Popover body padding
- * and arrow/body seam live in `app/assets/css/shell-codex-overrides.css`.
+ * Preferences `CdxPopover` is teleported — body padding and arrow/body seam live in
+ * `app/assets/css/shell-codex-overrides.css` (class `fd-cdx-popover--arrow-seam-fix`).
  */
+
+.shell-header-utility-actions__color-theme-field {
+	margin-block-start: 0;
+	min-inline-size: 12rem;
+}
+
+.shell-header-utility-actions__color-theme-field :deep( .cdx-field__label ) {
+	margin-block-end: var( --spacing-25 );
+}
 
 /*
  * Language control: compact globe + uppercase-code quiet `CdxButton` (Codex
