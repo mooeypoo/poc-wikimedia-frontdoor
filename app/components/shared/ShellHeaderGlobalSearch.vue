@@ -655,7 +655,7 @@ function handleLoadMore(): void {
 .shell-header-global-search__toolbar {
 	display: flex;
 	flex: 0 0 auto;
-	align-items: flex-start;
+	align-items: center;
 	column-gap: var( --spacing-50 );
 	min-inline-size: 0;
 }
@@ -718,9 +718,8 @@ function handleLoadMore(): void {
 }
 
 .shell-header-global-search--overlay .shell-header-global-search__toolbar {
-	padding-block-start: var( --spacing-100 );
-	padding-block-end: var( --spacing-75 );
-	padding-inline: var( --spacing-150 );
+	padding-block: var( --spacing-75 );
+	padding-inline: var( --spacing-75 );
 }
 
 .shell-header-global-search--overlay .shell-header-global-search__panel {

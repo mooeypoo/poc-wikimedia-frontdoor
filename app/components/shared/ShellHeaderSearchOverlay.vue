@@ -127,6 +127,5 @@ onMounted( () => {
 
 .shell-header-search-overlay-dialog__back {
 	flex: 0 0 auto;
-	margin-block-start: var( --spacing-25 );
 }
 </style>
