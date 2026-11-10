@@ -2,14 +2,14 @@
 /**
  * PageGrid — Codex-aligned responsive shell layout (see DESIGN_REQUIREMENTS.md).
  *
- * Desktop (≥ 1120px): fixed 281px start panel + body band (main:end 16:4 inside
- * `default.vue`). Tablet (≥ 640px): fixed 281px start + fluid body. Mobile: stacked.
+ * Desktop (≥ 1120px): responsive start panel + body band (main:end tracks inside
+ * `default.vue`). Tablet (≥ 640px): fixed start allocation + fluid body. Mobile: stacked.
  * Site footer (`ShellSiteFooter`) lives inside `frontdoor-shell__content` in
  * `default.vue` so its width matches the main content column.
  * Scroll: start column scrolls independently; main + end share one body scrollport
  * with the scrollbar at the inline-end edge — see DESIGN_REQUIREMENTS.md.
  *
- * Header chrome grid placement (`display: contents`, 1440px width lock) was
+ * Header chrome grid placement (`display: contents`) was
  * superseded by a full-viewport header band in `app/layouts/default.vue`.
  */
 </script>

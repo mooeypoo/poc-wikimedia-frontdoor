@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+	formatExplorerModuleSelectDisplayValue,
 	formatExplorerModuleSelectSupportingText,
 	formatModuleVersionChipLabel,
 	resolveExplorerModuleRailHeading
@@ -10,6 +11,18 @@ test( 'formatModuleVersionChipLabel strips beta and internal audience suffixes',
 	assert.equal( formatModuleVersionChipLabel( '0.1.0-beta' ), 'v0.1.0' )
 	assert.equal( formatModuleVersionChipLabel( '0.1.0-internal' ), 'v0.1.0' )
 	assert.equal( formatModuleVersionChipLabel( 'v1.2.3' ), 'v1.2.3' )
+} )
+
+test( 'formatExplorerModuleSelectDisplayValue combines title and version', () => {
+	assert.equal(
+		formatExplorerModuleSelectDisplayValue( 'MediaWiki REST API', 'v1' ),
+		'MediaWiki REST API (v1)'
+	)
+	assert.equal(
+		formatExplorerModuleSelectDisplayValue( 'MediaWiki REST API', undefined ),
+		'MediaWiki REST API'
+	)
+	assert.equal( formatExplorerModuleSelectDisplayValue( '  ', 'v1' ), 'v1' )
 } )
 
 test( 'formatExplorerModuleSelectSupportingText is version-only', () => {

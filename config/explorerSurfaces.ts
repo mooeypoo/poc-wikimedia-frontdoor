@@ -21,6 +21,10 @@
  * `--fd-explorer-test-request-modal-padding` in `explorer-codex-overrides.css`
  * and `useScalarClientModalBackgroundScrollLock` — keep gutter in sync with
  * Codex **`--spacing-250`**.
+ *
+ * Back-to-top insets (`EXPLORER_BACK_TO_TOP_*`) match Figma 1696:27981 —
+ * viewport block-end **32px** (`--spacing-200`) and Scalar-shell inline-end
+ * **16px** (`--spacing-100`).
  */
 export const EXPLORER_CONTROLS_SURFACE_BACKGROUND_COLOR = 'var(--background-color-neutral-subtle)'
 
@@ -38,3 +42,42 @@ export const EXPLORER_TEST_REQUEST_MODAL_GUTTER_PX = 40
  * Prevents ResizeObserver + subpixel layout from chasing ~1px/s.
  */
 export const EXPLORER_TEST_REQUEST_SHELL_BLOCK_SIZE_UPDATE_THRESHOLD_PX = 2
+
+/**
+ * Distance from the viewport block-end to the explorer “Back to top” button (px).
+ * Matches Codex `--spacing-200` (32px) — Figma 1696:27981.
+ */
+export const EXPLORER_BACK_TO_TOP_VIEWPORT_BLOCK_END_INSET_PX = 32
+
+/**
+ * Distance from the Scalar shell’s inline-end border to the “Back to top” button (px).
+ * Matches Codex `--spacing-100` (16px) — Figma 1696:27981.
+ */
+export const EXPLORER_BACK_TO_TOP_SHELL_INLINE_END_INSET_PX = 16
+
+/**
+ * Body-scroll offset (px) before the “Back to top” control is shown.
+ */
+export const EXPLORER_BACK_TO_TOP_REVEAL_SCROLL_PX = 320
+
+/**
+ * Minimum inline gap (px) between the collapsed project-settings Accordion
+ * title (“Exploring: Project: … API: …”) and the labeled **Adjust selection**
+ * button, and between the API Combobox minimum and the labeled **Include**
+ * MenuButton when settings are expanded.
+ *
+ * Matches Codex `--spacing-100` (16px), same as other shell / explorer control
+ * gaps. When the single-line title + this gap + the labeled Adjust no longer
+ * fit the header track, Adjust becomes a medium progressive quiet icon-only
+ * button (`useExplorerProjectSettingsAdjustCompact`). When the API row cannot
+ * keep Combobox min + this gap + labeled Include, Include becomes icon-only
+ * (`useExplorerProjectSettingsIncludeCompact`).
+ */
+export const EXPLORER_PROJECT_SETTINGS_HEADER_TITLE_BUTTON_MIN_GAP_PX = 16
+
+/**
+ * Preferred minimum inline size (px) for the explorer API Combobox — Codex
+ * `--size-1600` (16rem / 256px). Used by Include compact-fit measurement; do
+ * **not** `parseFloat` the CSS custom property (that yields `16` from `16rem`).
+ */
+export const EXPLORER_MODULE_COMBOBOX_MIN_INLINE_SIZE_PX = 256

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 import { scalarMapConfigPluginsResolvePlugin } from './app/scalar/scalarMapConfigPluginsResolvePlugin'
+import { applyViteAssetImportMetaUrlFilterDiskPatch } from './app/vite/patchViteAssetImportMetaUrlFilter'
 import { buildLegacyContentRedirectRouteRules } from './config/contentRedirects'
 import { BRAND_WORDMARK_FONT_FILES, buildBrandWordmarkFontCss } from './config/brandTypography'
 import { SUPPORTED_LANGUAGES } from './config/languages'
@@ -26,6 +27,10 @@ const colorModeFoucScript = `(function(){try{` +
 	`}catch(e){}})();`
 
 const projectRootDirectory = dirname( fileURLToPath( import.meta.url ) )
+// Vite 7.3.x ships a catastrophic `filter.code` regex that stack-overflows on
+// the multi‑MB @scalar/api-reference prebundle (vite#21696). Patch the on-disk
+// Vite bundle before Nuxt starts Vite; no-op once upstream is fixed.
+applyViteAssetImportMetaUrlFilterDiskPatch( projectRootDirectory )
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Per-process DB files avoid SQLITE_BUSY when a previous dev server did not exit cleanly.
 const contentLocalDatabaseFilename = `.data/content/contents-${ process.pid }.sqlite`
