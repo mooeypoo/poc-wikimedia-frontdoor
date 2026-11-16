@@ -2,70 +2,86 @@
 status: 0 draft
 ---
 
-# APIs
+# Wikimedia APIs
+
+Get programmatic access to Wikipedia and other Wikimedia projects. Wikimedia APIs let you reuse free knowledge in your projects and build tools for Wikimedia communities.
 
 ::highlight
-Wikimedia’s APIs provide access to projects’ content and data. To learn more, [**go to the Quick start →**](/apis/quickstart)
+Ready to get started? [**Make your first request →**](/apis/quickstart)
 ::
 
-::api-catalog-wikimedia-section{title="Wikimedia APIs" chip="Recommended"}
-Discover our curated selection of production-ready APIs, designed to help you build, integrate, and scale with Wikimedia's open knowledge ecosystem.
-::
+## Featured APIs
 
-## Wikimedia Enterprise APIs
-
-Wikimedia Enterprise offers reliable, high-volume access to Wikimedia data through structured APIs and data feeds, enabling organizations to seamlessly integrate trusted, up-to-date knowledge from Wikipedia and other Wikimedia projects into their products and services at scale. To learn more, [**visit the Wikimedia Enterprise portal**](https://enterprise.wikimedia.com)
+Try out new beta APIs, and explore the most useful APIs.
+<!-- We can rotate these. Keep it to 4-6 APIs.-->
 
 :::navigation-card-grid
-::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Snapshot API" description="The Enterprise Snapshot API allows users to retrieve entire Wikimedia projects as a database dump file." supporting-text="Read the docs" chips="notice:Multi-project|success:Stable"}
+::navigation-card{url="/explorer" title="Content API" description="Fetch page content, explore page history, and make edits."  chips="notice:v2|notice:Beta"}
 ::
 
-::navigation-card{url="https://enterprise.wikimedia.com/docs/on-demand/" title="On-demand API" description="The Wikimedia Enterprise On-demand API allows users to retrieve single articles from any supported Wikimedia project at anytime." supporting-text="Read the docs" chips="notice:Multi-project|success:Stable"}
+::navigation-card{url="/explorer" title="Accounts API" description="Get information about users, and manage permissions." chips="notice:v2|notice:Beta"}
 ::
 
-::navigation-card{url="https://enterprise.wikimedia.com/docs/realtime/#article-updates-streaming" title="Realtime API" description="Receive real-time event updates from all supported Wikimedia projects using a streaming endpoint, or via batch file endpoints that are generated hourly." supporting-text="Read the docs" chips="notice:Multi-project|success:Stable"}
+::navigation-card{url="/explorer" title="Patrolling API" description="Browse recent changes and events." chips="notice:v2|notice:Beta"}
 ::
 :::
 
-## Classic APIs
+## APIs by use case
 
-Still supported and powerful, but not recommended for most new integrations.
+Discover APIs based on your use case.
 
 :::navigation-card-grid
-::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/API:Main_page" title="MediaWiki Action API" description="The original and most comprehensive Wikimedia API. 100+ action modules covering page reads, edits, user management, file uploads, search, patrol and more." supporting-text="Read more on mediawiki.org" chips="notice:All projects"}
+::navigation-card{url="" title="Use wiki content" description="Search, get page content, and find the attribution details you need to credit Wikimedia."}
 ::
 
-::navigation-card{url="https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:Data_access" title="Wikibase Action API" description="Extension to the MediaWiki Action API adding Wikidata-specific operations: wbgetentities, wbsetclaim, wbsearchentities, etc." supporting-text="Read more on Wikidata" chips="notice:Wikidata/Wikibase"}
+::navigation-card{url="" title="Access open data" description="Query Wikidata entities, and get wiki analytics."}
 ::
 
-::navigation-card{url="https://query.wikidata.org/" title="SPARQL/Wikidata Query Service" description="A SPARQL 1.1 endpoint over the full Wikidata knowledge graph. Supports federated queries, GeoSPARQL, and MWAPI service calls from within a query." supporting-text="Try the Query Service" chips="notice:Wikidata|success:Stable"}
+::navigation-card{url="" title="Support contributors and readers" description="Edit pages, predict article quality, suggest tasks, and organize events."}
+::
+
+::navigation-card{url="" title="Build for commercial uses cases" description="Get Wikimedia content with on-demand, high-volume APIs from Wikimedia Enterprise."}
 ::
 :::
 
-## API best practices
+## All APIs
 
-Before you build, understand how Wikimedia APIs work and what's expected of developers.
+Discover new APIs, read the docs, and try out endpoints.
 
-::highlight
-[**Make requests →**](/apis/requests)
-
-Learn best practices for making requests to Wikimedia APIs.
+:::navigation-card-grid
+::navigation-card{url="/apis/catalog" title="API catalog" description="Browse all APIs."}
 ::
 
-::highlight
-[**Authenticate →**](/apis/auth)
+::navigation-card{url="/explorer" title="API explorer" description="Read the reference docs for all APIs and try out live requests."}
+::
+:::
 
-Learn how to request and manage personal access tokens and OAuth clients.
+## Guides
+
+Before you build, understand how Wikimedia APIs work and learn about best practices.
+
+:::navigation-card-grid
+::navigation-card{url="/apis/requests" title="Making requests" description="Learn about best practices for making API requests."}
 ::
 
-::highlight
-[**Rate limits →**](/apis/rate-limits)
-
-Learn how rate limit tiers work and how to avoid unexpected throttling.
+::navigation-card{url="/apis/limits" title="Rate limits" description="Know what to expect and how to get higher limits."}
 ::
 
-::highlight
-[**Policies →**](/apis/policies)
-
-Review terms and conditions for using Wikimedia content and APIs.
+::navigation-card{url="/apis/auth" title="Authentication" description="Make API requests using a Wikimedia account."}
 ::
+:::
+
+## Resources
+
+Maintain your integration with Wikimedia APIs.
+
+:::navigation-card-grid
+::navigation-card{url="/apis/policies" title="Policies" description="Review terms and conditions for using Wikimedia content and APIs."}
+::
+
+::navigation-card{url="/apis/changelog" title="Changelog" description="See recent changes to Wikimedia APIs."}
+::
+
+::navigation-card{url="/apis/auth" title="Stability and versioning" description="Learn how to navigate different versions and statuses."}
+::
+:::

@@ -1,44 +1,100 @@
----
-status: mockup
----
 # Quick start
 
-[Wikimedia projects](https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects) are free, collaborative repositories of knowledge, written and maintained by volunteers around the world.
-Each project hosts a different type of content, such as encyclopedia articles on [Wikipedia](https://www.wikipedia.org/) and dictionary entries on [Wiktionary](https://www.wiktionary.org/).
-Wikimedia APIs give you open access to content and data from Wikimedia projects, including page content, attribution information, machine learning predictions, and more.
+Get started fetching and reusing Wikimedia content.
 
-## Projects and languages
+## Fetch an article from Wikipedia
+For your first request, fetch the Solar System article from English Wikipedia. 
 
-Most Wikimedia projects are created and maintained in a single language.
-This means that what we think of as Wikipedia is really over 300 different Wikipedias (English Wikipedia, Cebuano Wikipedia, Swedish Wikipedia, and many more) all with original articles in their own language.
-Single-language projects use the language code as the subdomain.
+| Project: English Wikipedia | API: Content API v2 |
+| --- | ---|
 
-Some projects are maintained in English and translated into other languages (like [Commons](https://commons.wikimedia.org/wiki/Special:MyLanguage/Main_Page)), or they are created to be language neutral (like [Wikispecies](https://species.wikimedia.org/wiki/Special:MyLanguage/Main_Page)).
-These multilingual projects use the project name as the subdomain instead of a language code.
+| Endpoint: Get page | `en.wikipedia.org/api/page/{title}` |
+| --- | --- |
 
-For a complete list of projects and languages, visit the [site matrix on Meta-Wiki](https://meta.wikimedia.org/wiki/Special:SiteMatrix).
+| [Try it out](/explorer) |
+| --- |
 
-## API overview
-
-API endpoints share a consistent URL structure based on the project name and language code:
-
-:::code-block
-```shell
-https://[language code].[project].org/[version]/
+::::code-tabs
+:::code-tab{label="curl"}
+```curl
+...
 ```
 :::
 
-The API uses HTTP [request methods](https://en.wikipedia.org/wiki/HTTP#Request_methods) and [response status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) and returns data in [JSON](https://en.wikipedia.org/wiki/JSON) format.
-
-## Make your first request
-
-Get today's featured article from English Wikipedia.
-
-:::code-block
-```sh
-curl 'https://en.wikipedia.org/api/rest_v1/feed/featured/2026/07/01'
+:::code-tab{label="JavaScript"}
+```javascript
+...
 ```
 :::
+
+:::code-tab{label="Python"}
+```python
+...
+```
+:::
+
+:::code-tab{label="PHP"}
+```php
+...
+```
+:::
+::::
+
+:::code-block{label="Response"}
+```json
+...
+```
+:::
+
+When using Wikimedia APIs, include a user agent to identify your request. This identifying information gives you a higher rate limit and helps us contact you in case of any issues. [Learn more about rate limits.]()
+
+
+## Add attribution
+To reuse this article, indicate its source and include other information that attributes it to  Wikipedia. The Attribution API makes it easy to get all attribution information in one place. [Learn more about how to attribute Wikimedia content.](https://wikimedia-attribution.toolforge.org/)
+
+| Project: English Wikipedia | API: Attribution API v1 |
+| --- | ---|
+
+| Endpoint: Get page | `en.wikipedia.org/api/pages/{title}/signals` |
+| --- | --- |
+
+| [Try it out](/explorer) |
+| --- |
+
+
+::::code-tabs
+:::code-tab{label="curl"}
+```curl
+...
+```
+:::
+
+:::code-tab{label="JavaScript"}
+```javascript
+...
+```
+:::
+
+:::code-tab{label="Python"}
+```python
+...
+```
+:::
+
+:::code-tab{label="PHP"}
+```php
+...
+```
+:::
+::::
+
+:::code-block{label="Response"}
+```json
+...
+```
+:::
+
+Using information from these two requests, you can generate a preview of the Solar System article that you can incorporate into your app.
 
 ## Review API policies
 

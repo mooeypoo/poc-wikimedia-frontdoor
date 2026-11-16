@@ -52,35 +52,28 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-api',
 				items: [
 					{ id: 'apis-overview', messageKey: 'section-nav-overview', href: '/apis' },
-					{ id: 'quickstart', messageKey: 'Quickstart', href: '/apis/quickstart' }
+					{ id: 'quickstart', messageKey: 'Quickstart', href: '/apis/quickstart' },
+					{ id: 'catalog', messageKey: 'API catalog', href: '/apis/catalog' }
 				]
 			},
 			{
 				id: 'requests',
-				titleMessageKey: 'Make requests',
+				titleMessageKey: 'Guides',
 				items: [
-					{ id: 'requests-overview', messageKey: 'section-nav-overview', href: '/apis/overview' },
-					{ id: 'client-id', messageKey: 'Client identification', href: '/apis/client-id' },
-					{ id: 'errors', messageKey: 'Error handling', href: '/apis/errors' }
-
-				]
-			},
-			{
-				id: 'auth',
-				titleMessageKey: 'Authenticate',
-				items: [
-					{ id: 'auth-overview', messageKey: 'section-nav-overview', href: '/apis/auth' },
-					{ id: 'access-tokens', messageKey: 'Personal authentication', href: '/apis/access-tokens' },
-					{ id: 'log-in', messageKey: "User authentication", href: '/apis/log-in' },
-					{ id: 'xxx', messageKey: "Identity verification", href: '/apis/id' }
+					{ id: 'requests-overview', messageKey: 'Making requests', href: '/apis/overview' },
+					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
+					{ id: 'auth-overview', messageKey: 'Authentication', href: '/apis/auth' },
+					{ id: 'stability-policy', messageKey: 'Versioning and stability', href: '/apis/stability' },
+					{ id: 'troubleshooting', messageKey: 'Troubleshooting', href: '/apis/troubleshooting' },
 				]
 			},
 			{
 				id: 'api-explorer',
-				titleMessageKey: 'explorer-side-nav-api-explorer-title',
+				titleMessageKey: 'API explorer',
 				items: [
 					{ id: 'wikimedia-api-modules', messageKey: 'explorer-side-nav-wikimedia-api-modules', href: '/explorer' },
 					{ id: 'enterprise-apis', messageKey: 'explorer-side-nav-enterprise-apis', href: '/explorer/enterprise' },
+					{ id: 'clients', messageKey: 'Client libraries', href: '/apis/libraries' },
 					{
 						// Stays hidden: the "Enterprise APIs" entry above now renders the
 						// bespoke viewer itself (ENTERPRISE_EXPLORER_USE_CUSTOM_VIEWER in
@@ -99,8 +92,6 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'explorer-side-nav-resources-title',
 				items: [
 					{ id: 'changelog', messageKey: 'explorer-side-nav-changelog', href: '/apis/changelog' },
-					{ id: 'stability-policy', messageKey: 'Stability and versioning', href: '/apis/stability' },
-					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
 					{ id: 'policies', messageKey: 'Policies', href: '/apis/policies' }
 				]
 			}
@@ -115,29 +106,27 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				items: [
 					{ id: 'get-started-overview', messageKey: 'section-nav-overview', href: '/get-started' },
 					{ id: 'learn-about-wikimedia', messageKey: 'section-nav-get-started-learn-about-wikimedia', href: '/get-started/about-wikimedia' },
-					{ id: 'explore-featured-apps', messageKey: 'Explore featured apps', href: '/get-started/featured-apps' },
 					{ id: 'tutorials', messageKey: 'Learn with tutorials', href: '/get-started/tutorials' }
 				]
 			},
 			{
 				id: 'for-communities',
-				titleMessageKey: 'Use Wikimedia content and data',
+				titleMessageKey: 'Start building',
 				items: [
-					{ id: 'community-overview', messageKey: 'Overview', href: '/get-started/content-and-data' },
-					{ id: 'community-overview', messageKey: 'Use wiki content', href: '/get-started/wiki-content' },
+					{ id: 'community-overview', messageKey: 'Use Wikimedia content', href: '/get-started/wiki-content' },
 					{ id: 'access-open-data', messageKey: 'Access open data', href: '/get-started/open-data' },
+					{ id: 'commercial-use-cases', messageKey: 'Build for Wikimedia communities', href: '/get-started/tools-and-bots' },
 					{ id: 'commercial', messageKey: 'Build for commercial use cases', href: '/get-started/commercial' }
 				]
 			},
 			{
-				id: 'for-enterprise',
-				titleMessageKey: 'Build for Wikimedia communities',
+				id: 'x',
+				titleMessageKey: 'Explore',
 				items: [
-					{ id: 'wikimedia-enterprise', messageKey: 'Overview', href: '/get-started/tools' },
-					{ id: 'commercial-use-cases', messageKey: 'Build tools and bots', href: '/get-started/tools-and-bots' },
-					{ id: 'commercial-use-cases', messageKey: 'Contribute to Wikimedia', href: '/get-started/mediawiki' }
+					{ id: 'explore-featured-apps', messageKey: 'Browse featured apps', href: '/get-started/featured-apps' },
+					{ id: 'tutorials', messageKey: 'Browse APIs', href: '/' }
 				]
-			}
+			},
 		]
 	},
 	community: {

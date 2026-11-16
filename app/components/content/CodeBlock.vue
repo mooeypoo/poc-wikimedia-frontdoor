@@ -10,6 +10,9 @@
  * Long lines soft-wrap by default. Pass `no-soft-wrap` for horizontal scroll
  * instead (`:::code-block{no-soft-wrap}`).
  *
+ * Pass `label` to show a short caption above the code describing the sample
+ * (`:::code-block{label="Fetch a page summary"}`).
+ *
  * MDC: `:::code-block` … fenced code … `:::`.
  *
  * @see ARCHITECTURE.md → Markdown content pages → Code block
@@ -21,8 +24,14 @@ const props = withDefaults( defineProps<{
 	 * MDC boolean attributes arrive as `""`; treat that like `true` / `"true"`.
 	 */
 	noSoftWrap?: boolean | string
+	/**
+	 * Optional caption describing the code sample. Rendered in a header strip
+	 * above the code. Omit for the original headerless panel.
+	 */
+	label?: string
 }>(), {
-	noSoftWrap: false
+	noSoftWrap: false,
+	label: ''
 } )
 
 /**
@@ -34,6 +43,13 @@ const isNoSoftWrap = computed( () => {
 	const flag = props.noSoftWrap
 	return flag === true || flag === '' || flag === 'true'
 } )
+
+/**
+ * Trimmed label text, or an empty string when no usable label was provided.
+ *
+ * @returns The label to display, if any.
+ */
+const labelText = computed( () => props.label.trim() )
 </script>
 
 <template>
@@ -46,7 +62,19 @@ const isNoSoftWrap = computed( () => {
 		:class="{ 'code-block--no-soft-wrap': isNoSoftWrap }"
 		dir="ltr"
 	>
-		<slot />
+		<div
+			v-if="labelText"
+			class="code-block__label"
+		>
+			{{ labelText }}
+		</div>
+		<!--
+			Wrapper keeps the `:deep( > *:first-child )` margin resets working
+			now that the label can be the panel's first child.
+		-->
+		<div class="code-block__body">
+			<slot />
+		</div>
 	</div>
 </template>
 
@@ -65,11 +93,23 @@ const isNoSoftWrap = computed( () => {
 	background-color: var( --background-color-base );
 }
 
-.code-block :deep( > *:first-child ) {
+/* Caption strip: subtle surface + divider so it reads as part of the panel. */
+.code-block__label {
+	padding-block: var( --spacing-50 );
+	padding-inline: var( --spacing-75 );
+	border-block-end: 1px solid var( --border-color-muted );
+	background-color: var( --background-color-interactive-subtle );
+	color: var( --color-subtle );
+	font-size: var( --font-size-small );
+	font-weight: var( --font-weight-semi-bold );
+	line-height: var( --line-height-small );
+}
+
+.code-block__body :deep( > *:first-child ) {
 	margin-block-start: 0;
 }
 
-.code-block :deep( > *:last-child ) {
+.code-block__body :deep( > *:last-child ) {
 	margin-block-end: 0;
 }
 

@@ -1,24 +1,47 @@
-# Make requests
+# Making API requests
 
-Here are a few things you should know before you start using Wikimedia APIs.
+Learn how to make requests to Wikimedia APIs.
 
-## URL structure
+## Identify requests with a user agent
 
-Base URLs for Wikimedia APIs are based on the project domain and subdomain, which is typically the project name and language code. You can use the API explorer to find each project's URL and see which APIs are available per project.
+Wikimedia APIs require an HTTP User-Agent header for all requests. This helps identify your app and ensures that system administrators can contact you if a problem arises. Clients making requests without a User-Agent header may be blocked without notice. See the Wikimedia Foundation's User-Agent policy for more information.
 
+The User-Agent header can include a link to a user page on a Wikimedia wiki, a URL for a relevant external website, or an email address.
+
+:::code-block{label="Preferred format for User-Agent headers"}
+```text
+<client name>/<version> (<contact information>) <library/framework name>/<version>
 ```
-https://[project subdomain and domain]/[API module name]/...
-```
+:::
 
-TODO versions, audiences, etc.
+If you are calling the API from browser-based JavaScript, you may not be able to influence the User-Agent header, depending on the browser. To work around this, use the Api-User-Agent header.
 
+## Conditional requests
 
-Read more versioning
+Wikimedia API endpoints support conditional requests using ETags. You can use ETags to optimize your API calls when accessing the same resource multiple times
 
-Response codes… read more at error handling
+To make a conditional GET request, provide the value of the `etag` response header in the If-None-Match request header. If the resource remains the same, the API returns HTTP status 304 (Not Modified). If the resource has changed, the API returns HTTP status 200 (OK) with the latest data and a new ETag.
 
-User agent
+To make a conditional write request, provide the value of the `etag` in the If-Match request header to detect whether the resource has change since it was last fetched. If the resource has changed, the API returns HTTP status 412 (Precondition Failed). If the resource remains the same, the API completes the request normally.
 
-Rate limits
+## Handling errors
 
-Policies
+Wikimedia APIs use HTTP status codes to indicate the success or failure of a request. A successful request returns a status code in the 200 range; a failed request returns a status code in the 400 or 500 range. See the API reference for status codes specific to each endpoint.
+
+200	Resource found or updated
+201	Resource created
+400	Invalid or missing parameter
+403	Permission denied. Add a user agent.
+404	Route not found
+412	Invalid conditional request
+415	Unsupported content type
+429 Too many requests, see rate limits
+500	Server error
+
+## Authentication
+
+Write operations require authentication via OAuth or CSRF.
+
+## Rate limits
+
+Rate limits for unauthenticated requests are determined by the presence of a user agent and the platform making the request. For authenticated requests, rate limits depend on the status of the Wikimedia account that has been authenticated.

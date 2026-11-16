@@ -75,3 +75,6 @@ https://meta.wikimedia.org/w/rest.php/oauth2/access_token
 ```
 :::
 
+## Using PKCE in authorization requests
+
+A Proof Key for Code Exchange (PKCE) is required for mobile, desktop, and single-page apps as part of the OAuth 2.0 authorization code flow. Visit the [OAuth documentation](https://www.oauth.com/oauth2-servers/pkce/authorization-request/) for information about using PKCE in authorization requests.

@@ -104,8 +104,8 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides access to wiki content and functionality, supporting operations like searching, getting and transforming wiki pages, and accessing page history.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
-			{ label: 'Check stability at endpoint level', status: 'success' }
+			{ label: 'v1', status: 'notice' },
+			{ label: 'Beta', status: 'warning' }
 		],
 		visibility: { kind: 'universal' }
 	},
@@ -115,7 +115,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides cacheable and straightforward access to Wikimedia content and data, in machine-readable formats.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -126,7 +126,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Returns attribution signals for wiki pages to ensure fair reuse of Wikimedia content.',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Beta', status: 'warning' }
 		],
 		visibility: { kind: 'universal', excludeProjectIds: [ 'wikifunctions' ] }
@@ -137,8 +137,8 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'A machine-learning model-serving platform that returns predictions about Wikimedia pages and edits, such as article or edit-quality score.',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
-			{ label: 'Check stability at endpoint level', status: 'success' }
+			{ label: 'v1', status: 'notice' },
+			{ label: 'Beta', status: 'warning' }
 		],
 		visibility: {
 			kind: 'universal',
@@ -151,7 +151,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Experimental editing suggestions and editor feedback regarding such suggestions',
 		url: '/explorer',
 		chips: [
-			{ label: 'Multi-project', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: {
@@ -165,7 +165,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Store and retrieve private lists of pages, such as bookmarks or read-it-later feature.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -176,7 +176,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'REST API for the CampaignEvents extension. Create and manage campaign events, invite and track participants, and associate wiki contributions with events.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -187,7 +187,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides data about the usage of categories and media files on Wikimedia Commons. This data is focused on categories associated with contributions from galleries, libraries, archives, and museums (GLAM).',
 		url: '/explorer',
 		chips: [
-			{ label: 'Wikimedia Commons', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'projects', projectIds: [ 'commons' ] }
@@ -198,7 +198,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides data about the number of unique devices that access Wikimedia projects. This endpoint only returns data for projects that have at least 1,000 unique devices for the requested time period.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -209,7 +209,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Edit analytics provides data about the number of edits and edited pages on Wikimedia projects.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -220,7 +220,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Editor analytics provides data about the number of editors and newly registered users of Wikimedia projects. Data returned by these endpoints includes edits on redirects.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -231,7 +231,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Media file analytics provides data about requests for media files on Wikimedia projects.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -242,7 +242,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Page view analytics provides data about page views for Wikimedia projects.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -253,7 +253,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		description: 'Provides support for rendering mathematical formulae. It allows callers to convert various forms of math input into MathML + SVG or PNG outputs, which can be used across Wikimedia projects.',
 		url: '/explorer',
 		chips: [
-			{ label: 'All projects', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'universal' }
@@ -262,10 +262,9 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		id: 'wikifunctions',
 		title: 'Wikifunctions API',
 		description: 'Search, fetch, and call functions hosted on Wikifunctions (Abstract Wikipedia). Create, edit, and orchestrate function objects.',
-		url: 'https://www.mediawiki.org/wiki/Wikifunctions_API',
-		supportingText: 'Read more on mediawiki.org',
+		url: '/explorer',
 		chips: [
-			{ label: 'Wikifunctions', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'projects', projectIds: [ 'wikifunctions' ] }
@@ -277,7 +276,7 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		url: 'https://www.wikidata.org/wiki/Wikidata:Wikibase_GraphQL',
 		supportingText: 'Read more on Wikidata',
 		chips: [
-			{ label: 'Wikidata', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Beta', status: 'warning' }
 		],
 		visibility: { kind: 'projects', projectIds: [ 'wikidata' ] }
@@ -286,10 +285,9 @@ export const API_CATALOG_WIKIMEDIA_CARDS: readonly ApiCatalogWikimediaCard[] = [
 		id: 'wikibase-rest',
 		title: 'Wikibase REST API',
 		description: 'A modern, OpenAPI-documented REST interface for reading and writing Wikidata entities, statements, labels, aliases, and sitelinks.',
-		url: 'https://doc.wikimedia.org/Wikibase/master/js/rest-api/',
-		supportingText: 'Read the docs',
+		url: '/explorer/',
 		chips: [
-			{ label: 'Wikidata', status: 'notice' },
+			{ label: 'v1', status: 'notice' },
 			{ label: 'Stable', status: 'success' }
 		],
 		visibility: { kind: 'projects', projectIds: [ 'wikidata' ] }

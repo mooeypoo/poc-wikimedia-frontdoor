@@ -2,7 +2,7 @@
 status: version 1
 ---
 
-# Build for commercial use cases with Wikimedia Enterprise
+# Build for commercial use cases
 
 Integrate the world’s knowledge into your product experiences with Wikimedia Enterprise: a suite of APIs powered by the Wikimedia Foundation and designed specifically for commercial use cases.
 

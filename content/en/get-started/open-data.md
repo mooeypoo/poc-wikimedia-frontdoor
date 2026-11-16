@@ -5,6 +5,30 @@ status: mockup
 
 Explore public data that you can use in research and machine learning.
 
+## Wikimedia content
+
+Access free downloads of wiki content that you can use in research, offline reading, bot editing, and other projects. [Browse all datasets.](https://meta.wikimedia.org/wiki/Research:Data)
+
+:::navigation-card-grid
+::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Bulk downloads of pages as they appear to users are available though Wikimedia Enterprise using a free account or a Wikimedia developer account."}
+::
+
+::navigation-card{url="https://dumps.wikimedia.org/other/mediawiki_content_history/readme.html" title="Download content in source format" description="Get bulk downloads of content in their editable format, wikitext."}
+::
+:::
+
+### Wikidata
+
+Wikidata is a free and open knowledge base that can be read and edited by both humans and machines.
+
+:::navigation-card-grid
+::navigation-card{url="https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:For_developers" title="Explore structured data with Wikidata" description="Learn how to access data from Wikidata, and follow best practices for reusing it."}
+::
+
+::navigation-card{url="/explorer" title="Wikibase REST API" description="Interact with, retrieve, and edit entities on Wikidata."}
+::
+:::
+
 ## Machine learning
 
 Learn about machine learning models used to power tools and features across Wikimedia projects.
@@ -41,6 +65,9 @@ Analytics datasets provide metrics that you can use to understand how readers an
 ::
 
 ::navigation-card{url="https://dumps.wikimedia.org/other/analytics/" title="Analytics bulk downloads" description="Get analytics datasets as bulk downloads."}
+::
+
+::navigation-card{url="https://meta.wikimedia.org/wiki/Differential_privacy" title="Differential privacy datasets" description="Download pageviews and editor data "}
 ::
 :::
 
