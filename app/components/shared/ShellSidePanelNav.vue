@@ -19,9 +19,9 @@ import type { ResolvedSectionNavItem, ResolvedSectionNavSection } from '../../co
  * - Non-selected items: custom `:hover` CSS sets `--color-progressive` text. Codex hover
  *   normally changes background only; `highlighted` is never toggled without a parent `CdxMenu`.
  *
- * **Routing:** Items with a resolved `to` path (content items from their config
- * `href`, explorer items from their `mode`) navigate via `navigateTo`. Only items
- * with no target fall back to a non-navigating `href="#"` placeholder.
+ * **Routing:** Items with a resolved `to` path navigate via `navigateTo`. The
+ * current path emits `current-path-select` instead (collapsed overlay closes).
+ * Items with no target stay a non-navigating `href="#"` placeholder.
  */
 defineProps<{
 	/** Accessible name for the navigation region. */
@@ -33,6 +33,14 @@ defineProps<{
 	 * nav overlay back control already shows the primary section name).
 	 */
 	omitSectionTitleMatching?: string
+}>()
+
+const emit = defineEmits<{
+	/**
+	 * Emitted when the user activates the item for the current path (no
+	 * navigation). The collapsed overlay uses this to dismiss the menu.
+	 */
+	'current-path-select': []
 }>()
 
 const route = useRoute()
@@ -57,12 +65,22 @@ function sectionNavItemHref( item: ResolvedSectionNavItem ): string {
 /**
  * Navigates to a resolved section item when it has a route target.
  *
+ * Re-selecting the current path does not navigate (avoids remounting Scalar on
+ * `/explorer`); it emits `current-path-select` so the collapsed overlay can
+ * close as a second dismiss affordance beside tapping the backdrop.
+ *
  * @param pointerEvent - Click event from the menu item.
  * @param item - Resolved navigation item from `usePageSectionNav()`.
  */
 function onSectionNavItemClick( pointerEvent: PointerEvent, item: ResolvedSectionNavItem ): void {
-	if ( item.to === null || item.to === route.path ) {
+	if ( item.to === null ) {
 		pointerEvent.preventDefault()
+		return
+	}
+
+	if ( item.to === route.path ) {
+		pointerEvent.preventDefault()
+		emit( 'current-path-select' )
 		return
 	}
 

@@ -221,7 +221,7 @@ At the full two-panel breakpoint (≥1202px), the standard documentation shell u
 | Primary nav tab scroll buttons hidden | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; overflow scrollers flicker on first paint |
 | Primary nav + section menu collapse | **Implemented** | `useShellNavigationCollapse` — intrinsic width + hysteresis; hamburger + breadcrumbs; `useShellCollapsedNavigationBreadcrumbFit` removes subsection + arrow before primary-label ellipsis when the header TOC needs its 16px gap; start drawer on expand |
 | Start nav drawer reveal | **Implemented** | `shell-start-nav-reveal.css` — grid track push + panel slide **only** under `.frontdoor-shell--nav-drawer-expanding` (viewport expand); landing / `sidebar: false` route changes instant; Codex transition tokens |
-| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
+| Collapsed hamburger menu overlay | **Implemented** | `useShellCollapsedNavMenu` + `ShellCollapsedNavMenuOverlay` — backdrop-light; `cdxIconPrevious` back; `omitSectionTitleMatching`; primary-tab selection navigates to the section landing and drills into the section menu (overlay stays open); leaf links close; `--spacing-50` back-to-list gap; **`::after` scroll-end spacer (`--spacing-200`)**; scroll lock |
 | Primary nav tab label weight normal | **Implemented** | `shell-primary-nav-overrides.css` — **Codex exception**; selection via colour/underline only |
 | Start panel scroll-end symmetry | **Implemented** | `::after` spacer (`--spacing-200`) on each scrollport — start panel (tablet+), `.fd-page-grid__start` (mobile), collapsed overlay panel; footer uses `padding-block-end` |
 | Start panel always mounted | **Implemented** | `default.vue` — panel wrapper on every route; `ShellSidePanelNav` when sections exist |
@@ -336,8 +336,9 @@ The **`design-chrome`** work reshaped the application shell to match [Unified De
 | Back control | Quiet small `CdxButton`; **`cdxIconPrevious`** (`flip-for-rtl`); visible text = active primary section label; `aria-label` from `shell-collapsed-nav-menu-back-button-label` |
 | Back control → first item gap | **`gap: var(--spacing-50)`** on overlay panel flex column |
 | Section list | Reuses **`ShellSidePanelNav`** (including explorer mode links via `navigateTo`); **`omitSectionTitleMatching`** hides a section heading when it equals the back label (avoids duplicating the primary section name) |
-| Primary list | Flat **`CdxMenuItem`** rows (main tabs, including **APIs**); selection navigates and closes overlay |
-| Dismiss | Backdrop click, **Escape**, route change, or nav expand |
+| Primary list | Flat **`CdxMenuItem`** rows (main tabs, including **APIs**); selection navigates to that section’s landing path and drills into the section menu (overlay stays open). Already on that landing → section view only |
+| Section leaf | Subsection links navigate and close the overlay. Re-selecting the current page (e.g. **Overview** when already there) closes the overlay without navigating — second dismiss affordance beside tapping the backdrop |
+| Dismiss | Backdrop click, **Escape**, leaf navigation (route change), re-select current section item, or nav expand. Primary-tab drill-down does **not** dismiss |
 | Scroll lock | `html.shell-collapsed-nav-menu-open { overflow: hidden }` in **`shell-collapsed-nav-menu.css`** |
 
 **Source:** `app/composables/useShellCollapsedNavMenu.ts`, `app/components/shared/ShellCollapsedNavMenuOverlay.vue`, `app/components/shared/ShellCollapsedNavigation.vue`, `app/assets/css/shell-collapsed-nav-menu.css`, `app/layouts/default.vue`, `i18n/*` (`shell-collapsed-nav-menu-*`).

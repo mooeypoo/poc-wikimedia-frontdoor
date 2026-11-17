@@ -163,7 +163,9 @@ const {
 	collapsedNavMenuView,
 	closeCollapsedNavMenu,
 	toggleCollapsedNavMenu,
-	showCollapsedNavMenuPrimaryView
+	showCollapsedNavMenuPrimaryView,
+	showCollapsedNavMenuSectionView,
+	keepCollapsedNavMenuOpenForSectionViewAfterNavigation
 } = useShellCollapsedNavMenu( {
 	isNavigationCollapsed,
 	hasSectionNavigation
@@ -212,13 +214,36 @@ function handlePrimaryNavigationSelect( navigationId: string ): void {
 }
 
 /**
- * Navigates from the collapsed overlay primary list and closes the overlay.
+ * Handles a primary-tab selection in the collapsed overlay.
+ *
+ * Navigates to that section’s landing path when needed, then keeps the overlay
+ * open on the section menu so the user can browse subsections before choosing a
+ * leaf destination. If the route is already that landing path, only the view
+ * switches. Closing the overlay after this still leaves the user in the chosen
+ * main section.
  *
  * @param navigationId - Main navigation entry id from `config/mainNavigation.ts`.
  */
 function handleCollapsedNavMenuPrimaryNavigationSelect( navigationId: string ): void {
-	handlePrimaryNavigationSelect( navigationId )
-	closeCollapsedNavMenu()
+	if ( !isPrimaryNavigationReady.value ) {
+		return
+	}
+
+	const navigationLink = mainNavigationLinks.value.find(
+		( link ) => link.id === navigationId
+	)
+
+	if ( !navigationLink ) {
+		return
+	}
+
+	if ( navigationLink.to === route.path ) {
+		showCollapsedNavMenuSectionView()
+		return
+	}
+
+	keepCollapsedNavMenuOpenForSectionViewAfterNavigation()
+	navigateTo( navigationLink.to )
 }
 
 // Prefer `$interfaceLocale` (never empty). On explorer (`i18n: false`),
