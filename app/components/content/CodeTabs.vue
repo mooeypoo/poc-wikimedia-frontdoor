@@ -155,5 +155,26 @@ provide( 'code-tabs:register', registerTab )
 	border-radius: var( --border-radius-sharp );
 	padding-block: var( --spacing-75 );
 	padding-inline: var( --spacing-75 );
+	/*
+	 * Soft-wrap long lines (e.g. curl URLs) inside the panel — matches
+	 * CodeBlock. Authors still use `\` + indent for intentional breaks.
+	 */
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.code-tabs :deep( .cdx-tab pre code ) {
+	white-space: inherit;
+	overflow-wrap: inherit;
+}
+
+/*
+ * Each Shiki `.line` is one source line; allow soft-wrap inside long lines
+ * (URLs) without collapsing intentional newlines between lines.
+ */
+.code-tabs :deep( .cdx-tab .shiki .line ) {
+	display: block;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 </style>

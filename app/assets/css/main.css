@@ -167,6 +167,10 @@ h1 {
 
 h2 {
 	font-size: var( --font-size-x-large );
+	border-top-color: rgb(226, 226, 227);
+    border-top-style: solid;
+    border-top-width: 1px;
+	padding-top: 20px;
 }
 
 h3 {

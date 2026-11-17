@@ -52,7 +52,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'nav-api',
 				items: [
 					{ id: 'apis-overview', messageKey: 'section-nav-overview', href: '/apis' },
-					{ id: 'quickstart', messageKey: 'Quickstart', href: '/apis/quickstart' },
+					{ id: 'quickstart', messageKey: 'Quick start', href: '/apis/quickstart' },
 					{ id: 'catalog', messageKey: 'API catalog', href: '/apis/catalog' }
 				]
 			},
@@ -124,7 +124,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'Explore',
 				items: [
 					{ id: 'explore-featured-apps', messageKey: 'Browse featured apps', href: '/get-started/featured-apps' },
-					{ id: 'tutorials', messageKey: 'Browse APIs', href: '/' }
+					{ id: 'catalog', messageKey: 'Browse APIs', href: '/apis/catalog' }
 				]
 			},
 		]
@@ -155,20 +155,18 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				items: [
 					{ id: 'contribute-overview', messageKey: 'section-nav-overview', href: '/contribute' },
 					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/contribute/learn' },
+					{ id: 'dp', messageKey: 'Contribute to the Developer Portal', href: '/contribute/dev-portal' },
+				]
+			},
+			{
+				id: 'find-projects',
+				titleMessageKey: 'Find open source projects',
+				items: [
 					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute/by-topic' },
 					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute/by-language' },
 					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' }
 				]
 			},
-			{
-				id: 'developer-portal',
-				titleMessageKey: 'section-nav-contribute-developer-portal-title',
-				items: [
-					{ id: 'contribute-code', messageKey: 'section-nav-contribute-contribute-code', href: '/contribute-code' },
-					{ id: 'edit-the-docs', messageKey: 'section-nav-contribute-edit-the-docs', href: '/edit-the-docs' },
-					{ id: 'write-a-guide', messageKey: 'section-nav-contribute-write-a-guide', href: '/write-a-guide' }
-				]
-			}
 		]
 	},
 	'get-help': {

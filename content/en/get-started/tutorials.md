@@ -41,6 +41,6 @@ Follow step-by-step guides to learn the basics of building with Wikimedia.
 ::
 :::
 
-## Contribute
+## Contribute a tutorial
 
 To add a tutorial to this page or to nominate a featured tutorial, leave a comment on the [project page on mediawiki.org](https://www.mediawiki.org/wiki/Talk:Developer_Portal).

@@ -13,6 +13,12 @@
  * Pass `label` to show a short caption above the code describing the sample
  * (`:::code-block{label="Fetch a page summary"}`).
  *
+ * Pass `collapse-after-line` to show only that many lines initially, with a
+ * "Show more" toggle underneath (`:::code-block{collapse-after-line="8"}`). The
+ * limit is measured in rendered lines, so a soft-wrapped line counts once per
+ * visual row. The toggle only appears when the code is actually taller than
+ * the limit.
+ *
  * MDC: `:::code-block` … fenced code … `:::`.
  *
  * @see ARCHITECTURE.md → Markdown content pages → Code block
@@ -29,9 +35,16 @@ const props = withDefaults( defineProps<{
 	 * above the code. Omit for the original headerless panel.
 	 */
 	label?: string
+	/**
+	 * Number of lines to show before the rest is collapsed behind a toggle.
+	 * MDC attributes arrive as strings (`"8"`), so numeric strings are accepted.
+	 * Omit (or pass a non-positive / non-numeric value) to always show everything.
+	 */
+	collapseAfterLine?: number | string
 }>(), {
 	noSoftWrap: false,
-	label: ''
+	label: '',
+	collapseAfterLine: undefined
 } )
 
 /**
@@ -50,6 +63,92 @@ const isNoSoftWrap = computed( () => {
  * @returns The label to display, if any.
  */
 const labelText = computed( () => props.label.trim() )
+
+/**
+ * Parsed collapse limit, or null when collapsing is not requested.
+ *
+ * @returns A positive integer line count, or null.
+ */
+const collapsedLineCount = computed<number | null>( () => {
+	const raw = props.collapseAfterLine
+
+	if ( raw === undefined || raw === null || raw === '' ) {
+		return null
+	}
+
+	const parsed = typeof raw === 'number' ? Math.floor( raw ) : Number.parseInt( raw, 10 )
+
+	return Number.isFinite( parsed ) && parsed > 0 ? parsed : null
+} )
+
+/** Whether the user has expanded the collapsed code. */
+const isExpanded = ref( false )
+
+/**
+ * Whether the code is taller than the collapse limit. Measured on the client
+ * after mount; stays true after expanding so the "Show less" toggle remains.
+ */
+const isOverflowing = ref( false )
+
+/**
+ * True while the height limit should be applied. This depends only on props
+ * and the toggle state (not on measurement) so SSR and first paint already
+ * render the collapsed height, with no flash of full-height code.
+ */
+const isCollapsed = computed( () => collapsedLineCount.value !== null && !isExpanded.value )
+
+/** Inline CSS variable consumed by the collapsed `pre` height rule. */
+const collapsedStyle = computed( () => (
+	collapsedLineCount.value === null ?
+		undefined :
+		{ '--code-block-collapsed-lines': String( collapsedLineCount.value ) }
+) )
+
+const bodyRef = ref<HTMLElement | null>( null )
+let resizeObserver: ResizeObserver | null = null
+
+/**
+ * Checks whether the collapsed `pre` is clipping content. Skipped while
+ * expanded, since the full height would never report overflow.
+ */
+function measureOverflow() {
+	if ( collapsedLineCount.value === null || isExpanded.value ) {
+		return
+	}
+
+	const pre = bodyRef.value?.querySelector( 'pre' )
+
+	if ( !pre ) {
+		return
+	}
+
+	isOverflowing.value = pre.scrollHeight > pre.clientHeight + 1
+}
+
+/** Flips between the collapsed and fully expanded states. */
+function toggleExpanded() {
+	isExpanded.value = !isExpanded.value
+}
+
+onMounted( () => {
+	measureOverflow()
+
+	// Re-measure when the panel width changes, since soft-wrapping alters height.
+	if ( typeof ResizeObserver !== 'undefined' && bodyRef.value ) {
+		resizeObserver = new ResizeObserver( measureOverflow )
+		resizeObserver.observe( bodyRef.value )
+	}
+} )
+
+onBeforeUnmount( () => {
+	resizeObserver?.disconnect()
+	resizeObserver = null
+} )
+
+// Changing the limit (or soft-wrap mode) at runtime can change whether the code overflows.
+watch( [ collapsedLineCount, isNoSoftWrap ], () => {
+	nextTick( measureOverflow )
+} )
 </script>
 
 <template>
@@ -59,7 +158,11 @@ const labelText = computed( () => props.label.trim() )
 	-->
 	<div
 		class="code-block"
-		:class="{ 'code-block--no-soft-wrap': isNoSoftWrap }"
+		:class="{
+			'code-block--no-soft-wrap': isNoSoftWrap,
+			'code-block--collapsed': isCollapsed
+		}"
+		:style="collapsedStyle"
 		dir="ltr"
 	>
 		<div
@@ -72,9 +175,21 @@ const labelText = computed( () => props.label.trim() )
 			Wrapper keeps the `:deep( > *:first-child )` margin resets working
 			now that the label can be the panel's first child.
 		-->
-		<div class="code-block__body">
+		<div
+			ref="bodyRef"
+			class="code-block__body"
+		>
 			<slot />
 		</div>
+		<button
+			v-if="collapsedLineCount !== null && isOverflowing"
+			type="button"
+			class="code-block__toggle"
+			:aria-expanded="isExpanded"
+			@click="toggleExpanded"
+		>
+			{{ isExpanded ? 'Show less' : 'Show more' }}
+		</button>
 	</div>
 </template>
 
@@ -158,5 +273,51 @@ const labelText = computed( () => props.label.trim() )
 .code-block--no-soft-wrap :deep( .shiki .line ) {
 	white-space: pre;
 	overflow-wrap: normal;
+}
+
+/*
+ * Collapsed state: clip the `pre` to exactly N rendered lines. `content-box`
+ * keeps the padding outside the limit, and `1lh` is the `pre`'s own line
+ * height. Needs a browser with the `lh` unit (Chrome 109+, Safari 16.4+,
+ * Firefox 120+); older browsers ignore the rule and simply show the full code.
+ *
+ * `overflow` clips at the padding edge, so a bottom *padding* would reveal the
+ * top of the next line. Swap it for a transparent bottom *border* (outside the
+ * clip, still painted over by the `pre` background) to keep the same spacing
+ * without showing a partial line.
+ */
+.code-block--collapsed :deep( pre ) {
+	box-sizing: content-box;
+	max-block-size: calc( var( --code-block-collapsed-lines ) * 1lh );
+	overflow-y: hidden;
+	padding-block-end: 0;
+	border-block-end: var( --spacing-75 ) solid transparent;
+}
+
+/* Full-width toggle strip under the code, divided like the label strip. */
+.code-block__toggle {
+	display: block;
+	inline-size: 100%;
+	padding-block: var( --spacing-50 );
+	padding-inline: var( --spacing-75 );
+	border: 0;
+	border-block-start: 1px solid var( --border-color-muted );
+	background-color: var( --background-color-interactive-subtle );
+	color: var( --color-progressive );
+	font-family: inherit;
+	font-size: var( --font-size-small );
+	font-weight: var( --font-weight-semi-bold );
+	line-height: var( --line-height-small );
+	text-align: center;
+	cursor: pointer;
+}
+
+.code-block__toggle:hover {
+	background-color: var( --background-color-interactive );
+}
+
+.code-block__toggle:focus-visible {
+	outline: 2px solid var( --border-color-progressive--focus );
+	outline-offset: -2px;
 }
 </style>
