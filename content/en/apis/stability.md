@@ -16,7 +16,7 @@ Wikimedia APIs are versioned using a version number in the path (for example: `/
 
 APIs with `/v0/` in the path are unstable and may change in backwards incompatible ways without notice.
 
-## Module audiences
+## API status
 
 As part of REST API module creation, we are also introducing the concept of API audiences. Audiences indicate which developers the API is intended for, and makes associated stability assumptions. API audience designations are included as part of the API module definition and will appear as version suffixes within endpoint URLs were appropriate.
 

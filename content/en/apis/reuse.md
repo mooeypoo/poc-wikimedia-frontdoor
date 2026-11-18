@@ -1,14 +1,8 @@
----
-status: mockup
----
-
-# Attribution
+# Reusing free content
 
 Articles on Wikipedia and content on other Wikimedia projects are licensed under a variety of free licenses, including [Creative Commons licenses](https://creativecommons.org/cc-licenses/) and others. Properly attributing Wikimedia content is essential to the continued health of the free knowledge ecosystem.
 
-::highlight
-The Wikimedia attribution framework provides guideline for fairly crediting Wikimedia content wherever it is surfaced. [**Read the attribution framework →**](https://wikimedia-attribution.toolforge.org/)
-::
+The Wikimedia attribution framework provides guidelines for fairly crediting Wikimedia content wherever it is surfaced. [**Read the attribution framework →**](https://wikimedia-attribution.toolforge.org/)
 
 ## Quick start
 

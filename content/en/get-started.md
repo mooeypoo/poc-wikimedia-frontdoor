@@ -4,17 +4,17 @@ status: 0 draft
 
 # Get started
 
-Welcome to the Wikimedia Developer Portal! Start here to learn about developer tools for accessing content from Wikipedia and other Wikimedia projects, as well as open datasets and resources for building tools for Wikimedia communities.
+Welcome to the Wikimedia Developer Portal! Start here to learn about building with content and data from Wikipedia and other Wikimedia projects.
 
 :::navigation-card-grid
-::navigation-card{url="/get-started/about-wikimedia" title="New to Wikimedia?" description="We're so happy you're here! Read the introduction to learn about Wikimedia projects and technology."}
+::navigation-card{url="/get-started/about-wikimedia" title="New to Wikimedia?" description="Read the introduction to learn about Wikimedia projects and technology."}
 ::
 
-::navigation-card{url="/get-started/tutorials" title="Learn with tutorials" description="Follow coding exercises with step-by-step guidance."}
+::navigation-card{url="/get-started/tutorials" title="Learn with tutorials" description="Follow step-by-step guides to learn the basics of building with Wikimedia."}
 ::
 :::
 
-## Choose a use case
+## Start building
 
 :::navigation-card-grid
 ::navigation-card{url="/get-started/wiki-content" title="Use wiki content" description="Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
@@ -23,10 +23,10 @@ Welcome to the Wikimedia Developer Portal! Start here to learn about developer t
 ::navigation-card{url="/get-started/open-data" title="Access open data" description="Explore public data that you can use in research and machine learning."}
 ::
 
-::navigation-card{url="/" title="Build for Wikimedia communities" description="Automate edits, detect vandalism, and learn about hosting tools using Wikimedia infrastructure."}
+::navigation-card{url="/get-started/tools-and-bots" title="Build for Wikimedia communities" description="Automate edits, detect vandalism, and learn about hosting tools using Wikimedia infrastructure."}
 ::
 
-::navigation-card{url="/get-started/wikimedia-enterprise" title="Build for commercial use cases" description="Learn how Wikimedia Enterprise APIs provide high-volume and commercial access to Wikimedia content."}
+::navigation-card{url="/get-started/commercial" title="Build for commercial use cases" description="Learn how Wikimedia Enterprise APIs provide high-volume and commercial access to Wikimedia content."}
 ::
 :::
 
@@ -36,7 +36,7 @@ Welcome to the Wikimedia Developer Portal! Start here to learn about developer t
 ::navigation-card{url="/get-started/featured-apps" title="Browse featured apps" description="See examples of open source apps and data visualizations built with Wikimedia content and data."}
 ::
 
-::navigation-card{url="/" title="Browse APIs" description="See Wikimedia APIs."}
+::navigation-card{url="/apis/catalog" title="Browse APIs" description="Browse APIs by project and use case."}
 ::
 :::
 

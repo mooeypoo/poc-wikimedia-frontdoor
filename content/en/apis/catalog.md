@@ -2,9 +2,11 @@
 status: 0 draft
 ---
 
-# Wikimedia APIs
+# API catalog
 
 Browse all APIs.
+
+## Wikimedia APIs
 
 ::api-catalog-wikimedia-section
 ::

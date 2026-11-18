@@ -20,14 +20,14 @@ User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:De
 ```
 :::
 
-## 3. Search for articles
+## 3. Search for articles on Wikipedia
 
 Most Wikimedia APIs fetch content based on page titles. To find a Wikipedia article title, use a search endpoint to search by article title or article content. This guide uses the search content endpoint to find the article about the planet Mercury. [Try it out]()
 
 ::::code-tabs
 :::code-tab{label="curl"}
 ```bash
-curl -H "User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:Developer_Portal)" 'https://en.wikipedia.org/w/rest.php/v1/search/page?q=planet%20mercury&limit=1'
+curl -H 'User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:Developer_Portal)' 'https://en.wikipedia.org/w/rest.php/v1/search/page?q=planet%20mercury&limit=1'
 ```
 :::
 
@@ -79,14 +79,14 @@ The result includes information about the article, including the title, excerpt,
 
 ## 4. Fetch an article from Wikipedia
 
-Now that you have the article title, fetch the content of the article in HTML using a page endpoint. This guide uses the get page source endpoint from the Content API. [Try it out]()
+Now that you have the article title, fetch the content of the article in HTML using a page endpoint. This guide uses the get page with HTML endpoint from the Content API. [Try it out]()
 
-To format the title to use in the request, URL-encode use the `key` from the search response. For example, use `Steller%27s_jay` for `Steller's jay`.
+To format the title to use in the request, URL-encode the `key` from the search response. For example, use `Mercury_%28planet%29` for `Mercury (planet)`.
 
 ::::code-tabs
 :::code-tab{label="curl"}
 ```bash
-curl -H "User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:Developer_Portal)" 'https://en.wikipedia.org/w/rest.php/v1/page/Mercury_%28planet%29/bare'
+curl -H 'User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:Developer_Portal)' 'https://en.wikipedia.org/w/rest.php/v1/page/Mercury_%28planet%29/with_html'
 ```
 :::
 
@@ -109,24 +109,17 @@ curl -H "User-Agent: Developer Portal sample code (https://www.mediawiki.org/wik
 :::
 ::::
 
-
 ## 5. Add attribution
-To reuse this article, indicate its source and include other information that attributes it to  Wikipedia. The Attribution API makes it easy to get all attribution information in one place. [Learn more about how to attribute Wikimedia content.](https://wikimedia-attribution.toolforge.org/)
 
-| Project: English Wikipedia | API: Attribution API v1 |
-| --- | ---|
+Wikimedia content is free to use in your projects and apps as long as you follow the licensing requirements. To use unmodified text from English Wikipedia, you must include the name of the project, the name of the article, a link to the article, and a link to the license. [Learn more about reusing free content.]()
 
-| Endpoint: Get page | `en.wikipedia.org/api/pages/{title}/signals` |
-| --- | --- |
 
-| [Try it out](/explorer) |
-| --- |
-
+The Attribution API provides all this information through a single endpoint, including visual and sound logos. [Try it out]()
 
 ::::code-tabs
 :::code-tab{label="curl"}
-```curl
-...
+```bash
+curl -H 'User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:Developer_Portal)' 'https://en.wikipedia.org/w/rest.php/attribution/v0-beta/pages/Mercury%20%28planet%29/signals'
 ```
 :::
 
@@ -149,24 +142,60 @@ To reuse this article, indicate its source and include other information that at
 :::
 ::::
 
-:::code-block{label="Response"}
+:::code-block{label="Response" collapse-after-line="7"}
 ```json
-...
+{
+  "essential": {
+    "link": "https://en.wikipedia.org/w/index.php?title=Mercury_(planet)&wprov=afsw1",
+    "default_brand_marks": [
+      {
+        "name": "Default logo",
+        "url": "https://en.wikipedia.org/static/images/project-logos/enwiki-25.png",
+        "type": "logo"
+      },
+      {
+        "name": "Site icon",
+        "url": "https://en.wikipedia.org/static/images/icons/enwiki-25.svg",
+        "type": "icon"
+      },
+      {
+        "name": "Sound logo",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/9/91/Wikimedia_Sonic_Logo_-_4-seconds.wav",
+        "type": "audio"
+      }
+    ],
+    "source_wiki": {
+      "site_name": "English Wikipedia",
+      "project_family": "wikipedia",
+      "site_id": "enwiki",
+      "site_language": "en",
+      "page_language": "en"
+    },
+    "title": "Mercury (planet)",
+    "license": {
+      "title": "Creative Commons Attribution-Share Alike 4.0",
+      "short": "CC BY-SA 4.0",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
+    }
+  }
+}
 ```
 :::
 
-Using information from these two requests, you can generate a preview of the Solar System article that you can incorporate into your app.
-
-## Review API policies
-
-Before you go, we ask that you take a minute to look over the [API policies](/apis/policies). Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use.
-
-## Try the sandbox
-
-Visit the [API explorer](/explorer) to try different parameters and explore other available languages and projects.
-
 ## Next steps
 
-- [Explore featured apps](/get-started/featured-apps)
-- [Learn with tutorials](/get-started/tutorials)
-- [Connect with the community](/community)
+### Review API policies
+
+Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use. [Review API policies.](/apis/policies)
+
+### Set up authentication
+
+Integrate your app with Wikimedia accounts to make write requests and access user features. [Set up authentication.](/apis/auth)
+
+### Learn with tutorials
+
+Follow step-by-step guides to learn the basics of building with Wikimedia. [Learn with tutorials.](/get-started/tutorials)
+
+### Connect with the community
+
+Get involved with the Wikimedia technical community, and find opportunities for support and learning. [Connect with the community.](/community)

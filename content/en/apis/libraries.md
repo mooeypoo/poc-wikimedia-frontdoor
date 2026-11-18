@@ -24,4 +24,4 @@ Wikimedia API docs are based on OpenAPI descriptions that you can use to generat
 
 ## Add a library
 
-
+To add a library to this page, leave a comment on the [project page on mediawiki.org](https://www.mediawiki.org/wiki/Talk:Developer_Portal).

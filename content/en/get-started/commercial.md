@@ -4,13 +4,9 @@ status: version 1
 
 # Build for commercial use cases
 
-Integrate the world’s knowledge into your product experiences with Wikimedia Enterprise: a suite of APIs powered by the Wikimedia Foundation and designed specifically for commercial use cases.
+Integrate the world’s knowledge into your product experiences with Wikimedia Enterprise: a suite of APIs powered by the Wikimedia Foundation and designed for commercial use cases. [Get started with Wikimedia Enterprise.](https://enterprise.wikimedia.com)
 
-::highlight
-[**Get started with Wikimedia Enterprise**](https://enterprise.wikimedia.com)
-::
-
-## Wikimedia Enterprise APIs
+## Discover Wikimedia Enterprise APIs
 
 Backed by comprehensive services and support, SLAs, and guaranteed uptime, Wikimedia Enterprise APIs offer high-volume, on-demand access to content from Wikipedia and other Wikimedia projects.
 
@@ -25,7 +21,7 @@ Backed by comprehensive services and support, SLAs, and guaranteed uptime, Wikim
 ::
 :::
 
-## Use cases
+## Explore use cases
 
 Wikimedia Enterprise APIs are designed for a variety of commercial workflows, including large language models (LLM) training and inference, search engines, knowledge graphs, and data science.
 
@@ -53,17 +49,14 @@ Wikimedia Enterprise APIs are designed for a variety of commercial workflows, in
 
 Get access to Wikimedia Enterprise APIs as a Wikimedia community member or academic researcher.
 
-:::navigation-card-grid
-::navigation-card{url="https://enterprise.wikimedia.com/pricing" title="Free tier" description="Wikimedia Enterprise offers a free access tier for the Snapshot API and On-demand API to support a broad set of research and other community use cases."}
-::
+### Free tier
 
-::navigation-card{url="https://wikitech.wikimedia.org/wiki/Help:Cloud_Services_introduction#Get_Exclusive_Wikimedia_Enterprise_API_Access" title="Wikimedia cloud access" description="Wikimedia communities can use Wikimedia Enterprise APIs for free through Wikimedia Cloud Services."}
-::
-:::
+Wikimedia Enterprise offers a free access tier for the Snapshot API and On-demand API to support a broad set of research and other community use cases. [Sign up for free access.](https://enterprise.wikimedia.com/pricing)
+
+### Wikimedia cloud access
+
+Wikimedia communities can use Wikimedia Enterprise APIs for free through Wikimedia Cloud Services. [Read more on Wikitech.](https://wikitech.wikimedia.org/wiki/Help:Cloud_Services_introduction#Get_Exclusive_Wikimedia_Enterprise_API_Access)
 
 ## Limitations
 
-Depending on your use case, Wikimedia Enterprise may not be the best option. Here are a few limitations to consider when choosing Enterprise APIs:
-
-- Wikimedia Enterprise APIs offer read-only access. Use Wikimedia community APIs for write access.
-- Wikimedia Enterprise stores article text, templates, categories, and files from Wikimedia projects. For access to talk pages, user pages, help pages, and other types of content, use Wikimedia community APIs.
+Wikimedia Enterprise APIs offer read-only access to content pages, templates, categories, and files from Wikimedia projects. Wikimedia Enterprise does not support write requests or provide access to specialized pages such as talk pages, user pages, and help pages. [Browse all APIs.](/apis/catalog)

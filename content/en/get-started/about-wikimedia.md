@@ -1,11 +1,8 @@
----
-status: mockup
----
 # About Wikimedia
 
 Wikimedia is the largest collection of free knowledge in the world.
 
-## Wikimedia projects
+## Free knowledge projects
 
 Discover available content.
 
@@ -17,7 +14,7 @@ Discover available content.
 ::
 :::
 
-## Wikimedia technology
+## Open source technology
 
 Learn about core Wikimedia technologies and open source projects.
 

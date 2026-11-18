@@ -57,17 +57,6 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				]
 			},
 			{
-				id: 'requests',
-				titleMessageKey: 'Guides',
-				items: [
-					{ id: 'requests-overview', messageKey: 'Making requests', href: '/apis/overview' },
-					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
-					{ id: 'auth-overview', messageKey: 'Authentication', href: '/apis/auth' },
-					{ id: 'stability-policy', messageKey: 'Versioning and stability', href: '/apis/stability' },
-					{ id: 'troubleshooting', messageKey: 'Troubleshooting', href: '/apis/troubleshooting' },
-				]
-			},
-			{
 				id: 'api-explorer',
 				titleMessageKey: 'API explorer',
 				items: [
@@ -85,6 +74,18 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 						href: '/explorer/enterprise-custom',
 						enabled: false
 					}
+				]
+			},
+			{
+				id: 'requests',
+				titleMessageKey: 'Guides',
+				items: [
+					{ id: 'requests-overview', messageKey: 'Making requests', href: '/apis/overview' },
+					{ id: 'requests-overview', messageKey: 'Reusing free content', href: '/apis/reuse' },
+					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
+					{ id: 'auth-overview', messageKey: 'Authentication', href: '/apis/auth' },
+					{ id: 'stability-policy', messageKey: 'Versioning and stability', href: '/apis/stability' },
+					{ id: 'troubleshooting', messageKey: 'Troubleshooting', href: '/apis/troubleshooting' },
 				]
 			},
 			{
@@ -155,16 +156,10 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				items: [
 					{ id: 'contribute-overview', messageKey: 'section-nav-overview', href: '/contribute' },
 					{ id: 'learn-how-contributing-works', messageKey: 'section-nav-contribute-learn-how-contributing-works', href: '/contribute/learn' },
-					{ id: 'dp', messageKey: 'Contribute to the Developer Portal', href: '/contribute/dev-portal' },
-				]
-			},
-			{
-				id: 'find-projects',
-				titleMessageKey: 'Find open source projects',
-				items: [
 					{ id: 'contribute-by-topic', messageKey: 'section-nav-contribute-contribute-by-topic', href: '/contribute/by-topic' },
 					{ id: 'contribute-by-programming-language', messageKey: 'section-nav-contribute-contribute-by-programming-language', href: '/contribute/by-language' },
-					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' }
+					{ id: 'search-all-projects', messageKey: 'section-nav-contribute-search-all-projects', href: '/contribute/search' },
+					{ id: 'dp', messageKey: 'Contribute to the Developer Portal', href: '/contribute/dev-portal' },
 				]
 			},
 		]

@@ -183,6 +183,10 @@ h3 {
 	font-size: var( --font-size-large );
 }
 
+p + p {
+  margin-top: 0.9em;
+}
+
 /*
  * Markdown content pages — Codex typography style guide
  * (https://doc.wikimedia.org/codex/latest/style-guide/typography.html):
