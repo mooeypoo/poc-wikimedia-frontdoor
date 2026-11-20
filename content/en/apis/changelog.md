@@ -1,7 +1,3 @@
----
-status: mockup
----
-
 # Changelog
 
 Explore the latest changes to Wikimedia APIs.

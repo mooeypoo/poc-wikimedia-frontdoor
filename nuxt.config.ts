@@ -129,7 +129,8 @@ export default defineNuxtConfig( {
 						'html',
 						'css',
 						'vue',
-						'markdown'
+						'markdown',
+						'http'
 					]
 				}
 			}

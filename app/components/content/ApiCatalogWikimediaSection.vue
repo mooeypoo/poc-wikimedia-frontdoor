@@ -46,12 +46,6 @@ const {
 <template>
 	<section class="api-catalog-wikimedia-section">
 		<div class="api-catalog-wikimedia-section__header">
-			<SectionHeading
-				class="api-catalog-wikimedia-section__heading"
-				:title="props.title"
-				:chip="props.chip"
-				status="notice"
-			/>
 			<CdxField class="api-catalog-wikimedia-section__filter">
 				<template #label>
 					{{ filterLabel }}

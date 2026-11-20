@@ -1,7 +1,3 @@
----
-status: stub
----
-
 # Troubleshooting
 
 This page describes issues you may encounter when using Wikimedia APIs.

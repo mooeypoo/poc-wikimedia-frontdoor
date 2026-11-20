@@ -1,18 +1,23 @@
----
-status: draft 1
----
-
 # Contribute to Wikimedia open source
 
 Help build the Wikimedia ecosystem with open source software.
 
-:::navigation-card-grid
-::navigation-card{url="/contribute/learn" title="Learn how contributing works" description="Get the basics of how to contribute to MediaWiki and other Wikimedia open source projects."}
-::
-::navigation-card{url="/contribute/by-topic" title="Contribute by topic" description="Find ways to contribute, and connect with others with shared interests."}
-::
-::navigation-card{url="/contribute/by-language" title="Contribute by programming language" description="Choose a project to contribute to based on programming language."}
-::
-::navigation-card{url="/contribute/search" title="Search all projects" description="Search all Wikimedia open source software projects."}
-::
-:::
+## [Learn how contributing works](/contribute/learn)
+
+Get the basics of how to contribute to MediaWiki and other Wikimedia open source projects.
+
+## [Contribute by topic](/contribute/by-topic)
+
+Find ways to contribute, and connect with others with shared interests.
+
+## [Contribute by programming language](/contribute/by-language)
+
+Choose a project to contribute to based on programming language.
+
+## [Search all projects](/contribute/search)
+
+Search all Wikimedia open source software projects.
+
+## [Contribute to the Developer Portal](/contribute/dev-portal)
+
+Contribute to the documentation on the Developer Portal, the code behind the side, or help translate the site into your language.

@@ -167,6 +167,10 @@ h1 {
 
 h2 {
 	font-size: var( --font-size-x-large );
+	border-top-color: rgb(226, 226, 227);
+    border-top-style: solid;
+    border-top-width: 1px;
+	padding-top: 20px;
 }
 
 h3 {
@@ -177,6 +181,10 @@ h3 {
 	line-height: var( --line-height-xx-small );
 	/* Non-content pages only; `.fd-content-page h3` uses Codex Heading 3. */
 	font-size: var( --font-size-large );
+}
+
+p + p {
+  margin-top: 0.9em;
 }
 
 /*

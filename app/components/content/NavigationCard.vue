@@ -20,8 +20,9 @@ export type { NavigationCardChip }
  * - Vertical stack; optional top **media** screenshot (`media` public path) —
  *   Portrait-card layout (Codex design, not shipped yet — see T310632);
  *   **`--spacing-75` (12px)** inset around the image per Figma Portrait card
- * - Neutral-subtle background; transparent border that uses
- *   `--border-color-subtle` on hover when the card is a link
+ * - Outlined style: transparent background with a visible
+ *   `--border-color-base` border; the border darkens to
+ *   `--border-color-interactive` on hover when the card is a link
  * - Exploratory **4px** radius (`--fd-explorer-controls-surface-border-radius`)
  * - Optional **top** / **leading** title icons (Codex allowlist)
  * - Optional **title-logo** — allowlisted monochrome brand SVG
@@ -32,11 +33,21 @@ export type { NavigationCardChip }
  *   appended for off-platform URLs; icon inherits link colour);
  *   title trailing external icon is omitted in that case. Without supporting-text,
  *   off-platform cards still show the title trailing icon unless
- *   `hide-external-icon` is set. In equal-height grids, supporting-text is
+ *   `hide-external-icon` is set. The trailing icon is deliberately quiet:
+ *   `x-small`, `--color-placeholder` at rest, brightening to `--color-subtle`
+ *   on card hover / keyboard focus. In equal-height grids, supporting-text is
  *   bottom-aligned (`margin-block-start: auto`) with a Codex **minimum**
  *   `--spacing-50` (8px) from the description via `padding-block-start`.
  *   When converting from prose, **keep the technical writer’s supporting-text
  *   / link labels** — do not rewrite them
+ * - **Link-only variant:** when the card has a `url` and `supporting-text`
+ *   and nothing else (no title, title-logo, description, chips, media, or
+ *   icons — props or slots), it collapses to a compact "link pill": the card
+ *   is only as wide as its text (`fit-content`, capped at the container
+ *   width) and the `--spacing-75` (12px) padding is applied evenly on all
+ *   four sides. The bottom-alignment / minimum-gap spacing for
+ *   supporting-text is dropped in this mode because there is no description
+ *   above it.
  * - Optional `CdxInfoChip` row (label-only in cards — status icons hidden; Codex
  *   forces icons on warning/error/success and ignores a null `icon` for those;
  *   landing Coolest Tool chips use `chips="award:…"` with star + purple)
@@ -268,6 +279,21 @@ const hasBody = computed( () =>
 )
 
 /**
+ * Link-only variant: a `url` plus supporting-text and nothing else. The card
+ * shrinks to the width of its text and gets even padding on all sides.
+ */
+const isLinkOnly = computed( () =>
+	isLink.value &&
+	hasSupportingText.value &&
+	!hasMedia.value &&
+	!hasTopIcon.value &&
+	!hasLeadingIcon.value &&
+	!hasTitle.value &&
+	!hasDescription.value &&
+	!hasChips.value
+)
+
+/**
  * Resolves an optional chip icon from the allowlisted NavigationCard icons.
  *
  * @param chip - Parsed chip descriptor.
@@ -283,7 +309,8 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 		class="navigation-card"
 		:class="{
 			'navigation-card--is-link': isLink,
-			'navigation-card--has-media': hasMedia
+			'navigation-card--has-media': hasMedia,
+			'navigation-card--link-only': isLinkOnly
 		}"
 	>
 		<!--
@@ -397,7 +424,7 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 						>
 							<CdxIcon
 								:icon="resolvedTrailingIcon!"
-								size="medium"
+								size="x-small"
 							/>
 						</span>
 					</div>
@@ -476,14 +503,71 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 	min-block-size: 100%;
 	margin-block-end: var( --spacing-100 );
 	padding: var( --spacing-75 );
-	/* Transparent border reserves space so hover colour does not shift layout. */
-	border: 1px solid transparent;
+	/* Outlined style: visible base border, no filled background. */
+	border: var( --border-width-base ) var( --border-style-base ) var( --border-color-base );
 	border-radius: var( --fd-explorer-controls-surface-border-radius );
-	background-color: var( --fd-explorer-controls-surface-background-color );
+	background-color: transparent;
 	text-decoration: none;
 	color: inherit;
 	box-sizing: border-box;
 	overflow: clip;
+}
+
+/*
+ * Link-only variant (url + supporting-text, nothing else): shrink the card to
+ * the width of its text. `fit-content` sizes to the content but never exceeds
+ * the container, so long labels still wrap instead of overflowing. The card
+ * keeps the base `--spacing-75` padding on all four sides; the extra spacing
+ * rules that exist for title / description / chips are neutralised below so
+ * nothing adds uneven space around the text.
+ */
+.navigation-card--link-only {
+	inline-size: fit-content;
+	max-inline-size: 100%;
+	/* Don't stretch to fill equal-height grid cells. */
+	min-block-size: 0;
+	/*
+	 * Optical balance: the text line box is taller than the glyphs by the
+	 * "half-leading" above and below ((line-height − font-size) / 2). Subtract
+	 * it from the block padding so the space around the text looks equal to
+	 * the inline padding. Relies on both tokens being lengths (rem), as in Codex.
+	 */
+	padding-block: calc(
+		var( --spacing-75 ) -
+		( ( var( --line-height-medium ) - var( --font-size-medium ) ) / 2 )
+	);
+}
+
+.navigation-card--link-only .navigation-card__body,
+.navigation-card--link-only .navigation-card__copy {
+	/* Size to content rather than a percentage of a shrink-wrapped parent. */
+	inline-size: auto;
+	flex: 0 1 auto;
+	gap: 0;
+}
+
+.navigation-card--link-only .navigation-card__supporting-text {
+	/* No description above: drop bottom-pinning and the minimum gap. */
+	margin-block-start: 0;
+	padding-block-start: 0;
+}
+
+/*
+ * The whole card is the hit target in this mode, so the link label has no
+ * hover treatment of its own: it uses the same colour as card descriptions
+ * (`--color-subtle`) in every state (rest, visited, hover, active) and never
+ * underlines. The external icon inherits this colour. The card border still
+ * responds to hover / focus. Higher specificity than the base link rules,
+ * which come later.
+ */
+.navigation-card--link-only .navigation-card__supporting-text-link,
+.navigation-card--link-only .navigation-card__supporting-text-link:visited,
+.navigation-card--link-only .navigation-card__supporting-text-link:hover,
+.navigation-card--link-only .navigation-card__supporting-text-link:visited:hover,
+.navigation-card--link-only .navigation-card__supporting-text-link:active,
+.navigation-card--link-only .navigation-card__supporting-text-link:visited:active {
+	color: var( --color-subtle );
+	text-decoration: var( --text-decoration-none );
 }
 
 /*
@@ -613,6 +697,30 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
  */
 .navigation-card__title-icon--leading {
 	padding-block-start: 2px;
+}
+
+/*
+ * Trailing external-link icon: deliberately quiet. `x-small` (12px) icon,
+ * placeholder colour at rest, brightening to subtle on card hover or keyboard
+ * focus. Centred on the first title line: (24px line-height − 12px icon) / 2
+ * = 6px; keeps it aligned when the title wraps.
+ */
+.navigation-card__title-icon--trailing {
+	padding-block-start: 6px;
+	color: var( --color-placeholder );
+	transition: color var( --transition-duration-base ) var( --transition-timing-function-system );
+}
+
+.navigation-card--is-link:hover .navigation-card__title-icon--trailing,
+.navigation-card--is-link:has( .navigation-card__stretched-link:focus-visible )
+	.navigation-card__title-icon--trailing {
+	color: var( --color-subtle );
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.navigation-card__title-icon--trailing {
+		transition: none;
+	}
 }
 
 .navigation-card__title {
@@ -781,9 +889,10 @@ function resolveChipIcon( chip: NavigationCardChip ): Icon | undefined {
 	cursor: pointer;
 }
 
+/* Outlined style: border darkens to the Codex interactive colour on hover / focus. */
 .navigation-card--is-link:hover,
 .navigation-card--is-link:has( .navigation-card__stretched-link:focus-visible ) {
-	border-color: var( --border-color-subtle );
+	border-color: var( --border-color-interactive );
 }
 
 .navigation-card--is-link:has( .navigation-card__stretched-link:focus-visible ) {
