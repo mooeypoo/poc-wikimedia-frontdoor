@@ -1,22 +1,26 @@
----
-status: mockup
----
-
 # Authentication
 
 Authenticating an API request allows you to access resources and perform actions using a Wikimedia account. Wikimedia APIs require authentication for write requests.
 
-Choose a project to find the right authentication method:
-- [an app that allows users to log in with their Wikimedia account]()
-- [a service or bot that acts as itself]()
-- [a local script or prototype that uses your Wikimedia account]()
+**Choose a type of authentication**:
+
+:::navigation-card-grid
+::navigation-card{url="#authenticate-with-a-user-account" description="An app that allows users to log in with their Wikimedia account"}
+::
+
+::navigation-card{url="#authenticate-with-a-bot-account" description="An service or bot that acts as itself"}
+::
+
+::navigation-card{url="#authenticate-with-your-account" description="An local script or prototype that uses your Wikimedia account"}
+::
+:::
 
 ## Manage API credentials
 
-You can create and manage API credentials using Wikimedia Meta-Wiki. **[See API credentials on Meta-Wiki →]()**
+You can create and manage API credentials using Wikimedia Meta-Wiki. [Manage API credentials on Meta-Wiki.](https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/list)
 
 ::highlight
-If you're new to Wikimedia, create an account to be able to create and manage API credentials. [Create a Wikimedia account on Meta-Wiki.]()
+If you're new to Wikimedia, create an account to be able to create and manage API credentials. [Create a Wikimedia account on Meta-Wiki.](https://auth.wikimedia.org/metawiki/w/index.php?title=Special:CreateAccount)
 ::
 
 ## Authenticate with a user account
@@ -30,7 +34,7 @@ Use this authentication method to integrate your app with users' Wikimedia accou
 
 ### 1. Register an app
 
-Log in to Wikimedia Meta-Wiki, and complete the form to register an OAuth app. [Create credentials.]()
+Log in to Wikimedia Meta-Wiki, and complete the form to register an OAuth app. [Create credentials.](https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/propose/oauth2)
 
 After registering the app, the confirmation shows the client ID and secret. Make sure to store these credentials securely before exiting the dialog.
 
@@ -121,7 +125,7 @@ Established bots and other automated services typically have their own Wikimedia
 
 ### 1. Create credentials
 
-Log in to Wikimedia Meta-Wiki with the bot's account, and complete the form to register a service. [Create credentials.]()
+Log in to Wikimedia Meta-Wiki with the bot's account, and complete the form to register a service. [Create credentials.](https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/propose/oauth2)
 
 After registering the service, the confirmation shows the client ID and secret. Make sure to store these credentials securely before exiting the dialog.
 
@@ -164,7 +168,7 @@ Personal API tokens are tied to the account that created them and must be stored
 
 ### 1. Create token
 
-Log in to Wikimedia Meta-Wiki with the bot's account, and complete the form to register a service. Remember to store your access token in a secure place, like a password manager. [Create a token.]()
+Log in to Wikimedia Meta-Wiki with the bot's account, and complete the form to register a service. Remember to store your access token in a secure place, like a password manager. [Create a token.](https://meta.wikimedia.org/wiki/Special:OAuthConsumerRegistration/propose/oauth2)
 
 ### 2. Authenticate request
 

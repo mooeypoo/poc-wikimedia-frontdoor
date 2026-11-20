@@ -28,4 +28,4 @@ Wikimedia content is available by page through APIs or by project through bulk d
 
 ## High-volume and commercial access
 
-Wikimedia Enterprise offers high-volume access to Wikimedia content and service agreements designed for commercial applications. Try a free account for researchers and Wikimedia communities. [Learn more about Wikimedia Enterprise.](/apis/commercial)
+Wikimedia Enterprise offers high-volume access to Wikimedia content and service agreements designed for commercial applications. Try a free account for researchers and Wikimedia communities. [Learn more about Wikimedia Enterprise.](/get-started/commercial)

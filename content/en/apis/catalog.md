@@ -1,10 +1,12 @@
----
-status: 0 draft
----
-
 # API catalog
 
 Browse all APIs.
+
+::highlight
+**Share your feedback about beta APIs**
+
+Beta APIs are temporary experiments designed to try out new functionality and get feedback from developers. [Learn more about beta APIs.](/apis/stability)
+::
 
 ## Wikimedia APIs
 

@@ -81,7 +81,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'Guides',
 				items: [
 					{ id: 'requests-overview', messageKey: 'Making requests', href: '/apis/overview' },
-					{ id: 'requests-overview', messageKey: 'Reusing free content', href: '/apis/reuse' },
+					{ id: 'requests-overview', messageKey: 'Using free content', href: '/apis/reuse' },
 					{ id: 'rate-limits', messageKey: 'Rate limits', href: '/apis/rate-limits' },
 					{ id: 'auth-overview', messageKey: 'Authentication', href: '/apis/auth' },
 					{ id: 'stability-policy', messageKey: 'Versioning and stability', href: '/apis/stability' },

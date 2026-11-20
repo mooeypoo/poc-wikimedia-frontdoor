@@ -1,6 +1,3 @@
----
-status: mockup
----
 # Build for Wikimedia communities
 
 Support wiki readers and contributors by creating wiki features, running bots, and building tools.

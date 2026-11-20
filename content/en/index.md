@@ -16,13 +16,13 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ## What would you like to do?
 
 :::navigation-card-grid{columns="2"}
-::navigation-card{url="/get-started/wiki-content2" title="Use free knowledge" leading-icon="book" description="Get Wikipedia articles, media files, dictionary entries, and other content to use in your projects and apps."}
+::navigation-card{url="/get-started/wiki-content" title="Use free knowledge" leading-icon="book" description="Get Wikipedia articles, media files, dictionary entries, and other content to use in your projects and apps."}
 ::
 
 ::navigation-card{url="/get-started/open-data" title="Work with open data" leading-icon="labFlask" description="Use Wikimedia data to inform research, support machine learning, and create visualizations."}
 ::
 
-::navigation-card{url="/get-started/tools" title="Build for Wikimedia communities" leading-icon="robot" description="Create tools, bots, and features that support wiki readers and contributors."}
+::navigation-card{url="/get-started/tools-and-bots" title="Build for Wikimedia communities" leading-icon="robot" description="Create tools, bots, and features that support wiki readers and contributors."}
 ::
 
 ::navigation-card{url="/get-started/commercial" title="Build for commercial use cases" title-logo="wikimediaEnterprise" description="Get high-volume access to Wikimedia content and data using enterprise APIs and services."}
@@ -33,7 +33,7 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 :::::landing-band{variant="apis"}
 ## Build and learn with Wikimedia APIs
 
-::::landing-api-demo{explore-href="/explorer" explore-label="Explore Wikimedia APIs"}
+::::landing-api-demo{explore-href="/" explore-label="Explore Wikimedia APIs"}
 Query analytics, articles, media, page history, and more across languages. Send requests and inspect responses right in your browser.
 
 ### List of most viewed English Wikipedia articles

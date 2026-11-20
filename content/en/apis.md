@@ -1,7 +1,3 @@
----
-status: 0 draft
----
-
 # Wikimedia APIs
 
 Get programmatic access to Wikipedia and other Wikimedia projects. Wikimedia APIs let you integrate free knowledge into your projects, learn about wiki usage, and build tools for Wikimedia communities.
@@ -23,22 +19,22 @@ Ready to make your first request? [**Read the quick start guide →**](/apis/qui
 ## Guides and best practices
 
 :::navigation-card-grid
-::navigation-card{url="/apis/requests" title="Making requests" description="Learn about best practices for making API requests."}
+::navigation-card{url="/apis/overview" title="Making requests" description="Learn about best practices for making API requests."}
 ::
 
 ::navigation-card{url="/apis/reuse" title="Reusing free content" description="Follow guidelines for using Wikimedia content in your apps and projects."}
 ::
 
-::navigation-card{url="/apis/limits" title="Rate limits" description="Review the access policy, and learn how to get higher limits."}
+::navigation-card{url="/apis/rate-limits" title="Rate limits" description="Review the access policy, and learn how to get higher limits."}
 ::
 
 ::navigation-card{url="/apis/auth" title="Authentication" description="Make API requests using a Wikimedia account."}
 ::
 
-::navigation-card{url="/apis/auth" title="Stability and versioning" description="Learn how to navigate different versions and statuses."}
+::navigation-card{url="/apis/stability" title="Versioning and stability" description="Learn how to navigate different versions and statuses."}
 ::
 
-::navigation-card{url="/apis/auth" title="Troubleshooting" description="Resolve common errors."}
+::navigation-card{url="/apis/troubleshooting" title="Troubleshooting" description="Resolve common errors."}
 ::
 :::
 
@@ -52,7 +48,7 @@ Ready to make your first request? [**Read the quick start guide →**](/apis/qui
 ::
 :::
 
-## APIs by use case
+## Find APIs by use case
 
 :::navigation-card-grid
 ::navigation-card{url="" title="Use wiki content" description="Search, get page content, and find the attribution details you need to credit Wikimedia."}

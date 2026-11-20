@@ -195,7 +195,3 @@ Integrate your app with Wikimedia accounts to make write requests and access use
 ### [Learn with tutorials](/get-started/tutorials)
 
 Follow step-by-step guides to learn the basics of building with Wikimedia.
-
-### [Connect with the community](/community)
-
-Get involved with the Wikimedia technical community, and find opportunities for support and learning.

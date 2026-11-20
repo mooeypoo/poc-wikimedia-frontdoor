@@ -1,7 +1,3 @@
----
-status: mockup
----
-
 # Learn with tutorials
 
 Follow step-by-step guides to learn the basics of building with Wikimedia.

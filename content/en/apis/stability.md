@@ -1,7 +1,3 @@
----
-status: mockup
----
-
 # Versioning and stability
 
 This page describes the stability and versioning policy for Wikimedia APIs.

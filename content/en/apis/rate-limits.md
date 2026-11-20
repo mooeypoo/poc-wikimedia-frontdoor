@@ -1,7 +1,3 @@
----
-status: mockup
----
-
 # Rate limits
 
 Requests to Wikimedia APIs are subject to rate limiting to protect Wikimedia infrastructure from overloading and to ensure fair access to resources for all clients.

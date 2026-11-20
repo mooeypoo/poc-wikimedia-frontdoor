@@ -1,7 +1,3 @@
----
-status: 0 draft
----
-
 # Get started
 
 Welcome to the Wikimedia Developer Portal! Start here to learn about building with content and data from Wikipedia and other Wikimedia projects.

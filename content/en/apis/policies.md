@@ -1,7 +1,3 @@
----
-status: mockup
----
-
 # Policies
 
 Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use.

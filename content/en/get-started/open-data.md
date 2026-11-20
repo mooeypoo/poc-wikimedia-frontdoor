@@ -1,6 +1,3 @@
----
-status: mockup
----
 # Work with Wikimedia data
 
 Explore open data that you can use in research and machine learning.
@@ -28,7 +25,7 @@ Explore data about how readers and contributors interact with Wikimedia projects
 ::navigation-card{url="https://stats.wikimedia.org/" title="Wikimedia Statistics" description="Explore wiki usage statistics in your browser, and download the data."}
 ::
 
-::navigation-card{url="" title="Analytics APIs" description="Get data about page views, edits, and more. Explore analytics APIs in the API catalog."}
+::navigation-card{url="/apis/catalog" title="Analytics APIs" description="Get data about page views, edits, and more. Explore analytics APIs in the API catalog."}
 ::
 
 ::navigation-card{url="https://dumps.wikimedia.org/other/analytics/" title="Analytics bulk downloads" description="Download analytics datasets in bulk."}
@@ -46,7 +43,7 @@ Wikidata is a free and open knowledge base that can be read and edited by both h
 ::navigation-card{url="https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:For_developers" title="Explore structured data with Wikidata" description="Learn how to access data from Wikidata, and follow best practices."}
 ::
 
-::navigation-card{url="/explorer" title="Wikibase REST API" description="Interact with, retrieve, and edit entities on Wikidata."}
+::navigation-card{url="" title="Wikibase REST API" description="Interact with, retrieve, and edit entities on Wikidata."}
 ::
 :::
 
@@ -64,4 +61,4 @@ Learn about machine learning models used by Wikimedia projects.
 
 ## High-volume and commercial access
 
-Wikimedia Enterprise offers high-volume access to Wikimedia data and service agreements designed for commercial applications. Try a free account for researchers and Wikimedia communities. [Learn more about Wikimedia Enterprise.](/apis/commercial)
+Wikimedia Enterprise offers high-volume access to Wikimedia data and service agreements designed for commercial applications. Try a free account for researchers and Wikimedia communities. [Learn more about Wikimedia Enterprise.](/get-started/commercial)
