@@ -5,13 +5,13 @@ Authenticating an API request allows you to access resources and perform actions
 **Choose a type of authentication**:
 
 :::navigation-card-grid
-::navigation-card{url="#authenticate-with-a-user-account" description="An app that allows users to log in with their Wikimedia account"}
+::navigation-card{url="#authenticate-with-a-user-account" description="Allow users to log in to your app with their Wikimedia account."}
 ::
 
-::navigation-card{url="#authenticate-with-a-bot-account" description="An service or bot that acts as itself"}
+::navigation-card{url="#authenticate-with-a-bot-account" description="Authenticate as a service or bot that acts as itself."}
 ::
 
-::navigation-card{url="#authenticate-with-your-account" description="An local script or prototype that uses your Wikimedia account"}
+::navigation-card{url="#authenticate-with-your-account" description="Run a local script or tool that uses your Wikimedia account."}
 ::
 :::
 
