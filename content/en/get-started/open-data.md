@@ -1,23 +1,44 @@
 ---
 status: mockup
 ---
-# Access open data
+# Work with Wikimedia data
 
-Explore public data that you can use in research and machine learning.
+Explore open data that you can use in research and machine learning.
 
-## Wikimedia content
+## Build datasets with Wikimedia content
 
-Access free downloads of wiki content that you can use in research, offline reading, bot editing, and other projects. [Browse all datasets.](https://meta.wikimedia.org/wiki/Research:Data)
+Access multilingual Wikimedia content to build datasets for AI training, machine learning, and research.
 
 :::navigation-card-grid
+::navigation-card{url="https://dumps.wikimedia.org/other/mediawiki_content_history/readme.html" title="Download content in source format" description="Get bulk downloads of content in their editable format, wikitext."}
+::
+
 ::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Bulk downloads of pages as they appear to users are available though Wikimedia Enterprise using a free account or a Wikimedia developer account."}
 ::
 
-::navigation-card{url="https://dumps.wikimedia.org/other/mediawiki_content_history/readme.html" title="Download content in source format" description="Get bulk downloads of content in their editable format, wikitext."}
+::navigation-card{url="/apis/catalog" title="Explore content APIs" description="Wikimedia APIs allow you to fetch content by page."}
 ::
 :::
 
-### Wikidata
+## Analyze data about wikis
+
+Explore data about how readers and contributors interact with Wikimedia projects.
+
+:::navigation-card-grid
+::navigation-card{url="https://stats.wikimedia.org/" title="Wikimedia Statistics" description="Explore wiki usage statistics in your browser, and download data for specific views."}
+::
+
+::navigation-card{url="" title="Analytics APIs" description="Get data about page views, edits, and more. Explore analytics APIs in the API catalog."}
+::
+
+::navigation-card{url="https://dumps.wikimedia.org/other/analytics/" title="Analytics bulk downloads" description="Get analytics datasets as bulk downloads."}
+::
+
+::navigation-card{url="https://meta.wikimedia.org/wiki/Differential_privacy" title="Differential privacy datasets" description="Download page views and editor data "}
+::
+:::
+
+## Access structured knowledge from Wikidata
 
 Wikidata is a free and open knowledge base that can be read and edited by both humans and machines.
 
@@ -29,45 +50,15 @@ Wikidata is a free and open knowledge base that can be read and edited by both h
 ::
 :::
 
-## Machine learning
+## Explore Wikimedia's machine learning models
 
-Learn about machine learning models used to power tools and features across Wikimedia projects.
+Learn about machine learning models used by Wikimedia projects.
 
 :::navigation-card-grid
 ::navigation-card{url="/explorer" title="Lift Wing API" description="Get predictions from Wikimedia machine learning models"}
 ::
 
 ::navigation-card{url="https://meta.wikimedia.org/wiki/Machine_learning_models" title="Machine learning models" description="Read the documentation for Wikimedia machine learning models."}
-::
-:::
-
-## Analytics
-
-Analytics datasets provide metrics that you can use to understand how readers and editors interact with Wikimedia projects, such as the number of editors and the most-viewed pages.
-
-:::navigation-card-grid
-::navigation-card{url="" title="Device Analytics API" description="Get data about the number of unique devices that access Wikimedia projects."}
-::
-
-::navigation-card{url="" title="Edit Analytics API" description="Get data about the number of edits and edited pages on Wikimedia projects."}
-::
-
-::navigation-card{url="" title="Editor Analytics API" description="Get data about the number of editors and newly registered users of Wikimedia projects."}
-::
-
-::navigation-card{url="" title="Media Analytics API" description="Get data about requests for media files on Wikimedia projects."}
-::
-
-::navigation-card{url="" title="Page View Analytics API" description="Get data about page views for Wikimedia projects."}
-::
-
-::navigation-card{url="" title="Commons Analytics API" description="Get data about the usage of categories and media files."}
-::
-
-::navigation-card{url="https://dumps.wikimedia.org/other/analytics/" title="Analytics bulk downloads" description="Get analytics datasets as bulk downloads."}
-::
-
-::navigation-card{url="https://meta.wikimedia.org/wiki/Differential_privacy" title="Differential privacy datasets" description="Download pageviews and editor data "}
 ::
 :::
 

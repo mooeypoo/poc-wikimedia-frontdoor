@@ -1,22 +1,24 @@
 # About Wikimedia
 
-Wikimedia is the largest collection of free knowledge in the world.
+Wikipedia and other Wikimedia projects are free, collaborative repositories of knowledge, written and maintained by a global community of volunteers.
 
 ## Free knowledge projects
 
-Discover available content.
+Wikimedia content is organized by project and language. Each project hosts a different type of free content, like encyclopedia articles on Wikipedia, dictionary entries on Wiktionary, media files on Wikimedia Commons, and structured data on Wikidata.
+
+Within each type of project, there are tens to hundreds of different language editions, all written and maintained independently. For example, what you might think of as Wikipedia is really over 300 different Wikipedias—English Wikipedia, Cebuano Wikipedia, German Wikipedia, and many more.
 
 :::navigation-card-grid
-::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects" title="Explore projects" description="Wikimedia content is organized by project and language. Each project hosts a different type of free content."}
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_projects" title="Explore projects" description="Discover the different types of content available in Wikimedia projects."}
 ::
 
-::navigation-card{url="https://meta.wikimedia.org/wiki/Special:SiteMatrix" title="Explore languages" description="Wikimedia content is available in over 300 of the world's human languages, but languages availability varies by project type."}
+::navigation-card{url="https://meta.wikimedia.org/wiki/Special:SiteMatrix" title="Explore languages" description="Find available languages for each type of Wikimedia project."}
 ::
 :::
 
 ## Open source technology
 
-Learn about core Wikimedia technologies and open source projects.
+Learn about the technologies and open source projects that power Wikimedia projects.
 
 :::navigation-card-grid
 ::navigation-card{url="https://www.mediawiki.org/wiki/Special:MyLanguage/New_Developers/Introduction_to_the_Wikimedia_Technical_Ecosystem" title="Introduction to Wikimedia technology" description="Learn about the main technical areas where developers can contribute."}
@@ -31,6 +33,6 @@ Learn about core Wikimedia technologies and open source projects.
 ::navigation-card{url="https://meta.wikimedia.org/wiki/Special:MyLanguage/Wikimedia_Apps" title="Mobile apps" description="Expand the reach of Wikimedia content by contributing to mobile apps for Wikipedia, Wikimedia Commons, and other projects."}
 ::
 
-::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Main_Page" title="Wikibase and Wikidata" description="Wikibase is a MediaWiki extension for working with structured data, and it's the software that powers Wikidata."}
+::navigation-card{url="https://www.wikidata.org/wiki/Wikidata:Main_Page" title="Wikibase and Wikidata" description="Wikibase is the software that powers the structured knowledge base, Wikidata."}
 ::
 :::

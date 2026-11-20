@@ -1,46 +1,28 @@
----
-status: vnext mockup
----
 # Use Wikimedia content
 
-Access articles from Wikipedia, media files, structured data, and more with public APIs and downloads.
+Get Wikipedia articles, media files, dictionary entries, and other content to use in your projects and apps.
 
-## Attribution
+## Understand open licensing
 
-When you reuse Wikimedia content, you help expand the reach of free knowledge. Use these resources to learn what you need to do to use Wikimedia content.
+Most Wikimedia content is available under the Creative Commons Attribution-ShareAlike license, although there are some exceptions. You're free to use, remix, and distribute Wikimedia content as long as you follow the licensing requirements.
 
 :::navigation-card-grid
-::navigation-card{url="https://wikimedia-attribution.toolforge.org/" Title="Attribute Wikimedia content" description="The Attribute Framework provides examples of how to credit Wikimedia when reusing content in a variety of use cases."}
+::navigation-card{url="/apis/reuse" title="Read the guide to using free content" description="Learn how to find applicable licenses and requirements."}
 ::
 
-::navigation-card{url="https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Developer_app_guidelines" title="Use Wikimedia names and logos" description="Review the guidelines for using Wikimedia project names and logos in your apps."}
-::
-
-::navigation-card{url="/explorer/direct/enwiki/attribution/v0-beta" title="Attribution API" description="Get the data you need to provide attribution when reusing Wikimedia content."}
+::navigation-card{url="https://wikimedia-attribution.toolforge.org/" Title="Learn about attribution" description="The attribution framework provides guidelines for crediting Wikimedia in a variety of use cases."}
 ::
 :::
 
-## Content APIs
+## Access content
 
-Wikimedia APIs allow you to fetch content by page. [Explore all Wikimedia APIs in the API catalog.](/apis)
-
-:::navigation-card-grid
-::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/search/page" title="Search API" description="Search for pages by title or using full-text search."}
-::
-
-::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/page/{title}/bare" title="Page API" description="Fetch wiki pages in HTML or source format, explore page history, and get citations."}
-::
-
-::navigation-card{url="/explorer/direct/enwiki/-#GET/v1/file/{title}" title="Media API" description="Get information about photos, video, and other media files used on Wikimedia projects."}
-::
-:::
-
-## Bulk downloads
-
-Wikimedia content is also available to download in bulk, giving you access to all pages from a given project.
+Wikimedia content is available by page through APIs or by project through bulk downloads.
 
 :::navigation-card-grid
-::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Bulk downloads of pages as they appear to users are available though Wikimedia Enterprise using a free account or a Wikimedia developer account."}
+::navigation-card{url="/apis/catalog" title="Explore content APIs" description="Wikimedia APIs allow you to fetch content by page."}
+::
+
+::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Get bulk downloads of rendered pages using a free account for Wikimedia Enterprise."}
 ::
 :::
 

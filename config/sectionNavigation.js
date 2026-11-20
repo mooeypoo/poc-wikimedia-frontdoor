@@ -115,7 +115,7 @@ export const SECTION_NAVIGATION_BY_MAIN_NAVIGATION_ID = {
 				titleMessageKey: 'Start building',
 				items: [
 					{ id: 'community-overview', messageKey: 'Use Wikimedia content', href: '/get-started/wiki-content' },
-					{ id: 'access-open-data', messageKey: 'Access open data', href: '/get-started/open-data' },
+					{ id: 'access-open-data', messageKey: 'Work with Wikimedia data', href: '/get-started/open-data' },
 					{ id: 'commercial-use-cases', messageKey: 'Build for Wikimedia communities', href: '/get-started/tools-and-bots' },
 					{ id: 'commercial', messageKey: 'Build for commercial use cases', href: '/get-started/commercial' }
 				]

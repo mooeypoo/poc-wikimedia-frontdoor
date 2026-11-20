@@ -6,7 +6,7 @@ status: mockup
 :::landing-hero
 # Build with Wikimedia
 
-The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools and services. Explore live APIs, and connect with a global community of contributors.
+The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimedia projects](https://wikimediafoundation.org/our-work/wikimedia-projects/) powers thousands of apps, tools and services. Explore APIs, and connect with a global community of contributors.
 
 ::app-button{href="/get-started" label="Get started" size="large" icon-end="arrowNext"}
 ::
@@ -15,19 +15,19 @@ The technology behind [Wikipedia](https://www.wikipedia.org/) and [other Wikimed
 ::::landing-section
 ## What would you like to do?
 
-:::navigation-card-grid{columns="3"}
-::navigation-card{url="/get-started/wiki-content2" title="Use Wikimedia content in your apps" leading-icon="book" description="Get articles from Wikipedia, media files, structured data, and more with public APIs and downloads."}
+:::navigation-card-grid{columns="2"}
+::navigation-card{url="/get-started/wiki-content2" title="Use free knowledge" leading-icon="book" description="Get Wikipedia articles, media files, dictionary entries, and other content to use in your projects and apps."}
 ::
 
-::navigation-card{url="/get-started/open-data" title="Work with Wikimedia datasets for research" leading-icon="labFlask" description="Power research and create visualizations using open datasets from Wikimedia projects."}
+::navigation-card{url="/get-started/open-data" title="Work with open data" leading-icon="labFlask" description="Use Wikimedia data to inform research, support machine learning, and create visualizations."}
 ::
 
-::navigation-card{url="/get-started/tools" title="Build tools and bots for Wikimedia communities" leading-icon="robot" description="Automate edits, detect vandalism, and learn about hosting tools using Wikimedia infrastructure."}
+::navigation-card{url="/get-started/tools" title="Build for Wikimedia communities" leading-icon="robot" description="Create tools, bots, and features that support wiki readers and contributors."}
+::
+
+::navigation-card{url="/get-started/commercial" title="Build for commercial use cases" title-logo="wikimediaEnterprise" description="Get high-volume access to Wikimedia content and data using enterprise APIs and services."}
 ::
 :::
-
-::navigation-card{url="/get-started/commercial" title="Build for commercial use cases" title-logo="wikimediaEnterprise" description="Wikimedia Enterprise provides APIs and services designed for high-volume, commercial access to Wikimedia content and data."}
-::
 ::::
 
 :::::landing-band{variant="apis"}

@@ -45,13 +45,13 @@ Wikimedia Enterprise APIs are designed for a variety of commercial workflows, in
 ::
 :::
 
-## Access for Wikimedia communities and researchers
+## Free access for Wikimedia communities and researchers
 
 Get access to Wikimedia Enterprise APIs as a Wikimedia community member or academic researcher.
 
-### Free tier
+### Free accounts
 
-Wikimedia Enterprise offers a free access tier for the Snapshot API and On-demand API to support a broad set of research and other community use cases. [Sign up for free access.](https://enterprise.wikimedia.com/pricing)
+Wikimedia Enterprise offers a free access tier for the Snapshot API and On-demand API to support a broad set of research and other community use cases. [Sign up for a free account.](https://enterprise.wikimedia.com/pricing)
 
 ### Wikimedia cloud access
 
