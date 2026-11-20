@@ -1,10 +1,10 @@
 # Making API requests
 
-Learn how to make requests to Wikimedia APIs.
+Learn about best practices for making requests to Wikimedia APIs.
 
-## Identify requests with a User-Agent
+## Identifying requests with a User-Agent
 
-Wikimedia APIs require an HTTP User-Agent header for all requests. This helps identify your app and ensures that system administrators can contact you if a problem arises. Clients making requests without a User-Agent header may be blocked without notice. See the Wikimedia Foundation's User-Agent policy for more information.
+Wikimedia APIs require an HTTP User-Agent header for all requests. This helps identify your app and ensures that system administrators can contact you if a problem arises. Clients making requests without a User-Agent header may be blocked without notice. [See the Wikimedia Foundation's User-Agent policy for more information.]()
 
 The User-Agent header can include a link to a user page on a Wikimedia wiki, a URL for a relevant external website, or an email address.
 
@@ -26,7 +26,7 @@ To make a conditional write request, provide the value of the `etag` in the If-M
 
 ## Handling errors
 
-Wikimedia APIs use HTTP status codes to indicate the success or failure of a request. A successful request returns a status code in the 200 range; a failed request returns a status code in the 400 or 500 range. See the API reference for status codes specific to each endpoint.
+Wikimedia APIs use HTTP status codes to indicate the success or failure of a request. A successful request returns a status code in the 200 range; a failed request returns a status code in the 400 or 500 range. [See the API reference for status codes specific to each endpoint.]()
 
 * 200	Resource found or updated
 * 201	Resource created
@@ -40,8 +40,8 @@ Wikimedia APIs use HTTP status codes to indicate the success or failure of a req
 
 ## Authentication
 
-Write operations require authentication via OAuth or CSRF. [Learn more about authentication.](/apis/auth)
+Authenticating an API request allows you to access resources and perform actions using a Wikimedia account. Wikimedia APIs require authentication for write requests. [Learn more about authentication.](/apis/auth)
 
 ## Rate limits
 
-Rate limits for unauthenticated requests are determined by the presence of a user agent and the platform making the request. For authenticated requests, rate limits depend on the status of the Wikimedia account that has been authenticated. [Learn more about rate limits.](/apis/rate-limits)
+For unauthenticated requests, rate limits are determined by the presence of a user agent and the platform making the request. For authenticated requests, rate limits depend on the status of the Wikimedia account. [Learn more about rate limits.](/apis/rate-limits)

@@ -22,10 +22,10 @@ Wikimedia content is available by page through APIs or by project through bulk d
 ::navigation-card{url="/apis/catalog" title="Explore content APIs" description="Wikimedia APIs allow you to fetch content by page."}
 ::
 
-::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Get bulk downloads of rendered pages using a free account for Wikimedia Enterprise."}
+::navigation-card{url="https://enterprise.wikimedia.com/docs/snapshot/" title="Download content in HTML" description="Get bulk downloads of rendered pages using free access to Wikimedia Enterprise."}
 ::
 :::
 
-## Commercial and high-volume access
+## High-volume and commercial access
 
-Wikimedia Enterprise offers APIs to download bulk snapshots of Wikimedia content at scale. Try the free tier for Wikimedia communities. [Learn more about Wikimedia Enterprise.](https://meta.wikimedia.org/wiki/Special:MyLanguage/Data_dumps)
+Wikimedia Enterprise offers high-volume access to Wikimedia content and service agreements designed for commercial applications. Try a free account for researchers and Wikimedia communities. [Learn more about Wikimedia Enterprise.](/apis/commercial)

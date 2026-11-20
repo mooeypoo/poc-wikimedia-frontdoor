@@ -7,7 +7,7 @@ status: 0 draft
 Get programmatic access to Wikipedia and other Wikimedia projects. Wikimedia APIs let you integrate free knowledge into your projects, learn about wiki usage, and build tools for Wikimedia communities.
 
 ::highlight
-Ready to get started? [**Make your first request →**](/apis/quickstart)
+Ready to make your first request? [**Read the quick start guide →**](/apis/quickstart)
 ::
 
 ## Explore APIs
@@ -49,5 +49,21 @@ Ready to get started? [**Make your first request →**](/apis/quickstart)
 ::
 
 ::navigation-card{url="/apis/changelog" title="Changelog" description="See recent changes to Wikimedia APIs."}
+::
+:::
+
+## APIs by use case
+
+:::navigation-card-grid
+::navigation-card{url="" title="Use wiki content" description="Search, get page content, and find the attribution details you need to credit Wikimedia."}
+::
+
+::navigation-card{url="" title="Access open data" description="Query Wikidata entities, and get wiki analytics."}
+::
+
+::navigation-card{url="" title="Support contributors and readers" description="Edit pages, predict article quality, suggest tasks, and organize events."}
+::
+
+::navigation-card{url="" title="Build for commercial uses cases" description="Get Wikimedia content with on-demand, high-volume APIs from Wikimedia Enterprise."}
 ::
 :::

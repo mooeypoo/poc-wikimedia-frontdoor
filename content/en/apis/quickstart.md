@@ -4,15 +4,15 @@ Get started with Wikimedia APIs by fetching an article from Wikipedia.
 
 ## 1. Choose a project
 
-Wikimedia APIs are organized by project (such as English Wikipedia) and API (such as the Content API). This guide uses English Wikipedia, but you can also use one of over 300 other Wikipedias written in their own language. You can explore available projects and APIs using the API explorer. [Try the explorer]()
+Wikimedia APIs are organized by project (such as English Wikipedia) and API (such as the Content API). This guide uses English Wikipedia, but you can also use one of over 300 other Wikipedias written in their own language. You can explore available projects and APIs using the API explorer. [Try the explorer.]()
 
-API calls to English Wikipedia use the wiki's URL as the base URL: `https://en.wikipedia.org`. The following URL components can vary depending on the API.
+API calls to English Wikipedia use the wiki's URL as the base URL: `https://en.wikipedia.org`. Other URL components can vary depending on the API.
 
 ## 2. Identify your requests
 
-Wikimedia APIs are free to use without an account, but we ask that you include contact information in your requests using an HTTP User-Agent header. This information ensures that administrators can contact you if there's a problem. [Learn more about identifying requests.](/apis/requests)
+Wikimedia APIs are free to use without an account, but we ask that you include contact information in your requests using an HTTP User-Agent header. This information ensures that administrators can contact you if there's a problem. [Learn more about identifying requests.](/apis/overview)
 
-Before you start using Wikimedia APIs, set up your User-Agent header with your contact information, such as a link to a user page on a Wikimedia wiki, a URL for a relevant external website, or an email address.
+Before you start, set up a User-Agent header with your contact information, such as a link to a user page on a Wikimedia wiki, a URL for a relevant external website, or an email address.
 
 :::code-block{label="User-Agent header example"}
 ```http
@@ -22,7 +22,7 @@ User-Agent: Developer Portal sample code (https://www.mediawiki.org/wiki/Talk:De
 
 ## 3. Search for articles on Wikipedia
 
-Most Wikimedia APIs fetch content based on page titles. To find a Wikipedia article title, use a search endpoint to search by article title or article content. This guide uses the search content endpoint to find the article about the planet Mercury. [Try it out]()
+Most Wikimedia APIs fetch content based on page titles. To find a Wikipedia article title, use a search endpoint to search by article title or article content. This guide uses the search content endpoint to find the article about the planet Mercury. [Try it out.]()
 
 ::::code-tabs
 :::code-tab{label="curl"}
@@ -79,7 +79,7 @@ The result includes information about the article, including the title, excerpt,
 
 ## 4. Fetch an article from Wikipedia
 
-Now that you have the article title, fetch the content of the article in HTML using a page endpoint. This guide uses the get page with HTML endpoint from the Content API. [Try it out]()
+Now that you have the article title, fetch the content of the article in HTML using a page endpoint. This guide uses the get page with HTML endpoint from the Content API. [Try it out.]()
 
 To format the title to use in the request, URL-encode the `key` from the search response. For example, use `Mercury_%28planet%29` for `Mercury (planet)`.
 
@@ -111,10 +111,10 @@ curl -H 'User-Agent: Developer Portal sample code (https://www.mediawiki.org/wik
 
 ## 5. Add attribution
 
-Wikimedia content is free to use in your projects and apps as long as you follow the licensing requirements. To use unmodified text from English Wikipedia, you must include the name of the project, the name of the article, a link to the article, and a link to the license. [Learn more about reusing free content.]()
+Wikimedia content is free to use in your projects and apps as long as you follow the licensing requirements. To use unmodified text from English Wikipedia, you must credit Wikipedia by including the name of the project, the name of the article, a link to the article, and a link to the license. [Learn more about reusing free content.](/apis/reuse)
 
 
-The Attribution API provides all this information through a single endpoint, including visual and sound logos. [Try it out]()
+The Attribution API provides all the information you need to credit Wikipedia through a single endpoint, including visual and sound logos. [Try it out.]()
 
 ::::code-tabs
 :::code-tab{label="curl"}
@@ -184,18 +184,18 @@ curl -H 'User-Agent: Developer Portal sample code (https://www.mediawiki.org/wik
 
 ## Next steps
 
-### Review API policies
+### [Review API policies](/apis/policies)
 
-Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use. [Review API policies.](/apis/policies)
+Wikimedia's content and infrastructure policies are an important part of how free knowledge works. By being aware of the terms and conditions, you help support making Wikimedia APIs free to use.
 
-### Set up authentication
+### [Set up authentication](/apis/auth)
 
-Integrate your app with Wikimedia accounts to make write requests and access user features. [Set up authentication.](/apis/auth)
+Integrate your app with Wikimedia accounts to make write requests and access user features.
 
-### Learn with tutorials
+### [Learn with tutorials](/get-started/tutorials)
 
-Follow step-by-step guides to learn the basics of building with Wikimedia. [Learn with tutorials.](/get-started/tutorials)
+Follow step-by-step guides to learn the basics of building with Wikimedia.
 
-### Connect with the community
+### [Connect with the community](/community)
 
-Get involved with the Wikimedia technical community, and find opportunities for support and learning. [Connect with the community.](/community)
+Get involved with the Wikimedia technical community, and find opportunities for support and learning.
