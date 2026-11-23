@@ -239,6 +239,7 @@
   "search-category-endpoints": "API endpoints ($1)",
   "search-category-endpoints-accessible": "API endpoint results ($1)",
   "search-category-group-label": "Result categories",
+  "search-category-filters-hint": "Tab to filter by category.",
   "search-content-in-progress": "Searching pages",
   "search-content-unavailable": "Page search is unavailable right now. Try again in a moment.",
   "search-input-accessible-label": "Search",

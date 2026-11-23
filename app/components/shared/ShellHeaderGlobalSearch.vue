@@ -121,6 +121,8 @@ const isMenuOpen = ref( false )
 const isResultsScrolled = ref( false )
 const menuSelected = ref<MenuItemValue | null>( null )
 const menuId = useId()
+/** Target for `aria-describedby` — category-filter hint while the panel is open. */
+const categoryFiltersHintId = useId()
 const rootRef = useTemplateRef<HTMLElement>( 'rootRef' )
 const menuRef = useTemplateRef<GlobalSearchCodexMenu>( 'menuRef' )
 const panelBodyRef = useTemplateRef<HTMLElement>( 'panelBodyRef' )
@@ -142,6 +144,14 @@ let slowSearchAnnounceTimer: ReturnType<typeof setTimeout> | undefined
  */
 const searchFieldLabel = computed( () =>
 	$bananaI18n( 'header-search-placeholder' )
+)
+/**
+ * Visually hidden field description while results (and chips) are open.
+ * Wired via `aria-describedby` so SRs hear how to reach category filters
+ * without changing the field’s accessible name.
+ */
+const categoryFiltersHint = computed( () =>
+	$bananaI18n( 'search-category-filters-hint' )
 )
 const resultsPanelLabel = computed( () =>
 	$bananaI18n( 'search-results-panel-label' )
@@ -225,6 +235,11 @@ const showMenu = computed( () => {
 	}
 	return isMenuOpen.value && hasQuery.value
 } )
+
+/** `aria-describedby` only while the panel is open (chips are mounted). */
+const searchFieldDescribedBy = computed( () =>
+	showMenu.value ? categoryFiltersHintId : undefined
+)
 
 const menuEntries = computed( () =>
 	toCodexMenuEntries(
@@ -878,6 +893,17 @@ function panelItemForMenuItem(
 			{{ statusAnnouncementText }}
 		</div>
 
+		<!--
+			Field description for category filters (WCAG 3.3.2). Always mounted;
+			`aria-describedby` is set only while the panel is open.
+		-->
+		<p
+			:id="categoryFiltersHintId"
+			class="shell-header-global-search__filters-hint"
+		>
+			{{ categoryFiltersHint }}
+		</p>
+
 		<div class="shell-header-global-search__toolbar">
 			<slot name="leading" />
 			<div
@@ -892,6 +918,7 @@ function panelItemForMenuItem(
 					:clearable="true"
 					:placeholder="searchFieldLabel"
 					:aria-label="searchFieldLabel"
+					:aria-describedby="searchFieldDescribedBy"
 					role="combobox"
 					autocomplete="off"
 					aria-autocomplete="list"
@@ -1071,7 +1098,8 @@ function panelItemForMenuItem(
 	min-inline-size: 0;
 }
 
-.shell-header-global-search__status {
+.shell-header-global-search__status,
+.shell-header-global-search__filters-hint {
 	position: absolute;
 	inline-size: 1px;
 	block-size: 1px;

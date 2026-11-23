@@ -303,6 +303,7 @@
   "search-category-endpoints": "نقاط پایانی API ($1)",
   "search-category-endpoints-accessible": "نتایج نقاط پایانی API ($1)",
   "search-category-group-label": "دسته‌های نتیجه",
+  "search-category-filters-hint": "برای پالایش بر اساس دسته، Tab را بزنید.",
   "search-input-accessible-label": "جستجو",
   "search-no-results-all": "نتیجه‌ای برای '$1' در $2 یافت نشد.",
   "search-no-results-documentation": "نتیجهٔ مستنداتی برای '$1' در $2 یافت نشد.",

@@ -307,6 +307,7 @@
   "search-category-endpoints": "Points de terminaison de l'API ($1)",
   "search-category-endpoints-accessible": "Résultats de points de terminaison de l'API ($1)",
   "search-category-group-label": "Catégories de résultats",
+  "search-category-filters-hint": "Appuyez sur Tab pour filtrer par catégorie.",
   "search-input-accessible-label": "Rechercher",
   "search-no-results-all": "Aucun résultat pour « $1 » en $2.",
   "search-no-results-documentation": "Aucun résultat de documentation pour « $1 » en $2.",

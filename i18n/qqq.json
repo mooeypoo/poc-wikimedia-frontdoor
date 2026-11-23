@@ -236,6 +236,7 @@
   "search-category-endpoints": "Visible API endpoints category chip label (Figma-short). $1 is the endpoint result count. Also used as the accessible name.",
   "search-category-endpoints-accessible": "DEPRECATED for global search chips — accessible name now matches search-category-endpoints. Kept for compatibility.",
   "search-category-group-label": "Accessible name for the result-category chip radiogroup in the global search menu header.",
+  "search-category-filters-hint": "Visually hidden description for the global search field (aria-describedby) while the results panel is open. Tells screen-reader users how to reach the category filter chips. Keep short. Seeded non-en translations need human review.",
   "search-content-in-progress": "Accessible label on the progress bar shown in the search panel while the documentation page search is still running. The first search of a session waits for the index to build, so this can be on screen for a few seconds.",
   "search-content-unavailable": "Error message shown in the search panel when the documentation page index could not be built, so the query never ran. Distinct from a search that ran and found nothing. REST API endpoint results come from a separate index and may still be listed alongside this message.",
   "search-input-accessible-label": "Legacy alias — keep identical to header-search-placeholder. The global search field uses header-search-placeholder for both placeholder and aria-label so VoiceOver does not concatenate two different strings.",

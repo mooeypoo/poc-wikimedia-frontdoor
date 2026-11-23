@@ -307,6 +307,7 @@
   "search-category-endpoints": "נקודות קצה של ה־API ($1)",
   "search-category-endpoints-accessible": "תוצאות נקודות קצה של ה־API ($1)",
   "search-category-group-label": "קטגוריות תוצאות",
+  "search-category-filters-hint": "לחצו Tab כדי לסנן לפי קטגוריה.",
   "search-input-accessible-label": "חיפוש",
   "search-no-results-all": "אין תוצאות עבור '$1' ב$2.",
   "search-no-results-documentation": "אין תוצאות תיעוד עבור '$1' ב$2.",
