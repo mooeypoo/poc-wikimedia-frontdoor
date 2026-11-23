@@ -236,10 +236,12 @@ const showMenu = computed( () => {
 	return isMenuOpen.value && hasQuery.value
 } )
 
-/** `aria-describedby` only while the panel is open (chips are mounted). */
-const searchFieldDescribedBy = computed( () =>
-	showMenu.value ? categoryFiltersHintId : undefined
-)
+/**
+ * Polite live copy that speaks the category-filter hint when the panel opens
+ * under an already-focused field (`aria-describedby` alone is silent then).
+ */
+const filtersHintLiveText = ref( '' )
+let filtersHintLiveTimer: ReturnType<typeof setTimeout> | undefined
 
 const menuEntries = computed( () =>
 	toCodexMenuEntries(
@@ -307,6 +309,55 @@ function clearMenuHighlight(): void {
  */
 function focusSearchInput(): void {
 	searchInputHostRef.value?.querySelector<HTMLInputElement>( 'input' )?.focus()
+}
+
+/**
+ * Returns the native `<input>` inside Codex SearchInput / TextInput.
+ *
+ * @returns The search field element, or `null` when not mounted.
+ */
+function getNativeSearchInput(): HTMLInputElement | null {
+	const input = searchInputHostRef.value?.querySelector( 'input' )
+	return input instanceof HTMLInputElement ? input : null
+}
+
+/**
+ * Sets `aria-describedby` on the native input while the panel is open.
+ *
+ * Codex `CdxTextInput` binds `:aria-describedby="descriptionId"` for Field
+ * integration and that binding **overwrites** fallthrough attrs from
+ * `CdxSearchInput`, so a template `:aria-describedby` never sticks. Re-apply
+ * on the real `<input>` after render instead.
+ */
+function syncNativeSearchInputDescribedBy(): void {
+	const input = getNativeSearchInput()
+	if ( !input ) {
+		return
+	}
+	if ( showMenu.value ) {
+		input.setAttribute( 'aria-describedby', categoryFiltersHintId )
+	} else {
+		input.removeAttribute( 'aria-describedby' )
+	}
+}
+
+/**
+ * Speaks the category-filter hint once when the results panel opens.
+ *
+ * Users typically focus Search first, then type until chips appear — so
+ * `aria-describedby` is added under existing focus and VoiceOver will not
+ * re-read it. A polite live region covers that path; describedby still helps
+ * on later focus returns to the field.
+ */
+function announceCategoryFiltersHint(): void {
+	if ( filtersHintLiveTimer !== undefined ) {
+		clearTimeout( filtersHintLiveTimer )
+		filtersHintLiveTimer = undefined
+	}
+	filtersHintLiveText.value = ''
+	filtersHintLiveTimer = setTimeout( () => {
+		filtersHintLiveText.value = categoryFiltersHint.value
+	}, SEARCH_PROTOTYPE_STATUS_ANNOUNCE_DELAY_MS )
 }
 
 /**
@@ -509,12 +560,27 @@ watch( showMenu, ( isOpen ) => {
 		isResultsScrolled.value = false
 		menuSelected.value = null
 		clearMenuHighlight()
+		filtersHintLiveText.value = ''
+		if ( filtersHintLiveTimer !== undefined ) {
+			clearTimeout( filtersHintLiveTimer )
+			filtersHintLiveTimer = undefined
+		}
+		nextTick( () => {
+			syncNativeSearchInputDescribedBy()
+		} )
 		return
 	}
+	announceCategoryFiltersHint()
 	nextTick( () => {
 		bindListboxScroll()
 		annotateOptionSemantics()
+		syncNativeSearchInputDescribedBy()
 	} )
+} )
+
+// Codex TextInput re-renders can reset aria-describedby to its Field descriptionId.
+onUpdated( () => {
+	syncNativeSearchInputDescribedBy()
 } )
 
 watch( [ searchQuery, selectedCategory ], () => {
@@ -545,6 +611,9 @@ onBeforeUnmount( () => {
 	}
 	if ( slowSearchAnnounceTimer !== undefined ) {
 		clearTimeout( slowSearchAnnounceTimer )
+	}
+	if ( filtersHintLiveTimer !== undefined ) {
+		clearTimeout( filtersHintLiveTimer )
 	}
 } )
 
@@ -895,7 +964,8 @@ function panelItemForMenuItem(
 
 		<!--
 			Field description for category filters (WCAG 3.3.2). Always mounted;
-			`aria-describedby` is set only while the panel is open.
+			wired onto the native <input> via syncNativeSearchInputDescribedBy
+			(Codex TextInput overwrites fallthrough aria-describedby).
 		-->
 		<p
 			:id="categoryFiltersHintId"
@@ -903,6 +973,14 @@ function panelItemForMenuItem(
 		>
 			{{ categoryFiltersHint }}
 		</p>
+		<!-- Speaks the hint when the panel opens under existing field focus. -->
+		<div
+			class="shell-header-global-search__filters-hint-live"
+			role="status"
+			aria-atomic="true"
+		>
+			{{ filtersHintLiveText }}
+		</div>
 
 		<div class="shell-header-global-search__toolbar">
 			<slot name="leading" />
@@ -910,6 +988,10 @@ function panelItemForMenuItem(
 				ref="searchInputHostRef"
 				class="shell-header-global-search__input-host"
 			>
+				<!--
+					Do not set aria-describedby here — CdxTextInput replaces it with
+					Field descriptionId. See syncNativeSearchInputDescribedBy().
+				-->
 				<CdxSearchInput
 					v-model="searchQuery"
 					class="shell-header-global-search__input"
@@ -918,7 +1000,6 @@ function panelItemForMenuItem(
 					:clearable="true"
 					:placeholder="searchFieldLabel"
 					:aria-label="searchFieldLabel"
-					:aria-describedby="searchFieldDescribedBy"
 					role="combobox"
 					autocomplete="off"
 					aria-autocomplete="list"
@@ -1099,7 +1180,8 @@ function panelItemForMenuItem(
 }
 
 .shell-header-global-search__status,
-.shell-header-global-search__filters-hint {
+.shell-header-global-search__filters-hint,
+.shell-header-global-search__filters-hint-live {
 	position: absolute;
 	inline-size: 1px;
 	block-size: 1px;
