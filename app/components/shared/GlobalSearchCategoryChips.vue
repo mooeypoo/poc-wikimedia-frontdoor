@@ -15,7 +15,9 @@ import {
  * subtle outline chips. Implemented as buttons because Codex `CdxInfoChip` is
  * non-interactive.
  *
- * Accessible names match the visible labels (honest naming — WCAG 2.2 AA).
+ * Visible labels stay Figma-short (“All (30)”); the accessible name adds a
+ * spoken “result(s)” after the count (“All. 30 results”) via a visually
+ * hidden sibling (visible span is `aria-hidden`).
  *
  * @see DESIGN_REQUIREMENTS.md → Global search design prototype
  */
@@ -49,20 +51,30 @@ const { $bananaI18n } = useNuxtApp()
 const groupLabel = computed( () => $bananaI18n( 'search-category-group-label' ) )
 
 /**
- * Visible chip labels — also the accessible name (no separate aria-label).
+ * Visible Figma-short labels plus accessible names that speak “result(s)”
+ * after the count (e.g. visible “All (30)” → spoken “All. 30 results”).
  */
 const chips = computed( () => [
 	{
 		id: 'all' as const,
-		label: $bananaI18n( 'search-category-all', { $1: String( props.allCount ) } )
+		label: $bananaI18n( 'search-category-all', { $1: String( props.allCount ) } ),
+		accessibleLabel: $bananaI18n( 'search-category-all-accessible', {
+			$1: String( props.allCount )
+		} )
 	},
 	{
 		id: 'endpoints' as const,
-		label: $bananaI18n( 'search-category-endpoints', { $1: String( props.endpointCount ) } )
+		label: $bananaI18n( 'search-category-endpoints', { $1: String( props.endpointCount ) } ),
+		accessibleLabel: $bananaI18n( 'search-category-endpoints-accessible', {
+			$1: String( props.endpointCount )
+		} )
 	},
 	{
 		id: 'documentation' as const,
 		label: $bananaI18n( 'search-category-documentation', {
+			$1: String( props.documentationCount )
+		} ),
+		accessibleLabel: $bananaI18n( 'search-category-documentation-accessible', {
 			$1: String( props.documentationCount )
 		} )
 	}
@@ -197,7 +209,15 @@ function setChipButtonRef(
 				size="x-small"
 				aria-hidden="true"
 			/>
-			<span class="global-search-category-chips__label">{{ chip.label }}</span>
+			<!-- Visible Figma-short label; hidden from the accessibility tree. -->
+			<span
+				class="global-search-category-chips__label"
+				aria-hidden="true"
+			>{{ chip.label }}</span>
+			<!-- Spoken name: “All. 30 results” (PLURAL via banana). -->
+			<span class="global-search-category-chips__label-sr">{{
+				chip.accessibleLabel
+			}}</span>
 		</button>
 	</div>
 </template>
@@ -245,5 +265,17 @@ function setChipButtonRef(
 
 .global-search-category-chips__label {
 	white-space: nowrap;
+}
+
+.global-search-category-chips__label-sr {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
 }
 </style>
