@@ -310,5 +310,15 @@
   "search-no-results-for-query": "نتیجه‌ای برای '$1' در $2 یافت نشد.",
   "search-results-panel-label": "نتایج",
   "search-retry-label": "تلاش دوباره",
+  "search-option-type-documentation": "مستندات",
+  "search-option-type-endpoint": "نقطه پایانی API",
+  "search-status-more-loaded": "نتایج بیشتری بارگذاری شد.",
+  "search-status-no-results": "نتیجه‌ای برای $1 در $2 یافت نشد.",
+  "search-status-no-results-endpoints": "نتیجه‌ای برای $1 یافت نشد.",
+  "search-status-results-all": "{{PLURAL:$1|$1 نتیجه|$1 نتیجه}}. {{PLURAL:$2|$2 نقطه پایانی API|$2 نقطه پایانی API}}، {{PLURAL:$3|$3 مستندات|$3 مستندات}}.",
+  "search-status-searching": "در حال جستجو...",
+  "search-status-showing-documentation": "نمایش {{PLURAL:$1|$1 نتیجه مستندات|$1 نتیجه مستندات}}.",
+  "search-status-showing-endpoints": "نمایش {{PLURAL:$1|$1 نقطه پایانی API|$1 نقطه پایانی API}}.",
+  "search-status-unavailable": "جستجو در دسترس نیست. دوباره تلاش کنید.",
   "shell-collapsed-search-overlay-back-button-label": "بازگشت"
 }

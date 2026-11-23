@@ -355,6 +355,10 @@ function handleGlobalSearchResultSelect(): void {
 	searchQuery.value = ''
 }
 
+const searchToggleRef = useTemplateRef<{ $el?: HTMLElement } | HTMLElement>( 'searchToggleRef' )
+/** Skip restoring focus to the icon when a result navigates away. */
+let skipCollapsedSearchFocusRestore = false
+
 /**
  * Opens the collapsed search overlay from the icon button.
  *
@@ -369,8 +373,34 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
  * Clears the query and dismisses the overlay after a result is chosen.
  */
 function handleOverlayResultSelect(): void {
+	skipCollapsedSearchFocusRestore = true
 	handleGlobalSearchResultSelect()
 	closeCollapsedSearchOverlay()
+}
+
+/**
+ * Closes the overlay and restores focus to the search icon unless a result
+ * was activated (destination focus is handled by `focusNavigationTarget`).
+ */
+function handleCollapsedSearchOverlayClose(): void {
+	closeCollapsedSearchOverlay()
+	if ( skipCollapsedSearchFocusRestore ) {
+		skipCollapsedSearchFocusRestore = false
+		return
+	}
+	nextTick( () => {
+		const toggle = searchToggleRef.value
+		if ( !toggle ) {
+			return
+		}
+		const root = '$el' in toggle && toggle.$el instanceof HTMLElement ?
+			toggle.$el :
+			toggle instanceof HTMLElement ? toggle : null
+		const focusTarget = root?.matches?.( 'button' ) ?
+			root :
+			root?.querySelector?.( 'button' )
+		focusTarget?.focus()
+	} )
 }
 </script>
 
@@ -396,6 +426,7 @@ function handleOverlayResultSelect(): void {
 
 		<CdxButton
 			v-show="isUtilityCollapsed"
+			ref="searchToggleRef"
 			class="shell-header-utility-actions__search-toggle"
 			weight="quiet"
 			:aria-label="searchButtonLabel"
@@ -409,7 +440,7 @@ function handleOverlayResultSelect(): void {
 			v-model:search-query="searchQuery"
 			:overlay-label="collapsedSearchOverlayLabel"
 			:back-button-label="collapsedSearchOverlayBackButtonLabel"
-			@close="closeCollapsedSearchOverlay"
+			@close="handleCollapsedSearchOverlayClose"
 			@result-select="handleOverlayResultSelect"
 		/>
 

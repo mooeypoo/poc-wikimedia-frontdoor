@@ -49,6 +49,17 @@ export const SEARCH_PROTOTYPE_SNIPPET_MAX_LENGTH = 120
 export const SEARCH_PROTOTYPE_PENDING_DELAY_MS = 500
 
 /**
+ * Live-region clear→rewrite delay (ms) so identical status text is re-announced.
+ */
+export const SEARCH_PROTOTYPE_STATUS_ANNOUNCE_DELAY_MS = 100
+
+/**
+ * Delay (ms) before announcing “Searching…” when a query stays in flight.
+ * Distinct from {@link SEARCH_PROTOTYPE_PENDING_DELAY_MS} (visual pending bar).
+ */
+export const SEARCH_PROTOTYPE_SLOW_SEARCH_ANNOUNCE_MS = 1000
+
+/**
  * Whether to hide PR #66's "Search all languages" expansion.
  * Primary §4: no cross-language search action; UI language + English only.
  */
