@@ -97,6 +97,8 @@ Locale-prefixed paths use the same mapping (e.g. `/fr/learn` → `/fr/use-conten
 
 **Typography exception:** TOC heading and links use **`--font-size-small`** (compact end-column list).
 
+**End-column spacing:** `.shell-on-this-page-nav` uses **`padding-block-start: var(--spacing-150)` (24px)** so the TOC aligns with page titles at the top of the content band; **`padding-block-end: var(--spacing-75)`** remains for compact chrome.
+
 **Copy:** Banana keys `on-this-page-label` / `on-this-page-nav-aria` — not `content-page-nav-label` (prev/next). Heading titles are content (`<bdi>` / `isolatePickerLabel`).
 
 **Config:** `config/onThisPageNav.ts` (`ON_THIS_PAGE_NAV_MIN_H2_COUNT`, `ON_THIS_PAGE_NAV_END_PANEL_MIN_VIEWPORT_PX`).
