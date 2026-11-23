@@ -320,7 +320,7 @@ All planned markdown features are achievable with packages already installed:
 - Outer module: `border: 1px solid var(--border-color-muted)`, `border-radius: var(--fd-explorer-controls-surface-border-radius)` (**4px** exploratory — same as `CodeBlock` / NavigationCard), `overflow: hidden`.
 - Code panels: `pre` padding `var(--spacing-75)` (12px) via logical properties; margins reset so the panel connects to the selected tab label.
 - Soft-wrap / `no-soft-wrap` is **`CodeBlock`-only** today; tab panels do not expose that prop unless product asks for parity.
-- MDC nesting is bridged with `CodeTab` → `provide`/`inject` registration during `setup()` (SSR-safe) because `CdxTabs` only accepts direct `CdxTab` slot children.
+- MDC nesting is bridged by reading the panel list off `CodeTabs`' own slot vnodes at render time (a `label` prop over a default slot), because `CdxTabs` only accepts direct `CdxTab` slot children. Not `provide`/`inject` registration from the children: a registry fills only when the children mount, which on the client is after the parent has rendered, so the server-rendered tabs lost a hydration mismatch and were rebuilt a tick later.
 
 **Alternatives considered:** Custom tab buttons styled with Codex tokens (rejected — duplicates `CdxTabs` and diverges from the design system); quiet `CdxTabs` (rejected — wrong semantic/visual role for a code module).
 

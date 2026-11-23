@@ -27,6 +27,8 @@
 
 ## 2. Search scope: content pages only
 
+> **Superseded.** API endpoints are now searchable. See `docs/adr-explorer-deep-linking.md` §10 and the resolution note at the end of this section.
+
 **Decision:** Search covers the `content/` markdown collection only. The Scalar/OpenAPI explorer is excluded.
 
 **Context:** The explorer loads OpenAPI specs at runtime and renders them inside a third-party `@scalar/api-reference` component.
@@ -34,6 +36,13 @@
 **Rationale:** Scalar does not expose programmatic navigation to individual operations (no deep-link API, no hash-anchor callbacks). Indexing the spec client-side is feasible in principle, but there is no way to navigate a user to a specific operation after a match. This would produce dead results.
 
 **Deferred to a future PR.** Revisit if Scalar adds a navigation API or exposes operation-level hash anchors. When that happens, the approach would be a separate search index over the loaded spec JSON, with results rendered in a distinct section of the same panel.
+
+**Resolution.** The deferral condition was met, and the premise turned out to be wrong in one respect: Scalar's operation hash *is* addressable, and its navigation-id builders are importable, so a link can be computed offline. Two things were needed and both now exist — a URL that names an operation (`docs/adr-explorer-deep-linking.md` PR 1) and an index to search (§10 there).
+
+The shape landed close to what this section predicted, with two differences worth noting:
+
+- The index is generated **offline from the committed specs**, not built from the spec JSON loaded at runtime. Search has to work from any page in the site, not only while the explorer is mounted with a spec already fetched.
+- Endpoint results are rendered in a distinct group of the same panel **as predicted**, but they are deliberately *not* locale-partitioned: OpenAPI summaries come from upstream MediaWiki and are English-only, so the locale bucketing in §3 does not apply to them. Only the group heading is translated. This is the main user-visible limitation of endpoint search — a French speaker searching French words will not match English endpoint text. A hand-authored, translatable keyword layer is the intended fix and is anticipated by the pipeline.
 
 ---
 
@@ -65,6 +74,12 @@ resultId.startsWith('/{locale}#')      // section on root page
 **Rationale:** Mixing locales without a label is confusing, especially for RTL locales where English results would flip direction mid-list. A labeled section communicates clearly that the content is not yet translated.
 
 **UI string key:** A single parameterized key, `search-results-locale-heading` (`"Results in {{bidi:$1}}"`), serves both the active-locale and English-fallback headings. The translated language name is passed as `$1`, so there is no separate `search-results-fallback-heading` key — the English-fallback section reuses the same key with `$1` resolved to "English". `{{bidi:$1}}` provides BiDi isolation around the language name (see §8).
+
+**Amendment: a fallback group shows what the reader is missing, not what they already found.** Once the single English hop became the catalog's full chain, this section's "the content is not yet translated" rationale stopped holding on its own. A page translated into several locales of one chain matched in each of them, so a Brazilian Portuguese reader (chain `pt-br → pt → en`, all three of which have a content collection) searching a term common to every translation got that one page under three headings, and only the first was a page they had any reason to open.
+
+Deduping needs an identity a document keeps across locales, which the FTS ids already carry: they are locale-prefixed paths, so dropping the locale segment and the section hash leaves what the translations share. `contentDocumentIdentity()` and `dropDuplicateChainDocuments()` in `app/utils/contentLocalePaths.ts` do that, and the chain keeps only the most-preferred locale's copy.
+
+Two boundaries on it. Identity is **per page**, not per section, so a reader who found the page in their own language does not get other sections of it in three more languages; the dedupe therefore never applies *within* a group, where two matching sections of one page are two real hits pointing at different anchors. And **all-locales mode does not dedupe at all**, because that view is an explicit request to see every language.
 
 ---
 

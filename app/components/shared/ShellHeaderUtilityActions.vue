@@ -8,7 +8,6 @@ import {
 	CdxMenuButton,
 	CdxPopover,
 	CdxRadio,
-	CdxSearchInput,
 	type MenuConfig,
 	type MenuItemData,
 	type MenuItemValue
@@ -27,10 +26,10 @@ import {
 } from '../../../config/headerChrome'
 import { SUPPORTED_LANGUAGES, getLanguageByCode } from '../../../config/languages'
 import { useColorMode } from '../../composables/useColorMode'
-import { useContentSearch } from '../../composables/useContentSearch'
 import { useDirection } from '../../composables/useDirection'
 import { useHeaderUtilityCollapse } from '../../composables/useHeaderUtilityCollapse'
 import { useShellAuthNavigation } from '../../composables/useShellAuthNavigation'
+import { useShellCollapsedSearchOverlay } from '../../composables/useShellCollapsedSearchOverlay'
 import {
 	SHELL_HEADER_UTILITY_MENU_VALUE,
 	useShellHeaderUtilityMenu
@@ -39,9 +38,11 @@ import {
 /**
  * Header utility row — search, settings (color theme), interface language, and session control.
  *
- * Compact mode when the allocated actions track is narrower than the expanded minimum
- * (256px search + siblings). Search becomes an icon button; settings and log in move
- * into a `CdxMenuButton`; language stays visible as icon + uppercase locale code.
+ * Compact mode when the allocated actions track is narrower than the measured
+ * expanded minimum (256px search + live sibling widths + gaps). Search becomes an
+ * icon button that opens a full-viewport search `CdxDialog`
+ * (`ShellHeaderSearchOverlay`); settings and log in move into a `CdxMenuButton`;
+ * language stays visible as icon + uppercase locale code.
  * When logged in, the expanded row shows only the Meta username as a progressive
  * link to `/account` (Codex link pattern — `NuxtLink`, not `CdxButton`).
  *
@@ -78,27 +79,26 @@ const selectedInterfaceLocale = defineModel<string>( 'selectedInterfaceLocale', 
 } )
 
 const actionsRootRef = useTemplateRef<HTMLElement>( 'actionsRootRef' )
-const { isUtilityCollapsed } = useHeaderUtilityCollapse( actionsRootRef )
+const searchWrapperRef = useTemplateRef<HTMLElement>( 'searchWrapperRef' )
+const settingsControlRef = useTemplateRef<HTMLElement>( 'settingsControlRef' )
+const languageControlRef = useTemplateRef<HTMLElement>( 'languageControlRef' )
+const sessionControlRef = useTemplateRef<HTMLElement>( 'sessionControlRef' )
+const { isUtilityCollapsed } = useHeaderUtilityCollapse( {
+	actionsRootRef,
+	searchWrapperRef,
+	settingsControlRef,
+	languageControlRef,
+	sessionControlRef
+} )
+const {
+	isCollapsedSearchOverlayOpen,
+	openCollapsedSearchOverlay,
+	closeCollapsedSearchOverlay
+} = useShellCollapsedSearchOverlay( { isUtilityCollapsed } )
 const { direction } = useDirection()
-const { $bananaI18n, $interfaceLocale } = useNuxtApp()
+const { $bananaI18n } = useNuxtApp()
 
 const searchQuery = ref( '' )
-const isSearchPanelOpen = ref( false )
-
-const {
-	localeResults,
-	fallbackResults,
-	allLocaleResultGroups,
-	isAllLocalesMode,
-	activateAllLocalesSearch,
-	hasQuery
-} = useContentSearch( searchQuery, $interfaceLocale )
-
-watch( hasQuery, ( newHasQuery ) => {
-	if ( newHasQuery ) {
-		isSearchPanelOpen.value = true
-	}
-} )
 
 const { menuSelection, menuItems, handleMenuSelection: handleUtilityMenuSelection } =
 	useShellHeaderUtilityMenu()
@@ -173,12 +173,15 @@ function handleMenuSelection(
 	handleUtilityMenuSelection( selectedValue )
 }
 
-const searchPlaceholderLabel = computed( () => $bananaI18n( 'header-search-placeholder' ) )
 const searchButtonLabel = computed( () => $bananaI18n( 'header-search-button-label' ) )
 const settingsButtonLabel = computed( () => $bananaI18n( 'header-settings-label' ) )
 const loginLinkLabel = computed( () => $bananaI18n( 'header-login-label' ) )
 const interfaceLanguageLabel = computed( () => $bananaI18n( 'interface-language-label' ) )
 const utilityMenuLabel = computed( () => $bananaI18n( 'header-utility-menu-label' ) )
+const collapsedSearchOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-search-overlay-label' ) )
+const collapsedSearchOverlayBackButtonLabel = computed( () =>
+	$bananaI18n( 'shell-collapsed-search-overlay-back-button-label' )
+)
 
 const selectedLanguageCodeLabel = computed( () => {
 	return selectedInterfaceLocale.value.toUpperCase()
@@ -346,43 +349,58 @@ function handleLanguageAreaFocusOut( event: FocusEvent ): void {
 }
 
 /**
- * Opens the search results panel when the field is focused and a query is present.
+ * Clears the query after a result is chosen (NuxtLink performs navigation).
  */
-function handleSearchFocusIn(): void {
-	if ( hasQuery.value ) {
-		isSearchPanelOpen.value = true
-	}
-}
-
-/**
- * Closes the search results panel when focus leaves the search area.
- *
- * @param event - Focusout event from the search wrapper.
- */
-function handleSearchAreaFocusOut( event: FocusEvent ): void {
-	const container = event.currentTarget as HTMLElement
-	if ( !container.contains( event.relatedTarget as Node ) ) {
-		isSearchPanelOpen.value = false
-	}
-}
-
-/**
- * Clears the query and closes the search panel after a result is chosen.
- *
- * @param _resultId - Selected search result id (navigation deferred in prototype).
- */
-function handleResultSelect( _resultId: string ): void {
+function handleGlobalSearchResultSelect(): void {
 	searchQuery.value = ''
-	isSearchPanelOpen.value = false
 }
 
+const searchToggleRef = useTemplateRef<{ $el?: HTMLElement } | HTMLElement>( 'searchToggleRef' )
+/** Skip restoring focus to the icon when a result navigates away. */
+let skipCollapsedSearchFocusRestore = false
+
 /**
- * Placeholder for collapsed search icon activation — behaviour deferred.
+ * Opens the collapsed search overlay from the icon button.
  *
  * @param event - Click event on the collapsed search button.
  */
 function handleCollapsedSearchClick( event: MouseEvent ): void {
 	event.preventDefault()
+	openCollapsedSearchOverlay()
+}
+
+/**
+ * Clears the query and dismisses the overlay after a result is chosen.
+ */
+function handleOverlayResultSelect(): void {
+	skipCollapsedSearchFocusRestore = true
+	handleGlobalSearchResultSelect()
+	closeCollapsedSearchOverlay()
+}
+
+/**
+ * Closes the overlay and restores focus to the search icon unless a result
+ * was activated (destination focus is handled by `focusNavigationTarget`).
+ */
+function handleCollapsedSearchOverlayClose(): void {
+	closeCollapsedSearchOverlay()
+	if ( skipCollapsedSearchFocusRestore ) {
+		skipCollapsedSearchFocusRestore = false
+		return
+	}
+	nextTick( () => {
+		const toggle = searchToggleRef.value
+		if ( !toggle ) {
+			return
+		}
+		const root = '$el' in toggle && toggle.$el instanceof HTMLElement ?
+			toggle.$el :
+			toggle instanceof HTMLElement ? toggle : null
+		const focusTarget = root?.matches?.( 'button' ) ?
+			root :
+			root?.querySelector?.( 'button' )
+		focusTarget?.focus()
+	} )
 }
 </script>
 
@@ -396,37 +414,19 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	>
 		<div
 			v-show="!isUtilityCollapsed"
+			ref="searchWrapperRef"
 			class="shell-header-utility-actions__search-wrap"
-			@focusout="handleSearchAreaFocusOut"
 		>
-			<CdxSearchInput
-				v-model="searchQuery"
-				class="shell-header-utility-actions__search"
-				dir="auto"
-				:use-button="false"
-				:placeholder="searchPlaceholderLabel"
-				@focusin="handleSearchFocusIn"
+			<SharedShellHeaderGlobalSearch
+				v-model:search-query="searchQuery"
+				variant="dropdown"
+				@result-select="handleGlobalSearchResultSelect"
 			/>
-			<div
-				v-if="isSearchPanelOpen && hasQuery"
-				class="shell-header-utility-actions__search-panel"
-				@mousedown.prevent
-			>
-				<SharedSearchResults
-					:locale-results="localeResults"
-					:fallback-results="fallbackResults"
-					:all-locale-result-groups="allLocaleResultGroups"
-					:is-all-locales-mode="isAllLocalesMode"
-					:active-locale="$interfaceLocale"
-					:search-query="searchQuery"
-					@result-select="handleResultSelect"
-					@activate-all-locales="activateAllLocalesSearch"
-				/>
-			</div>
 		</div>
 
 		<CdxButton
 			v-show="isUtilityCollapsed"
+			ref="searchToggleRef"
 			class="shell-header-utility-actions__search-toggle"
 			weight="quiet"
 			:aria-label="searchButtonLabel"
@@ -435,8 +435,18 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 			<CdxIcon :icon="cdxIconSearch" />
 		</CdxButton>
 
+		<SharedShellHeaderSearchOverlay
+			v-if="isCollapsedSearchOverlayOpen"
+			v-model:search-query="searchQuery"
+			:overlay-label="collapsedSearchOverlayLabel"
+			:back-button-label="collapsedSearchOverlayBackButtonLabel"
+			@close="handleCollapsedSearchOverlayClose"
+			@result-select="handleOverlayResultSelect"
+		/>
+
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="settingsControlRef"
 			class="shell-header-utility-actions__settings"
 		>
 			<CdxButton
@@ -481,6 +491,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 		</CdxPopover>
 
 		<div
+			ref="languageControlRef"
 			class="shell-header-utility-actions__language"
 			@focusout="handleLanguageAreaFocusOut"
 			@keydown.escape="closeLanguageLookup"
@@ -524,6 +535,7 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 
 		<span
 			v-show="!isUtilityCollapsed"
+			ref="sessionControlRef"
 			class="shell-header-utility-actions__session"
 		>
 			<NuxtLink
@@ -588,32 +600,6 @@ function handleCollapsedSearchClick( event: MouseEvent ): void {
 	 * is `--spacing-100` (16px); other option pairs stay at 8px.
 	 */
 	margin-inline-end: var( --spacing-50 );
-}
-
-.shell-header-utility-actions__search {
-	flex: 1 1 auto;
-	min-inline-size: 0;
-	inline-size: 100%;
-}
-
-.shell-header-utility-actions__search:deep( .cdx-text-input ) {
-	min-inline-size: var( --fd-header-search-input-min-inline-size );
-	max-inline-size: 100%;
-	inline-size: 100%;
-}
-
-.shell-header-utility-actions__search-panel {
-	position: absolute;
-	inset-block-start: 100%;
-	inset-inline-start: 0;
-	inset-inline-end: 0;
-	z-index: 20;
-	background-color: var( --background-color-base );
-	border: 1px solid var( --border-color-base );
-	border-radius: var( --border-radius-base );
-	box-shadow: var( --box-shadow-drop-medium );
-	max-block-size: min( 24rem, 80dvh );
-	overflow-y: auto;
 }
 
 .shell-header-utility-actions__settings,

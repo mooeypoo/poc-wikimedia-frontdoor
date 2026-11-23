@@ -249,7 +249,9 @@ The placeholder title is overridden by `source.overrideFrontmatter.title` if dec
 
 **Decision:** The existing `app/pages/[...slug].vue` catch-all route and `useLocalizedContentPage` composable are unchanged. Fetched files become regular Nuxt Content documents once written to `content/[locale]/`.
 
-**Context:** `useLocalizedContentPage` calls `queryCollection('content').path(candidate).first()`. Nuxt Content indexes all `.md` files in `content/` at build time. A file placed there by the fetch script is indistinguishable from a locally authored page.
+**Context:** Nuxt Content indexes all `.md` files in `content/` at build time. A file placed there by the fetch script is indistinguishable from a locally authored page.
+
+**Update:** `useLocalizedContentPage` no longer queries the collection itself. It fetches `/api/content-page`, which runs the fallback-chain walk in Nitro, because a browser-side `queryCollection` pulled down the SQLite WASM engine and the whole locale dump to read one document. This decision still holds as written: imported files remain ordinary content documents, and the route resolves them exactly like authored ones. See `ARCHITECTURE.md` → Markdown content pages → Server-side content queries.
 
 **Rationale:** No special-case rendering logic for remote vs. local content. The fetch script's output is the same artifact as any other authored page.
 

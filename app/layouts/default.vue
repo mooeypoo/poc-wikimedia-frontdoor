@@ -495,14 +495,16 @@ useHead( {
 }
 
 /*
- * Row 1 (mobile): brand and utility actions on one flex row. Tablet+: `display: contents`
- * so brand and utilities land in the same grid columns as start panel / body band.
+ * Row 1: brand and utility actions on one flex row with a **16px** minimum gap
+ * (requirements §5.1.7.1 / Figma). Kept as one formatting context at every
+ * breakpoint so the gap is between the actual brand and search — not the 24px
+ * page-grid gutter. Tablet+: the band spans both chrome columns (see media query).
  */
 .frontdoor-shell__chrome-utility-band {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: var( --spacing-150 );
+	gap: var( --spacing-100 );
 	min-inline-size: 0;
 }
 
@@ -543,16 +545,13 @@ useHead( {
 	}
 
 	.frontdoor-shell__chrome-utility-band {
-		display: contents;
-	}
-
-	.frontdoor-shell__chrome-start--brand {
-		grid-column: 1;
-		grid-row: 1;
-	}
-
-	.frontdoor-shell__chrome-main {
-		grid-column: 2;
+		/*
+		 * Keep row 1 as one flex context so the 16px brand↔search gap is measured
+		 * between the actual groups (translated wordmarks may be wider than the
+		 * start track). Do not use `display: contents` here — that would replace
+		 * the 16px gap with the 24px grid gutter.
+		 */
+		grid-column: 1 / -1;
 		grid-row: 1;
 	}
 

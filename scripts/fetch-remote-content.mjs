@@ -30,6 +30,7 @@ import { promises as fs } from 'node:fs'
 import YAML from 'yaml'
 import { REMOTE_CONTENT_SOURCES } from '../config/remoteContentSources.ts'
 import { convertWikiHtmlToMarkdown } from './lib/wikiContentConversion.mjs'
+import { parseFrontmatter } from './lib/markdownFrontmatter.mjs'
 import { isRegisteredSharedPartial } from '../config/sharedPartials.ts'
 
 const __filename = fileURLToPath( import.meta.url )
@@ -82,26 +83,6 @@ async function fetchJson( url ) {
 		throw new Error( `API error ${ json.error.code }: ${ json.error.info }` )
 	}
 	return json
-}
-
-/**
- * Parses YAML frontmatter from Markdown content.
- *
- * @param {string} content - Raw Markdown.
- * @returns {{ data: Record<string, unknown>, body: string }}
- */
-function parseFrontmatter( content ) {
-	const match = /^---\n([\s\S]*?)\n---\n?/.exec( content )
-	if ( !match ) {
-		return { data: {}, body: content }
-	}
-	let data
-	try {
-		data = YAML.parse( match[ 1 ] ) ?? {}
-	} catch {
-		data = {}
-	}
-	return { data, body: content.slice( match[ 0 ].length ) }
 }
 
 /**
