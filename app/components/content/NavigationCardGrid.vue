@@ -2,10 +2,11 @@
 /**
  * Grid wrapper for {@link NavigationCard} rows on content pages.
  *
- * Renders slotted cards in up to **three** equal columns (Codex desktop+),
- * or **two** when `columns="2"` (landing “Join the community”). Stretching
- * each row to the tallest card. Title/description stay top-aligned; when cards
- * include supporting-text, that link is bottom-aligned within each card so
+ * Renders slotted cards in up to **three** equal columns when
+ * `columns="3"` is set, or **two** by default (Codex desktop+, and the
+ * landing “Join the community” band). Stretches each row to the tallest
+ * card. Title/description stay top-aligned; when cards include
+ * supporting-text, that link is bottom-aligned within each card so
  * links share a baseline across the row. Vertical rhythm uses
  * **`--spacing-100` (16px)** `margin-block` above and below the grid; under
  * `.fd-content-page`, adjoining `p` / `ul` / `ol` margins are zeroed in
@@ -17,12 +18,12 @@
  */
 const props = withDefaults( defineProps<{
 	/**
-	 * Max columns at desktop+. `"2"` keeps a two-up row (landing join band);
-	 * default `"3"` matches the standard content card grid.
+	 * Max columns at desktop+. Default `"2"` matches the standard content
+	 * card grid; `"3"` opts back into the wider three-up row.
 	 */
 	columns?: '2' | '3' | 2 | 3 | string
 }>(), {
-	columns: '3'
+	columns: '2'
 } )
 
 const isTwoColumnGrid = computed( () => {
@@ -77,6 +78,16 @@ const isTwoColumnGrid = computed( () => {
 @media ( min-width: 1120px ) {
 	.navigation-card-grid:not( .navigation-card-grid--columns-2 ) {
 		grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
+	}
+
+	/*
+	 * Only two cards slotted into an explicit 3-column grid: expand to a
+	 * 2-up row that fills the width instead of leaving a dead third
+	 * track. `:nth-child(2):last-child` matches a container whose second
+	 * child is also its last — i.e. exactly two slotted elements.
+	 */
+	.navigation-card-grid:not( .navigation-card-grid--columns-2 ):has( > :nth-child( 2 ):last-child ) {
+		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
 	}
 }
 
