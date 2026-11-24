@@ -66,7 +66,12 @@
 	--fd-layout-page-margin: var( --spacing-100 );
 	--fd-layout-page-margin-inline-start: var( --fd-layout-page-margin );
 	--fd-layout-grid-gutter: var( --spacing-100 );
-	--fd-layout-explorer-navigation-content-gap: var( --fd-layout-page-margin );
+	/*
+	 * Expanded Explorer: gap from local-nav border to Scalar / project controls.
+	 * Fixed at the standard navigation/content minimum (`--spacing-250` / 40px) —
+	 * not the Codex page margin (24px tablet / 32px desktop).
+	 */
+	--fd-layout-explorer-navigation-content-gap: var( --fd-layout-navigation-content-min-gap );
 
 	/*
 	 * Legacy start panel background (#F3F3F3) — superseded by transparent panel +
