@@ -11,7 +11,9 @@ import type { ShellCollapsedNavMenuView } from '../../composables/useShellCollap
  * Default view mirrors `ShellSidePanelNav` (start-column section links) with the active
  * primary section as a quiet back control (`cdxIconPrevious`, `flip-for-rtl`). Section
  * headings that duplicate the back label are omitted via `omitSectionTitleMatching`.
- * The primary view lists main navigation entries (including the **APIs** tab).
+ * The primary view lists main navigation entries (including the **APIs** tab);
+ * selecting one navigates to that section’s landing path and drills into the
+ * section menu (overlay stays open). Leaf section links still navigate and close.
  * Panel inline-end border uses `--border-color-muted` (matches expanded start column).
  * Scroll-end inset: `::after` spacer (`--spacing-200`, 32px) on the panel scrollport,
  * symmetric with the in-shell start panel and site footer. Figma Off-wiki page templates
@@ -79,6 +81,7 @@ const emit = defineEmits<{
 						:ariaLabel="sectionNavigationLabel"
 						:sections="sectionNavigationSections"
 						:omit-section-title-matching="primaryNavigationLabel"
+						@current-path-select="emit( 'close' )"
 					/>
 				</template>
 				<nav
@@ -121,7 +124,11 @@ const emit = defineEmits<{
 	display: flex;
 	flex-direction: column;
 	gap: var( --spacing-50 );
-	inline-size: var( --fd-layout-start-panel-inline-size );
+	/*
+	 * Overlay starts at the viewport edge, so it owns the full 241px navigation
+	 * allocation instead of subtracting the in-shell outer page margin.
+	 */
+	inline-size: var( --fd-layout-navigation-region-inline-size );
 	max-inline-size: 100%;
 	block-size: 100%;
 	padding-block-start: var( --spacing-100 );

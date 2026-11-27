@@ -12,7 +12,10 @@ export type ShellCollapsedNavMenuView = 'section' | 'primary'
  * Manages open state and drill-down level for the collapsed header navigation overlay.
  *
  * Opens to the section view when the current route has start-column sections;
- * otherwise opens directly to the primary navigation list. Closes on route change,
+ * otherwise opens directly to the primary navigation list. Selecting a primary
+ * tab navigates to that section’s landing path and keeps the overlay open on the
+ * section menu (so dismissing the overlay still leaves the user in that section).
+ * Leaf section links still navigate and close the overlay. Also closes on
  * viewport expand (nav uncollapsed), Escape, or explicit `closeCollapsedNavMenu`.
  *
  * @param options - Reactive inputs that affect default view and auto-close behaviour.
@@ -25,7 +28,8 @@ export type ShellCollapsedNavMenuView = 'section' | 'primary'
  *   closeCollapsedNavMenu: () => void,
  *   toggleCollapsedNavMenu: () => void,
  *   showCollapsedNavMenuPrimaryView: () => void,
- *   showCollapsedNavMenuSectionView: () => void
+ *   showCollapsedNavMenuSectionView: () => void,
+ *   keepCollapsedNavMenuOpenForSectionViewAfterNavigation: () => void
  * }} Overlay open flag, view level, and open / close / back actions.
  */
 export function useShellCollapsedNavMenu( options: {
@@ -34,6 +38,11 @@ export function useShellCollapsedNavMenu( options: {
 } ) {
 	const isCollapsedNavMenuOpen = ref( false )
 	const collapsedNavMenuView = ref<ShellCollapsedNavMenuView>( 'section' )
+	/**
+	 * When true, the next route change from a primary-tab selection keeps the
+	 * overlay open and switches to the section view instead of dismissing it.
+	 */
+	let shouldKeepOpenForSectionViewAfterNavigation = false
 
 	const route = useRoute()
 
@@ -41,6 +50,7 @@ export function useShellCollapsedNavMenu( options: {
 	 * Opens the overlay, resetting the view to section or primary as appropriate.
 	 */
 	function openCollapsedNavMenu(): void {
+		shouldKeepOpenForSectionViewAfterNavigation = false
 		collapsedNavMenuView.value = options.hasSectionNavigation.value ? 'section' : 'primary'
 		isCollapsedNavMenuOpen.value = true
 	}
@@ -49,6 +59,7 @@ export function useShellCollapsedNavMenu( options: {
 	 * Closes the overlay and resets the view to section for the next open.
 	 */
 	function closeCollapsedNavMenu(): void {
+		shouldKeepOpenForSectionViewAfterNavigation = false
 		isCollapsedNavMenuOpen.value = false
 		collapsedNavMenuView.value = 'section'
 	}
@@ -80,6 +91,14 @@ export function useShellCollapsedNavMenu( options: {
 	}
 
 	/**
+	 * Marks the next route change as a primary-tab drill-down that should keep
+	 * the overlay open on the destination section menu.
+	 */
+	function keepCollapsedNavMenuOpenForSectionViewAfterNavigation(): void {
+		shouldKeepOpenForSectionViewAfterNavigation = true
+	}
+
+	/**
 	 * Closes the overlay when the Escape key is pressed while it is open.
 	 *
 	 * @param keyboardEvent - Keydown event from the document listener.
@@ -93,7 +112,22 @@ export function useShellCollapsedNavMenu( options: {
 		closeCollapsedNavMenu()
 	}
 
-	watch( () => route.fullPath, () => {
+	watch( () => route.fullPath, async () => {
+		if ( shouldKeepOpenForSectionViewAfterNavigation ) {
+			shouldKeepOpenForSectionViewAfterNavigation = false
+			/*
+			 * Wait for `usePageSectionNav` to resolve against the new route so
+			 * `hasSectionNavigation` reflects the destination section menu.
+			 */
+			await nextTick()
+
+			if ( options.hasSectionNavigation.value ) {
+				collapsedNavMenuView.value = 'section'
+				isCollapsedNavMenuOpen.value = true
+				return
+			}
+		}
+
 		closeCollapsedNavMenu()
 	} )
 
@@ -127,6 +161,7 @@ export function useShellCollapsedNavMenu( options: {
 		closeCollapsedNavMenu,
 		toggleCollapsedNavMenu,
 		showCollapsedNavMenuPrimaryView,
-		showCollapsedNavMenuSectionView
+		showCollapsedNavMenuSectionView,
+		keepCollapsedNavMenuOpenForSectionViewAfterNavigation
 	}
 }

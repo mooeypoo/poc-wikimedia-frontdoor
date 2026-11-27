@@ -3,17 +3,17 @@ import { CdxInfoChip, CdxTooltip } from '@wikimedia/codex'
 import { useMainNavigationLinks } from '../../composables/useMainNavigationLinks'
 
 /**
- * Compact header brand lockup — Wikimedia mark (32px SVG) plus two-line wordmark,
- * with a label-only warning “Prototype” InfoChip after the lockup (Figma 1238:24310).
+ * Compact header brand lockup — Wikimedia mark (32px SVG) plus responsive wordmark,
+ * with a label-only progressive “Beta” InfoChip after the lockup (design lock #12).
  *
  * Rendered in the shell header utility row per Figma Header node 284:11443.
  * Mark: inlined {@link WikimediaLogoMark} (Commons Wikimedia-logo_black.svg with
  * `currentColor`) so light / dark mode follow `--color-base`. Wordmark lines use
  * banana-i18n (`brand-wordmark-wikimedia`, `brand-wordmark-developer-portal`) in
- * Montserrat. Chip label: `brand-prototype-chip-label`. Gap logo → chip is
+ * Montserrat. Chip label: `brand-beta-chip-label`. Gap logo → chip is
  * Codex `--spacing-50` (8px). Chip is outside the home link (InfoChip is
- * non-interactive). Status icon hidden — Codex forces icons on `warning`.
- * Hover/focus tooltip via Codex `v-tooltip` (`brand-prototype-chip-tooltip`) on a
+ * non-interactive). Status icon hidden — Codex forces icons on `progressive`.
+ * Hover/focus tooltip via Codex `v-tooltip` (`brand-beta-chip-tooltip`) on a
  * host `<span>` (directive is more reliable on native elements than on InfoChip).
  *
  * **Product exception:** no `:focus` / `:focus-visible` / `:active` outline (and
@@ -30,9 +30,9 @@ const vTooltip = CdxTooltip
 const brandLogoAccessibleLabel = computed( () => $bananaI18n( 'app-title' ) )
 const brandWordmarkTopLabel = computed( () => $bananaI18n( 'brand-wordmark-wikimedia' ) )
 const brandWordmarkBottomLabel = computed( () => $bananaI18n( 'brand-wordmark-developer-portal' ) )
-const brandPrototypeChipLabel = computed( () => $bananaI18n( 'brand-prototype-chip-label' ) )
-const brandPrototypeChipTooltipLabel = computed( () =>
-	$bananaI18n( 'brand-prototype-chip-tooltip' )
+const brandBetaChipLabel = computed( () => $bananaI18n( 'brand-beta-chip-label' ) )
+const brandBetaChipTooltipLabel = computed( () =>
+	$bananaI18n( 'brand-beta-chip-tooltip' )
 )
 </script>
 
@@ -52,40 +52,47 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 			</span>
 		</NuxtLink>
 		<!--
-			Label-only warning chip (Figma 1238:24310). Codex forces a status icon
-			on warning; hide `.cdx-info-chip__icon--vue` below. Tooltip on host
-			<span> per Codex directive guidance (native element trigger).
+			Label-only progressive Beta chip (design lock #12). Codex forces a
+			status icon on progressive; hide `.cdx-info-chip__icon--vue` below.
+			Tooltip on host <span> per Codex directive guidance.
 		-->
 		<span
-			v-tooltip="brandPrototypeChipTooltipLabel"
-			class="shell-header-brand-group__prototype-chip-host"
+			v-tooltip="brandBetaChipTooltipLabel"
+			class="shell-header-brand-group__beta-chip-host"
 		>
 			<CdxInfoChip
-				status="warning"
-				class="shell-header-brand-group__prototype-chip"
+				status="progressive"
+				class="shell-header-brand-group__beta-chip"
 			>
-				{{ brandPrototypeChipLabel }}
+				{{ brandBetaChipLabel }}
 			</CdxInfoChip>
 		</span>
 	</div>
 </template>
 
 <style scoped>
-/* Mark + wordmark + Prototype chip — gap --spacing-50 (8px) per Figma 1238:24310. */
+/*
+ * Mark + wordmark + Beta chip — gap --spacing-50 (8px).
+ * The group may shrink and wrap the non-production chip independently so it never
+ * determines when the translated production wordmark wraps.
+ */
 .shell-header-brand-group {
 	display: inline-flex;
+	flex-wrap: wrap;
 	align-items: flex-end;
 	gap: var( --spacing-50 );
-	flex: 0 0 auto;
+	flex: 1 1 auto;
 	min-inline-size: 0;
+	max-inline-size: max-content;
 }
 
 .shell-header-brand {
 	display: inline-flex;
 	align-items: center;
 	gap: var( --spacing-25 );
-	flex: 0 0 auto;
+	flex: 1 1 auto;
 	min-inline-size: 0;
+	max-inline-size: max-content;
 	color: var( --color-base );
 	text-decoration: none;
 }
@@ -116,7 +123,6 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 	flex-direction: column;
 	gap: 2px;
 	min-inline-size: 0;
-	white-space: nowrap;
 	font-family: var( --font-family-brand-wordmark );
 }
 
@@ -132,20 +138,28 @@ const brandPrototypeChipTooltipLabel = computed( () =>
 	font-weight: 800;
 	line-height: 1rem;
 	letter-spacing: 0.01em;
+	/*
+	 * Preserve complete translated words. When the header cannot keep the 16px
+	 * brand/actions gap, the line wraps at its natural whitespace (English:
+	 * “PORTAL” moves below “DEVELOPER”).
+	 */
+	white-space: normal;
+	overflow-wrap: normal;
+	word-break: normal;
 }
 
-.shell-header-brand-group__prototype-chip-host {
+.shell-header-brand-group__beta-chip-host {
 	display: inline-flex;
 	flex-shrink: 0;
 	min-inline-size: 0;
 }
 
 /*
- * Codex forces status icons on warning InfoChips and ignores a null `icon` prop.
- * Header Prototype chip is label-only (same pattern as NavigationCard / explorer
- * audience chips).
+ * Codex forces status icons on progressive InfoChips and ignores a null `icon`
+ * prop for non-notice statuses. Header Beta chip is label-only (same pattern as
+ * NavigationCard / explorer audience chips).
  */
-.shell-header-brand-group__prototype-chip :deep( .cdx-info-chip__icon--vue ) {
+.shell-header-brand-group__beta-chip :deep( .cdx-info-chip__icon--vue ) {
 	display: none;
 }
 </style>

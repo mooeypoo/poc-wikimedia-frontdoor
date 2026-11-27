@@ -1,10 +1,12 @@
 import { usePageSectionNav } from './usePageSectionNav'
 import { usePrimaryNavigationTab } from './usePrimaryNavigationTab'
+import { resolvePrimaryNavigationBreadcrumbLabel } from '../utils/shellNavigationBreadcrumb'
 
 /**
  * Resolves breadcrumb labels for the collapsed shell navigation row.
  *
- * First crumb: active primary navigation tab (including **APIs** on explorer routes).
+ * First crumb: active primary navigation tab (including **APIs** on explorer routes);
+ * omitted when the route is outside the primary information architecture.
  * Second crumb: active start-column section item, or the first section title when
  * no item is marked active.
  *
@@ -19,15 +21,10 @@ export function useShellNavigationBreadcrumbs() {
 	const { navigationSections } = usePageSectionNav()
 
 	const primaryNavigationBreadcrumbLabel = computed( () => {
-		const activeNavigationLink = mainNavigationLinks.value.find(
-			( navigationLink ) => navigationLink.id === activeNavigationId.value
+		return resolvePrimaryNavigationBreadcrumbLabel(
+			mainNavigationLinks.value,
+			activeNavigationId.value
 		)
-
-		if ( activeNavigationLink ) {
-			return activeNavigationLink.label
-		}
-
-		return mainNavigationLinks.value[ 0 ]?.label ?? ''
 	} )
 
 	const sectionNavigationBreadcrumbLabel = computed( () => {

@@ -107,7 +107,12 @@ function onHeadingClick( pointerEvent: MouseEvent, headingId: string ): void {
 	inline-size: 100%;
 	max-inline-size: 100%;
 	min-inline-size: 0;
-	padding-block: var( --spacing-75 );
+	/*
+	 * Match page-title top alignment: `--spacing-150` (24px) block-start.
+	 * Keep `--spacing-75` block-end from the compact TOC chrome.
+	 */
+	padding-block-start: var( --spacing-150 );
+	padding-block-end: var( --spacing-75 );
 	padding-inline: var( --spacing-50 );
 	background-color: var( --background-color-base );
 	font-size: var( --font-size-small );

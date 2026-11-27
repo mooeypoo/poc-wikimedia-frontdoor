@@ -21,6 +21,13 @@ export const SHELL_NAV_EXPAND_PADDING_PX =
 	SHELL_NAV_COLLAPSE_PADDING_PX + SHELL_NAV_EXPAND_HYSTERESIS_PX
 
 /**
+ * Minimum viewport width (px) that can show the local navigation while preserving
+ * the responsive shell's 40px content gap and 640px minimum content measure:
+ * 241px navigation + 40px gap + 640px content + 40px page-end space.
+ */
+export const SHELL_NAV_EXPANDED_LAYOUT_MIN_VIEWPORT_PX = 961
+
+/**
  * Start-drawer expand duration (ms) — matches Codex `--transition-duration-medium`
  * (250ms). Used to keep `.frontdoor-shell--nav-drawer-expanding` on for the
  * animation window; route / `sidebar: false` layout changes stay instant.
