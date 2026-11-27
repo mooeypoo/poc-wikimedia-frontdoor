@@ -931,7 +931,12 @@ useHead( {
 	flex-direction: column;
 	flex: 1 1 auto;
 	min-inline-size: 0;
-	padding-block: var( --spacing-200 );
+	padding-block-start: var( --spacing-200 );
+	/*
+	 * Design lock #10 — 80px (2 × --spacing-250) between page content and the
+	 * site footer (footer is the next sibling in `.frontdoor-shell__content`).
+	 */
+	padding-block-end: calc( 2 * var( --spacing-250 ) );
 }
 
 .frontdoor-shell__page-grid :deep( .fd-page-grid__body ) {
