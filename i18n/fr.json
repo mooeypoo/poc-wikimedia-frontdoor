@@ -300,5 +300,6 @@
   "shell-collapsed-nav-label": "Navigation du site reduite",
   "shell-collapsed-nav-menu-back-button-label": "Retour a la navigation du site",
   "shell-collapsed-nav-menu-button-label": "Ouvrir le menu de navigation du site",
-  "shell-collapsed-nav-menu-overlay-label": "Menu de navigation du site"
+  "shell-collapsed-nav-menu-overlay-label": "Menu de navigation du site",
+  "shell-collapsed-nav-menu-visible-label": "Menu"
 }

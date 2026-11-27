@@ -296,5 +296,6 @@
   "shell-collapsed-nav-label": "ناوبری جمع‌شده سایت",
   "shell-collapsed-nav-menu-back-button-label": "بازگشت به ناوبری سایت",
   "shell-collapsed-nav-menu-button-label": "باز کردن منوی ناوبری سایت",
-  "shell-collapsed-nav-menu-overlay-label": "منوی ناوبری سایت"
+  "shell-collapsed-nav-menu-overlay-label": "منوی ناوبری سایت",
+  "shell-collapsed-nav-menu-visible-label": "منو"
 }

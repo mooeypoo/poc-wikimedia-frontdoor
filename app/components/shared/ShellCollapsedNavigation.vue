@@ -9,13 +9,16 @@ import { useShellCollapsedNavigationBreadcrumbFit } from '../../composables/useS
  * Shown when `useShellNavigationCollapse` collapses the quiet tabs and start-column
  * section menu. The menu button toggles `ShellCollapsedNavMenuOverlay` (Figma Off-wiki
  * page templates nodes 50:2731, 25:1929). Routes outside the primary information
- * architecture, including the landing page, show only the hamburger.
+ * architecture (landing, account) have no location breadcrumb — the quiet menu
+ * button shows a visible **Menu** label beside the hamburger for orientation.
  */
 const props = defineProps<{
 	/** Accessible name for the collapsed navigation region. */
 	regionLabel: string
-	/** Accessible label for the icon-only menu button. */
+	/** Accessible label for the icon-only menu button (when breadcrumbs are shown). */
 	menuButtonLabel: string
+	/** Visible “Menu” label beside the hamburger when no primary breadcrumb is shown. */
+	menuVisibleLabel: string
 	/** Active primary navigation label (first breadcrumb). */
 	primaryNavigationLabel: string
 	/** Active start-column section label (second breadcrumb). */
@@ -25,6 +28,11 @@ const props = defineProps<{
 	/** When true, the collapsed navigation overlay is open (menu button pressed state). */
 	isMenuOpen: boolean
 }>()
+
+/** True when routes outside the primary IA need the labeled Menu trigger. */
+const shouldShowMenuVisibleLabel = computed( () => {
+	return props.primaryNavigationLabel === ''
+} )
 
 const navigationRootRef = useTemplateRef<HTMLElement>( 'navigationRootRef' )
 const primaryBreadcrumbRef = useTemplateRef<HTMLElement>( 'primaryBreadcrumbRef' )
@@ -52,12 +60,19 @@ const emit = defineEmits<{
 	>
 		<CdxButton
 			class="shell-collapsed-navigation__menu-button"
+			:class="{
+				'shell-collapsed-navigation__menu-button--with-label': shouldShowMenuVisibleLabel
+			}"
 			weight="quiet"
-			:aria-label="menuButtonLabel"
+			:aria-label="shouldShowMenuVisibleLabel ? undefined : menuButtonLabel"
 			:aria-expanded="isMenuOpen"
 			@click="emit( 'menu-toggle' )"
 		>
 			<CdxIcon :icon="cdxIconMenu" />
+			<span
+				v-if="shouldShowMenuVisibleLabel"
+				class="shell-collapsed-navigation__menu-label"
+			>{{ menuVisibleLabel }}</span>
 		</CdxButton>
 		<div
 			v-if="primaryNavigationLabel"
@@ -98,6 +113,7 @@ const emit = defineEmits<{
 /*
  * Figma Off-wiki page templates 50:2731 — icon-only quiet button + breadcrumbs
  * (spacing-25 between button and crumbs; spacing-50 between crumb segments).
+ * Landing / account (no primary crumb): Codex Button with icon + visible Menu label.
  */
 .shell-collapsed-navigation {
 	display: flex;
@@ -110,6 +126,17 @@ const emit = defineEmits<{
 
 .shell-collapsed-navigation__menu-button {
 	flex: 0 0 auto;
+}
+
+/* Native Codex icon+label gap; no first-party overrides on icon/label chrome. */
+.shell-collapsed-navigation__menu-button--with-label {
+	font-weight: var( --font-weight-normal );
+	color: var( --color-base );
+}
+
+.shell-collapsed-navigation__menu-label {
+	/* Keep the visible Menu word from wrapping beside the hamburger. */
+	white-space: nowrap;
 }
 
 .shell-collapsed-navigation__breadcrumbs {

@@ -300,5 +300,6 @@
   "shell-collapsed-nav-label": "ניווט באתר מכווץ",
   "shell-collapsed-nav-menu-back-button-label": "חזרה לניווט באתר",
   "shell-collapsed-nav-menu-button-label": "פתיחת תפריט הניווט באתר",
-  "shell-collapsed-nav-menu-overlay-label": "תפריט ניווט באתר"
+  "shell-collapsed-nav-menu-overlay-label": "תפריט ניווט באתר",
+  "shell-collapsed-nav-menu-visible-label": "תפריט"
 }

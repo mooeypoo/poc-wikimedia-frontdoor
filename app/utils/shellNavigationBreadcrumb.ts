@@ -2,7 +2,9 @@
  * Resolves the active primary-navigation breadcrumb without inventing a fallback.
  *
  * Routes outside the primary information architecture, including the landing
- * page and account page, intentionally return an empty label.
+ * page and account page, intentionally return an empty label so
+ * `ShellCollapsedNavigation` can show a visible Menu trigger instead of a
+ * fake location crumb.
  *
  * @param mainNavigationLinks - Available primary-navigation links.
  * @param activeNavigationId - Active primary-navigation id, or an empty string.

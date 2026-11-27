@@ -857,6 +857,15 @@ function handleCollapsedSearchClick(): void {
 }
 
 /*
+ * Extra `--spacing-25` (4px) outside the collapsed ellipsis MenuButton (inline-end)
+ * so its icon optically aligns with the On this page MenuButton expand icon.
+ * Overrides the shared `margin: 0` above for inline-end only.
+ */
+.shell-header-utility-actions__utility-menu {
+	margin-inline-end: var( --spacing-25 );
+}
+
+/*
  * Preferences `CdxPopover` and `CdxDialog` are teleported. Popover body padding
  * and arrow/body seam live in `app/assets/css/shell-codex-overrides.css`.
  */

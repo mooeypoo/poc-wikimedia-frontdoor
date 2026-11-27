@@ -124,6 +124,7 @@ const applicationTitle = computed( () => $bananaI18n( 'app-title' ) )
 const primaryNavigationLabel = computed( () => $bananaI18n( 'nav-primary-label' ) )
 const collapsedNavigationRegionLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-label' ) )
 const collapsedNavigationMenuButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-button-label' ) )
+const collapsedNavigationMenuVisibleLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-visible-label' ) )
 const collapsedNavMenuOverlayLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-overlay-label' ) )
 const collapsedNavMenuBackButtonLabel = computed( () => $bananaI18n( 'shell-collapsed-nav-menu-back-button-label' ) )
 
@@ -316,6 +317,7 @@ useHead( {
 								v-if="isNavigationCollapsed"
 								:region-label="collapsedNavigationRegionLabel"
 								:menu-button-label="collapsedNavigationMenuButtonLabel"
+								:menu-visible-label="collapsedNavigationMenuVisibleLabel"
 								:primary-navigation-label="primaryNavigationBreadcrumbLabel"
 								:section-navigation-label="sectionNavigationBreadcrumbLabel"
 								:has-section-navigation-breadcrumb="hasSectionNavigationBreadcrumb"
